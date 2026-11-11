@@ -10,7 +10,7 @@
 
 新しい Bolt は、選択されたインテントのレジストリ UUID にスコープされる。`<id8>` は
 その 8 文字の小文字 16 進数のサフィックス（`idSuffix(uuid)`）であり、`refs/heads/claim/<id8>/<unit>` における
-Unit の claim と同じ識別情報である。Unit 名、`--slug`、監査の
+Unit の claim と同じ識別情報である。ユニット名、`--slug`、監査の
 `Bolt slug`、状態の `Bolt Refs`、`Unit Progress` は変わらない。
 
 | 対象 | 新しい形 |
@@ -23,7 +23,7 @@ Unit の claim と同じ識別情報である。Unit 名、`--slug`、監査の
 `_` 区切りは Bolt slug（`[a-z][a-z0-9-]*`）には現れないため、新しい名前が
 レガシーの名前と取り違えられることはない: `bolt-abcdef01-api` はレガシーの slug であり、
 `bolt-abcdef01_api` はインテントの識別情報 `abcdef01` を持つ。`bolt-` プレフィックスは
-引き続き `bolt-*` のブランチルールと互換である。これにより、並行するインテント内の同名の Unit が、
+引き続き `bolt-*` のブランチルールと互換である。これにより、並行するインテント内の同名のユニットが、
 1 つのチェックアウト内や 1 つのクローンのワークツリー間で衝突することを防ぐ
 （[#1252](https://github.com/awslabs/aidlc-workflows/issues/1252)）。
 

@@ -170,7 +170,7 @@ stage-protocol.md の完了テンプレートを使い、完了時の絵文字�
 
 このステージの出力は `<record>/inception/units-generation/` 配下の Markdown 成果物である。
 
-取り込み: `required-sections`, `upstream-coverage`, `traceability`.
+インポート: `required-sections`, `upstream-coverage`, `traceability`.
 
 上流ターゲット: `components`, `decisions`, `requirements`, `stories`.
 

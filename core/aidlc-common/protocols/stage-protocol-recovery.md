@@ -14,7 +14,7 @@
 
 1. **成果物ツリー**（`<record>/<phase>/<stage>/*.md`）— 決定事項そのものの
    完成形。最初に読む: 実際に合意された内容の永続的な記録だからである。
-2. **ステージごとの `memory.md`。`learnings` モジュールが列挙されている場合のみ**（`<record>/<phase>/<stage>/memory.md`。Unit ごとのステージでは各 Unit の `<record>/construction/<unit>/<stage>/` 内）— 意思決定の過程で
+2. **ステージごとの `memory.md`。`learnings` モジュールが列挙されている場合のみ**（`<record>/<phase>/<stage>/memory.md`。ユニットごとのステージでは各ユニットの `<record>/construction/<unit>/<stage>/` 内）— 意思決定の過程で
    気づいたこと（解釈、逸脱、トレードオフ、未解決の質問）。
 3. **監査ログ**: `{{INVOKE}} engine audit history` を実行し、各イベントが
    いつ起きたか、ユーザーがどのゲートを承認したかを確認する。自由記述の回復メモも
@@ -57,7 +57,7 @@ fresh, just say so."）: それを書かれたとおりに、そのメッセー�
 やり直し、ジャンプ、最初からのやり直しは、利用者が求めたときにだけ行う。
 利用者の言葉からどれを意図しているかを読み取り、
 `{{INVOKE}} engine orchestrate report --result resumed --choice <redo|jump|fresh>` で報告する。
-利用者が挙げたステージには `--target <stage slug>` を（Unit を挙げたか全 Unit と言った場合は `--unit <unit>` または
+利用者が挙げたステージには `--target <stage slug>` を（ユニットを挙げたか全ユニットと言った場合は `--unit <unit>` または
 `--every-unit` も）加え、その後、返された print に
 従う。承認ゲートでは、そうした依頼はゲートへの回答ではない: この方法で報告し、
 Request Changes として扱ってはならない。
@@ -65,19 +65,19 @@ Request Changes として扱ってはならない。
 **Build-and-Test 失敗のループバックで、記録済みだがジャンプ未実施の検出**:
 `<record>/construction/build-and-test/test-results.md` に
 `## Loop-Back Log` があり、その最新エントリに修正計画があるのに、監査ログにその後の
-対応する `STAGE_JUMPED`（Target: code-generation）がなく、修正が名指しする Unit について
+対応する `STAGE_JUMPED`（Target: code-generation）がなく、修正が名指しするユニットについて
 Unit タグ付きの `GATE_REJECTED`（Stage: code-generation）もない場合、セッションは
 記録とジャンプの間で終了している — 再診断せずに、ループバック
 プロトコルモジュール（`aidlc-common/protocols/stage-protocol-loopback.md`）の
 "Build-and-Test failure loop-back" に従ってジャンプを再実行する。修正が
-複数の Unit を名指ししていて、その後に該当する行を持つのが一部だけの場合は、先に進む前に
+複数のユニットを名指ししていて、その後に該当する行を持つのが一部だけの場合は、先に進む前に
 残りも同じ方法で再オープンする。どの再開でも、
 ループバックの回数は台帳のエントリ数であり、決してゼロではない。対応する
 ジャンプがすでに存在する場合は、代わりに決着状況を考慮した再突入を再開する:
-receipt モードは最初の未決着 Unit から続け、artifact-only モードは
+receipt モードは最初の未決着ユニットから続け、artifact-only モードは
 ゲート前のオーバーライドを再開し、`invoke-swarm` を再出力するリプレイ
 （自律的な stage-major）はそのセクションの "Swarm interaction" の手順に従う:
-古い worktree/ブランチを破棄し、新たに `prepare` を実行し、まずすべての Unit を
+古い worktree/ブランチを破棄し、新たに `prepare` を実行し、まずすべてのユニットを
 確認し、新しいレビュアーのレシートを記録して、`finalize` する。3つの経路のいずれも、
 保存されていた成果物や以前のレシートを現在の試行の証拠として扱ってはならない。
 破棄は古い試行を park する。`{{INVOKE}} engine worktree restore --slug <slug>`
@@ -160,7 +160,7 @@ receipt モードは最初の未決着 Unit から続け、artifact-only モー�
 
 （これは「承認後にユーザーが変更を求めた」シナリオである。クラッシュによってジャンプの途中で
 残された build-and-test のループバックは別のシナリオ — 承認済みのステージのやり直しではなく、
-意図的に進行中にされた失敗ステージ — であり、上記の "Session resume" で
+失敗後も意図的に処理中の状態に保持されたステージ — であり、上記の "Session resume" で
 扱う。）
 
 再開したアクティブまたは修正中の CONDITIONAL ステージが適用外と判明した場合は、

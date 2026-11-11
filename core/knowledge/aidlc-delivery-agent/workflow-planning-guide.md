@@ -56,7 +56,7 @@ Delivery Planning ステージ向けのドメイン固有のガイダンス。�
 
 Bolt の順序付け（ステージ 2.9）は別の作業である。人間の価値判断で重み付けされた、DAG を通る経路を選ぶ — どの Bolt を最初に出荷するか、どの Bolt で何を証明するか、どの Bolt で最大のリスクを早期に表面化させるか。AI はトポロジカルソートはできるが、何が市場仮説を最も速く検証するかは決められない。
 
-正式な用語集（`stage-protocol.md` の Terminology）によれば、**Bolt** とは 2.9 で計画される Construction の提供単位であり、Definition of Done、確信度の仮説、オーナーシップを持つ 1 つ以上の Unit から成る。Bolt は MMF でもスプリントでもない。
+正式な用語集（`stage-protocol.md` の Terminology）によれば、**Bolt** とは 2.9 で計画される Construction の提供単位であり、Definition of Done、確信度の仮説、オーナーシップを持つ 1 つ以上のユニットから成る。Bolt は MMF でもスプリントでもない。
 
 Bolt の順序付けのヒューリスティクス:
 

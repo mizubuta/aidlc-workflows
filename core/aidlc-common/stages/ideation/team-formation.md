@@ -79,7 +79,7 @@ stage-protocol.md の質問フローに従う。
 
 このステージの出力は `<record>/ideation/team-formation/` 配下の Markdown 成果物である。
 
-取り込み: `required-sections`, `upstream-coverage`.
+インポート: `required-sections`, `upstream-coverage`.
 
 上流ターゲット: `scope-document`, `intent-backlog`, `feasibility-assessment`.
 

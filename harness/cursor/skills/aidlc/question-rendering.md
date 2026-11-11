@@ -2,45 +2,43 @@
 
 このファイルは、`{{HARNESS_DIR}}/aidlc-common/protocols/stage-protocol.md` のセクション "Structured questions" が求める構造化質問を、
 「この」ハーネスがどのように表示するかを定める。
-The protocol and stage files are harness-neutral: they say *present a
-structured question* and carry a fenced ` ```question ` spec block. This annex
-is the one place that binds that contract to a concrete mechanism.
+プロトコルとステージのファイルはハーネス中立であり、*構造化質問を提示せよ* と述べ、
+フェンス付きの ` ```question ` 仕様ブロックを持つ。この付属文書は、
+その契約を具体的な仕組みに結び付ける唯一の場所である。
 
 ## Never echo the spec (non-negotiable)
 
-A ` ```question ` fenced block is **INPUT to this annex's rendering, never
-output to paste**. The orchestrator MUST render every ` ```question ` spec as
-the numbered prose the Mechanism below defines, and MUST NEVER echo, print,
-paste, or "quote back" the fenced block, or any of its field lines (`prompt:`,
-`header:`, `multiSelect:`, `options:`, `label:`, `description:`), into the chat
-transcript. The user must never see the raw fence; they see only the numbered
-prose rendering.
+` ```question ` のフェンス付きブロックは、**この付属文書のレンダリングへの入力であり、決して
+貼り付けるための出力ではない**。オーケストレーターは、すべての ` ```question ` 仕様を、
+以下の「Mechanism」で定義する番号付きの散文として必ずレンダリングしなければならない。フェンス付きブロックやそのフィールド行（`prompt:`、
+`header:`、`multiSelect:`、`options:`、`label:`、`description:`）を、チャットの
+トランスクリプトにエコー、出力、貼り付け、または「引用して返す」ことは決してしてはならない。ユーザーには生のフェンスを決して見せず、
+番号付きの散文によるレンダリングだけを見せる。
 
-Echoing the fence as literal text is a **protocol violation**, not a stylistic
-choice. It:
+フェンスをそのままのテキストとしてエコーすることは、スタイルの選択ではなく**プロトコル違反**である。
+エコーすると次の問題が生じる:
 
-- produces an unanswerable block instead of numbered options the user can pick;
-- drops the "Other" escape the numbered rendering appends;
-- is inconsistent with every correct rendering elsewhere in the same session.
+- ユーザーが選べる番号付きの選択肢ではなく、回答できないブロックが生まれる。
+- 番号付きレンダリングが末尾に追加する "Other" の逃げ道が失われる。
+- 同じセッション内の他のすべての正しいレンダリングと一貫しなくなる。
 
-If you find yourself about to write a triple-backtick `question` block into your
-reply, STOP: that content is a spec to render as numbered prose, not message
-body.
+返信の中に 3 連バッククォートの `question` ブロックを書こうとしていることに気付いたら、
+**止まる**こと。その内容は番号付きの散文としてレンダリングすべき仕様であり、メッセージ
+本文ではない。
 
-This applies to **every** structured-question site, including but not limited to:
+これは、以下を含む（ただしこれらに限らない）**すべての**構造化質問の箇所に適用される:
 
-- approval gates (every stage completion);
-- the questions interaction-mode choice (Guide me / I'll edit the file / Chat),
-  when the step asks for it (otherwise say the step's notice and take the
-  questions the way it says; stage-protocol.md §3 Step 2);
-- the ladder prompt (autonomy mode after the walking skeleton);
-- halt-and-ask on Bolt failure (Retry / Skip / Abort);
-- consolidated-summary confirmation before artifact generation;
-- the section 13 learnings question after a correction (keep for this project, for the team, or not).
+- 承認ゲート（すべてのステージ完了時）
+- 質問へのインタラクションモードの選択（Guide me / I'll edit the file / Chat）。
+  ステップがそれを求めている場合に限る（それ以外の場合は、ステップの通知を伝え、ステップの指示どおりに
+  質問を扱う。stage-protocol.md §3 Step 2）
+- ラダーのプロンプト（ウォーキングスケルトン後の自律モード）
+- Bolt 失敗時の停止と確認（Retry / Skip / Abort）
+- 成果物生成前の統合サマリーの確認
+- 修正の後に行うセクション 13 の学びに関する質問（このプロジェクト用に残すか、チーム用に残すか、残さないか）
 
-(Literal ` ```question ` fences legitimately remain in framework documentation
-like THIS file and the stage-protocol because they are authoring specs, not chat
-output.
+（` ```question ` のフェンスがそのまま残っていてよいのは、**この**ファイルや stage-protocol のような
+フレームワークのドキュメントの中である。それらはチャットの出力ではなく、記述用の仕様だからである。
 stage-protocol では、それらの仕様は規範的なプロンプトのテンプレートである: 周囲の指示が
 質問を求めるとき、その内容は**必ず**この付属文書を通じて
 表示しなければならない。この付属文書の対応付けの例は説明用である。

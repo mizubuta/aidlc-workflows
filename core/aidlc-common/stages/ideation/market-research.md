@@ -81,5 +81,5 @@ stage-protocol.md の質問フロー（Guide Me / Edit File / Chat）に従う�
 
 `directive.protocol_modules` に `learnings` が含まれている場合は、
 `stage-protocol-learnings.md` に従う。作業中は `directive.memory_path` に日誌を付け、
-承認ゲートの前に学習ステップを実施する。そのモジュールが、利用者に何かを尋ねるタイミングを定めている。
+承認ゲートの前に学びのステップを実施する。そのモジュールが、利用者に何かを尋ねるタイミングを定めている。
 モジュールがない場合は、日誌とステップの両方を省略する。

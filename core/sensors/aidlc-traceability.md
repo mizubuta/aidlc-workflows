@@ -42,9 +42,9 @@ timeout_seconds: 300
    表記どおりに綴られる（それぞれ `kind` を持ち、サブ要件は自身の要件の `of` となる）。
    その記録がない場合、表の要件は、その表に列挙されたものと、FR および NFR の
    ID パターンが requirements.md で見つけたものとなる。
-5. 可能な場合は決定論的な target を検証する: ストーリー、Unit マッピング、
+5. 可能な場合は決定論的な target を検証する: ストーリー、ユニットマッピング、
    ビジネスルール、ワークスペース相対のコードパス。種別上 `rules.md` を書かない
-   Functional Design の Unit（`ui` Unit）は、ビジネスルールの代わりに、各行で
+   Functional Design のユニット（`ui` ユニット）は、ビジネスルールの代わりに、各行で
    自身の設計ファイル（`functional-spec.md`、`frontend-components.md`）の 1 つを指定する。
 6. 自己申告の `reverse` 配列だけを信頼するのではなく、
    `rules.md` から functional-design の孤立要素（orphan）を導出する。
@@ -57,7 +57,7 @@ timeout_seconds: 300
 Build and Test のカバレッジゲートは、同じツールを `--stage build-and-test`
 付き、出力パスなしで実行する。すべての Code Generation の表を読み込み、各
 要件と受け入れ基準について構築済みかどうかを出力する。サブ要件を持つ要件は、
-各 Unit がそれぞれ自分の分を構築したときに構築済みとなり、親だけの行では
+各ユニットがそれぞれ自分の分を構築したときに構築済みとなり、親だけの行では
 サブ要件はカバーされない。それ以外の要件は、自身の行によって、または User Stories が
 実行された場合は User Stories がトレースしたストーリーの受け入れ基準を通じて構築済みとなる。
 何によっても構築されない要件は、それをトレースした最新のステージ（User Stories、

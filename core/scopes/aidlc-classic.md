@@ -18,9 +18,9 @@ collaborators: off
 `classic` は暗黙の既定スコープである - 利用者も
 `AWS_AIDLC_DEFAULT_SCOPE` もスコープを指定しないときに使われ、Inception と Construction を通じて
 v1 スタイルのセレモニーを復元する: Inception のステージごとに人間の承認が1回ある。
-Construction では Unit ごとにビルドし、人間は各 Unit のコードプランと、
-"Review each checkpoint" の下ではそのチェックポイントを承認するため、Unit の設計ステージは
-それ自体では停止せずに実行される。チーム所有の Unit は、ステージごとまたは
+Construction ではユニットごとにビルドし、人間は各ユニットのコードプランと、
+"Review each checkpoint" の下ではそのチェックポイントを承認するため、ユニットの設計ステージは
+それ自体では停止せずに実行される。チーム所有のユニットは、ステージごとまたは
 Unit の終わりの独自のゲートを保持する。Ideation はスキップされ、Operation はプレースホルダのままである。ステージで宣言された実行モードは
 変わらない。コラボレーターはオフなので、各ステージはリードエージェント
 だけで実行される（`/aidlc --collaborators on` でサポートエージェントが加わる）。
@@ -49,7 +49,7 @@ Guard Policy の既定はオフである: 変更された入力は記録され�
 AI-DLC v1 には Ideation フェーズがなかったため、`classic` は Ideation の7ステージをすべてスキップする。
 Inception のステージはすべて保持し、Construction のステージは Build and
 Test まで保持する。CI Pipeline と Operation の7ステージはすべてスキップする: 顧客は
-独自の CI と下流の仕組みを持ち込み、Build and Test がすべての Unit にまたがる唯一の統合ビルドであるためである。無条件のステージは8つだけである: Initialization の3ステージ、
+独自の CI と下流の仕組みを持ち込み、Build and Test がすべてのユニットにまたがる唯一の統合ビルドであるためである。無条件のステージは8つだけである: Initialization の3ステージ、
 Requirements Analysis、Units Generation、Delivery Planning、Code Generation、
 Build and Test。残りの Inception と Construction の作業は
 CONDITIONAL であり、プロジェクトのコンテキストから自ら選択されるため、v1 の適応的な振る舞いが保たれる。
