@@ -1,31 +1,30 @@
 # Agent Deep Dives
 
-A page per domain agent: its domain, the stages it leads and supports, the
-knowledge it loads, and how it collaborates. The full 14-agent roster comprises
-11 domain agents, 2 review-only agents, and the adaptive-workflows composer.
-This index covers the 11 domain agents that execute stage work.
+ドメインエージェントごとに 1 ページを設け、そのドメイン、リードおよびサポートするステージ、
+読み込むナレッジ、連携の仕方を説明します。14 エージェントの全体構成は、
+11 のドメインエージェント、2 つのレビュー専用エージェント、そして adaptive-workflows のコンポーザーです。
+この索引では、ステージの作業を実行する 11 のドメインエージェントを扱います。
 
-The review-only agents perform independent product and architecture checks;
-the composer proposes and reshapes adaptive stage plans. See the
-[Agents chapter](../06-agents.md) for all three role groups and the philosophy
-behind 11 broad domain agents rather than 30 narrow ones. For the frontmatter
-contract, tool allowlists, and complete comparison matrix, see the Developer
-Reference's [Agent Reference](../../reference/agents/README.md).
+レビュー専用エージェントは、プロダクトとアーキテクチャの独立したチェックを行います。
+コンポーザーは、適応型のステージ計画を提案し、組み替えます。3 つの役割グループすべてと、
+30 の狭いエージェントではなく 11 の幅広いドメインエージェントを採用した考え方については、
+[エージェントの章](../06-agents.md)を参照してください。frontmatter の契約、ツールの許可リスト、
+完全な比較マトリクスについては、開発者リファレンスの[エージェントリファレンス](../../reference/agents/README.md)を参照してください。
 
-| # | Agent | Domain |
+| # | エージェント | ドメイン |
 |---|-------|--------|
-| 1 | [aidlc-product-agent](product-agent.md) | Requirements, scope, user stories, market research |
-| 2 | [aidlc-design-agent](design-agent.md) | UX/UI, wireframes, interaction design, accessibility |
-| 3 | [aidlc-delivery-agent](delivery-agent.md) | Team formation, capacity planning, delivery sequencing |
-| 4 | [aidlc-architect-agent](architect-agent.md) | Domain design, domain modelling, NFRs, decomposition |
-| 5 | [aidlc-aws-platform-agent](aws-platform-agent.md) | AWS infrastructure, IaC, FinOps, environment provisioning |
-| 6 | [aidlc-compliance-agent](compliance-agent.md) | GRC, regulatory mapping, data classification, risk |
-| 7 | [aidlc-devsecops-agent](devsecops-agent.md) | Threat modelling, security pipeline, secure design review |
-| 8 | [aidlc-developer-agent](developer-agent.md) | Code generation, reverse engineering, implementation guidance |
-| 9 | [aidlc-quality-agent](quality-agent.md) | Test strategy, acceptance criteria, performance validation |
-| 10 | [aidlc-pipeline-deploy-agent](pipeline-deploy-agent.md) | CI/CD pipelines, deployment strategy, release execution |
-| 11 | [aidlc-operations-agent](operations-agent.md) | Observability, incident response, feedback loops |
+| 1 | [aidlc-product-agent](product-agent.md) | 要件、スコープ、ユーザーストーリー、市場調査 |
+| 2 | [aidlc-design-agent](design-agent.md) | UX/UI、ワイヤーフレーム、インタラクションデザイン、アクセシビリティ |
+| 3 | [aidlc-delivery-agent](delivery-agent.md) | チーム編成、キャパシティ計画、デリバリーの順序付け |
+| 4 | [aidlc-architect-agent](architect-agent.md) | ドメイン設計、ドメインモデリング、NFR、分解 |
+| 5 | [aidlc-aws-platform-agent](aws-platform-agent.md) | AWS インフラストラクチャ、IaC、FinOps、環境のプロビジョニング |
+| 6 | [aidlc-compliance-agent](compliance-agent.md) | GRC、規制マッピング、データ分類、リスク |
+| 7 | [aidlc-devsecops-agent](devsecops-agent.md) | 脅威モデリング、セキュリティパイプライン、セキュア設計レビュー |
+| 8 | [aidlc-developer-agent](developer-agent.md) | コード生成、リバースエンジニアリング、実装ガイダンス |
+| 9 | [aidlc-quality-agent](quality-agent.md) | テスト戦略、受け入れ基準、パフォーマンス検証 |
+| 10 | [aidlc-pipeline-deploy-agent](pipeline-deploy-agent.md) | CI/CD パイプライン、デプロイ戦略、リリースの実行 |
+| 11 | [aidlc-operations-agent](operations-agent.md) | オブザーバビリティ、インシデント対応、フィードバックループ |
 
 ---
 
-← Back to the [User Guide](../00-introduction.md) · [Agents chapter](../06-agents.md)
+← [ユーザーガイド](../00-introduction.md)に戻る · [エージェントの章](../06-agents.md)

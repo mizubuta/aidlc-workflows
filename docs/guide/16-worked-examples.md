@@ -452,7 +452,7 @@ lint、ビルド、テスト、セキュリティスキャンのステージを�
 
 ## Next Steps
 
-- [Scopes, Depth, and Test Strategy](05-scopes-and-depth.md) — スコープがどのステージを実行するかをどのように決めるか
-- [How a Stage Runs](04-phases-and-stages.md) — ステージのプロトコルの詳細
-- [Agents](06-agents.md) — エージェントのペルソナと責務
-- [Artifacts Reference](14-artifacts-reference.md) — 成果物のディレクトリツリー全体
+- [スコープ、深さ、テスト戦略](05-scopes-and-depth.md) — スコープがどのステージを実行するかをどのように決めるか
+- [ステージの実行のしくみ](04-phases-and-stages.md) — ステージのプロトコルの詳細
+- [エージェント](06-agents.md) — エージェントのペルソナと責務
+- [成果物リファレンス](14-artifacts-reference.md) — 成果物のディレクトリツリー全体

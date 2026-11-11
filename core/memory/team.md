@@ -1,9 +1,9 @@
 # Team-Level Rules
 
-> This team's affirmed practices and corrections. Loaded after `org.md` as
-> strict-additive guidance; contradictions with broader policy are rejected.
-> Populated by the practices-discovery affirmation gate. Edit at the gate,
-> not directly.
+> このチームが確定したプラクティスと修正事項。`org.md` の後に、厳密に追加のみの
+> ガイダンスとして読み込まれる。より上位のポリシーと矛盾する内容は却下される。
+> practices-discovery の確定ゲートによって記入される。直接編集せず、
+> ゲートで編集する。
 
 ## Way of Working
 

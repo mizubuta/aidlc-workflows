@@ -1,52 +1,51 @@
 # Running AI-DLC on Kiro CLI
 
-This guide moved. Kiro CLI (V2) (`aidlc config --harness kiro-v2`, started
-with `kiro-cli --v2`) is now the [Kiro CLI (V2)](kiro.md#kiro-cli-v2) section
-of Running AI-DLC on Kiro. For Kiro CLI on its v3 engine (`kiro-cli --v3`,
-`aidlc config --harness kiro`), see the
-[first part of that page](kiro.md). Each heading below links to its section
-there.
+このガイドは移動しました。Kiro CLI (V2)（`aidlc config --harness kiro-v2`、
+`kiro-cli --v2` で起動）は、現在は Running AI-DLC on Kiro の [Kiro CLI (V2)](kiro.md#kiro-cli-v2) セクションにあります。
+v3 エンジン上の Kiro CLI（`kiro-cli --v3`、
+`aidlc config --harness kiro`）については、
+[そのページの前半](kiro.md)を参照してください。以下の各見出しから、移動先の該当セクションへリンクしています。
 
 ## Prerequisites
 
-Moved to [Kiro CLI (V2) prerequisites](kiro.md#kiro-cli-v2-prerequisites).
+[Kiro CLI (V2) の前提条件](kiro.md#kiro-cli-v2-prerequisites)へ移動しました。
 
 ## Install
 
-Moved to [Kiro CLI (V2) install](kiro.md#kiro-cli-v2-install).
+[Kiro CLI (V2) のインストール](kiro.md#kiro-cli-v2-install)へ移動しました。
 
 ### Native channel (recommended)
 
-Moved to [Kiro CLI (V2) native channel (recommended)](kiro.md#kiro-cli-v2-native-channel-recommended).
+[Kiro CLI (V2) のネイティブチャネル（推奨）](kiro.md#kiro-cli-v2-native-channel-recommended)へ移動しました。
 
 ### Versioned manual-copy alternative
 
-Moved to [Kiro CLI (V2) versioned manual-copy alternative](kiro.md#kiro-cli-v2-versioned-manual-copy-alternative).
+[Kiro CLI (V2) のバージョン固定の手動コピーによる代替手段](kiro.md#kiro-cli-v2-versioned-manual-copy-alternative)へ移動しました。
 
 ### Session model and effort
 
-Moved to [Kiro CLI (V2) session model and effort](kiro.md#kiro-cli-v2-session-model-and-effort).
+[Kiro CLI (V2) のセッションのモデルと effort](kiro.md#kiro-cli-v2-session-model-and-effort)へ移動しました。
 
 ## Refresh and version skew
 
-Moved to [Kiro CLI (V2) refresh and version skew](kiro.md#kiro-cli-v2-refresh-and-version-skew).
+[Kiro CLI (V2) の更新とバージョンのずれ](kiro.md#kiro-cli-v2-refresh-and-version-skew)へ移動しました。
 
 ## Usage
 
-Moved to [Kiro CLI (V2) usage](kiro.md#kiro-cli-v2-usage).
+[Kiro CLI (V2) の使い方](kiro.md#kiro-cli-v2-usage)へ移動しました。
 
 ### When the chat fills up
 
-Moved to [When a Kiro CLI (V2) chat fills up](kiro.md#when-a-kiro-cli-v2-chat-fills-up).
+[Kiro CLI (V2) のチャットがいっぱいになったとき](kiro.md#when-a-kiro-cli-v2-chat-fills-up)へ移動しました。
 
 ## What's different on Kiro
 
-Moved to [What's different on Kiro CLI (V2)](kiro.md#whats-different-on-kiro-cli-v2).
+[Kiro CLI (V2) での違い](kiro.md#whats-different-on-kiro-cli-v2)へ移動しました。
 
 ## For framework developers
 
-Moved to [Kiro CLI (V2) for framework developers](kiro.md#kiro-cli-v2-for-framework-developers).
+[フレームワーク開発者向けの Kiro CLI (V2) 情報](kiro.md#kiro-cli-v2-for-framework-developers)へ移動しました。
 
 ## Next steps
 
-Moved to [Next steps](kiro.md#next-steps).
+[次のステップ](kiro.md#next-steps)へ移動しました。

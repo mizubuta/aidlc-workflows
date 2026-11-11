@@ -1,6 +1,6 @@
 # Knowledge
 
-AI-DLC uses a two-tier knowledge system that lets agents draw on both methodology expertise (shipped with the framework) and your team's specific standards (managed by you).
+AI-DLC は 2 層のナレッジシステムを使います。これにより、エージェントはメソドロジーの専門知識（フレームワークに同梱）と、チーム固有の標準（利用者が管理）の両方を活用できます。
 
 ---
 
@@ -44,9 +44,9 @@ flowchart TD
 
 ### Tier 1: Methodology Knowledge
 
-**Location:** `.claude/knowledge/`
+**場所:** `.claude/knowledge/`
 
-Ships with the framework. Contains shared principles and per-agent methodology references that define how AI-DLC stages execute. Updated when you upgrade the framework.
+フレームワークに同梱されています。AI-DLC のステージの実行方法を定める共有の原則と、エージェントごとのメソドロジーの参照資料が含まれます。フレームワークをアップグレードすると更新されます。
 
 ```
 .claude/knowledge/
@@ -66,15 +66,15 @@ Ships with the framework. Contains shared principles and per-agent methodology r
 `-- ...                              # One directory per agent
 ```
 
-The format references in `aidlc-shared/` (the audit taxonomy and the state, memory, worktree and README templates) are left out of what an agent loads, inline or dispatched on its own (a reviewer, or a stage that runs as a subagent): the step that needs one names it, and the agent reads it then.
+`aidlc-shared/` にある形式の参照資料（監査の分類と、状態・メモリ・ワークツリー・README の各テンプレート）は、エージェントが読み込む対象から外されています。これはインラインの場合も、単独でディスパッチされる場合（レビュアー、またはサブエージェントとして実行されるステージ）も同じです。それらが必要なステップがその資料を名指しし、エージェントはその時点で読み込みます。
 
-> **Do NOT edit Tier 1 files to inject your team's knowledge.** `.claude/knowledge/` and `.claude/agents/*.md` are framework files — they are overwritten on every upgrade, and your changes will disappear. If you want to add company standards, architectural preferences, or domain context, add them to **Tier 2** (below). If you want to constrain agent behavior, add a **rule** (see [Rules and the Learning Loop](09-rules-and-the-learning-loop.md)).
+> **チームのナレッジを注入するために Tier 1 のファイルを編集しないでください。** `.claude/knowledge/` と `.claude/agents/*.md` はフレームワークのファイルです。アップグレードのたびに上書きされ、加えた変更は消えてしまいます。社内標準、アーキテクチャ上の方針、ドメインのコンテキストを追加したい場合は、**Tier 2**（後述）に追加してください。エージェントの振る舞いを制約したい場合は、**ルール**を追加してください（[ルールと学習ループ](09-rules-and-the-learning-loop.md) を参照）。
 
 ### Tier 2: Team Knowledge
 
-**Location:** the active space — `aidlc/knowledge/` (shorthand for `aidlc/spaces/<space>/knowledge/`)
+**場所:** アクティブなスペース — `aidlc/knowledge/`（`aidlc/spaces/<space>/knowledge/` の略記）
 
-User-managed. Contains your company-specific standards, policies, and conventions. It belongs to one space; [what carries over](03-spaces-and-intents.md#what-carries-over-and-what-doesnt) between spaces and projects is listed in Spaces and Intents. It is a sibling of the space's `memory/`, `codekb/`, and `intents/` — so team knowledge accumulates across every intent in the space, not inside any one intent's record. It is **free-form and empty at bootstrap**: the engine just creates the empty `aidlc/knowledge/` directory on your first `/aidlc`. There is no fixed file set and no mandated structure. The convention below — an `aidlc-shared/` directory plus one per agent — is what the agent personas look for, so create the subdirectories you want as you go:
+利用者が管理します。社内固有の標準、ポリシー、規約を格納します。1 つのスペースに属します。スペースやプロジェクトの間で [何が引き継がれるか](03-spaces-and-intents.md#what-carries-over-and-what-doesnt) は「スペースとインテント」に記載しています。これはスペースの `memory/`、`codekb/`、`intents/` と同じ階層にあります。そのため、チームのナレッジは個々のインテントの記録の中ではなく、スペース内のすべてのインテントにまたがって蓄積されます。ブートストラップ時点では**自由形式で空です**。エンジンは最初の `/aidlc` で空の `aidlc/knowledge/` ディレクトリを作成するだけです。決まったファイル構成も、必須の構造もありません。以下の規約（`aidlc-shared/` ディレクトリとエージェントごとのディレクトリ）は、エージェントのペルソナが探す場所です。必要に応じてサブディレクトリを作成してください。
 
 ```
 aidlc/knowledge/                  # empty at bootstrap; create the subdirs you need
@@ -94,25 +94,26 @@ aidlc/knowledge/                  # empty at bootstrap; create the subdirs you n
 
 ## Document Knowledge (DocumentKB)
 
-Team knowledge files are curated reference material. DocumentKB is the companion
-catalog for documents the team already owns: vision documents, PRDs,
-requirements briefs, policies, contracts, PDFs, Word and Excel files, Markdown,
-CSV, and plain text. AI-DLC reads Word and Excel files itself (a workbook's every
-sheet, as a table), and a PDF with `pdftotext` where it is installed, or with
-its own reader where it is not (see Reading PDFs below). See
-[Starting from an existing document](02-your-first-workflow.md#starting-from-an-existing-document)
-for ways to use one as workflow input.
+チームのナレッジファイルは、整理・厳選された参照資料です。DocumentKB は、チームがすでに持っている
+ドキュメントのための対となるカタログです。対象は、ビジョンドキュメント、PRD、
+要件の概要書、ポリシー、契約書、PDF、Word や Excel のファイル、Markdown、
+CSV、プレーンテキストです。AI-DLC は Word と Excel のファイルを自ら読み込みます（ワークブックは
+すべてのシートを表として読みます）。PDF は、`pdftotext` がインストールされていればそれで、
+インストールされていなければ独自のリーダーで読み込みます（後述の「PDF の読み込み」を参照）。
+ドキュメントをワークフローの入力として使う方法は
+[既存のドキュメントから始める](02-your-first-workflow.md#starting-from-an-existing-document)
+を参照してください。
 
-The ownership split is deliberate:
+所有の分担は意図的なものです:
 
-| Directory | Owner | Purpose |
+| ディレクトリ | 所有者 | 目的 |
 |---|---|---|
-| `aidlc/spaces/<space>/knowledge/documents/` | Your team | Original documents, organised and deleted by you |
-| `aidlc/spaces/<space>/knowledge/documentkb/` | AI-DLC | Derived index, metadata, and extracted text |
+| `aidlc/spaces/<space>/knowledge/documents/` | あなたのチーム | 元のドキュメント。整理も削除も利用者が行います |
+| `aidlc/spaces/<space>/knowledge/documentkb/` | AI-DLC | 派生したインデックス、メタデータ、抽出したテキスト |
 
-Use `/aidlc knowledge onboard [path]` to add one document or sweep the folder.
-For example, `/aidlc knowledge onboard docs/inventory-vision.md` in a Claude
-Code chat ends with this line from AI-DLC, which the agent passes on:
+ドキュメントを 1 つ追加したり、フォルダー全体を取り込んだりするには `/aidlc knowledge onboard [path]` を使います。
+たとえば Claude Code のチャットで `/aidlc knowledge onboard docs/inventory-vision.md` を実行すると、
+最後に AI-DLC から次の行が出力され、エージェントがそれを伝えます:
 
 ```text
 Copied inventory-vision.md into AI-DLC's documents as
@@ -120,82 +121,82 @@ aidlc/spaces/default/knowledge/documents/inventory-vision.md and added it. The
 knowledge base reads that copy from now on, not your own inventory-vision.md.
 ```
 
-You can name a file or folder anywhere in your project: one that is not already
-under `documents/` is copied in for you, keeping its name and a folder's layout,
-and the result says where the copy is. From then on the knowledge base reads
-that copy, so edit it under `documents/` and run `sync` to pick changes up.
-Inside a folder you name, files git ignores are left where they are and the
-line says how many (name one of them directly and it is added, since you asked
-for it by name). A folder that git ignores as a whole is copied whole when you
-name it, and the line says the copy is not ignored, so it is committed unless
-you keep it out of git there too. A folder holding more documents than the batch cap, or a
-document over the per-document cap, is refused before anything is copied, so
-nothing is left behind to duplicate. A path outside the project is refused, and
-the folder is created if it is missing, so a sweep of an empty space adds
-nothing and says nothing is there.
-Use `sync` after files are added, edited, moved, or deleted; `list` shows every
-catalog row and state, and `show <id>` returns one citable record plus current
-extracted text when available. The `/aidlc-knowledge` skill guides the same
-workflow.
+プロジェクト内のどこにあるファイルやフォルダーでも指定できます。まだ
+`documents/` 配下にないものは、名前とフォルダーの構成を保ったままコピーされ、
+結果にコピー先が示されます。それ以降、ナレッジベースはそのコピーを読むので、
+`documents/` 配下のコピーを編集し、`sync` を実行して変更を取り込んでください。
+指定したフォルダー内で git が無視しているファイルはその場に残され、
+その数が出力行に示されます（そのうちの 1 つを直接指定すれば、名前で指定したものとして
+追加されます）。git がフォルダー全体を無視している場合、そのフォルダーを指定すると
+丸ごとコピーされ、コピーは無視対象ではないと出力行に示されます。そのため、コピー先でも
+git から除外しない限りコミットされます。バッチの上限を超えるドキュメントを含むフォルダーや、
+ドキュメントごとの上限を超えるドキュメントは、何もコピーされる前に拒否されるため、
+重複の原因となるものは何も残りません。プロジェクト外のパスは拒否されます。
+フォルダーが存在しない場合は作成されるため、空のスペースを取り込んでも何も追加されず、
+何もないことが示されます。
+ファイルを追加・編集・移動・削除した後は `sync` を使います。`list` はカタログのすべての
+行とその状態を表示し、`show <id>` は引用可能な 1 件のレコードと、利用可能な場合は現在の
+抽出テキストを返します。`/aidlc-knowledge` スキルでも同じ
+ワークフローを案内します。
 
-Inception's stages read these documents. The reading list of each Inception
-stage worked in your chat carries the documents in the knowledge base that have
-text (this piece of work's first, then the ones for the whole space), with each
-one's summary or the opening of its text. Before asking a question, the agent checks it against them: the
-questions your documents already answer come together in one first question,
-each with its answer and the document it came from, for you to confirm or
-change; what no document says, or what two documents disagree on, is still
-asked. A document you name when you start the work is filed for that work;
-`knowledge dissociate <id> --intent` makes it the whole space's again.
+Inception のステージはこれらのドキュメントを読み込みます。チャット内で作業される各 Inception
+ステージの読み込みリストには、ナレッジベース内のテキストを持つドキュメントが含まれます
+（まずこの作業のためのもの、次にスペース全体のもの）。それぞれに要約、またはテキストの
+冒頭が付きます。エージェントは質問する前に、その質問をこれらのドキュメントと照らし合わせます。
+ドキュメントがすでに答えている質問は最初の 1 つの質問にまとめられ、
+それぞれの回答とその出典ドキュメントが示されるので、利用者が確認または
+変更します。どのドキュメントにも書かれていないことや、2 つのドキュメントで食い違っていることは、
+引き続き質問されます。作業の開始時に指定したドキュメントは、その作業に紐付けて登録されます。
+`knowledge dissociate <id> --intent` を使うと、スペース全体のものに戻せます。
 
-A file in `documents/` that is not in the knowledge base yet, or is in it with
-no text it can read (a type it has no reader for, such as an old `.xls` or a slide
-deck, or a scanned page), is named by AI-DLC in one line when work starts
-or goes on, with what to do for each kind: add it with `sync`, or save a text
-copy (`.md`, `.txt` or `.csv`) beside it with the same name, then `sync`. Each
-file is named once in a piece of work, and the work goes on: carrying on
-without it is your call. `aidlc doctor` lists the same files each time you run
-it, as a warning.
+`documents/` 内のファイルのうち、まだナレッジベースにないもの、またはナレッジベースにあっても
+読み取れるテキストがないもの（古い `.xls` やスライドデッキのようにリーダーのない形式、
+スキャンしたページなど）は、作業の開始時や継続時に AI-DLC が 1 行で名前を挙げ、
+種類ごとの対処方法を示します。対処方法は、`sync` で追加するか、同じ名前のテキストの
+コピー（`.md`、`.txt`、`.csv`）を隣に保存してから `sync` を実行するかです。各
+ファイルの名前が挙がるのは 1 つの作業につき 1 回だけで、作業は続行されます。そのファイルなしで
+続けるかどうかは利用者の判断です。`aidlc doctor` は、実行するたびに同じファイルを
+警告として一覧表示します。
 
-A document can also carry a short **summary and tags**, so an agent can cite its
-gist without re-reading the whole file. The agent writes the summary itself and
-persists it with `summarize <id>`, bound to the revision it describes. After the
-original is edited, run `sync`; the summary then reports `invalidated` and is
-withheld rather than served stale — the same revision-binding rule the extracted
-text follows. Tags survive that invalidation; passing `--tags` replaces the set,
-omitting it leaves the existing tags alone. Because tags may be LLM-authored
-from customer content, `list` and `show` frame them as untrusted labels, never
-instructions.
+ドキュメントには短い**要約とタグ**を付けることもできます。これにより、エージェントはファイル全体を
+読み直さずに要旨を引用できます。要約はエージェント自身が書き、
+`summarize <id>` で、その要約が説明するリビジョンに紐付けて保存します。元の
+ドキュメントを編集した後に `sync` を実行すると、要約は `invalidated` と報告され、
+古い内容のまま提供されることはなく、保留されます。これは抽出テキストに適用される
+リビジョン紐付けのルールと同じです。タグはこの無効化の後も残ります。`--tags` を渡すとタグの集合が置き換わり、
+省略すると既存のタグはそのまま残ります。タグは顧客のコンテンツから LLM が作成する場合が
+あるため、`list` と `show` はタグを信頼できないラベルとして扱い、決して
+指示としては扱いません。
 
-**Reading PDFs.** A PDF is read by `pdftotext` (Poppler) where it is installed.
-Where it is not, as on Windows and macOS out of the box, AI-DLC reads the PDF
-itself with nothing to install (`show --json` names that reader
-`builtin-pdf`); install pdftotext later and the next `sync` reads those PDFs again
-with it. AI-DLC's own reader has known limits where pdftotext does better:
-words in Thai, Hindi and other scripts whose letters combine can come out with
-spaces inside them, and a PDF encrypted with AES-256, or an older one whose text
-is compressed the LZW or RunLength way, is not opened (`extraction_failed`, with
-the reason). Neither reader gets text from a scanned PDF (there is no
-OCR) or from one that needs a password to open.
+**PDF の読み込み。** PDF は、インストールされていれば `pdftotext`（Poppler）で読み込まれます。
+インストールされていない場合（Windows や macOS の初期状態など）は、AI-DLC が
+何もインストールせずに自ら PDF を読み込みます（`show --json` はそのリーダーを
+`builtin-pdf` と表示します）。後から pdftotext をインストールすると、次の `sync` でそれらの PDF が
+pdftotext で読み直されます。AI-DLC 独自のリーダーには、pdftotext のほうが優れている既知の制約があります。
+タイ語、ヒンディー語など、文字が結合する文字体系の単語は、途中に
+スペースが入ることがあります。また、AES-256 で暗号化された PDF や、テキストが
+LZW 方式または RunLength 方式で圧縮された古い PDF は開けません（`extraction_failed` と
+その理由が示されます）。どちらのリーダーも、スキャンした PDF（
+OCR はありません）や、開くのにパスワードが必要な PDF からはテキストを取得できません。
 
-Recovery is intentionally limited. If only `documentkb/index.json` is lost,
-`sync` rebuilds it from the surviving per-document `metadata.json` records,
-including tombstones. Deleting the whole `documentkb/` tree also deletes those
-records, so document IDs, tombstones, and intent associations do not survive;
-surviving originals are indexed as new documents.
+復旧は意図的に限定されています。`documentkb/index.json` だけが失われた場合は、
+`sync` が、残っているドキュメントごとの `metadata.json` レコード（
+tombstone を含む）から再構築します。`documentkb/` ツリー全体を削除すると、それらの
+レコードも削除されるため、ドキュメント ID、tombstone、インテントとの紐付けは失われます。
+残っている元のドキュメントは、新しいドキュメントとしてインデックスされます。
 
-See [CLI Commands](12-cli-commands.md) for every verb and flag, and
-[Skills and Runner Commands](17-skills.md) for the skill surface.
+すべての動詞とフラグについては [CLI コマンド](12-cli-commands.md) を、
+スキルについては [スキルとランナーコマンド](17-skills.md) を参照してください。
 
 ---
 
 ## Adding Company Standards
 
-Place your company-specific files in the appropriate `aidlc/knowledge/` directory. They are loaded automatically when the agent is activated — no configuration changes needed.
+社内固有のファイルを、適切な `aidlc/knowledge/` ディレクトリに配置してください。エージェントが有効になると自動的に読み込まれます。設定の変更は不要です。
 
 ### Team-wide standards (loaded by all agents)
 
-Add to `aidlc/knowledge/aidlc-shared/`:
+`aidlc/knowledge/aidlc-shared/` に追加します:
 
 ```
 aidlc/knowledge/aidlc-shared/company-coding-standards.md
@@ -205,46 +206,46 @@ aidlc/knowledge/aidlc-shared/naming-conventions.md
 
 ### Agent-specific standards (loaded only when that agent is active)
 
-Add to `aidlc/knowledge/<agent-name>/`:
+`aidlc/knowledge/<agent-name>/` に追加します:
 
-| Directory | Example Files |
+| ディレクトリ | ファイルの例 |
 |-----------|--------------|
-| `knowledge/aidlc-architect-agent/` | Architecture patterns, ADR templates, design principles |
-| `knowledge/aidlc-developer-agent/` | Coding conventions, framework guides, API patterns |
-| `knowledge/aidlc-devsecops-agent/` | Security policies, threat model templates, scanning rules |
-| `knowledge/aidlc-quality-agent/` | Testing standards, coverage thresholds, performance criteria |
-| `knowledge/aidlc-aws-platform-agent/` | AWS account structure, CDK conventions, tagging policies |
-| `knowledge/aidlc-compliance-agent/` | Regulatory requirements, data classification, audit standards |
-| `knowledge/aidlc-operations-agent/` | SLO definitions, incident procedures, monitoring standards |
-| `knowledge/aidlc-product-agent/` | Product strategy, persona definitions, prioritization frameworks |
-| `knowledge/aidlc-design-agent/` | Design system, accessibility standards, UX guidelines |
-| `knowledge/aidlc-delivery-agent/` | Sprint templates, capacity models, estimation guidelines |
-| `knowledge/aidlc-pipeline-deploy-agent/` | CI/CD patterns, deployment checklists, rollback procedures |
+| `knowledge/aidlc-architect-agent/` | アーキテクチャパターン、ADR テンプレート、設計原則 |
+| `knowledge/aidlc-developer-agent/` | コーディング規約、フレームワークのガイド、API パターン |
+| `knowledge/aidlc-devsecops-agent/` | セキュリティポリシー、脅威モデルのテンプレート、スキャンのルール |
+| `knowledge/aidlc-quality-agent/` | テスト標準、カバレッジのしきい値、パフォーマンス基準 |
+| `knowledge/aidlc-aws-platform-agent/` | AWS アカウント構成、CDK の規約、タグ付けポリシー |
+| `knowledge/aidlc-compliance-agent/` | 規制要件、データ分類、監査基準 |
+| `knowledge/aidlc-operations-agent/` | SLO の定義、インシデント対応手順、監視の標準 |
+| `knowledge/aidlc-product-agent/` | プロダクト戦略、ペルソナの定義、優先順位付けのフレームワーク |
+| `knowledge/aidlc-design-agent/` | デザインシステム、アクセシビリティ標準、UX ガイドライン |
+| `knowledge/aidlc-delivery-agent/` | スプリントのテンプレート、キャパシティモデル、見積もりのガイドライン |
+| `knowledge/aidlc-pipeline-deploy-agent/` | CI/CD パターン、デプロイのチェックリスト、ロールバック手順 |
 
 ### Where the directories come from
 
-The team creates them. On your first `/aidlc` the engine creates the empty space-level `aidlc/knowledge/` directory — and nothing inside it. There is no scaffold command, no seeded per-agent subdirectories, and no guidance READMEs. The `aidlc-shared/` and per-agent subdirectories are a convention the agent personas look for; create the ones you have content for. Match the agent slug exactly (`aidlc-architect-agent/`, not `architect/`) — a typo'd directory name is silently ignored.
+ディレクトリはチームが作成します。最初の `/aidlc` で、エンジンはスペースレベルの空の `aidlc/knowledge/` ディレクトリを作成しますが、その中には何も作りません。スキャフォールドのコマンドも、あらかじめ用意されたエージェントごとのサブディレクトリも、ガイダンスの README もありません。`aidlc-shared/` とエージェントごとのサブディレクトリは、エージェントのペルソナが探す場所の規約です。内容があるものだけ作成してください。エージェントの slug と正確に一致させてください（`architect/` ではなく `aidlc-architect-agent/`）。ディレクトリ名に誤字があると、何も通知されずに無視されます。
 
 ---
 
 ## Worked Example: Adding Your First Knowledge File
 
-Say your team uses Amazon API Gateway with a specific pattern — authorizer Lambdas in front of every route, a request-validation JSON schema, and a standard response envelope. You want the aidlc-architect-agent to default to that pattern whenever it designs a new API.
+たとえば、チームで Amazon API Gateway を特定のパターンで使っているとします。すべてのルートの前に Lambda オーソライザーを置き、リクエスト検証用の JSON スキーマと標準のレスポンスエンベロープを使うパターンです。aidlc-architect-agent が新しい API を設計するときは、常にこのパターンを既定にしてほしいとします。
 
-**Step 1 - Create the knowledge directory you need.** On your first `/aidlc` the engine creates an empty `aidlc/spaces/default/knowledge/` directory (in a project on the default space). There is no per-agent scaffold and no seeded READMEs, so create the agent subdirectory yourself - here, `aidlc/spaces/default/knowledge/aidlc-architect-agent/`. Match the agent slug exactly.
+**ステップ 1 - 必要なナレッジディレクトリを作成します。** 最初の `/aidlc` で、エンジンは空の `aidlc/spaces/default/knowledge/` ディレクトリを作成します（デフォルトのスペースを使うプロジェクトの場合）。エージェントごとのスキャフォールドも、あらかじめ用意された README もないので、エージェントのサブディレクトリは自分で作成します。ここでは `aidlc/spaces/default/knowledge/aidlc-architect-agent/` です。エージェントの slug と正確に一致させてください。
 
-**Step 2 — Create a focused knowledge file in the right agent directory:**
+**ステップ 2 — 適切なエージェントのディレクトリに、トピックを絞ったナレッジファイルを作成します:**
 
 ```
 aidlc/spaces/default/knowledge/aidlc-architect-agent/api-gateway-standards.md
 ```
 
-Filename rules:
-- Lowercase, hyphen-separated, descriptive
-- One topic per file — `api-gateway-standards.md`, not `architecture.md`
-- Any `.md` file in the directory is loaded — no naming convention is required, but descriptive names help during weekly reviews
+ファイル名のルール:
+- 小文字、ハイフン区切りで、内容がわかる名前にする
+- 1 ファイルに 1 トピック — `architecture.md` ではなく `api-gateway-standards.md`
+- ディレクトリ内の `.md` ファイルはすべて読み込まれます。命名規則は必須ではありませんが、内容がわかる名前は週次レビューの際に役立ちます
 
-**Step 3 — Write the content as concise reference material.** Agents load the file literally, so keep it tight:
+**ステップ 3 — 内容を簡潔な参照資料として書きます。** エージェントはファイルをそのまま読み込むので、簡潔にまとめてください:
 
 ```markdown
 # API Gateway Standards
@@ -268,30 +269,30 @@ Error responses follow:
   { "error": { "code": "<short-code>", "message": "<human-readable>" }, "requestId": "<uuid>" }
 ```
 
-**Step 4 — Run a workflow.** On the next `/aidlc` invocation, the aidlc-architect-agent loads this file automatically at stage start (step 5 in the loading order below). No configuration, no CLI flags, no registration — the file's presence is the registration.
+**ステップ 4 — ワークフローを実行します。** 次に `/aidlc` を呼び出すと、aidlc-architect-agent はステージの開始時にこのファイルを自動的に読み込みます（後述の読み込み順序のステップ 5）。設定も、CLI フラグも、登録も不要です。ファイルが存在すること自体が登録になります。
 
-**Common mistakes to avoid:**
+**避けるべきよくある間違い:**
 
-| Wrong | Right |
+| 誤り | 正しい方法 |
 |-------|-------|
-| Editing `.claude/agents/aidlc-architect-agent.md` | Add a file under `aidlc/knowledge/aidlc-architect-agent/` |
-| Editing `.claude/knowledge/aidlc-architect-agent/architecture-guide.md` | Add a file under `aidlc/knowledge/aidlc-architect-agent/` |
-| Putting everything in `knowledge/aidlc-shared/` | Use agent-specific directories unless the standard truly applies to all 14 agents |
-| One large `company-standards.md` covering API, auth, data, and logging | Split into `api-gateway-standards.md`, `auth-standards.md`, etc. |
+| `.claude/agents/aidlc-architect-agent.md` を編集する | `aidlc/knowledge/aidlc-architect-agent/` 配下にファイルを追加する |
+| `.claude/knowledge/aidlc-architect-agent/architecture-guide.md` を編集する | `aidlc/knowledge/aidlc-architect-agent/` 配下にファイルを追加する |
+| すべてを `knowledge/aidlc-shared/` に入れる | 標準が 14 のエージェントすべてに本当に当てはまる場合を除き、エージェント別のディレクトリを使う |
+| API、認証、データ、ログをまとめて扱う大きな `company-standards.md` を 1 つ作る | `api-gateway-standards.md`、`auth-standards.md` などに分割する |
 
 ---
 
 ## Verifying Knowledge Is Loaded
 
-Before a team rolls knowledge out, confirm the agent is actually seeing the file.
+チームにナレッジを展開する前に、エージェントが実際にそのファイルを参照していることを確認してください。
 
-**Option 1 — Ask the agent at an approval gate.** At any gate during a workflow, reply with:
+**方法 1 — 承認ゲートでエージェントに尋ねます。** ワークフロー中の任意のゲートで、次のように返信します:
 
 ```
 What team knowledge are you using for this stage?
 ```
 
-The agent lists the Tier 2 files it loaded. In a Claude Code run at the Intent Capture gate, with one file under `aidlc/spaces/default/knowledge/aidlc-product-agent/`, the answer began (shortened):
+エージェントは、読み込んだ Tier 2 のファイルを一覧表示します。Claude Code で実行し、Intent Capture のゲートで `aidlc/spaces/default/knowledge/aidlc-product-agent/` 配下にファイルが 1 つある場合、回答は次のように始まりました（抜粋）:
 
 ```text
 For this stage I used one team knowledge file:
@@ -301,41 +302,41 @@ aidlc/spaces/default/knowledge/aidlc-product-agent/inventory-terms.md. It has tw
 I followed the first one throughout the documents.
 ```
 
-The approval question stays open while you ask. If your file is missing, check the filename extension is `.md` and the directory matches the agent name exactly (e.g. `aidlc-architect-agent/`, not `architect/`).
+質問している間も、承認の質問は開いたままです。ファイルが見当たらない場合は、ファイルの拡張子が `.md` であること、ディレクトリ名がエージェント名と正確に一致していること（例: `architect/` ではなく `aidlc-architect-agent/`）を確認してください。
 
-**Option 2 — Check the audit trail for the agent.** Every stage start emits a `STAGE_STARTED` audit event recording the stage and its lead agent. After running a stage, inspect:
+**方法 2 — 監査証跡でエージェントを確認します。** ステージが開始されるたびに、ステージとそのリードエージェントを記録する `STAGE_STARTED` 監査イベントが出力されます。ステージを実行した後、次を確認します:
 
 ```
 <record>/audit/        # per-clone shards; glob and merge by timestamp
 ```
 
-Find the most recent `STAGE_STARTED` entry for your stage and confirm the **Agent** field is the one whose knowledge directory holds your file — that tells you the right persona activated and its `aidlc/knowledge/<agent>-agent/` directory was in scope. The audit trail records which agent ran, not the individual files it read; use Option 1 to confirm a specific file was loaded.
+対象のステージについて最新の `STAGE_STARTED` エントリを探し、**Agent** フィールドが、ファイルを置いたナレッジディレクトリのエージェントであることを確認します。これにより、正しいペルソナが有効になり、その `aidlc/knowledge/<agent>-agent/` ディレクトリが対象範囲に入っていたことがわかります。監査証跡に記録されるのは実行されたエージェントであり、読み込んだ個々のファイルではありません。特定のファイルが読み込まれたことを確認するには、方法 1 を使ってください。
 
-**Option 3 — Run a fast workflow to smoke-test.** For a lightweight end-to-end check, use a small scope that exercises the target agent:
+**方法 3 — 短いワークフローを実行してスモークテストします。** 軽量なエンドツーエンドの確認には、対象のエージェントが動く小さなスコープを使います:
 
 ```
 /aidlc-mvp Prototype a new inventory API
 ```
 
-The aidlc-architect-agent leads Feasibility, the second stage of the mvp plan, and Domain Design later in it; any Tier 2 file it loaded will influence its output visibly (in our example, its design should reference API Gateway with a Lambda authorizer). A plan without a stage the agent leads never loads its folder: `poc`, for example, runs no architect stage.
+aidlc-architect-agent は、mvp の計画の 2 番目のステージである Feasibility と、その後の Domain Design を主導します。読み込まれた Tier 2 のファイルは、その出力に目に見える形で影響します（この例では、設計で Lambda オーソライザー付きの API Gateway に言及されるはずです）。そのエージェントが主導するステージを含まない計画では、そのフォルダーは読み込まれません。たとえば `poc` には architect のステージがありません。
 
 ---
 
 ## Managing Knowledge Over Time
 
-Knowledge files are not fire-and-forget. As standards evolve, the vault of team knowledge needs pruning and refactoring just like code.
+ナレッジファイルは作って終わりではありません。標準が変わっていくにつれ、チームのナレッジの蓄積もコードと同じように整理やリファクタリングが必要になります。
 
 ### Updating an existing file
 
-Edit the file in place. Knowledge reloads at every stage start, so the next `/aidlc` invocation picks up the change. No restart, no cache, no registration.
+ファイルをその場で編集します。ナレッジはステージの開始のたびに再読み込みされるため、次の `/aidlc` の呼び出しで変更が反映されます。再起動も、キャッシュも、登録も不要です。
 
 ### Removing outdated knowledge
 
-Delete the file. There is no registry to update and no configuration to clean up. If the agent was relying on a now-removed standard, subsequent runs will simply stop applying it.
+ファイルを削除します。更新すべきレジストリも、整理すべき設定もありません。削除した標準にエージェントが依存していた場合、以降の実行ではその標準が適用されなくなるだけです。
 
 ### Splitting a file that has grown too large
 
-If a single file now covers multiple topics (a common drift), split it:
+1 つのファイルが複数のトピックを扱うようになった場合（よくある肥大化です）、分割します:
 
 ```
 api-standards.md          →   api-gateway-standards.md
@@ -343,49 +344,49 @@ api-standards.md          →   api-gateway-standards.md
                               api-error-handling-standards.md
 ```
 
-Smaller focused files are easier to update, easier to review, and less likely to contain contradictions.
+トピックを絞った小さなファイルのほうが、更新しやすく、レビューしやすく、矛盾も含みにくくなります。
 
 ### Promoting agent-specific to shared
 
-If a standard originally written for one agent turns out to apply across the team, move it up:
+もともと 1 つのエージェント向けに書いた標準がチーム全体に当てはまるとわかった場合は、上の階層に移します:
 
 ```
 aidlc/knowledge/aidlc-architect-agent/naming-conventions.md
   →  aidlc/knowledge/aidlc-shared/naming-conventions.md
 ```
 
-The `aidlc-shared/` directory is loaded by every agent (step 4 in the loading order).
+`aidlc-shared/` ディレクトリはすべてのエージェントが読み込みます（読み込み順序のステップ 4）。
 
 ### Review cadence
 
-Schedule a quarterly prune — every active project accumulates stale knowledge. Outdated or contradictory files actively confuse agents because they are loaded literally with equal weight. A short weekly or sprint review during retro is often enough: open each file, confirm it still reflects reality, delete or update what does not.
+四半期ごとの整理を予定に組み込んでください。進行中のプロジェクトにはどれも古いナレッジがたまっていきます。古いファイルや矛盾するファイルは、そのまま同じ重みで読み込まれるため、エージェントを積極的に混乱させます。振り返りの際に週次やスプリントごとに短くレビューするだけで十分なことも多くあります。各ファイルを開き、現状を反映しているか確認し、そうでないものは削除または更新してください。
 
 ---
 
 ## Knowledge vs Rules: Which to Use
 
-Both knowledge files and rules customize agent behavior, but they are not interchangeable. Use this table to decide:
+ナレッジファイルとルールはどちらもエージェントの振る舞いをカスタマイズしますが、互いに置き換えられるものではありません。次の表を使って判断してください:
 
-| Use knowledge when... | Use a rule when... |
+| ナレッジを使う場合... | ルールを使う場合... |
 |-----------------------|--------------------|
-| You are providing **reference material** the agent should consult | You are stating a **behavioral rule** the agent must follow |
-| "These are the patterns we use" | "Never do X" / "Always do Y" |
-| Content is informative and contextual | Content is prescriptive and non-negotiable |
-| Applies to a specific domain or agent | Applies across stages and agents |
-| Can be long-form prose, diagrams, or tables | Should be short, imperative, one line each |
-| Example: API Gateway standards, coding conventions, domain glossary | Example: "Never log PII", "All data access must go through the repository layer", "Reject any design that uses DynamoDB with scan operations" |
+| エージェントが参照すべき**参照資料**を提供する | エージェントが従わなければならない**振る舞いのルール**を定める |
+| 「私たちはこのパターンを使っています」 | 「X は決してしない」/「常に Y をする」 |
+| 内容が情報提供的で、文脈に依存する | 内容が規範的で、交渉の余地がない |
+| 特定のドメインやエージェントに適用される | ステージやエージェントをまたいで適用される |
+| 長文の散文、図、表でもよい | 短く命令形で、1 項目 1 行にする |
+| 例: API Gateway の標準、コーディング規約、ドメインの用語集 | 例: 「PII を決してログに出力しない」「すべてのデータアクセスはリポジトリ層を経由しなければならない」「DynamoDB で scan 操作を使う設計はすべて却下する」 |
 
-A useful rule of thumb: **if a human reviewer would reject a stage's output when the rule is violated, it belongs in the space memory layer (`aidlc/spaces/<active-space>/memory/`).** If they would use the rule as background context when reviewing, it is knowledge.
+便利な目安: **ルールに違反したときに人間のレビュアーがステージの出力を却下するなら、それはスペースのメモリ層（`aidlc/spaces/<active-space>/memory/`）に置くべきものです。** レビュー時の背景情報として使うものであれば、それはナレッジです。
 
-Rules and knowledge sit on different planes, and that is why their loading behaves differently. Knowledge files are reference material that agents weigh during a stage. Rules resolve through a strict-additive chain — org, then team, then project, then phase, then stage — that the framework compiles ahead of the workflow; every applicable rule reaches the agent, and nothing is silently dropped. For kept learnings, the gate protocol asks the orchestrator to check potential conflicts against org policy before the deterministic writer runs; the writer does not independently enforce that LLM check, and runtime does not reconcile conflicts mid-stage.
+ルールとナレッジは異なる平面にあり、そのため読み込みの振る舞いも異なります。ナレッジファイルは、エージェントがステージ中に考慮する参照資料です。ルールは、厳密に追加のみのチェーン（org、team、project、phase、stage の順）を通じて解決され、フレームワークがワークフローの前にコンパイルします。適用されるすべてのルールがエージェントに届き、何も黙って捨てられることはありません。保持された学びについては、決定論的な書き込み処理が実行される前に、ゲートのプロトコルがオーケストレーターに org ポリシーとの潜在的な矛盾を確認するよう求めます。書き込み処理自体はその LLM による確認を独自に強制せず、実行時にステージの途中で矛盾が調整されることもありません。
 
-For the full rule model — file locations, the five-layer chain, the learning loop, and admission-time conflict checks — see [Rules and the Learning Loop](09-rules-and-the-learning-loop.md).
+ルールのモデル全体（ファイルの場所、5 層のチェーン、学習ループ、受け入れ時の矛盾チェック）については、[ルールと学習ループ](09-rules-and-the-learning-loop.md) を参照してください。
 
 ---
 
 ## Knowledge Loading Order
 
-When an agent is dispatched for a stage (a reviewer, or a stage that runs as a subagent), its knowledge loads in this 6-step order. On inline stages and for a mob stage's lead, your team's knowledge (steps 4-5) comes before the shipped methodology (steps 2-3), as the key points below say:
+エージェントがステージのためにディスパッチされる場合（レビュアー、またはサブエージェントとして実行されるステージ）、ナレッジは次の 6 ステップの順序で読み込まれます。インラインのステージとモブステージのリードでは、以下の要点に記載のとおり、チームのナレッジ（ステップ 4-5）が同梱のメソドロジー（ステップ 2-3）より先に読み込まれます:
 
 ```mermaid
 sequenceDiagram
@@ -426,21 +427,21 @@ sequenceDiagram
 
 <!-- Text fallback: Six steps: 1. Rules (the resolved org → team → project → phase → stage chain), 2. Shared methodology knowledge, 3. Agent-specific methodology knowledge, 4. Team shared knowledge (if exists), 5. Team agent-specific knowledge (if exists), 6. Prior stage artifacts. -->
 
-| Step | Source | What Loads | Priority |
+| ステップ | ソース | 読み込まれる内容 | 優先度 |
 |------|--------|-----------|----------|
-| 1 | `aidlc/spaces/<active-space>/memory/` | The resolved org → team → project → phase → stage rule chain | Behavioral rules — every applicable rule loads (strict-additive) |
-| 2 | `.claude/knowledge/aidlc-shared/` | Shared methodology principles | Framework-level defaults |
-| 3 | `.claude/knowledge/<agent>/` | Agent-specific methodology | Agent expertise |
-| 4 | `aidlc/knowledge/aidlc-shared/` | Team-wide standards | Your company defaults |
-| 5 | `aidlc/knowledge/<agent>/` | Team agent-specific standards | Your company + agent expertise |
-| 6 | Prior stage artifacts | Outputs from earlier stages | Runtime context |
+| 1 | `aidlc/spaces/<active-space>/memory/` | 解決済みの org → team → project → phase → stage のルールチェーン | 振る舞いのルール — 適用されるすべてのルールが読み込まれる（厳密に追加のみ） |
+| 2 | `.claude/knowledge/aidlc-shared/` | 共有のメソドロジー原則 | フレームワークレベルの既定 |
+| 3 | `.claude/knowledge/<agent>/` | エージェント固有のメソドロジー | エージェントの専門知識 |
+| 4 | `aidlc/knowledge/aidlc-shared/` | チーム全体の標準 | 自社の既定 |
+| 5 | `aidlc/knowledge/<agent>/` | チームのエージェント固有の標準 | 自社とエージェントの専門知識 |
+| 6 | 前のステージの成果物 | 前のステージの出力 | 実行時のコンテキスト |
 
-**Key points:**
-- Steps 1-5 load from files on disk
-- Step 6 is context added by the orchestrator at runtime based on the current stage's declared inputs
-- Steps 4-5 only load if the directories exist and contain files
-- On inline stages and for a mob stage's lead, the agent reads your team's knowledge (steps 4-5) right after its persona and before the shipped methodology (steps 2-3)
-- [Rules](09-rules-and-the-learning-loop.md) are behavioral constraints, not reference material — the resolved chain loads first and every applicable rule reaches the agent
+**要点:**
+- ステップ 1-5 はディスク上のファイルから読み込まれます
+- ステップ 6 は、現在のステージが宣言した入力に基づいて、オーケストレーターが実行時に追加するコンテキストです
+- ステップ 4-5 は、ディレクトリが存在し、ファイルを含む場合にのみ読み込まれます
+- インラインのステージとモブステージのリードでは、エージェントはペルソナの直後、同梱のメソドロジー（ステップ 2-3）の前に、チームのナレッジ（ステップ 4-5）を読み込みます
+- [ルール](09-rules-and-the-learning-loop.md) は振る舞いの制約であり、参照資料ではありません。解決済みのチェーンが最初に読み込まれ、適用されるすべてのルールがエージェントに届きます
 
 ---
 
@@ -448,37 +449,37 @@ sequenceDiagram
 
 ### Keep knowledge files focused
 
-Each file should cover one topic. Prefer many small files over one large file — this makes it easier to update and remove outdated standards.
+各ファイルは 1 つのトピックを扱うようにしてください。大きなファイル 1 つより小さなファイルを多数にするほうが、古くなった標準の更新や削除がしやすくなります。
 
 ### Use the shared directory for cross-cutting concerns
 
-Standards that apply to all agents (naming conventions, coding style, commit message format) go in `knowledge/aidlc-shared/`. Standards specific to a domain (architecture patterns, security policies) go in the agent directory.
+すべてのエージェントに当てはまる標準（命名規則、コーディングスタイル、コミットメッセージの形式）は `knowledge/aidlc-shared/` に置きます。特定のドメインに固有の標準（アーキテクチャパターン、セキュリティポリシー）は、エージェントのディレクトリに置きます。
 
 ### Review knowledge before workflows
 
-Knowledge files are loaded at every stage start. Outdated or contradictory knowledge will confuse agents. Periodically review and prune your knowledge directories.
+ナレッジファイルはステージの開始のたびに読み込まれます。古いナレッジや矛盾するナレッジはエージェントを混乱させます。ナレッジのディレクトリを定期的に見直し、整理してください。
 
 ### Don't duplicate Tier 1 content
 
-If you want to **constrain** how the agent applies a methodology principle, add a rule instead of duplicating the Tier 1 file. See [Rules and the Learning Loop](09-rules-and-the-learning-loop.md).
+エージェントがメソドロジーの原則をどう適用するかを**制約**したい場合は、Tier 1 のファイルを複製するのではなく、ルールを追加してください。[ルールと学習ループ](09-rules-and-the-learning-loop.md) を参照してください。
 
 ### Don't edit agent files to inject team context
 
-`.claude/agents/*.md` defines the projected persona and tool access, and the
-packager adds its mandatory delegated knowledge preflight. Editing that
-generated file to add team knowledge is a common mistake — the changes are
-overwritten on framework upgrade. Always use `aidlc/knowledge/<agent>/`
-instead.
+`.claude/agents/*.md` は投影されたペルソナとツールのアクセス権を定義し、
+パッケージャーがそこに必須の委譲ナレッジのプリフライトを追加します。チームのナレッジを
+加えるためにこの生成ファイルを編集するのはよくある間違いです。変更は
+フレームワークのアップグレード時に上書きされます。必ず代わりに `aidlc/knowledge/<agent>/`
+を使ってください。
 
 ### Name the directories to match the agent slug
 
-The space-level `aidlc/knowledge/` directory is empty at bootstrap — you create the `aidlc-shared/` and per-agent subdirectories yourself as you accumulate standards. The directory name must match the agent slug exactly (e.g. `aidlc-architect-agent/`, not `architect/`); a typo'd name is silently ignored because the loader walks the agent's own directory by name and finds nothing.
+スペースレベルの `aidlc/knowledge/` ディレクトリはブートストラップ時点では空です。標準がたまってきたら、`aidlc-shared/` とエージェントごとのサブディレクトリを自分で作成します。ディレクトリ名はエージェントの slug と正確に一致していなければなりません（例: `architect/` ではなく `aidlc-architect-agent/`）。ローダーはエージェント自身のディレクトリを名前で探し、何も見つけられないため、名前に誤字があると何も通知されずに無視されます。
 
 ---
 
 ## Next Steps
 
-- [Rules and the Learning Loop](09-rules-and-the-learning-loop.md) — the strict-additive rule chain and how the framework learns new rules across workflows
-- [Getting Started](01-getting-started.md) — the workspace shell and where knowledge directories appear
-- [Customization](13-customization.md) — full customization guide
-- [Glossary](glossary.md) — terminology reference
+- [ルールと学習ループ](09-rules-and-the-learning-loop.md) — 厳密に追加のみのルールチェーンと、フレームワークがワークフローをまたいで新しいルールを学習する仕組み
+- [はじめに](01-getting-started.md) — ワークスペースの構成と、ナレッジディレクトリが作られる場所
+- [カスタマイズ](13-customization.md) — カスタマイズの完全なガイド
+- [用語集](glossary.md) — 用語の参照

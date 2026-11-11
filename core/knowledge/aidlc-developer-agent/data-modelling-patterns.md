@@ -1,74 +1,74 @@
 # Data Modelling Patterns
 
-Guidance for designing data models across relational and NoSQL databases, with emphasis on DynamoDB single-table design.
+リレーショナルデータベースと NoSQL データベースにまたがるデータモデル設計のガイダンス。特に DynamoDB のシングルテーブル設計に重点を置く。
 
 ## Relational vs NoSQL — When to Choose
 
-| Factor | Relational (RDS/Aurora) | NoSQL (DynamoDB) |
+| 観点 | リレーショナル（RDS/Aurora） | NoSQL（DynamoDB） |
 |--------|------------------------|------------------|
-| Access patterns | Ad-hoc, complex joins | Known, predictable queries |
-| Consistency | Strong ACID transactions | Eventual by default, optional strong |
-| Scale model | Vertical (read replicas for reads) | Horizontal, automatic partitioning |
-| Schema | Fixed, enforced at DB level | Flexible, enforced in application |
-| Cost model | Instance-hours | Request-based (on-demand) or provisioned |
+| アクセスパターン | アドホック、複雑な結合 | 既知で予測可能なクエリ |
+| 一貫性 | 強い ACID トランザクション | デフォルトは結果整合性、強い整合性も選択可 |
+| スケールモデル | 垂直（読み取りはリードレプリカ） | 水平、自動パーティショニング |
+| スキーマ | 固定、DB レベルで強制 | 柔軟、アプリケーションで強制 |
+| コストモデル | インスタンス時間 | リクエストベース（オンデマンド）またはプロビジョンド |
 
-Choose relational when you need complex reporting, ad-hoc queries, or multi-table transactions. Choose DynamoDB when access patterns are well-defined, you need single-digit-ms latency at any scale, or you want zero operational overhead.
+複雑なレポート、アドホッククエリ、複数テーブルにまたがるトランザクションが必要な場合はリレーショナルを選ぶ。アクセスパターンが明確に定義されている場合、どの規模でも 1 桁ミリ秒のレイテンシが必要な場合、または運用負荷をゼロにしたい場合は DynamoDB を選ぶ。
 
 ## Normalization Forms (Relational)
 
-- **1NF**: Eliminate repeating groups; every column holds atomic values.
-- **2NF**: Remove partial dependencies; every non-key column depends on the full primary key.
-- **3NF**: Remove transitive dependencies; non-key columns depend only on the primary key, not on other non-key columns.
-- **BCNF**: Every determinant is a candidate key.
-- Normalize to 3NF for transactional systems. Denormalize selectively for read-heavy workloads (materialized views, read replicas).
+- **1NF**: 繰り返しグループを排除する。すべての列は原子的な値を保持する。
+- **2NF**: 部分従属を取り除く。すべての非キー列は主キー全体に従属する。
+- **3NF**: 推移的従属を取り除く。非キー列は主キーのみに従属し、他の非キー列には従属しない。
+- **BCNF**: すべての決定項が候補キーである。
+- トランザクション系システムでは 3NF まで正規化する。読み取りが多いワークロードでは選択的に非正規化する（マテリアライズドビュー、リードレプリカ）。
 
 ## DynamoDB Single-Table Design
 
-Single-table design stores multiple entity types in one table using overloaded partition and sort keys.
+シングルテーブル設計では、パーティションキーとソートキーを多重定義（オーバーロード）することで、複数のエンティティ型を 1 つのテーブルに格納する。
 
-**Process**:
-1. List all entities and their relationships (user, order, order-item, payment).
-2. Document every access pattern with the query it must serve.
-3. Design PK/SK patterns to satisfy those queries. Use prefixes: `PK=USER#123`, `SK=ORDER#2024-01-15#456`.
-4. Use GSIs to support additional access patterns (inverted index, sparse index).
+**手順**:
+1. すべてのエンティティとその関係を列挙する（user、order、order-item、payment）。
+2. すべてのアクセスパターンを、それが応えるべきクエリとともに文書化する。
+3. それらのクエリを満たす PK/SK パターンを設計する。プレフィックスを使う: `PK=USER#123`、`SK=ORDER#2024-01-15#456`。
+4. 追加のアクセスパターンをサポートするために GSI を使う（転置インデックス、スパースインデックス）。
 
-**Key Design Rules**:
-- Partition key should distribute load evenly; avoid hot partitions.
-- Sort key enables range queries and hierarchical data (`SK BEGINS_WITH 'ORDER#'`).
-- Use composite sort keys for multi-level queries: `SK=STATUS#pending#DATE#2024-01-15`.
-- Store item collections (1:N relationships) under the same partition key for transactional writes.
+**キー設計のルール**:
+- パーティションキーは負荷を均等に分散させるべきである。ホットパーティションを避ける。
+- ソートキーにより範囲クエリと階層データが可能になる（`SK BEGINS_WITH 'ORDER#'`）。
+- 複数レベルのクエリには複合ソートキーを使う: `SK=STATUS#pending#DATE#2024-01-15`。
+- トランザクション書き込みのために、アイテムコレクション（1:N の関係）は同じパーティションキーの下に格納する。
 
 ## Entity-Relationship Modelling
 
-- Start with a conceptual ER diagram: entities, attributes, relationships (1:1, 1:N, M:N).
-- For M:N relationships in DynamoDB, use an adjacency list pattern: the relationship itself is an item with `PK=ENTITY_A#id`, `SK=ENTITY_B#id`.
-- For relational databases, use a join table with foreign keys to both sides.
-- Document cardinality and optionality; they drive schema decisions.
+- 概念 ER 図から始める: エンティティ、属性、関係（1:1、1:N、M:N）。
+- DynamoDB での M:N の関係には隣接リストパターンを使う: 関係そのものを `PK=ENTITY_A#id`、`SK=ENTITY_B#id` を持つアイテムとする。
+- リレーショナルデータベースでは、両側への外部キーを持つ結合テーブルを使う。
+- カーディナリティと任意性を文書化する。これらがスキーマの決定を左右する。
 
 ## Index Design
 
-**DynamoDB GSI/LSI**:
-- GSI (Global Secondary Index): Different partition key; eventually consistent. Use for alternate query patterns.
-- LSI (Local Secondary Index): Same partition key, different sort key; supports strong consistency. Must be defined at table creation.
-- Limit GSIs to 5-8; each consumes additional write capacity.
-- Use sparse indexes (only items with the indexed attribute appear) for filtered queries.
+**DynamoDB の GSI/LSI**:
+- GSI（グローバルセカンダリインデックス）: パーティションキーが異なり、結果整合性である。別のクエリパターンに使う。
+- LSI（ローカルセカンダリインデックス）: パーティションキーは同じでソートキーが異なり、強い整合性をサポートする。テーブル作成時に定義しなければならない。
+- GSI は 5〜8 個に抑える。それぞれが追加の書き込みキャパシティを消費する。
+- フィルタ付きのクエリにはスパースインデックス（インデックス対象の属性を持つアイテムだけが現れる）を使う。
 
-**Relational B-tree Indexes**:
-- Index columns that appear in WHERE, JOIN, and ORDER BY clauses.
-- Use composite indexes for multi-column queries; put the most selective column first.
-- Avoid over-indexing; each index slows writes and consumes storage.
-- Use EXPLAIN to validate query plans use the intended index.
+**リレーショナルの B-tree インデックス**:
+- WHERE、JOIN、ORDER BY 句に現れる列にインデックスを作る。
+- 複数列のクエリには複合インデックスを使い、最も選択性の高い列を先頭に置く。
+- インデックスの作りすぎを避ける。インデックスはそれぞれ書き込みを遅くし、ストレージを消費する。
+- EXPLAIN を使い、クエリプランが意図したインデックスを使っていることを確認する。
 
 ## Schema Versioning
 
-- Add a `schemaVersion` attribute to every item (DynamoDB) or a `schema_version` column (relational).
-- Application code handles backward-compatible reads across versions.
-- For relational, use migration tools (Flyway, Liquibase) with numbered, idempotent scripts.
-- Never drop columns in production without a deprecation period; add new columns as nullable first.
+- すべてのアイテムに `schemaVersion` 属性（DynamoDB）、または `schema_version` 列（リレーショナル）を追加する。
+- アプリケーションコードは、バージョンをまたいだ後方互換の読み取りを処理する。
+- リレーショナルでは、番号付きで冪等なスクリプトとともにマイグレーションツール（Flyway、Liquibase）を使う。
+- 非推奨期間を設けずに本番環境で列を削除してはならない。新しい列はまず NULL 許容として追加する。
 
 ## Data Migration Strategies
 
-- **Dual-write**: Write to old and new stores simultaneously during transition. Complex but zero-downtime.
-- **ETL batch migration**: Export, transform, load. Use for one-time moves with a maintenance window.
-- **Change data capture (CDC)**: Stream changes from source to target (DynamoDB Streams, RDS event notifications). Best for live migrations.
-- Always run migration with a dry-run/validation pass before committing. Compare row counts and checksums.
+- **デュアルライト**: 移行期間中、旧ストアと新ストアに同時に書き込む。複雑だがダウンタイムはゼロ。
+- **ETL バッチ移行**: エクスポート、変換、ロード。メンテナンスウィンドウを伴う一度限りの移行に使う。
+- **変更データキャプチャ（CDC）**: ソースからターゲットへ変更をストリーミングする（DynamoDB Streams、RDS イベント通知）。ライブ移行に最適。
+- コミットする前に、必ずドライラン／検証パスでマイグレーションを実行する。行数とチェックサムを比較する。

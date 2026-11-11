@@ -1,99 +1,99 @@
 # SLO, SLI, and Error Budget Patterns
 
-Defining and managing service level objectives using Google SRE principles adapted for AWS environments.
+Google の SRE の原則を AWS 環境向けに適用し、サービスレベル目標を定義・管理する。
 
 ## Key Terminology
 
-- **SLI (Service Level Indicator)**: A quantitative measure of a specific aspect of service performance. Example: "the proportion of requests served in under 200ms."
-- **SLO (Service Level Objective)**: A target value or range for an SLI. Example: "99.9% of requests will be served in under 200ms, measured over a 30-day rolling window."
-- **SLA (Service Level Agreement)**: A contractual commitment to a customer, with consequences for breach. SLAs are looser than SLOs to provide a safety margin.
-- **Error Budget**: The allowed amount of unreliability. If SLO is 99.9%, the error budget is 0.1% (approximately 43 minutes of downtime per 30 days).
+- **SLI（Service Level Indicator）**: サービスのパフォーマンスの特定の側面を定量的に測る指標。例: 「200ms 未満で処理されたリクエストの割合」。
+- **SLO（Service Level Objective）**: SLI の目標値または目標範囲。例: 「30 日間のローリングウィンドウで測定し、リクエストの 99.9% を 200ms 未満で処理する」。
+- **SLA（Service Level Agreement）**: 顧客に対する契約上の約束で、違反時には罰則がある。安全マージンを確保するため、SLA は SLO より緩く設定する。
+- **エラーバジェット**: 許容される信頼性の欠如の量。SLO が 99.9% なら、エラーバジェットは 0.1%（30 日あたり約 43 分のダウンタイム）である。
 
 ## SLI Definition
 
-Choose SLIs that reflect the user's experience, not internal system metrics.
+内部のシステムメトリクスではなく、利用者の体験を反映する SLI を選ぶ。
 
 ### Common SLI Types
 
-| SLI Type | Definition | Measurement |
+| SLI の種類 | 定義 | 測定方法 |
 |----------|-----------|-------------|
-| **Availability** | Proportion of successful requests | `(successful requests / total requests) * 100` |
-| **Latency** | Proportion of requests faster than threshold | `(requests < 200ms / total requests) * 100` |
-| **Throughput** | Requests processed per unit time | CloudWatch metric: `RequestCount` per minute |
-| **Error Rate** | Proportion of requests returning errors | `(5xx responses / total responses) * 100` |
-| **Freshness** | Proportion of data updated within threshold | Time since last successful sync vs target |
-| **Correctness** | Proportion of responses with correct output | Validated against ground truth or invariants |
+| **可用性** | 成功したリクエストの割合 | `(successful requests / total requests) * 100` |
+| **レイテンシー** | しきい値より速いリクエストの割合 | `(requests < 200ms / total requests) * 100` |
+| **スループット** | 単位時間あたりに処理されたリクエスト数 | CloudWatch メトリクス: 1 分あたりの `RequestCount` |
+| **エラー率** | エラーを返したリクエストの割合 | `(5xx responses / total responses) * 100` |
+| **鮮度** | しきい値以内に更新されたデータの割合 | 最後に成功した同期からの経過時間と目標の比較 |
+| **正確性** | 正しい出力を返したレスポンスの割合 | 正解データまたは不変条件に照らして検証 |
 
 ### SLI Specification Best Practices
-- Measure at the point closest to the user (API Gateway, ALB) not at the application.
-- Exclude health check traffic and synthetic monitoring from SLI calculations.
-- Use CloudWatch Metrics Math or CloudWatch Contributor Insights for SLI computation.
-- Define SLIs per critical user journey, not per API endpoint.
+- アプリケーションではなく、利用者に最も近い地点（API Gateway、ALB）で測定する。
+- ヘルスチェックのトラフィックと合成モニタリングは SLI の計算から除外する。
+- SLI の計算には CloudWatch Metrics Math または CloudWatch Contributor Insights を使う。
+- SLI は API エンドポイントごとではなく、重要なユーザージャーニーごとに定義する。
 
 ## SLO Target Setting
 
 ### Process
-1. Measure current performance for 2-4 weeks to establish a baseline.
-2. Set the SLO slightly below the observed baseline (if p99 latency is consistently 150ms, set SLO at 200ms).
-3. Validate with stakeholders that the target aligns with user expectations and business requirements.
-4. Start conservative; tighten SLOs as reliability improves and tooling matures.
+1. 現在のパフォーマンスを 2〜4 週間測定し、ベースラインを確立する。
+2. SLO は観測したベースラインよりわずかに低く設定する（p99 レイテンシーが常に 150ms なら、SLO は 200ms に設定する）。
+3. 目標が利用者の期待とビジネス要件に合致していることを、ステークホルダーとともに検証する。
+4. 最初は保守的に設定し、信頼性が向上してツールが成熟するにつれて SLO を厳しくする。
 
 ### Guidelines
-- Do not set SLOs at 100%. It is impossible to achieve and eliminates the error budget for deployments and improvements.
-- Typical SLO targets: 99.9% for customer-facing services, 99.5% for internal services, 99% for batch processing.
-- Use a 30-day rolling window, not calendar month, to avoid reset-day gaming.
-- Document the measurement methodology alongside the target.
+- SLO を 100% に設定しない。達成は不可能であり、デプロイや改善のためのエラーバジェットがなくなってしまう。
+- 典型的な SLO 目標: 顧客向けサービスは 99.9%、社内サービスは 99.5%、バッチ処理は 99%。
+- リセット日を狙った操作を避けるため、暦月ではなく 30 日間のローリングウィンドウを使う。
+- 目標と併せて測定方法を文書化する。
 
 ## Error Budgets
 
-The error budget is the inverse of the SLO: `error budget = 1 - SLO target`.
+エラーバジェットは SLO の裏返しである: `error budget = 1 - SLO target`。
 
 ### Error Budget Policy
-Define what happens when the error budget is consumed:
+エラーバジェットが消費されたときに何が起きるかを定義する:
 
-| Budget Status | Implication | Action |
+| バジェットの状態 | 意味 | アクション |
 |--------------|-------------|--------|
-| > 50% remaining | Healthy | Normal feature development velocity |
-| 25-50% remaining | Caution | Increase deployment monitoring, review recent incidents |
-| < 25% remaining | At risk | Slow deployments, prioritize reliability work |
-| Exhausted (0%) | Frozen | Halt feature releases, all engineering effort on reliability |
+| 残り 50% 超 | 健全 | 通常の機能開発ペース |
+| 残り 25〜50% | 注意 | デプロイの監視を強化し、最近のインシデントをレビューする |
+| 残り 25% 未満 | 危険 | デプロイを減速し、信頼性向上の作業を優先する |
+| 枯渇（0%） | 凍結 | 機能リリースを停止し、すべてのエンジニアリング工数を信頼性に充てる |
 
-Error budgets create a shared language between product and engineering: "We can afford to ship this risky feature because we have budget, or we cannot because the budget is low."
+エラーバジェットは、プロダクトとエンジニアリングの間に共通の言語を生む: 「バジェットがあるので、このリスクのある機能をリリースする余裕がある。あるいは、バジェットが少ないのでリリースできない」。
 
 ## Burn Rate Alerting
 
-Instead of alerting when the SLO is breached (too late), alert based on the rate at which the error budget is being consumed.
+SLO に違反したときにアラートを出す（遅すぎる）のではなく、エラーバジェットが消費される速度に基づいてアラートを出す。
 
-- **Burn rate**: How fast the error budget is being consumed relative to the window. A burn rate of 1.0 means the budget will be exactly exhausted at the end of the window.
-- **Fast burn (SEV1)**: Burn rate > 14x over 1 hour and > 14x over 5 minutes. The budget will be consumed in ~2 hours. Page immediately.
-- **Medium burn (SEV2)**: Burn rate > 6x over 6 hours and > 6x over 30 minutes. The budget will be consumed in ~5 days. Alert during business hours.
-- **Slow burn (SEV3)**: Burn rate > 3x over 24 hours and > 3x over 6 hours. The budget will be consumed in ~10 days. Create a ticket.
+- **バーンレート**: ウィンドウに対して、エラーバジェットがどれだけ速く消費されているか。バーンレート 1.0 は、ウィンドウの終わりにちょうどバジェットを使い切ることを意味する。
+- **高速バーン（SEV1）**: 1 時間でバーンレート 14 倍超、かつ 5 分間で 14 倍超。バジェットは約 2 時間で消費される。直ちに呼び出す。
+- **中速バーン（SEV2）**: 6 時間でバーンレート 6 倍超、かつ 30 分間で 6 倍超。バジェットは約 5 日で消費される。営業時間内にアラートを出す。
+- **低速バーン（SEV3）**: 24 時間でバーンレート 3 倍超、かつ 6 時間で 3 倍超。バジェットは約 10 日で消費される。チケットを作成する。
 
-Use multi-window, multi-burn-rate alerting (Google SRE workbook approach) to balance sensitivity and specificity.
+感度と特異度のバランスを取るため、マルチウィンドウ・マルチバーンレートのアラート（Google SRE ワークブックの手法）を使う。
 
 ## SLO-Based Decision Making
 
-- **Should we deploy?** Check error budget. If healthy, deploy with normal confidence. If low, add extra validation or delay.
-- **Should we invest in reliability?** If the SLO is consistently met with budget to spare, invest in features. If the budget is frequently exhausted, invest in reliability.
-- **Should we adopt a new dependency?** Evaluate the dependency's SLO. Your service's SLO cannot exceed its least reliable critical dependency.
-- **How much testing is enough?** Test until you are confident the deployment will not consume more than a defined fraction of the error budget.
+- **デプロイすべきか？** エラーバジェットを確認する。健全なら通常の確信度でデプロイする。少なければ、追加の検証を行うか延期する。
+- **信頼性に投資すべきか？** SLO を常にバジェットの余裕を持って満たしているなら、機能に投資する。バジェットが頻繁に枯渇するなら、信頼性に投資する。
+- **新しい依存関係を採用すべきか？** その依存関係の SLO を評価する。サービスの SLO は、最も信頼性の低いクリティカルな依存関係の SLO を超えられない。
+- **テストはどこまで行えば十分か？** デプロイがエラーバジェットの定められた割合を超えて消費しないと確信できるまでテストする。
 
 ## Toil Measurement
 
-Toil is repetitive, automatable operational work that scales with service size.
+トイルとは、サービスの規模に比例して増える、反復的で自動化可能な運用作業である。
 
-- Track time spent on toil weekly: manual deployments, alert response, config changes, scaling actions.
-- Target: toil should consume no more than 50% of an operations engineer's time (Google SRE standard).
-- Prioritize automation of the most time-consuming toil tasks.
-- Report toil reduction as a team metric alongside SLO compliance.
+- トイルに費やした時間を毎週記録する: 手動デプロイ、アラート対応、設定変更、スケーリング操作。
+- 目標: トイルが運用エンジニアの時間の 50% を超えないようにする（Google SRE の標準）。
+- 最も時間のかかるトイル作業から優先して自動化する。
+- トイルの削減を、SLO の遵守状況と並ぶチームのメトリクスとして報告する。
 
 ## SLO Dashboards
 
-Build a dashboard per service showing:
-- Current SLO compliance (percentage) vs target, with the measurement window
-- Error budget remaining (absolute and percentage)
-- Burn rate trend over the last 7 and 30 days
-- SLI time series (latency percentiles, error rate, availability)
-- Recent incidents that consumed error budget, with links to postmortems
+サービスごとに、次を表示するダッシュボードを作成する:
+- 現在の SLO 遵守率（パーセンテージ）と目標の比較、および測定ウィンドウ
+- エラーバジェットの残量（絶対値とパーセンテージ）
+- 直近 7 日間と 30 日間のバーンレートの推移
+- SLI の時系列（レイテンシーのパーセンタイル、エラー率、可用性）
+- エラーバジェットを消費した最近のインシデントと、ポストモーテムへのリンク
 
-Use CloudWatch dashboards with Metrics Math, or export to Grafana for richer visualisation.
+Metrics Math を使った CloudWatch ダッシュボードを使うか、より豊かな可視化のために Grafana にエクスポートする。

@@ -106,92 +106,92 @@
 /aidlc workshop --learnings off --summary-confirmation off <the work>
 ```
 
-| Switch | What it removes at each stage | What you lose |
+| スイッチ | 各ステージで取り除かれるもの | 失うもの |
 |--------|-------------------------------|---------------|
-| `--learnings off` | The "Keep that for next time?" question before the approval gate of a stage where you corrected the agent, and the stage diary (`memory.md`) | Nothing from this work is written to `memory/project.md` or `memory/team.md`, so the next run does not pick up what this one taught. Practices already in memory still load |
-| `--summary-confirmation off` | The `Looks correct` check on a summary of your answers before the stage writes its artifact | The stage writes straight from your answers. A misread answer shows up in the artifact at the approval gate, where fixing it costs a revision |
+| `--learnings off` | エージェントを修正したステージの承認ゲートの前に出る "Keep that for next time?" という質問と、ステージの日誌（`memory.md`） | この作業からは `memory/project.md` にも `memory/team.md` にも何も書き込まれないため、次の実行はこの実行で得た教訓を引き継ぎません。すでにメモリーにあるプラクティスは引き続き読み込まれます |
+| `--summary-confirmation off` | ステージが成果物を書く前に、回答のサマリーに対して行う `Looks correct` の確認 | ステージは回答から直接書きます。誤って読み取られた回答は承認ゲートで成果物の中に現れ、その修正にはリビジョンが 1 回かかります |
 
-Neither switch removes a stage's questions or its approval gate. `bugfix` and
-`express` already start with both off, and `classic` with summary confirmation
-off. On work already under way, ask for either one in your own words, or type
-`/aidlc --learnings off` or `/aidlc --summary-confirmation off`; summary
-confirmation goes off only when you ask for it.
+どちらのスイッチも、ステージの質問や承認ゲートを取り除くことはありません。`bugfix` と
+`express` は最初から両方がオフの状態で始まり、`classic` はサマリー確認がオフの状態で始まります。
+すでに進行中の作業では、どちらかを自分の言葉で依頼するか、
+`/aidlc --learnings off` または `/aidlc --summary-confirmation off` と入力します。サマリー
+確認がオフになるのは、あなたが依頼したときだけです。
 
 #### Upgrading an in-flight classic intent
 
-The saved stage plan is preserved: an older classic intent whose Operation
-stages are recorded as `EXECUTE` still runs them, and routing, next-stage lookup,
-and status follow that recorded plan. New classic intents use the smaller grid.
-Ceremony defaults change immediately when the old intent has no saved ceremony
-fields: Sensors and Learnings resolve to `on`, while Summary Confirmation
-resolves to `off` from classic. Enable summary confirmation with `/aidlc --summary-confirmation on`, or ask for
-it in your own words.
-Saved per-intent ceremony choices remain in effect.
-Environment kill switches still take precedence.
+保存済みのステージのプランは保持されます。Operation
+ステージが `EXECUTE` として記録されている古い classic インテントは引き続きそれらを実行し、ルーティング、次のステージの検索、
+ステータスは記録されたプランに従います。新しい classic インテントは小さいほうのグリッドを使います。
+古いインテントに保存済みの儀式のフィールドがない場合、儀式の既定値はすぐに変わります:
+Sensors と Learnings は `on` に解決され、Summary Confirmation は classic に従って
+`off` に解決されます。サマリー確認を有効にするには `/aidlc --summary-confirmation on` を使うか、
+自分の言葉で依頼してください。
+保存済みのインテントごとの儀式の選択は引き続き有効です。
+環境変数のキルスイッチが引き続き優先されます。
 
-Classic's reviewer cap also changes immediately: reviewer-bearing stages run
-one advisory pass unless overridden. A per-work `--review` level replaces the
-scope cap but cannot exceed a stage's own review class: `--review adversarial`
-restores adversarial review on the stages that declare it, stages declared
-advisory stay advisory, and `--review none` still lowers it. To run the previous classic graph, with CI
-Pipeline and the Operation stages, change the intent to workshop with
-`aidlc engine scope change --scope workshop`; workshop retains the full
-Inception-through-Operation plan and uses a Minimal test strategy by default.
-Preserve a production Standard test strategy if needed by adding
-`--test-strategy standard` to that scope change.
+classic のレビュアーの上限もすぐに変わります。レビュアーを伴うステージは、上書きされない限り
+advisory のパスを 1 回実行します。作業ごとの `--review` レベルは
+スコープの上限を置き換えますが、ステージ自身のレビュークラスを超えることはできません。`--review adversarial`
+は adversarial レビューを宣言しているステージでそれを復元し、advisory と宣言されたステージは
+advisory のままで、`--review none` は引き続きレベルを下げます。CI
+Pipeline と Operation ステージを含む以前の classic のグラフを実行するには、
+`aidlc engine scope change --scope workshop` でインテントを workshop に変更します。workshop は
+Inception から Operation までの完全なプランを保持し、既定では Minimal のテスト戦略を使います。
+必要であれば、そのスコープ変更に `--test-strategy standard` を追加して、本番向けの
+Standard のテスト戦略を維持してください。
 
 ### workshop
 
-**Use when:** Running a facilitated workshop or training lab with the established
-full Inception-through-Operation lifecycle and a lighter teaching test floor.
+**使う場面:** 確立された Inception から Operation までの完全なライフサイクルと、
+より軽い教育向けのテストの下限で、ファシリテーション付きのワークショップやトレーニングラボを実施するとき。
 
-- **Stages:** 23 of 30
-- **Default depth:** Standard
-- **Default test strategy:** Minimal
-- **Skips:** All Ideation stages (1.1-1.7)
-- **Keywords:** `workshop`, `lab`, and `training`
+- **ステージ:** 30 のうち 23
+- **既定の深さ:** Standard
+- **既定のテスト戦略:** Minimal
+- **スキップするもの:** Ideation のすべてのステージ（1.1-1.7）
+- **キーワード:** `workshop`、`lab`、`training`
 
 ### express
 
-**Use when:** You want the lightest path from requirements through code and test to a conditional deploy tail, with no design pass or reviewer dispatch.
+**使う場面:** 設計のパスやレビュアーのディスパッチなしで、要件からコードとテストを経て条件付きのデプロイの末尾までを、最も軽い経路で進めたいとき。
 
-- **Stages:** 7 of 30
-- **Default depth:** Minimal
-- **Review cap:** None
-- **Includes:** Initialization, conditional Reverse Engineering, Requirements Analysis, Code Generation, Build and Test, and the conditional Deployment Pipeline, Deployment Execution, and Observability Setup stages
-- **Skips:** Ideation, design, Units Generation, Delivery Planning, CI Pipeline, environment provisioning, and the late operations stages
-- **Plan approval:** Off, like poc: each code plan is built as written after one line naming it, which says you can ask to go over it at any time
+- **ステージ:** 30 のうち 7
+- **既定の深さ:** Minimal
+- **レビューの上限:** なし
+- **含まれるもの:** Initialization、条件付きの Reverse Engineering、Requirements Analysis、Code Generation、Build and Test、そして条件付きの Deployment Pipeline、Deployment Execution、Observability Setup の各ステージ
+- **スキップするもの:** Ideation、設計、Units Generation、Delivery Planning、CI Pipeline、環境のプロビジョニング、後半の運用ステージ
+- **プラン承認:** poc と同様にオフ。各コードプランは、それを示す 1 行の後に書かれたとおりに構築され、その行でいつでも見直しを依頼できると伝えられます
 
 ---
 
 ## Scope Routing Table
 
-Authoritative data lives in the `.claude/scopes/aidlc-<name>.md` files (scope identity), plugin scope files, plus each stage's `scopes:` frontmatter (membership), compiled into `.claude/tools/data/scope-grid.json`. The compiled grid contains only scopes enabled by the current plugin selection. Run `aidlc engine gen scope-table` for the live compiled table (and `aidlc engine orchestrate help` for the user-facing workflow and scope one-liners).
+正となるデータは、`.claude/scopes/aidlc-<name>.md` ファイル（スコープの識別）、プラグインのスコープファイル、そして各ステージの `scopes:` frontmatter（所属）にあり、`.claude/tools/data/scope-grid.json` にコンパイルされます。コンパイル済みのグリッドには、現在のプラグイン選択で有効になっているスコープだけが含まれます。ライブのコンパイル済みの表は `aidlc engine gen scope-table` で確認できます（ユーザー向けのワークフローとスコープの 1 行説明は `aidlc engine orchestrate help` で確認できます）。
 
-| Scope | EXECUTE / Total | Depth | Test Strategy | Use Case |
+| スコープ | EXECUTE / 合計 | 深さ | テスト戦略 | 用途 |
 |-------|-----------------|-------|---------------|----------|
-| `enterprise` | 33 / 33 | Comprehensive | Comprehensive | Regulated enterprise feature, full audit trail |
-| `feature` | 33 / 33 | Standard | Standard | Full lifecycle for new features |
-| `mvp` | 23 / 33 | Standard | Standard | Greenfield, skip late operations |
-| `poc` | 8 / 33 | Minimal | Minimal | Prove feasibility fast |
-| `bugfix` | 9 / 33 | Minimal | Minimal | Fix and deploy a specific bug |
-| `refactor` | 10 / 33 | Minimal | Minimal | Clean up and deploy existing code |
-| `infra` | 15 / 33 | Standard | Standard | Infrastructure change |
-| `security-patch` | 10 / 33 | Minimal | Minimal | CVE response |
-| `classic` | 18 / 33 | Standard | Standard | V1-style Inception + Construction — the implicit default |
-| `workshop` | 26 / 33 | Standard | Minimal | Facilitated lifecycle with teaching-oriented tests |
-| `express` | 10 / 33 | Minimal | Minimal | Requirements to conditional deploy, no design or reviewers |
-| (proposed) | Varies | Varies | Varies | The agent proposes one from your freeform intent; you confirm it |
+| `enterprise` | 33 / 33 | Comprehensive | Comprehensive | 規制対象のエンタープライズ機能、完全な監査証跡 |
+| `feature` | 33 / 33 | Standard | Standard | 新機能のための完全なライフサイクル |
+| `mvp` | 23 / 33 | Standard | Standard | グリーンフィールド、後半の運用をスキップ |
+| `poc` | 8 / 33 | Minimal | Minimal | 実現可能性を素早く証明する |
+| `bugfix` | 9 / 33 | Minimal | Minimal | 特定のバグを修正してデプロイする |
+| `refactor` | 10 / 33 | Minimal | Minimal | 既存のコードを整理してデプロイする |
+| `infra` | 15 / 33 | Standard | Standard | インフラストラクチャの変更 |
+| `security-patch` | 10 / 33 | Minimal | Minimal | CVE への対応 |
+| `classic` | 18 / 33 | Standard | Standard | V1 スタイルの Inception + Construction — 暗黙の既定 |
+| `workshop` | 26 / 33 | Standard | Minimal | 教育向けのテストを伴う、ファシリテーション付きのライフサイクル |
+| `express` | 10 / 33 | Minimal | Minimal | 要件から条件付きデプロイまで、設計とレビュアーなし |
+| （提案） | 状況による | 状況による | 状況による | エージェントが自由記述のインテントから提案し、あなたが確認する |
 
-Scopes differ by an order of magnitude in ceremony: `poc` runs a narrow single-pass path, while `feature` runs 30 stages after Initialization with 30 approval gates (29 of each on a new project, where Reverse Engineering is skipped) and five stages that repeat for each Unit of Work in Construction (four design stages and Code Generation). The scope confirmation line names the effective numbers - stage count, approval-gate count, and any per-unit fan-out - computed from the compiled grid and workspace scan, never estimated. Greenfield work excludes reverse engineering, and scopes that skip `units-generation` omit the per-unit clause because no Unit DAG exists. You know what you are consenting to before the workflow starts.
+スコープによって儀式の量は桁違いに異なります。`poc` は狭い単一パスの経路を実行しますが、`feature` は Initialization の後に 30 のステージを 30 の承認ゲートとともに実行し（Reverse Engineering がスキップされる新規プロジェクトではそれぞれ 29）、Construction では 5 つのステージ（4 つの設計ステージと Code Generation）を作業ユニットごとに繰り返します。スコープの確認行には、実際に適用される数（ステージ数、承認ゲート数、ユニットごとのファンアウト）が示されます。これらはコンパイル済みのグリッドとワークスペースのスキャンから計算され、推定されることはありません。グリーンフィールドの作業では Reverse Engineering が除外され、`units-generation` をスキップするスコープでは、ユニットの DAG が存在しないためユニットごとの記述が省かれます。ワークフローが始まる前に、何に同意しているのかがわかります。
 
-> **Per-project default scope:** teams can pre-set the default scope for a project by setting `AWS_AIDLC_DEFAULT_SCOPE` in `.claude/settings.json`. See [Customization § Per-Project Default Scope](13-customization.md#per-project-default-scope).
+> **プロジェクトごとの既定スコープ:** チームは `.claude/settings.json` で `AWS_AIDLC_DEFAULT_SCOPE` を設定することで、プロジェクトの既定スコープをあらかじめ決めておけます。[カスタマイズ § プロジェクトごとの既定スコープ](13-customization.md#per-project-default-scope) を参照してください。
 
 ---
 
 ## Stage-by-Scope Matrix
 
-The routing table above gives the counts; this matrix shows exactly **which** stages execute under each stock scope, so you can see what you will walk through before starting a workflow. A ✓ means the stage is EXECUTE under that scope; an empty cell means SKIP. Stage numbers and names match [Phases and Stages](04-phases-and-stages.md).
+上のルーティング表は数を示しています。このマトリクスは、標準の各スコープで**どの**ステージが実行されるかを正確に示すので、ワークフローを始める前にどのステージを通るかを確認できます。✓ はそのスコープでステージが EXECUTE であることを、空のセルは SKIP であることを意味します。ステージの番号と名前は [フェーズとステージ](04-phases-and-stages.md) と一致しています。
 
 <!-- BEGIN scope-stage-matrix: derived from each stage's `scopes:` frontmatter via the compiled scope-grid.json — kept in sync by tests/unit/t244-scope-matrix-doc-sync.test.ts; do not hand-edit cells without re-checking that test -->
 | # | Stage | `enterprise` | `feature` | `mvp` | `poc` | `bugfix` | `refactor` | `infra` | `security-patch` | `classic` | `workshop` | `express` |
@@ -230,28 +230,27 @@ The routing table above gives the counts; this matrix shows exactly **which** st
 | | **Total stages** | **33** | **33** | **23** | **8** | **9** | **10** | **15** | **10** | **18** | **26** | **10** |
 <!-- END scope-stage-matrix -->
 
-A ✓ marks static scope membership — it means the stage is included in the scope's plan, not that it will unconditionally execute. CONDITIONAL stages may be skipped at runtime when their condition does not hold (for example, Reverse Engineering only runs for brownfield projects), and pending stages can be reshaped through an approved composer proposal (see [the composer](#the-adaptive-composer)). Composed (custom) scopes are not listed here — their grids live in `scope-grid.json` alongside the stock ones.
+✓ は静的なスコープへの所属を示します。つまり、そのステージがスコープのプランに含まれることを意味し、無条件に実行されることを意味するわけではありません。CONDITIONAL のステージは、条件が成り立たない場合に実行時にスキップされることがあり（たとえば Reverse Engineering はブラウンフィールドのプロジェクトでのみ実行されます）、保留中のステージは承認されたコンポーザーの提案によって組み替えられることがあります（[コンポーザー](#the-adaptive-composer) を参照）。合成された（カスタムの）スコープはここには載っていません。そのグリッドは標準のスコープと並んで `scope-grid.json` にあります。
 
 ---
 
 ## The Agent Proposes the Plan
 
-You don't have to specify a scope explicitly. Describe what you want, and the
-agent proposes a plan from your words:
+スコープを明示的に指定する必要はありません。やりたいことを説明すれば、
+エージェントがあなたの言葉からプランを提案します:
 
 ```
 /aidlc Build a REST API for inventory management
 ```
 
-The engine keeps your request and hands it to the agent with every plan AI-DLC
-ships on this project: how many stages each runs here, what it is for, and the
-hint words its author wrote in the plan file (`keywords:` in
-`scopes/aidlc-<name>.md`). The hints are read by the agent, like the rest of
-your words; no tool matches them. The agent proposes the plan that fits what
-you described, and you get one question with it, straight from the compiled
-grid. For `/aidlc Fix the timeout on the export endpoint` in a new project it
-read like this; on an existing codebase bugfix also runs Reverse Engineering, so
-the line says 6 stages and 6 approval gates:
+エンジンはあなたの依頼を保持し、AI-DLC がこのプロジェクトに同梱しているすべてのプランとともにエージェントに渡します。
+各プランについて、ここで実行するステージ数、何のためのプランか、そして作成者がプランファイルに書いた
+ヒントの単語（`scopes/aidlc-<name>.md` の `keywords:`）が渡されます。
+ヒントは、あなたの言葉の残りと同様にエージェントが読みます。ツールがそれを照合することはありません。
+エージェントはあなたの説明に合うプランを提案し、あなたはそれとともに、コンパイル済みのグリッドから直接作られた
+1 つの質問を受け取ります。新規プロジェクトで `/aidlc Fix the timeout on the export endpoint` と入力した場合は
+次のようになりました。既存のコードベースでは bugfix は Reverse Engineering も実行するため、
+この行は 6 ステージ、6 承認ゲートとなります:
 
 ```text
  Plan
@@ -267,24 +266,21 @@ the line says 6 stages and 6 approval gates:
    5. Chat about this
 ```
 
-Go ahead to proceed, use a different plan (the agent lists the others with
-their length; you pick one or type its name), or tailor one to course-correct
-before the workflow starts. When no ready-made plan fits what you described, the
-agent offers to tailor one instead ("None of the ready-made plans is an obvious
-fit for ..."), with the plans you can pick directly listed beside it. Settings
-you typed with the request (`--depth minimal`, `--learnings off`) ride the
-question's answers, so the work starts with them. Whichever plan is proposed,
-confirm that it fits your intent: the choice is yours at the question.
+そのまま進めるか、別のプランを使うか（エージェントが他のプランをその長さとともに一覧にするので、1 つを選ぶか名前を入力します）、
+あるいはワークフローが始まる前に軌道修正するためにプランを調整します。説明に合う既製のプランがない場合、
+エージェントは代わりにプランの調整を提案し（"None of the ready-made plans is an obvious
+fit for ..."）、そのまま選べるプランを横に一覧表示します。依頼と一緒に入力した設定
+（`--depth minimal`、`--learnings off`）は質問の回答に引き継がれるため、作業はその設定で始まります。
+どのプランが提案されても、それがインテントに合っているかを確認してください。選ぶのは質問の場でのあなたです。
 
 ---
 
 ## The Adaptive Composer
 
-The default plan, used when none is named or proposed, is `classic` (a project
-can change it with `AWS_AIDLC_DEFAULT_SCOPE`). In the user-facing flow,
-the agent reads your request and either proposes a ready-made plan or, when none
-fits, offers to tailor one; nothing starts before you answer. You can also force
-composition:
+プランが指定も提案もされないときに使われる既定のプランは `classic` です（プロジェクトは
+`AWS_AIDLC_DEFAULT_SCOPE` で変更できます）。ユーザー向けのフローでは、
+エージェントがあなたの依頼を読み、既製のプランを提案するか、合うものがなければ
+プランの調整を提案します。あなたが答えるまで何も始まりません。合成を強制することもできます:
 
 ```
 /aidlc compose "harden the deployment pipeline and add observability"
@@ -293,43 +289,43 @@ composition:
 /aidlc --new-scope "..."               # force a custom plan even on a stock match
 ```
 
-The composer agent reads your task, then estimates five implementation-entropy components - intent ambiguity, codebase structural uncertainty, verification entropy, risk, and unresolved assumptions - and composes the minimum viable workflow: the least sufficient EXECUTE/SKIP grid that still produces every artifact the outcome depends on. Structural estimates ground in CodeKB MCP call-graph and component analysis when a CodeKB server is configured and indexed (an optional external tool; nothing ships with AI-DLC); otherwise the composer falls back to the bounded workspace scan (brownfield/greenfield, languages). The proposal comes to you as a short offer: two or three sentences on what kind of change this looks like, how much process the composer suggests and the steps in plain terms, then one line with the plan's name, stage count and approval questions, and rows for its Guard Policy and its scope settings that you can change before approving. When a tailored plan skips a stage the stock scope it runs on would run, or a stage that a stage it keeps uses (beyond what that scope leaves out by design), the offer says so once, in one line naming every one ("This plan skips Units Generation, which Contract Design, Functional Design and Code Generation use, and Deployment Execution"). Ask, and the agent shows the score breakdown (each component with a LOW/MED/HIGH band and its evidence) and the reason for every EXECUTE and SKIP. On existing code a tailored plan always includes Reverse Engineering, which checks the code map an earlier scan left before it scans again, unless the composer has CodeKB evidence and proposes leaving it out (see CodeKB grounding below). When the plan is created, its scores and their evidence method are kept on the work's first audit entry. You approve, edit, or reject; nothing is written and no workflow starts before an explicit approval. A plan applies to the piece of work it was approved for, so composing never adds to your scope list unless you ask. On approve:
+コンポーザーエージェントはタスクを読み、実装エントロピーの 5 つの要素（インテントの曖昧さ、コードベースの構造的な不確実性、検証のエントロピー、リスク、未解決の前提）を推定し、最小限で実用的なワークフローを合成します。つまり、成果が依存するすべての成果物をなお生み出せる、必要十分で最小の EXECUTE/SKIP グリッドです。構造の推定は、CodeKB サーバーが設定されインデックス済みの場合は CodeKB MCP のコールグラフとコンポーネント分析に基づきます（オプションの外部ツールであり、AI-DLC には何も同梱されていません）。そうでない場合、コンポーザーは範囲を限定したワークスペースのスキャン（ブラウンフィールド/グリーンフィールド、言語）にフォールバックします。提案は短いオファーとして届きます。どのような種類の変更に見えるか、コンポーザーがどの程度のプロセスを提案するか、そしてそのステップを平易な言葉で説明する 2〜3 文に続いて、プランの名前、ステージ数、承認の質問を示す 1 行があり、承認前に変更できる Guard Policy とスコープ設定の行が並びます。調整されたプランが、その基盤となる標準スコープなら実行するはずのステージや、残したステージが使うステージをスキップする場合（そのスコープが設計上除外しているものを除く）、オファーはそのことを、該当するステージをすべて挙げた 1 行で一度だけ伝えます（"This plan skips Units Generation, which Contract Design, Functional Design and Code Generation use, and Deployment Execution"）。依頼すると、エージェントはスコアの内訳（各要素の LOW/MED/HIGH の帯とその証拠）と、すべての EXECUTE と SKIP の理由を示します。既存のコードでは、調整されたプランには常に Reverse Engineering が含まれます。Reverse Engineering は、再度スキャンする前に以前のスキャンが残したコードマップを確認します。ただし、コンポーザーが CodeKB の証拠を持っていてそれを除外するよう提案する場合は例外です（後述の CodeKB による根拠付けを参照）。プランが作成されると、そのスコアと証拠の取得方法は作業の最初の監査エントリに保存されます。あなたは承認、編集、または却下します。明示的な承認の前には何も書き込まれず、ワークフローも始まりません。プランは承認された作業にだけ適用されるため、あなたが依頼しない限り、合成によってスコープの一覧が増えることはありません。承認すると:
 
-- If the proposal MATCHED a stock scope, AI-DLC creates the workflow with that scope directly (a scan report full of code-level findings usually routes to `bugfix` or `security-patch` this way).
-- For a CUSTOM plan, AI-DLC creates the workflow on the nearest suitable stock scope (one with no walking skeleton and no test strategy other than the plan's depth, so the plan runs as the gate showed it; for a new project, one meant for new work rather than `bugfix`, `refactor`, or `security-patch` when one fits) with the plan's own stage changes and depth, in the same turn, and writes no scope file. The work's state records `Plan: <name>`, the name the composer suggested and the gate showed (`tailored plan` when it gave none), and `/aidlc status` shows it; the scope the plan runs on is not named there. The gate for a custom plan has a second approval, **Approve and save as scope**: it asks for a name (the composer suggests one) and keeps the plan as a reusable scope as well.
-- To keep a plan later, ask in plain words ("save this plan as quick-fix"). AI-DLC runs `aidlc engine scope save --name quick-fix`, which writes the running work's current plan, with its settings and Guard Policy, as a scope, and names the command that reuses it (`/aidlc --scope quick-fix "..."`). A saved scope resolves like any stock scope, survives a graph recompile and an engine reinstall, and travels between harnesses (see [Where a saved scope is stored](#where-a-saved-scope-is-stored)).
-- Every front/report proposal carries a nonblank `creationDescription`. When the compose request included task text, it is that text verbatim; a request too long for one step is named in the dispatch by its stored copy instead, and the composer then writes a short summary of the work in its own words, so a brief of any length still fits one step and the creation keeps the original words; report-only and task-less proposals derive it from the approved findings/plan. A report-only or task-less same-turn creation passes it, with the composition's `--request` id, which ties the work to that gate, after the literal `--` delimiter as one shell-safe argv value (POSIX single-quoted when rendered in a shell), so the state Project field and intent-record slug preserve descriptions that contain shell metacharacters or begin with a flag. A compose approval cannot continue with only a scope and no description.
-- In a project that already holds other work with none selected (a fresh clone of a repository whose intent records are committed, for example), AI-DLC first asks whether the approved plan is part of that work, separate new work, or a change to it. Choosing separate new work creates the plan you approved, with its stage changes and settings; naming a different stock plan there starts that plan with the same settings, without the approved plan's own stage changes. Either way the work starts once, and a "skip plan approval" you said at the gate still applies.
+- 提案が標準スコープに一致した（MATCHED）場合、AI-DLC はそのスコープで直接ワークフローを作成します（コードレベルの指摘を多く含むスキャンレポートは、通常このようにして `bugfix` または `security-patch` に振り分けられます）。
+- カスタム（CUSTOM）プランの場合、AI-DLC は、最も近い適切な標準スコープ（ウォーキングスケルトンがなく、プランの深さ以外のテスト戦略を持たないもの。これによりプランはゲートで示されたとおりに実行されます。新規プロジェクトでは、該当するものがあれば `bugfix`、`refactor`、`security-patch` ではなく新規作業向けのもの）の上に、プラン独自のステージの変更と深さを加えたワークフローを同じターンで作成し、スコープファイルは書きません。作業の状態には `Plan: <name>`（コンポーザーが提案しゲートで示された名前。名前が提案されなかった場合は `tailored plan`）が記録され、`/aidlc status` がそれを表示します。プランの基盤となるスコープはそこには示されません。カスタムプランのゲートには 2 つ目の承認 **Approve and save as scope** があります。これを選ぶと名前を尋ねられ（コンポーザーが候補を提案します）、プランを再利用可能なスコープとしても保存します。
+- 後からプランを保存するには、平易な言葉で依頼します（"save this plan as quick-fix"）。AI-DLC は `aidlc engine scope save --name quick-fix` を実行し、実行中の作業の現在のプランを、その設定と Guard Policy とともにスコープとして書き込み、それを再利用するコマンド（`/aidlc --scope quick-fix "..."`）を示します。保存されたスコープは標準スコープと同じように解決され、グラフの再コンパイルやエンジンの再インストール後も残り、ハーネス間で引き継がれます（[保存したスコープの保存場所](#where-a-saved-scope-is-stored) を参照）。
+- front/report のすべての提案は、空でない `creationDescription` を持ちます。compose の依頼にタスクのテキストが含まれていた場合は、そのテキストがそのまま使われます。1 ステップに収まらないほど長い依頼は、代わりにディスパッチの中で保存済みのコピーとして示され、コンポーザーが作業の短い要約を自分の言葉で書きます。そのため、どんな長さの説明でも 1 ステップに収まり、作成時には元の言葉が保持されます。report のみの提案やタスクのない提案では、承認された指摘事項/プランから導出されます。report のみ、またはタスクのない同一ターンでの作成では、それをコンポジションの `--request` id（作業をそのゲートに結びつけるもの）とともに、リテラルの `--` 区切りの後に、シェルで安全な 1 つの argv 値として渡します（シェルで表示する場合は POSIX のシングルクォート）。これにより、状態の Project フィールドとインテント記録の slug は、シェルのメタ文字を含む説明や、フラグで始まる説明も保持できます。compose の承認は、スコープだけで説明がない状態では続行できません。
+- すでに他の作業があり、どれも選択されていないプロジェクト（たとえば、インテントの記録がコミットされているリポジトリを新たにクローンした場合）では、AI-DLC はまず、承認されたプランがその作業の一部なのか、別の新しい作業なのか、その作業への変更なのかを尋ねます。別の新しい作業を選ぶと、承認したプランがそのステージの変更と設定とともに作成されます。そこで別の標準プランを指定すると、そのプランが同じ設定で始まりますが、承認したプラン独自のステージの変更は含まれません。いずれの場合も作業は一度だけ始まり、ゲートで伝えた「skip plan approval」は引き続き適用されます。
 
-**Settings at the gate:** besides the stage grid, a front/report proposal names the plan's Guard Policy and its six scope settings (`sensors`, `learnings`, `summary_confirmation`, `plan_approval`, `collaborators`, and `review_cap`), each group on its own row with a one-line reason. That lets a composed plan trim the ceremony inside its stages as well as the stages themselves: a small, well-understood fix might run with sensors and learnings off and reviews capped at advisory. A matched proposal starts from the stock scope's values. A custom plan picks its own stages but starts from the `classic` scope's ceremony, the workflow you get without composing: Guard Policy off, summary confirmation and collaborators off, reviews advisory, and sensors, learnings, and plan approval on. The composer moves a setting only when your task gives it a reason (summary confirmation comes back on only when the task is highly ambiguous) and keeps Guard Policy off unless a memory layer holds it strict; you can raise it on the gate. Either way, values that differ from the stock scope the plan runs on apply to this piece of work only, with no new scope file, and a plan you save stores them in its frontmatter. Ask for any change before approving and it is made; lowering a stock plan's Guard Policy makes it a custom plan, on a stock scope that carries that value. Plan approval keeps the value the gate shows, so a custom plan keeps it on even when the stock scope it runs on builds without asking; say "skip plan approval for this work" at the gate and the work is created with it off, set by you. No other setting removes an approval gate. Mid-workflow, ask in plain words ("turn sensors off", "give this full reviews") and the change is applied to the running work without a gate (see [Ceremony Switches](13-customization.md#ceremony-switches)); a review level set for the piece of work replaces its scope's ceiling, so stronger reviews change no stages, and setting the scope's own level returns to its normal reviews. A setting the composer suggests on its own during a mid-workflow compose appears on the gate and applies only if you approve it. Turning summary confirmation off mid-workflow is a change you make yourself: ask in plain words ("skip the looks correct check from now on") or approve it on the gate, and the agent turns it off and says so in one line, with your words and how to turn it back on. Plan approval is turned off only by you, in your own words or by typing `/aidlc config set plan-approval off`; the composer never proposes turning it off mid-workflow.
+**ゲートでの設定:** ステージのグリッドに加えて、front/report の提案はプランの Guard Policy と 6 つのスコープ設定（`sensors`、`learnings`、`summary_confirmation`、`plan_approval`、`collaborators`、`review_cap`）を示し、各グループをそれぞれの行に 1 行の理由とともに表示します。これにより、合成されたプランはステージそのものだけでなく、ステージ内部の儀式も削ることができます。小さくてよく理解された修正なら、センサーと学びをオフにし、レビューを advisory に制限して実行するかもしれません。一致した提案は、標準スコープの値から始まります。カスタムプランは独自のステージを選びますが、儀式は `classic` スコープ（合成しない場合に得られるワークフロー）のものから始まります: Guard Policy はオフ、サマリー確認と collaborators はオフ、レビューは advisory、センサー、学び、プラン承認はオンです。コンポーザーは、タスクに理由がある場合にだけ設定を動かし（サマリー確認がオンに戻るのは、タスクが非常に曖昧な場合だけです）、メモリーのレイヤーが strict を保持していない限り Guard Policy をオフのままにします。ゲートで引き上げることができます。いずれの場合も、プランの基盤となる標準スコープと異なる値はこの作業にだけ適用され、新しいスコープファイルは作られません。保存したプランでは、それらの値が frontmatter に保存されます。承認の前に変更を依頼すれば、その変更が行われます。標準プランの Guard Policy を下げると、その値を持つ標準スコープの上のカスタムプランになります。プラン承認はゲートに表示された値を保持するため、カスタムプランは、基盤となる標準スコープが確認なしで構築する場合でもプラン承認をオンのままにします。ゲートで「skip plan approval for this work」と伝えると、作業はプラン承認がオフの状態で、あなたの設定として作成されます。それ以外の設定で承認ゲートが取り除かれることはありません。ワークフローの途中では、平易な言葉で依頼すると（"turn sensors off"、"give this full reviews"）、変更はゲートなしで実行中の作業に適用されます（[儀式のスイッチ](13-customization.md#ceremony-switches) を参照）。作業に設定したレビューレベルはスコープの上限を置き換えるため、レビューを強めてもステージは変わりません。スコープ自身のレベルに設定すると、通常のレビューに戻ります。ワークフロー途中の compose でコンポーザーが自ら提案した設定はゲートに表示され、あなたが承認した場合にだけ適用されます。ワークフローの途中でサマリー確認をオフにするのは、あなた自身が行う変更です。平易な言葉で依頼するか（"skip the looks correct check from now on"）、ゲートで承認すると、エージェントがそれをオフにし、あなたの言葉と元に戻す方法を添えて 1 行で伝えます。プラン承認をオフにできるのはあなただけで、自分の言葉で依頼するか、`/aidlc config set plan-approval off` と入力します。コンポーザーがワークフローの途中でそれをオフにするよう提案することはありません。
 
-**CodeKB grounding (optional):** CodeKB is an external MCP server that serves pre-computed structural analysis of a codebase (call graphs, component inventories, cross-package coupling). AI-DLC does not ship or require it - without it the composer scores structure from the bounded workspace scan, which is the normal path. When you do connect one, the composer uses it as the sole structural evidence source and cites it in the proposal (`method: codekb`). How to connect it depends on the harness: on Claude Code add the server to your project's `.mcp.json` (subagents inherit session MCP servers); on Codex add an `mcp_servers` entry to your `config.toml`; on opencode add it to your opencode config; on Copilot CLI add it to `~/.copilot/mcp-config.json`, and in VS Code to `.vscode/mcp.json`. On Kiro add it to `.kiro/settings/mcp.json` (or your own `~/.kiro/settings/mcp.json`) without `"disabled": true`: on Kiro CLI's v2 engine then run config again, which grants it to the composer agent; on its v3 engine and on Kiro IDE the composer gets it as it is. Do not confuse CodeKB with the framework's own "codekb" directory (`aidlc/spaces/<space>/codekb/`) - that is the local artifact store the Reverse Engineering stage writes, unrelated to the MCP server. Note that with CodeKB evidence the composer may propose skipping Reverse Engineering; the proposal must disclose that downstream stages then run without that local store, and you decide at the gate.
+**CodeKB による根拠付け（オプション）:** CodeKB は、コードベースの事前計算された構造分析（コールグラフ、コンポーネントの一覧、パッケージ間の結合）を提供する外部の MCP サーバーです。AI-DLC はこれを同梱も必須ともしていません。これがない場合、コンポーザーは範囲を限定したワークスペースのスキャンから構造をスコアリングします。これが通常の経路です。接続した場合、コンポーザーはそれを唯一の構造的な証拠の情報源として使い、提案の中で引用します（`method: codekb`）。接続方法はハーネスによって異なります。Claude Code ではプロジェクトの `.mcp.json` にサーバーを追加します（サブエージェントはセッションの MCP サーバーを引き継ぎます）。Codex では `config.toml` に `mcp_servers` エントリを追加します。opencode では opencode の設定に追加します。Copilot CLI では `~/.copilot/mcp-config.json` に、VS Code では `.vscode/mcp.json` に追加します。Kiro では `"disabled": true` を付けずに `.kiro/settings/mcp.json`（または自分の `~/.kiro/settings/mcp.json`）に追加します。Kiro CLI の v2 エンジンではその後 config を再度実行すると、コンポーザーエージェントに付与されます。v3 エンジンと Kiro IDE では、コンポーザーはそのまま利用できます。CodeKB を、フレームワーク自身の "codekb" ディレクトリ（`aidlc/spaces/<space>/codekb/`）と混同しないでください。後者は Reverse Engineering ステージが書き込むローカルの成果物ストアであり、MCP サーバーとは無関係です。なお、CodeKB の証拠がある場合、コンポーザーは Reverse Engineering のスキップを提案することがあります。その場合、提案は下流のステージがそのローカルストアなしで実行されることを必ず開示しなければならず、ゲートであなたが判断します。
 
-**Keyword hygiene:** saved scopes ship with `keywords: []`, so a saved plan carries no hints into the agent's plan proposal step. Giving it hints for future prompts is an explicit choice when you save it (`scope save --keywords <word,...>`, single words; a hint another plan already has is saved too, and the save says in one line that the plan proposal lists it under both), never a side effect.
+**キーワードの衛生管理:** 保存されたスコープは `keywords: []` を持つため、保存したプランはエージェントのプラン提案ステップにヒントを持ち込みません。今後のプロンプトのためにヒントを与えることは、保存時の明示的な選択です（`scope save --keywords <word,...>`。単語単位で指定します。他のプランがすでに持っているヒントも保存され、保存時に、プラン提案がそれを両方のプランの下に一覧表示することが 1 行で伝えられます）。副作用として付与されることは決してありません。
 
-**In-flight recompose:** mid-workflow, `/aidlc compose` proposes re-shaping the PENDING stages of the running workflow - skip what you no longer need, add back a pending stage you realize you need. The composer re-estimates the entropy components from what completed stages actually resolved, so each proposed flip names the evidence that moved the score ("feasibility settled the integration questions - risk re-scores MED"). Flips apply only to pending, ahead-of-cursor stages (completed and in-progress stages are frozen), are strict-validated so no remaining stage is starved of a required input, and land through the deterministic `recompose` verb under the audit lock with a `RECOMPOSED` audit event. When one approval covers stage changes and settings, the same `recompose` applies both in one write, so the plan is never left half-changed; summary confirmation off goes through its own setting, which the agent applies right after when you approved it. The first EXECUTE stage of Construction cannot be flipped by recompose. This protects the stage-routing anchor; it does not make a first design-stage review proof of a working integrated skeleton. Finished work takes no more stages on its own plan: asking for more names the plans that run them after its last stage, and switching to the one you pick (`/aidlc --scope <plan>`) reopens the work there, keeping what is done.
+**実行中の再合成:** ワークフローの途中では、`/aidlc compose` は実行中のワークフローの保留中（PENDING）のステージの組み替えを提案します。不要になったものをスキップし、必要だと気づいた保留中のステージを戻します。コンポーザーは、完了したステージが実際に解決した内容からエントロピーの要素を再推定するため、提案される切り替えのそれぞれに、スコアを動かした証拠が示されます（"feasibility settled the integration questions - risk re-scores MED"）。切り替えは、カーソルより先にある保留中のステージにだけ適用され（完了済みと進行中のステージは凍結されます）、残りのステージが必要な入力を欠くことのないよう厳密に検証され、監査ロックのもとで決定論的な `recompose` 動詞を通じて `RECOMPOSED` 監査イベントとともに適用されます。1 回の承認でステージの変更と設定の両方を扱う場合は、同じ `recompose` が両方を 1 回の書き込みで適用するため、プランが中途半端に変更されたまま残ることはありません。サマリー確認のオフは独自の設定を通じて行われ、あなたが承認した場合、エージェントがその直後に適用します。Construction の最初の EXECUTE ステージは recompose で切り替えられません。これはステージのルーティングのアンカーを保護するためのものであり、最初の設計ステージのレビューを、統合されたスケルトンが動作することの証明にするものではありません。完了した作業は、自身のプランにそれ以上ステージを取り込みません。さらにステージを求めると、最後のステージの後にそれらを実行するプランが示され、選んだプランに切り替えると（`/aidlc --scope <plan>`）、完了した内容を保ったままその場所で作業が再開されます。
 
-You do not need the literal verb: plain chat like "what else can we cut? we already know this market" is recognized mid-workflow as a reshape request and routed through the same gate and the same `recompose` verb. When you name the stages yourself ("can we skip market research?", "drop market-research and team-formation"), the plan changes at once, with no gate, and the reply names the undo; `recompose` still refuses a change the plan cannot take and says why. When you name a plan instead ("switch this to the express plan"), the work switches to it in place, as `/aidlc --scope express` does, with no gate: what is done stays done, and the reply says what changed. Text inside a document you paste never counts as naming a stage. On the non-Claude harnesses the literal `/aidlc compose "<request>"` verb remains the documented reliable path.
+動詞をそのまま使う必要はありません。"what else can we cut? we already know this market" のような平易なチャットも、ワークフローの途中では組み替えの依頼として認識され、同じゲートと同じ `recompose` 動詞に回されます。ステージを自分で指定した場合（"can we skip market research?"、"drop market-research and team-formation"）は、ゲートなしでプランがすぐに変更され、返信で元に戻す方法が示されます。`recompose` は、プランが受け入れられない変更は引き続き拒否し、その理由を伝えます。代わりにプランを指定した場合（"switch this to the express plan"）は、`/aidlc --scope express` と同様に、ゲートなしで作業がその場でそのプランに切り替わります。完了した内容は完了したまま残り、返信で何が変わったかが伝えられます。貼り付けたドキュメントの中のテキストが、ステージの指定とみなされることはありません。Claude 以外のハーネスでは、リテラルの `/aidlc compose "<request>"` 動詞が、引き続きドキュメントに記載された確実な経路です。
 
 ### Where a saved scope is stored
 
-A stock scope belongs to the engine: it is regenerated into the harness tree on every build. A scope you save from a composed plan is *yours*: nothing in the engine produces it, so it is stored with the rest of your work:
+標準スコープはエンジンに属します。ビルドのたびにハーネスのツリーに再生成されます。合成されたプランから保存したスコープは*あなたのもの*です。エンジンの中にそれを生成するものはないため、あなたの他の作業とともに保存されます:
 
-| | Path | Role |
+| | パス | 役割 |
 |---|---|---|
-| **Record** | `aidlc/scopes/<name>.md` | The durable source. Your scope file, plus a generated grid region holding the EXECUTE/SKIP plan, in one file. Commit it with the rest of your `aidlc/` tree |
-| **Projection** | `<harness>/scopes/aidlc-<name>.md` + a `scope-grid.json` column | What the runtime reads. Regenerated from the record by `aidlc engine graph compile` |
+| **記録** | `aidlc/scopes/<name>.md` | 永続的なソースです。スコープファイルと、EXECUTE/SKIP のプランを保持する生成されたグリッド領域を 1 つのファイルにまとめたものです。`aidlc/` ツリーの他の部分と一緒にコミットしてください |
+| **投影** | `<harness>/scopes/aidlc-<name>.md` + `scope-grid.json` の列 | ランタイムが読むものです。`aidlc engine graph compile` によって記録から再生成されます |
 
-Two things follow, both of which used to fail:
+ここから 2 つのことが言えます。どちらも以前は失敗していたことです:
 
-- **An engine reinstall cannot lose the scope.** Replacing the harness tree discards the projection; the next `graph compile` rebuilds it from the record. This matters for the copy channel in particular, where `scope-grid.json` is a generated file that any copy-over replaces.
-- **A saved scope travels between harnesses.** The record lives in the shared, tool-neutral `aidlc/` tree, so a collaborator working in `.kiro/` or `.codex/` resolves a scope you saved in `.claude/` after one `graph compile`.
+- **エンジンを再インストールしてもスコープは失われません。** ハーネスのツリーを置き換えると投影は破棄されますが、次の `graph compile` が記録から再構築します。これは特にコピーチャネルで重要です。コピーチャネルでは `scope-grid.json` は生成されたファイルであり、上書きコピーのたびに置き換えられるためです。
+- **保存したスコープはハーネス間で引き継がれます。** 記録はツールに依存しない共有の `aidlc/` ツリーにあるため、`.kiro/` や `.codex/` で作業している共同作業者も、`graph compile` を 1 回実行すれば、あなたが `.claude/` で保存したスコープを解決できます。
 
-If you have a composed scope from an earlier release it lives only in the harness tree; the first `graph compile` after upgrading writes its record for you, once. From then on the record is the source.
+以前のリリースで合成したスコープは、ハーネスのツリーにしか存在しません。アップグレード後の最初の `graph compile` が、その記録を一度だけ書き込みます。それ以降は記録がソースになります。
 
 #### The record's shape
 
-Everything above the sentinel comment is yours to edit — frontmatter and prose alike, including your own Markdown headings and fenced code. Everything between the sentinels is generated. Treat the region as the **end** of the file: write your prose above it, because that is the part `graph compile` projects into the harness tree. Anything you append *below* the END sentinel stays in the record — nothing rewrites a record that already exists — but it is not carried into the harness scope file:
+センチネルコメントより上はすべて、自由に編集できます。frontmatter も散文も同様で、独自の Markdown の見出しやフェンス付きコードも含まれます。センチネルの間はすべて生成されたものです。この領域はファイルの**末尾**として扱い、散文はその上に書いてください。`graph compile` がハーネスのツリーに投影するのはその部分だからです。END センチネルの*下*に追記したものは記録に残りますが（既存の記録を書き換えるものはありません）、ハーネスのスコープファイルには引き継がれません:
 
 ````markdown
 ---
@@ -351,52 +347,51 @@ Whatever you want to write, including a "## Stage Grid" heading of your own.
 <!-- END aidlc composed-scope-grid -->
 ````
 
-Reshape the plan with `/aidlc compose`, not by editing the region — a hand-edited grid is not validated against the stage graph, so it can starve a stage of an input it requires.
+プランの組み替えは、領域を編集するのではなく `/aidlc compose` で行ってください。手で編集したグリッドはステージグラフに対して検証されないため、ステージが必要とする入力を欠いてしまう可能性があります。
 
-Editing the part above the sentinel is fine, but note that `graph compile` writes the harness scope file only when it is **missing**; it does not overwrite one you have edited. So if you change `depth` or `description` in the record, delete `<harness>/scopes/aidlc-<name>.md` and recompile to re-project it. The plan itself always comes from the record, so this only affects descriptive fields.
+センチネルより上の部分を編集するのは問題ありませんが、`graph compile` がハーネスのスコープファイルを書くのは、それが**存在しない**場合だけであることに注意してください。編集済みのファイルを上書きすることはありません。そのため、記録の `depth` や `description` を変更した場合は、`<harness>/scopes/aidlc-<name>.md` を削除して再コンパイルし、再投影してください。プラン自体は常に記録から取得されるため、これが影響するのは説明用のフィールドだけです。
 
 #### When a record is unreadable
 
-A record missing its frontmatter, its `name`, or its generated grid region **stops** `graph compile` and `aidlc update` with the file path and the required edit named — it is committed work, so it is never silently skipped. Repair the named file, or delete it: if the harness projection is still present, the next compile back-fills a fresh record from it. `/aidlc --doctor`'s **Composed scope durability** check reports a scope file with no grid column, a record that has not been projected yet, and a runnable workflow whose scope no longer resolves.
+frontmatter、`name`、または生成されたグリッド領域が欠けている記録は、ファイルパスと必要な編集を示して `graph compile` と `aidlc update` を**停止**させます。コミット済みの作業であるため、黙ってスキップされることはありません。示されたファイルを修復するか、削除してください。ハーネスの投影がまだ存在する場合、次のコンパイルがそこから新しい記録を補完します。`/aidlc --doctor` の **Composed scope durability** チェックは、グリッドの列がないスコープファイル、まだ投影されていない記録、スコープが解決できなくなった実行可能なワークフローを報告します。
 
 ---
 
 ## The 3 Depth Levels
 
-Depth controls the detail level of artifacts produced at each stage. The scope sets a default depth, but you can override it.
+深さは、各ステージで作られる成果物の詳しさを制御します。スコープが既定の深さを設定しますが、上書きできます。
 
-| Depth | Artifact Detail | When to Use |
+| 深さ | 成果物の詳しさ | 使う場面 |
 |-------|----------------|-------------|
-| **Minimal** | Core essentials only. Short documents, key decisions, minimal supporting analysis. | Quick fixes, patches, proofs of concept |
-| **Standard** | Balanced detail. Complete requirements, architecture decisions with rationale, thorough test plans. | Most features and MVPs |
-| **Comprehensive** | Full enterprise detail. Exhaustive requirements, compliance matrices, detailed NFR specifications, complete audit documentation. | Regulated features, enterprise deployments |
+| **Minimal** | 中核となる要点のみ。短いドキュメント、主要な決定、最小限の補足分析。 | 手早い修正、パッチ、概念実証 |
+| **Standard** | バランスの取れた詳しさ。完全な要件、根拠付きのアーキテクチャ上の決定、綿密なテスト計画。 | ほとんどの機能と MVP |
+| **Comprehensive** | エンタープライズ向けの完全な詳しさ。網羅的な要件、コンプライアンスのマトリクス、詳細な NFR の仕様、完全な監査ドキュメント。 | 規制対象の機能、エンタープライズへのデプロイ |
 
 ### How depth affects stages
 
-At each stage, the agent adjusts its output based on the active depth:
+各ステージで、エージェントはアクティブな深さに応じて出力を調整します:
 
-- **Minimal:** 1-2 page artifact, key decisions only, skip optional sections
-- **Standard:** Complete artifact, all required sections, concise rationale
-- **Comprehensive:** Expanded artifact, optional sections included, detailed justification, compliance cross-references
+- **Minimal:** 1〜2 ページの成果物、主要な決定のみ、オプションのセクションはスキップ
+- **Standard:** 完全な成果物、すべての必須セクション、簡潔な根拠
+- **Comprehensive:** 拡張された成果物、オプションのセクションも含む、詳細な正当化、コンプライアンスの相互参照
 
 ### Overriding depth
 
-You can change the depth at three points:
+深さは次の 3 つの時点で変更できます:
 
-1. **Via the `--depth` CLI flag** — override depth at invocation time:
+1. **`--depth` CLI フラグで** — 起動時に深さを上書きします:
    ```
    /aidlc --depth comprehensive
    /aidlc --scope bugfix --depth standard
    /aidlc --stage code-generation --depth minimal
    ```
-2. **At scope confirmation** - when the engine asks you to confirm the proposed plan, reply with `--depth <level>` instead of just confirming
-3. **At any approval gate** — request a different depth level as part of your feedback
+2. **スコープの確認時に** - エンジンが提案されたプランの確認を求めたとき、単に確認する代わりに `--depth <level>` と返信します
+3. **任意の承認ゲートで** — フィードバックの一部として別の深さを依頼します
 
-The agent is asked to remind you once per session, at its first completion
-message, of the current depth (how much detail it writes into each document) and
-test strategy (how many tests it writes), and that you can ask to change either
-at any approval gate. You can ask at any time, in your own words or with
-`/aidlc --depth <level>`.
+エージェントは、セッションごとに 1 回、最初の完了メッセージで、現在の深さ（各ドキュメントにどの程度詳しく書くか）と
+テスト戦略（いくつのテストを書くか）、そしてどちらも任意の承認ゲートで変更を依頼できることを
+伝えるよう求められています。いつでも、自分の言葉で、または
+`/aidlc --depth <level>` で依頼できます。
 
 ---
 
@@ -424,7 +419,7 @@ at any approval gate. You can ask at any time, in your own words or with
 /aidlc --scope enterprise --stage code-generation
 ```
 
-The `--scope` flag is composable with `--stage`, `--phase`, and `--depth` for jump operations.
+ジャンプ操作では、`--scope` フラグを `--stage`、`--phase`、`--depth` と組み合わせられます。
 
 ### Override depth
 
@@ -434,7 +429,7 @@ The `--scope` flag is composable with `--stage`, `--phase`, and `--depth` for ju
 /aidlc --scope enterprise --depth standard --stage code-generation
 ```
 
-The `--depth` flag overrides the scope's default depth level. Valid values: `minimal`, `standard`, `comprehensive` (case-insensitive).
+`--depth` フラグはスコープの既定の深さを上書きします。有効な値: `minimal`、`standard`、`comprehensive`（大文字と小文字は区別されません）。
 
 ### Override test strategy
 
@@ -443,129 +438,126 @@ The `--depth` flag overrides the scope's default depth level. Valid values: `min
 /aidlc --depth standard --test-strategy minimal
 ```
 
-The `--test-strategy` flag overrides the test strategy independently of depth. See the full explanation in [The 3 Test Strategy Levels](#the-3-test-strategy-levels) below.
+`--test-strategy` フラグは、深さとは独立にテスト戦略を上書きします。詳しい説明は、後述の [3 つのテスト戦略レベル](#the-3-test-strategy-levels) を参照してください。
 
 ---
 
 ## The 3 Test Strategy Levels
 
-Test strategy controls **how many tests** are generated and **which test types** are included. It is independent of depth — depth controls artifact detail (documents, diagrams, questions), while test strategy controls test volume only. This separation lets you run a full Standard-depth workflow with Minimal testing when speed matters more than test coverage.
+テスト戦略は、**いくつのテスト**を生成するか、そして**どの種類のテスト**を含めるかを制御します。深さとは独立しています。深さは成果物の詳しさ（ドキュメント、図、質問）を制御し、テスト戦略はテストの量だけを制御します。この分離により、テストカバレッジより速さが重要な場合に、Standard の深さの完全なワークフローを Minimal のテストで実行できます。
 
 ### Minimal — Nyquist model
 
-Inspired by the Nyquist rate from signal processing: the minimum sampling frequency needed to reconstruct a signal. Minimal test strategy generates the minimum tests needed to verify every requirement — no more, no less.
+信号処理のナイキストレート（信号を再構成するのに必要な最小のサンプリング周波数）に着想を得ています。Minimal のテスト戦略は、すべての要件を検証するのに必要な最小限のテストを生成します。多すぎず、少なすぎずです。
 
-- **1 test per identified requirement** (requirement-driven, not component-driven)
-- **Happy-path floor:** every component gets at least 1 happy-path unit test, even if no requirement maps to it
-- **Unit tests by default.** A bugfix/security-patch targeted regression may
-  use integration or E2E when that is the narrowest level that reproduces the
-  defect; unrelated test volume remains Minimal.
-- **~5-15 tests total** for a typical project
-- Soft guideline — the agent can exceed when safety-critical context demands it
+- **特定された要件ごとに 1 つのテスト**（コンポーネント駆動ではなく要件駆動）
+- **ハッピーパスの下限:** 対応する要件がない場合でも、すべてのコンポーネントに少なくとも 1 つのハッピーパスのユニットテストを用意します
+- **既定はユニットテストです。** bugfix/security-patch の対象を絞った回帰テストでは、
+  それが欠陥を再現できる最も狭いレベルであれば、統合テストや E2E を使ってもかまいません。
+  無関係なテストの量は Minimal のままです。
+- 一般的なプロジェクトで**合計約 5〜15 個のテスト**
+- 緩やかな目安です。安全性が重要な状況で必要であれば、エージェントはこれを超えてもかまいません
 
-**Best for:** Workshops, training sessions, proofs of concept, quick bugfixes — any context where you want to verify correctness without investing in a full test suite.
+**最適な用途:** ワークショップ、トレーニングセッション、概念実証、手早いバグ修正など、完全なテストスイートに投資せずに正しさを検証したいあらゆる状況。
 
 ### Standard — per-component model
 
-Balanced test coverage that validates boundaries between components.
+コンポーネント間の境界を検証する、バランスの取れたテストカバレッジです。
 
-- **5-8 tests per component**
-- **Unit + integration tests** (key boundaries between components)
-- E2E, performance, and security tests only if NFR requirements explicitly call for them
-- **Test pyramid proportions:** ~75% unit / ~20% integration / ~5% E2E
-- Soft guideline
+- **コンポーネントごとに 5〜8 個のテスト**
+- **ユニットテスト + 統合テスト**（コンポーネント間の主要な境界）
+- E2E、パフォーマンス、セキュリティのテストは、NFR の要件が明示的に求める場合のみ
+- **テストピラミッドの比率:** ユニット約 75% / 統合約 20% / E2E 約 5%
+- 緩やかな目安です
 
-**Best for:** Most features and MVPs — good coverage without over-investing in testing.
+**最適な用途:** ほとんどの機能と MVP。テストに過剰に投資することなく、十分なカバレッジが得られます。
 
 ### Comprehensive — full coverage model
 
-Thorough test coverage across all test types.
+すべての種類のテストにわたる、綿密なテストカバレッジです。
 
-- **10-15 tests per component**
-- **All test types:** unit + integration + E2E + performance (if NFRs exist) + security (if NFRs exist)
-- **Test pyramid proportions** apply across all types
-- Soft guideline
+- **コンポーネントごとに 10〜15 個のテスト**
+- **すべての種類のテスト:** ユニット + 統合 + E2E + パフォーマンス（NFR がある場合）+ セキュリティ（NFR がある場合）
+- **テストピラミッドの比率**はすべての種類に適用されます
+- 緩やかな目安です
 
-**Best for:** Enterprise features, regulated systems, any context requiring an audit trail of test coverage.
+**最適な用途:** エンタープライズ機能、規制対象のシステム、テストカバレッジの監査証跡が求められるあらゆる状況。
 
 ### How test strategy defaults work
 
-Most core scopes inherit test strategy from depth. `classic` therefore uses the
-production Standard test floor and `express` uses the requirement-driven Minimal
-floor. `workshop` retains its explicit Minimal override at Standard depth for
-teaching sessions. You can always override with `--test-strategy`.
+ほとんどのコアスコープは、テスト戦略を深さから引き継ぎます。そのため `classic` は
+本番向けの Standard のテストの下限を使い、`express` は要件駆動の Minimal の
+下限を使います。`workshop` は教育セッションのために、Standard の深さで明示的な Minimal の上書きを
+保持しています。`--test-strategy` でいつでも上書きできます。
 
 ### Overriding test strategy
 
-You can change the test strategy at three points:
+テスト戦略は次の 3 つの時点で変更できます:
 
-1. **Via the `--test-strategy` CLI flag** — override at invocation time:
+1. **`--test-strategy` CLI フラグで** — 起動時に上書きします:
    ```
    /aidlc --test-strategy minimal
    /aidlc --depth standard --test-strategy minimal
    /aidlc --scope bugfix --test-strategy comprehensive
    ```
-2. **Mid-workflow** — change test strategy on an active workflow:
+2. **ワークフローの途中で** — アクティブなワークフローのテスト戦略を変更します:
    ```
    /aidlc --test-strategy comprehensive
    ```
-3. **At any approval gate** — request a different test strategy as part of your feedback
+3. **任意の承認ゲートで** — フィードバックの一部として別のテスト戦略を依頼します
 
 ### Common depth + test strategy combinations
 
-| Depth | Test Strategy | Effect | When to use |
+| 深さ | テスト戦略 | 効果 | 使う場面 |
 |-------|--------------|--------|-------------|
-| Standard | Standard | Full artifacts, balanced tests | Feature, classic, and other production scopes |
-| Standard | Minimal | Full artifacts, Nyquist tests | Workshops, time-boxed sessions |
-| Minimal | Minimal | Lean artifacts, requirement-driven tests | Express, quick bugfixes, patches |
-| Comprehensive | Comprehensive | Full everything | Regulated enterprise features |
-| Comprehensive | Standard | Full artifacts, balanced tests | Enterprise with pragmatic testing |
-| Minimal | Comprehensive | Lean artifacts, thorough tests | Critical bugfix needing confidence |
+| Standard | Standard | 完全な成果物、バランスの取れたテスト | feature、classic、その他の本番向けスコープ |
+| Standard | Minimal | 完全な成果物、ナイキストのテスト | ワークショップ、時間を区切ったセッション |
+| Minimal | Minimal | 簡素な成果物、要件駆動のテスト | express、手早いバグ修正、パッチ |
+| Comprehensive | Comprehensive | すべてが完全 | 規制対象のエンタープライズ機能 |
+| Comprehensive | Standard | 完全な成果物、バランスの取れたテスト | 実用的なテストを伴うエンタープライズ |
+| Minimal | Comprehensive | 簡素な成果物、綿密なテスト | 確信が必要な重大なバグ修正 |
 
 ---
 
 ## Choosing the Right Scope
 
-| Situation | Recommended Scope |
+| 状況 | 推奨スコープ |
 |-----------|------------------|
-| New feature for a production application | `feature` |
-| Greenfield product from scratch | `mvp` or `feature` |
-| Quick validation of an approach | `poc` |
-| Known bug to fix | `bugfix` |
-| Code cleanup without behavior changes | `refactor` |
-| New AWS environment or CDK changes | `infra` |
-| CVE or security vulnerability response | `security-patch` |
-| Regulated feature requiring compliance | `enterprise` |
-| V1-style Inception + Construction with minimal ceremony | `classic` |
-| Lightweight requirements-to-deploy run | `express` |
-| AI-DLC workshop or training lab | `workshop` |
+| 本番アプリケーションの新機能 | `feature` |
+| ゼロから作るグリーンフィールドの製品 | `mvp` または `feature` |
+| アプローチの手早い検証 | `poc` |
+| 修正すべき既知のバグ | `bugfix` |
+| 振る舞いを変えないコードの整理 | `refactor` |
+| 新しい AWS 環境や CDK の変更 | `infra` |
+| CVE やセキュリティ脆弱性への対応 | `security-patch` |
+| コンプライアンスが求められる規制対象の機能 | `enterprise` |
+| 最小限の儀式による V1 スタイルの Inception + Construction | `classic` |
+| 要件からデプロイまでの軽量な実行 | `express` |
+| AI-DLC のワークショップやトレーニングラボ | `workshop` |
 
-When in doubt, pick the plan by the size of the change. For a small,
-well-understood change, start with `express` (or `bugfix` for a known bug) and
-add the one stage you want, rather than starting with `feature`, which runs
-every stage:
+迷ったときは、変更の規模でプランを選んでください。小さくてよく理解された変更なら、
+すべてのステージを実行する `feature` から始めるのではなく、`express`（既知のバグなら `bugfix`）から始めて、
+必要なステージを 1 つ追加してください:
 
 ```
 /aidlc express --add functional-design <the change>
 /aidlc bugfix --add functional-design <what is broken>
 ```
 
-`--add` puts a stage on this piece of work's plan only and keeps the rest of
-the scope as it is, so `express` with Functional Design still runs with no
-reviewers, sensors, learnings question, summary confirmation, or plan approval.
-Add `domain-design` instead when the change first needs its components named.
-On work already under way, `/aidlc --add <stage>` adds a stage that has not
-run yet (see `--skip` / `--add` in [CLI Commands](12-cli-commands.md)).
-Choose `feature` for a production feature that needs the full lifecycle, and
-`classic` for the v1-style Inception and Construction experience without
-Ideation or Operation.
+`--add` はこの作業のプランにだけステージを追加し、スコープの残りはそのまま保つため、
+Functional Design を加えた `express` も、レビュアー、センサー、学びの質問、サマリー確認、プラン承認なしで実行されます。
+変更の前にまずコンポーネントに名前を付ける必要がある場合は、代わりに `domain-design` を追加してください。
+すでに進行中の作業では、`/aidlc --add <stage>` でまだ実行されていないステージを追加できます
+（[CLI コマンド](12-cli-commands.md) の `--skip` / `--add` を参照）。
+完全なライフサイクルが必要な本番向けの機能には `feature` を、
+Ideation や Operation を伴わない v1 スタイルの Inception と Construction の体験には `classic` を選んでください。
 
 ---
 
 ## Next Steps
 
-- [Phases and Stages](04-phases-and-stages.md) — what each stage does
-- [Agents](06-agents.md) — which agents participate in which scopes
-- [Skills and Runner Commands](17-skills.md) — the one-word `/aidlc-<scope>` runners for bugfix, express, feature, mvp, and security-patch
-- [CLI Commands](12-cli-commands.md) — full command reference
-- [Glossary](glossary.md) — terminology reference
+- [フェーズとステージ](04-phases-and-stages.md) — 各ステージの内容
+- [エージェント](06-agents.md) — どのエージェントがどのスコープに参加するか
+- [スキルとランナーコマンド](17-skills.md) — bugfix、express、feature、mvp、security-patch 用の 1 語の `/aidlc-<scope>` ランナー
+- [CLI コマンド](12-cli-commands.md) — コマンドの完全なリファレンス
+- [用語集](glossary.md) — 用語のリファレンス

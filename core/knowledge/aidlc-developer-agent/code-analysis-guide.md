@@ -2,12 +2,12 @@
 
 ## Package & Build System Discovery
 
-Scan the project root and common subdirectories for these markers:
+プロジェクトのルートと一般的なサブディレクトリを走査し、次のマーカーを探す:
 
-| File | Build System | Language/Runtime |
+| ファイル | ビルドシステム | 言語/ランタイム |
 |------|-------------|-----------------|
 | `package.json` | npm/yarn/pnpm | JavaScript/TypeScript |
-| `tsconfig.json` | TypeScript compiler | TypeScript |
+| `tsconfig.json` | TypeScript コンパイラ | TypeScript |
 | `requirements.txt` / `pyproject.toml` / `setup.py` | pip/poetry/setuptools | Python |
 | `Cargo.toml` | Cargo | Rust |
 | `go.mod` | Go modules | Go |
@@ -15,103 +15,105 @@ Scan the project root and common subdirectories for these markers:
 | `build.gradle` / `build.gradle.kts` | Gradle | Java/Kotlin |
 | `Gemfile` | Bundler | Ruby |
 | `*.csproj` / `*.sln` | dotnet/MSBuild | C# |
-| `Makefile` | Make | Any |
-| `Dockerfile` / `docker-compose.yml` | Docker | Containerized |
-| `serverless.yml` / `template.yaml` | Serverless/SAM | Cloud functions |
-| `cdk.json` / `cdktf.json` | CDK/CDKTF | Infrastructure |
+| `Makefile` | Make | 任意 |
+| `Dockerfile` / `docker-compose.yml` | Docker | コンテナ化 |
+| `serverless.yml` / `template.yaml` | Serverless/SAM | クラウド関数 |
+| `cdk.json` / `cdktf.json` | CDK/CDKTF | インフラストラクチャ |
 
 ## Framework Detection Patterns
 
-Identify frameworks by scanning imports and configuration:
-- **React**: `import React`, `jsx`/`tsx` files, `react-dom`
-- **Next.js**: `next.config.js`, `pages/` or `app/` directory structure
-- **Express**: `require('express')`, `app.get/post/use` patterns
-- **FastAPI**: `from fastapi import`, `@app.get` decorators
-- **Django**: `settings.py` with `INSTALLED_APPS`, `urls.py`, `models.py`
-- **Spring Boot**: `@SpringBootApplication`, `application.properties/yml`
-- **Rails**: `config/routes.rb`, `app/controllers/`, `ActiveRecord`
+インポートと設定を走査してフレームワークを特定する:
+- **React**: `import React`、`jsx`/`tsx` ファイル、`react-dom`
+- **Next.js**: `next.config.js`、`pages/` または `app/` のディレクトリ構成
+- **Express**: `require('express')`、`app.get/post/use` のパターン
+- **FastAPI**: `from fastapi import`、`@app.get` デコレーター
+- **Django**: `INSTALLED_APPS` を含む `settings.py`、`urls.py`、`models.py`
+- **Spring Boot**: `@SpringBootApplication`、`application.properties/yml`
+- **Rails**: `config/routes.rb`、`app/controllers/`、`ActiveRecord`
 
 ## What to Skip
 
-Scan what people wrote. Find the files with your file tools, one folder at a
-time: your directory read where you have one, otherwise one plain `ls` of the
-folder. Read the repository's `.gitignore` files and leave out what they
-ignore, and also skip generated and installed content that nothing ignores:
+人が書いたものを走査する。ファイルはファイルツールを使い、フォルダーを1つずつ
+探す。ディレクトリ読み取りツールがあればそれを使い、なければフォルダーに対して
+素の `ls` を1回だけ実行する。リポジトリの `.gitignore` ファイルを読み、そこで無視
+されているものは除外する。また、どこでも無視されていない生成物やインストール物も
+スキップする:
 
-- **Build outputs**: .NET `bin/` and `obj/` beside a `.csproj`, `.fsproj` or
-  `.vbproj` (and `out/` from `dotnet publish -o out`), `dist/`, `build/`,
-  `target/`, `coverage/`, and compiled files such as `*.dll`, `*.pdb`,
-  `*.class` and `*.pyc`
-- **Dependencies**: `node_modules/`, `.venv/` and `venv/`, `vendor/`, and
-  NuGet's solution-level `packages/`
-- **IDE and tool caches**: `.vs/`, `.idea/`, `.gradle/`, `__pycache__/`,
-  `.pytest_cache/`, `.next/`
+- **ビルド出力**: `.csproj`、`.fsproj`、`.vbproj` の隣にある .NET の `bin/` と
+  `obj/`（および `dotnet publish -o out` による `out/`）、`dist/`、`build/`、
+  `target/`、`coverage/`、ならびに `*.dll`、`*.pdb`、`*.class`、`*.pyc` などの
+  コンパイル済みファイル
+- **依存関係**: `node_modules/`、`.venv/` と `venv/`、`vendor/`、および
+  NuGet のソリューションレベルの `packages/`
+- **IDE とツールのキャッシュ**: `.vs/`、`.idea/`、`.gradle/`、`__pycache__/`、
+  `.pytest_cache/`、`.next/`
 
-Decide from the files beside a folder, not by opening it. A `bin/`, `obj/` or
-`out/` next to a `.csproj`, `.fsproj` or `.vbproj` is build output, and a
-`packages/` next to a `.sln` is NuGet's: skip them without listing or reading
-anything inside. The same names hold hand-written code elsewhere: Node's
-`bin/www`, Rails' `bin/` scripts, a hexagonal `adapter/out/` package, or a
-JavaScript monorepo's `packages/` named in its `package.json` `workspaces` or
-`pnpm-workspace.yaml`. Open one file in a folder only when nothing beside it
-tells which. A folder the brief names to scan, or one listed in
-`.aidlc-source-paths.json`, is source whatever sits beside it.
+フォルダーを開いて判断するのではなく、その隣にあるファイルから判断する。
+`.csproj`、`.fsproj`、`.vbproj` の隣にある `bin/`、`obj/`、`out/` はビルド出力であり、
+`.sln` の隣にある `packages/` は NuGet のものである。これらは中身を一覧表示したり
+読んだりせずにスキップする。同じ名前でも、別の場所では手書きのコードを含む。
+Node の `bin/www`、Rails の `bin/` スクリプト、ヘキサゴナルアーキテクチャの
+`adapter/out/` パッケージ、あるいは `package.json` の `workspaces` や
+`pnpm-workspace.yaml` に記載された JavaScript モノレポの `packages/` などである。
+隣のファイルからどちらか判断できない場合に限り、フォルダー内のファイルを1つだけ開く。
+ブリーフが走査対象として指定したフォルダーや、`.aidlc-source-paths.json` に
+記載されたフォルダーは、隣に何があってもソースとして扱う。
 
-List the folders you skip under **Left out** in the scan's coverage, not under
-**Skimmed only**.
+スキップしたフォルダーは、スキャンのカバレッジの **Skimmed only** ではなく
+**Left out** の下に列挙する。
 
 ## Source File Classification
 
-Classify every source file that "What to Skip" leaves in into one of these
-categories:
-- **Model/Entity**: Data structures, database models, DTOs, schemas
-- **Controller/Handler**: Request routing, input parsing, response formatting
-- **Service/UseCase**: Business logic, orchestration, domain operations
-- **Repository/DAO**: Data access, queries, persistence abstraction
-- **Utility/Helper**: Cross-cutting functions, formatters, validators
-- **Configuration**: App config, environment setup, dependency injection
-- **Middleware**: Request/response pipeline (auth, logging, error handling)
-- **Test**: Unit tests, integration tests, fixtures, factories
-- **Migration**: Database schema changes, data migrations
-- **Static/Asset**: Templates, stylesheets, images, static content
+"What to Skip" で除外されずに残ったすべてのソースファイルを、次のいずれかの
+カテゴリに分類する:
+- **Model/Entity**: データ構造、データベースモデル、DTO、スキーマ
+- **Controller/Handler**: リクエストのルーティング、入力の解析、レスポンスの整形
+- **Service/UseCase**: ビジネスロジック、オーケストレーション、ドメイン操作
+- **Repository/DAO**: データアクセス、クエリ、永続化の抽象化
+- **Utility/Helper**: 横断的な関数、フォーマッター、バリデーター
+- **Configuration**: アプリ設定、環境構成、依存性注入
+- **Middleware**: リクエスト/レスポンスのパイプライン（認証、ログ記録、エラー処理）
+- **Test**: ユニットテスト、統合テスト、フィクスチャ、ファクトリ
+- **Migration**: データベーススキーマの変更、データ移行
+- **Static/Asset**: テンプレート、スタイルシート、画像、静的コンテンツ
 
 ## Dependency Graph Extraction
 
-For each source file, extract:
-1. **Direct imports** -- modules/packages this file depends on
-2. **Exported symbols** -- functions/classes/constants this file provides
-3. **External dependencies** -- third-party packages used
-4. **Circular references** -- files that import each other (flag these)
+各ソースファイルについて、次を抽出する:
+1. **直接インポート** -- このファイルが依存するモジュール/パッケージ
+2. **エクスポートされるシンボル** -- このファイルが提供する関数/クラス/定数
+3. **外部依存関係** -- 使用しているサードパーティパッケージ
+4. **循環参照** -- 相互にインポートし合っているファイル（これらにはフラグを立てる）
 
-Build a dependency adjacency list: `file -> [dependency1, dependency2, ...]`
+依存関係の隣接リストを構築する: `file -> [dependency1, dependency2, ...]`
 
 ## Code Quality Quick Assessment
 
-Rate each of these on a 3-point scale (good/fair/poor):
-- **Naming clarity**: Are variables, functions, and files self-documenting?
-- **Function size**: Are functions under 30 lines with single responsibility?
-- **Error handling**: Are errors caught, logged, and propagated appropriately?
-- **Test presence**: Do critical paths have corresponding test files?
-- **Duplication**: Are there copy-paste patterns that should be abstracted?
-- **Dead code**: Are there unused imports, unreachable branches, commented-out blocks?
+次の各項目を3段階（good/fair/poor）で評価する:
+- **命名の明確さ**: 変数、関数、ファイルの名前がそれ自体で意味を説明しているか。
+- **関数のサイズ**: 関数は30行未満で、単一責任になっているか。
+- **エラー処理**: エラーが適切に捕捉、記録、伝播されているか。
+- **テストの有無**: 重要な経路に対応するテストファイルがあるか。
+- **重複**: 抽象化すべきコピー＆ペーストのパターンがあるか。
+- **デッドコード**: 未使用のインポート、到達不能な分岐、コメントアウトされたブロックがあるか。
 
 ## API Endpoint Inventory
 
-For each discovered endpoint, record:
-- HTTP method and path (or GraphQL operation name)
-- Request parameters (path, query, body, headers)
-- Response shape and status codes
-- Authentication/authorization requirements
-- Rate limiting or throttling configuration
-- Associated middleware chain
+検出した各エンドポイントについて、次を記録する:
+- HTTP メソッドとパス（または GraphQL のオペレーション名）
+- リクエストパラメーター（パス、クエリ、ボディ、ヘッダー）
+- レスポンスの形とステータスコード
+- 認証/認可の要件
+- レート制限またはスロットリングの設定
+- 関連するミドルウェアチェーン
 
 ## Technical Debt Indicators
 
-Flag these patterns during code scan:
-- TODO/FIXME/HACK comments (count and categorize)
-- Suppressed linter warnings (`// eslint-disable`, `# noqa`, `@SuppressWarnings`)
-- Hard-coded credentials, URLs, or magic numbers
-- Deeply nested conditionals (>3 levels)
-- God classes/files (>500 lines with multiple responsibilities)
-- Missing error handling on I/O operations
-- Outdated dependencies (major version behind)
+コードの走査中に、次のパターンにフラグを立てる:
+- TODO/FIXME/HACK コメント（件数を数えて分類する）
+- 抑制されたリンター警告（`// eslint-disable`、`# noqa`、`@SuppressWarnings`）
+- ハードコードされた認証情報、URL、マジックナンバー
+- 深くネストした条件分岐（3階層超）
+- 神クラス/神ファイル（複数の責務を持つ500行超のもの）
+- I/O 操作でのエラー処理の欠如
+- 古い依存関係（メジャーバージョンが遅れているもの）

@@ -87,7 +87,7 @@ codex
 Windows では、`install.ps1` をダウンロードし、その PowerShell ウィンドウで
 `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force` によりスクリプトを許可してから、
 `& $installer` を実行します。アカウントのスコープ、User PATH への自動登録、`-NoModifyPath` については
-[Windows installation](../18-install-and-lifecycle.md#windows-powershell)
+[Windows へのインストール](../18-install-and-lifecycle.md#windows-powershell)
 を参照してください。
 エアギャップ環境向けのパッケージでは、同じ
 `Set-ExecutionPolicy` の行を実行した後、Unix では
@@ -122,7 +122,7 @@ refresh ではあなたが設定した値が保たれ（リリースが別の値
 
 ### Versioned manual-copy alternative
 
-[Install and Lifecycle: Copy Channel](../18-install-and-lifecycle.md#copy-channel)
+[インストールとライフサイクル: コピーチャネル](../18-install-and-lifecycle.md#copy-channel)
 の説明に従って特定リリースの `aidlc-copy-runtime-X.Y.Z.tar.gz` をダウンロードして展開し、
 `RUNTIME_ROOT` を展開した `runtime/` ディレクトリに設定します。
 

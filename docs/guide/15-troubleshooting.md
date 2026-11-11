@@ -18,7 +18,7 @@
 |---------|-----------|
 | 監査エントリが記録されない | `aidlc doctor` を実行します。コピーインストールの場合は、`bun` がフックの PATH 上にあることも確認してください |
 | Windows: 監査やその他の記録で `—` が `â€”` と、`→` が `â†’` と表示される | ファイルは UTF-8 ですが、Windows PowerShell 5.1 が ANSI として読み込んでいます。`Get-Content -Encoding UTF8` で読み込むか、PowerShell 7 を使ってください。その読み込み結果から書き直したファイルには誤った文字が残るため、記録は `Copy-Item` またはエクスプローラーでコピーし、実行内容の共有には `/aidlc --doctor --export` を使ってください |
-| ファイルを手で編集した。エージェントはそれを受け入れるか？ | はい。編集してから **done** と伝えてください（またはそのまま続けてください）。完了済みのステージへの編集はそのまま使われますが、再承認はされません。承認を受けたい場合は `/aidlc --stage <name>` で戻ってください。そのステージとそれ以降のすべてのステージが再び開かれます。各ケースについては [Editing Files Yourself](07-interaction-modes.md#editing-files-yourself) を参照してください |
+| ファイルを手で編集した。エージェントはそれを受け入れるか？ | はい。編集してから **done** と伝えてください（またはそのまま続けてください）。完了済みのステージへの編集はそのまま使われますが、再承認はされません。承認を受けたい場合は `/aidlc --stage <name>` で戻ってください。そのステージとそれ以降のすべてのステージが再び開かれます。各ケースについては [ファイルを自分で編集する](07-interaction-modes.md#editing-files-yourself) を参照してください |
 | Claude のフックがポリシーで制限されている | Claude Code の管理者に、マネージド設定の `allowManagedHooksOnly` を解除するよう依頼してください。プロジェクト設定ではこれを上書きできません |
 | Cursor: 承認が一切記録されない | プロジェクトが git リポジトリ内にない場合は、そこで `git init` を実行し、Cursor を完全に再起動してフォルダを信頼してください（[Cursor project outside a git repository](#cursor-project-outside-a-git-repository) を参照） |
 | Kiro IDE または Kiro CLI v3: `deny fs_read matching ".kiro/"` | `/aidlc --doctor` を実行し、表示された ignore ファイルから `.kiro/` のルールを削除してください（[Kiro Read Denials](#kiro-read-denials) を参照） |
@@ -26,14 +26,14 @@
 | Kiro CLI: AI-DLC のレビューやヘルパーが実行されず、エージェントが作業を引き渡すツールがないと言う | Kiro CLI の Workflows 機能がオンになっています。エージェントにオフにするよう頼むか、`aidlc config trust --kiro-cli-workflows off --yes` を実行してから Kiro CLI を終了し、このプロジェクトで再度 `kiro-cli --v3` を起動してください（[Kiro's Workflows feature](harnesses/kiro.md#kiros-workflows-feature-stops-ai-dlcs-reviews-and-helpers) を参照） |
 | Windows 上の Kiro IDE で、Kiro のターミナルがコマンドプロンプトの場合: コマンドの結果が `AI-DLC reply:` 行で終わるかその後で切れてしまい、ステップに余分なターンがかかる、またはすべてのコマンドが終了コード -1 になる | エージェントに Kiro のターミナルを PowerShell に設定するよう頼むか、`aidlc config trust --kiro-terminal powershell --yes` を実行してから Kiro を再起動してください（[Command Prompt as Kiro's terminal](harnesses/kiro.md#command-prompt-as-kiros-terminal-on-windows) を参照） |
 | Windows 上の Kiro IDE で、Kiro のターミナルが PowerShell の場合: フォルダを信頼しているのにすべてのコマンドが終了コード -1 になり、結果が `AI-DLC reply:` 行で終わるか切れてしまう | Kiro のシェル統合が読み込まれていません。たとえば PowerShell の実行ポリシーが `Restricted` や `AllSigned` になっている場合です。Kiro のターミナルで `aidlc doctor` を実行すると（チャットでの `/aidlc --doctor` ではこれを確認できません）、`Kiro terminal` 行に原因が表示されます。Kiro の PowerShell ターミナルで（Windows PowerShell と PowerShell 7 はそれぞれ別のポリシーを持ちます）`Get-ExecutionPolicy -List` と `$ExecutionContext.SessionState.LanguageMode` を実行してください。`MachinePolicy` または `UserPolicy` が設定されている場合、あるいは言語モードが `FullLanguage` でない場合は IT チームに相談してください。`Process` が設定されている場合は、スタートメニューから Kiro を起動してください。有効なポリシーが `CurrentUser` または `LocalMachine` から来ていて `Restricted` または `AllSigned` の場合は、そこで `Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned` を実行し、Kiro を再起動してください。Kiro の `terminal.integrated.shellIntegration.enabled` がオフになっている場合や、PowerShell プロファイルに余分な引数がある場合も同じ症状になります（[PowerShell without Kiro's shell integration](harnesses/kiro.md#powershell-without-kiros-shell-integration-on-windows) を参照） |
-| Kiro IDE: エージェントが "my memory"（自分の記憶）を根拠に、チェックの回避やフックの手動実行を提案する | その提案は無視し、該当する Kiro のメモリを削除してください（[Kiro memories carry old AI-DLC advice](harnesses/kiro.md#kiro-memories-carry-old-ai-dlc-advice) を参照） |
+| Kiro IDE: エージェントが "my memory"（自分の記憶）を根拠に、チェックの回避やフックの手動実行を提案する | その提案は無視し、該当する Kiro のメモリを削除してください（[Kiro のメモリーに古い AI-DLC の助言が残っている](harnesses/kiro.md#kiro-memories-carry-old-ai-dlc-advice) を参照） |
 | 状態ファイルが壊れている | `/aidlc --doctor` を実行し、状態テンプレートと比較してください |
 | 承認ゲートで止まっている | 返答を入力してください。先へ進むには `/aidlc --stage <target>` を使います |
 | Kiro IDE: エージェントが実行したビルド・テスト・プローブのコマンドが `Exit Code: -1` を示すが、AI-DLC 自身のコマンドは動作する | Kiro がそのコマンドを実行していません。あなたの許可を待っているか、あなたが拒否したためです。Kiro のプロンプトで **Allow**（または **Always allow**）を選ぶか、どう進めるかをエージェントに伝えてください |
 | Kiro IDE: 承認の質問への返答が認識されない、またはコマンドが終了コード -1 で返ってくる | Kiro がこのフォルダを信頼するか尋ねてきたら **Trust Folder & Continue** を選び（または Restricted Mode のバナーで **Manage**、続いて **Trust** を選び）、コマンドパレットから **Developer: Reload Window** を実行して、続けるよう伝えてください。次のメッセージがまだ記録されない場合は、`/aidlc --doctor` で理由がわかります。Kiro CLI では、いったん終了してそのフォルダで再度 `kiro-cli --v3` を起動してください（フォルダを信頼するか尋ねられ、中身を把握している場合は **Trust, continue** を選びます）（[Kiro IDE hooks not running](#kiro-ide-hooks-not-running) を参照） |
 | Kiro IDE または Kiro CLI: 承認時に `aidlc-record-human-turn` がオフになっているため回答が記録されなかったと表示される、または次の AI-DLC ステップで AI-DLC のフックがオフになっていると表示される | `.kiro/hooks/` にあるそのフックのファイルに `"enabled": false` が書かれています。Kiro IDE の Agent Hooks パネルがこれを書き込み、その状態でコミットされたファイルはすべてのクローンに持ち込まれます。AI-DLC がこれを自動でオンに戻すことはありません。Kiro IDE では Agent Hooks でオンに戻してください。Kiro CLI では、表示された行が示すファイルの `"enabled": false` を `true` に変更し、Kiro を終了してそのフォルダで再度 `kiro-cli --v3` を起動してください（フックファイルはセッション開始時に読み込まれます）（[A Kiro hook switched off](#a-kiro-hook-switched-off) を参照） |
-| Kiro CLI（または Kiro ACP クライアント）: すべての承認で人間の返答が届いていないと表示され、再起動しても直らない | エンジンがディストリビューションと一致していません。Kiro CLI (V2) には Kiro CLI の v2 エンジン（`kiro-cli --v2`）が必要で、Kiro がエージェントファイルをアップグレードした後であれば v3 も使えます。Kiro には v3（`kiro-cli --v3`）が必要です（[Kiro CLI hooks not running](#kiro-cli-hooks-not-running) を参照） |
-| AI-DLC がナレッジベースからナレッジドキュメントフォルダ内のファイルを読めないと言う、または `aidlc doctor` がそれらについて警告する | それらのファイルはナレッジベースに追加されていないか、読み取れるテキストを含んでいません。各ファイルについて表示された行の指示に従い（追加するか、その横に `.md`、`.txt`、`.csv` のコピーを保存する）、その後 `/aidlc knowledge sync` を実行してください（[Document Knowledge](08-knowledge.md#document-knowledge-documentkb) を参照） |
+| Kiro CLI（または Kiro ACP クライアント）: すべての承認で人間の返答が届いていないと表示され、再起動しても直らない | エンジンがディストリビューションと一致していません。Kiro CLI (V2) には Kiro CLI の v2 エンジン（`kiro-cli --v2`）が必要で、Kiro がエージェントファイルをアップグレードした後であれば v3 も使えます。Kiro には v3（`kiro-cli --v3`）が必要です（[Kiro CLI のフックが動かない](#kiro-cli-hooks-not-running) を参照） |
+| AI-DLC がナレッジベースからナレッジドキュメントフォルダ内のファイルを読めないと言う、または `aidlc doctor` がそれらについて警告する | それらのファイルはナレッジベースに追加されていないか、読み取れるテキストを含んでいません。各ファイルについて表示された行の指示に従い（追加するか、その横に `.md`、`.txt`、`.csv` のコピーを保存する）、その後 `/aidlc knowledge sync` を実行してください（[ドキュメントナレッジ](08-knowledge.md#document-knowledge-documentkb) を参照） |
 | `aidlc doctor` がこのプロジェクトは同期フォルダ（Google Drive、OneDrive、Dropbox、Box、iCloud Drive）内にあると言う、または誰も編集していないファイルについてレビューや計画の承認が拒否される | 同期クライアントが AI-DLC のチェック対象のファイルを書き換えることがあり、ファイルが変更されると再レビューされるまで承認は止まります。プロジェクトを同期フォルダの外に移すか、そのフォルダの同期を一時停止してから、拒否メッセージが示す手順を実行してください |
 | セッションの途中でコンテキストがコンパクションされた | `/aidlc` を実行してチェックポイントから再開してください |
 | 監査ログが大きすぎる | そのままにしておいてください。長期プロジェクトの監査ファイルが大きくなるのは設計どおりで、エンジンはそれを読んで、あなたが何を承認し何を完了したかを把握します（[Audit Log Growing Too Large](#audit-log-growing-too-large) を参照） |
@@ -59,7 +59,7 @@
 | `This PowerShell window is running as administrator` | 最も安全にインストールするには、N と答え、PowerShell を通常どおり（"Run as administrator" ではなく）開いて、インストーラーを再度実行してください。それでも管理者として続行するには、y と答えるか、インストーラーに `-Yes` を渡してください。`aidlc uninstall` は何も尋ねません。同じ警告を表示してそのまま進むため、最も安全にアンインストールするには通常の PowerShell ウィンドウから実行してください。AI-DLC はユーザー単位でインストールされ、管理者権限は必要ありません。Windows Server の組み込み Administrator や UAC による昇格のないその他のセッションでは、警告は表示されません。 |
 | Windows のインストールで PATH の競合が報告される | ファイルはインストールされていますが、永続的な PATH が別のコマンドを選択しています。`config` には表示されたコマンドのフルパスを使うか、報告された競合を解消してください。終了コードが 0 でも、JSON は `status: "warning"` と `data.ready: false` を報告します。 |
 | Windows のインストールで PATH を構成できなかったと報告される | ファイルはインストールされていますが、PATH の手順が終了コード 1 で失敗しました。表示された復旧手順に従うか、`-NoModifyPath` を付けて再実行し、直接実行用のコマンドを使ってください。JSON は `data.installed: true` と `data.ready: false` を報告します。 |
-| Windows のアンインストール後もユーザー PATH のエントリが残っている | アンインストールで削除されるのは、`windows-path.json` を通じて所有しているエントリだけです。もともと存在していたエントリや、その所有記録のないインストールでは、ユーザー PATH は変更されません。[Uninstall](18-install-and-lifecycle.md#uninstall) を参照してください。 |
+| Windows のアンインストール後もユーザー PATH のエントリが残っている | アンインストールで削除されるのは、`windows-path.json` を通じて所有しているエントリだけです。もともと存在していたエントリや、その所有記録のないインストールでは、ユーザー PATH は変更されません。[アンインストール](18-install-and-lifecycle.md#uninstall) を参照してください。 |
 | アンインストール後もファイルが残っている | アンインストールでは、個別に検証したファイルを削除し、ディレクトリは空の場合にのみ削除します。一覧にないファイルや変更されたファイルは保持され、報告されます。古いインストールで所有一覧がないファイルも同様です。報告されたパスを確認してください。`--purge` でも無関係な内容は削除されません。 |
 | `--offline requires --from <release-directory>` | オフラインモードがネットワーク上のリリースにフォールバックすることはありません。リリースアセット一式を転送し、そのディレクトリを `--from` / `-From` で渡してください。インストーラーがそれを検証します。 |
 | `aidlc` が終了コード 4 で終了する、または Windows のアクティブポインタが無効 | ランチャー（bin 内の `aidlc.exe` または `aidlc.cmd`）は、使用できなかったファイル（アクティブバージョンのマーカー、アクティブなコマンドのターゲット、またはアクティブな実行ファイル）を示す `aidlc:` 行を 1 行表示し、続けて `Rerun the AI-DLC installer (install.ps1) to repair the aidlc command.` と表示します。以前のリリースから `aidlc update` を実行した後は、そのリリースのランチャー（何も表示せずに終了コード 4 で終了するもの）が、`aidlc doctor` と `aidlc uninstall` 以外の次の `aidlc` コマンドで置き換えられるまで残ります。その 1 回のコマンドはまだ古いランチャーを通して実行され、空白を含む値は別々の単語に分割されます。古いランチャーが残っている間、`aidlc doctor` は `Windows launcher` 行を表示します。AI-DLC がそれを置き換えられない場合（たとえばインストール後に `aidlc.cmd` や `aidlc-shim.ps1` が変更された場合）、その行に理由と修正手順が示されます。古いランチャーがコマンドの開始前に終了コード 4 で終了する場合は、インストーラーを再実行してください。`%LOCALAPPDATA%\aidlc\active-executable` は編集しないでください。検証済みの同じインストーラーを再実行するか、正常に動作する保持済みの実行ファイルから `aidlc use <version>` を使ってください。PowerShell がランチャーを `ConstrainedLanguage` モードで実行していることを示す行が表示された場合は、アプリケーション制御ポリシー（AppLocker または WDAC）がそれをブロックしています。管理者に `aidlc-shim.ps1` の許可を依頼するか、`%LOCALAPPDATA%\aidlc\versions\<version>\aidlc.exe` を直接実行してください。 |
@@ -68,7 +68,7 @@
 | `the last AI-DLC uninstall is still finishing` | Windows では、`aidlc uninstall` の終了後に AI-DLC のファイルが削除されます。インストールされたバージョンが 1 つか 2 つなら 1 分未満ですが、それ以上ある場合や遅いマシンではもっとかかります。何も変更されていません。表示された行の指示に従ってインストーラーを再度実行してください。完了せずに止まったクリーンアップは、開始から 10 分後に doctor 以外の最初の AI-DLC コマンドによって再開されます。 |
 | Alpine で `libstdc++.so.6` または `libgcc_s.so.1` が見つからないと報告される | Bun と Node.js の musl ビルドが必要とするのと同じランタイム依存関係を `apk add libgcc libstdc++` でインストールし、インストーラーまたはコマンドを再実行してください。完全に静的な Bun musl コンパイルターゲットは現在利用できません。インストーラーはこの対処法を表示しますが、パッケージのインストールはしません。 |
 | ハーネスがすでに独自のモデルアクセスを持っているのに、`Providers` が `no recorded answers` とともに `[needs]` を示す | Kiro CLI と Kiro IDE では、モデルアクセスが Kiro に付属しているため、この行は `[ok]` となり、`aidlc config providers` は何も尋ねません。GitHub Copilot と Cursor では、セッションがモデルアクセスを提供するため、回答なしで `[ok]` となります。自分の Amazon Bedrock アクセスを使う場合にのみ `aidlc config providers` を実行してください（Cursor では Bedrock のキーを受け付けるのは IDE だけで、CLI は常に Cursor のバックエンドを使います）。その他のハーネスではこの行は本当に対応が必要です。`amazon-bedrock` と答えるか、`keep current`（`--provider current`）を選んで、ハーネスにすでに設定されているプロバイダを維持して記録してください。`--provider other --acknowledge` は、自分で設定した別のプロバイダを記録します。 |
-| `Models` が `no recorded policy` とともに `[needs]` を示す | ポリシーがない場合、ほとんどのエージェントはセッションのモデルと effort を引き継ぐため、高い effort のセッションではエージェントも高い effort で実行されます。エージェントの effort を設定するにはプリセットを記録するか（`aidlc config models --preset balanced --project --yes`）、そのままにして引き継ぎを続けてください。Kiro CLI では、プリセットは対話セッション全体に 1 つの effort を設定します。`aidlc config models` がセッションのモデルを選び、その effort とともに個人の Kiro 設定に保存します。Kiro の中では `/model` と `/effort` で変更できます（[Kiro CLI (V2) session model and effort](harnesses/kiro.md#kiro-cli-v2-session-model-and-effort) を参照）。GitHub Copilot、Cursor、Kiro IDE では、プリセットを設定しても何も変わらないため、この行は `[ok]` となり代わりにホストの名前を示します。モデルと effort はホスト側で選んでください（Kiro では、`aidlc config models --agent` で 1 つのエージェントに独自のモデルと effort を設定できます）。[Choosing a Model and Effort](18-install-and-lifecycle.md#choosing-a-model-and-effort) を参照してください。 |
+| `Models` が `no recorded policy` とともに `[needs]` を示す | ポリシーがない場合、ほとんどのエージェントはセッションのモデルと effort を引き継ぐため、高い effort のセッションではエージェントも高い effort で実行されます。エージェントの effort を設定するにはプリセットを記録するか（`aidlc config models --preset balanced --project --yes`）、そのままにして引き継ぎを続けてください。Kiro CLI では、プリセットは対話セッション全体に 1 つの effort を設定します。`aidlc config models` がセッションのモデルを選び、その effort とともに個人の Kiro 設定に保存します。Kiro の中では `/model` と `/effort` で変更できます（[Kiro CLI (V2) session model and effort](harnesses/kiro.md#kiro-cli-v2-session-model-and-effort) を参照）。GitHub Copilot、Cursor、Kiro IDE では、プリセットを設定しても何も変わらないため、この行は `[ok]` となり代わりにホストの名前を示します。モデルと effort はホスト側で選んでください（Kiro では、`aidlc config models --agent` で 1 つのエージェントに独自のモデルと effort を設定できます）。[モデルと推論量の選び方](18-install-and-lifecycle.md#choosing-a-model-and-effort) を参照してください。 |
 | `aidlc doctor` で `workspace shell ready` が失敗し、`aidlc config` を再実行しても直らない | 対話的な再実行は既存のプロジェクションを使い、欠けている `aidlc/spaces/default/memory/` を再構築することはありません。シェルが不完全な間は `Workspace` 行を報告し、修正するセクションを提示しません。その行が示すコマンドを実行してください。ネイティブインストールでは `aidlc config --harness <name>` で、インストール済みのランタイムから更新し、ワークスペースのシェルを再作成します。Bun で起動するプロジェクション（`aidlc-copy-runtime-X.Y.Z.tar.gz` の `runtime/<name>/` ルート、またはチェックアウトの `dist/<name>/` ツリーからコピーしたもの）には更新元となるインストール済みランタイムがないため、そのコマンドには `--download` も付きます。これはプロジェクトのリリースに対応する `aidlc-copy-runtime-<version>.tar.gz` を取得して検証します。プロジェクトのフックがネイティブコマンドに切り替わってしまうため、ネイティブ用の `aidlc-runtime-X.Y.Z.tar.gz` や `dist-release/` のバイトが使われることはありません。 |
 | `aidlc config` がリリースを必要としていると表示する: `this project is pinned to <version>`、`needs the <version> release files`、`is missing aidlc/spaces/default/memory/`、または `no longer has the MCP server list` | プロジェクトが、このマシンにないリリースのファイルを必要としています。チームメイトが設定した新しいピン、追加しようとしているハーネス、または失われたファイルが原因です。`fix:` 行を実行してください。これは実行したコマンドに `--download` を付けたもので、まさにそのリリースを取得し、チェックサムと（`gh` がインストールされていれば）リリースのアテステーションを検証して、コマンドを完了させます。ネイティブの場合は、`aidlc config --pin` と同様にピン留めされたリリースをインストールして登録します。コピーされたプロジェクトでは `aidlc-copy-runtime-<version>.tar.gz` をダウンロードします。ターミナルでは、config が代わりに確認を求めます。ピン留めされたリリースがすでにインストールされていれば、確認なしで使われます。ネットワークにアクセスできない場合は `offline:` 行に従ってください。示されたファイルを別の場所で取得して `--from` で渡すか、ネイティブの場合は `aidlc config --pin <version> --offline --from <release directory>` を実行します。`--release-base-url` と `--ca-bundle` でミラーを選べます。チェックサムやアテステーションに失敗した場合は、何も変更せずに停止します。 |
 | コピーチャネルでインストールしていないプロジェクトで、`aidlc doctor` が Bun を要求する | コピーチャネルのプロジェクションは Bun でフックを実行し、ネイティブインストールは `aidlc` コマンドでフックを実行します。対処法には、プロジェクトがどちらのチャネルかが示されます。Bun を不要にするには、ネイティブのリリースインストーラーで再インストールし、`aidlc config --harness <name>` を再実行してください。 |
@@ -76,7 +76,7 @@
 | `config plan changed after approval` | `aidlc config --dry-run --json` を再実行し、`data.actions` を確認してから、まったく同じソースと動作オプションで新しい `data.planToken` を適用してください。 |
 | `aidlc config` から `locally modified` または `managed block was locally modified` | `aidlc config --dry-run --json` を実行して `data.actions` を確認してください。`--force` は、ベースラインが所有するフレームワークのバイトやマネージドブロックを置き換える場合にのみ使ってください。無関係なルートの内容を変更する許可にはなりません。`.claude/settings.json` はエントリ単位でマージされるため `--force` は不要です。更新すると AI-DLC のフックとコマンドの許可エントリが元に戻され、あなたのフック、deny ルール、カスタムのステータスライン、環境変数、その他の設定は保持され、何を戻したかを示す注記が表示されます。廃止された同梱の許可エントリは自動的には削除されません。`.codex/config.toml` も同じようにエントリ単位でマージされます。更新で変更されるのは AI-DLC 自身のキーだけで、あなたのキー、テーブル、コメントはそのまま保持されます。AI-DLC のキーのうちあなたが変更した値も保持され、リリースが別の値を同梱している場合は注記が表示されます。 |
 | `aidlc doctor` で `AI-DLC files: N changed in this project` | これらの AI-DLC ファイルがこのプロジェクトで編集されているため、`aidlc config` はそれらを保持し、何かを更新する前に停止します。自分の版を残したい場合は、示されたファイルを別の場所に移してから `aidlc config` を実行してください。同梱の版で上書きしたい場合は `aidlc config --force` を実行してください。違いが改行コードだけのファイル（Windows のチェックアウトでは LF が CRLF に変換されます）は数えられません。 |
-| `cannot coexist in one project` | 2 つ目のハーネスが、エンジンディレクトリ（`opencode` / `copilot` は `.aidlc` を使います）または排他的なマネージドブロック（Copilot の `AGENTS.md`）を共有しています。別々のエンジンディレクトリを選び、排他的なブロックを避けてください。Kiro CLI (V2) と Kiro も `.kiro` を共有しますが、`aidlc config --harness kiro`（または `--harness kiro-v2`）でインストール済みのものをその場でもう一方に切り替えられます（Kiro CLI (V2) から Kiro へ、ターミナルなしで、または `--quiet` や `--json` の下で切り替える場合は `--yes` を付けます）。[More than one harness in a project](18-install-and-lifecycle.md) を参照してください。中立的な `AGENTS.md` ブロックは Kiro CLI、Kiro IDE、Codex、Cursor、OpenCode で共有され、`.gitignore` は同梱のエントリを結合します。 |
+| `cannot coexist in one project` | 2 つ目のハーネスが、エンジンディレクトリ（`opencode` / `copilot` は `.aidlc` を使います）または排他的なマネージドブロック（Copilot の `AGENTS.md`）を共有しています。別々のエンジンディレクトリを選び、排他的なブロックを避けてください。Kiro CLI (V2) と Kiro も `.kiro` を共有しますが、`aidlc config --harness kiro`（または `--harness kiro-v2`）でインストール済みのものをその場でもう一方に切り替えられます（Kiro CLI (V2) から Kiro へ、ターミナルなしで、または `--quiet` や `--json` の下で切り替える場合は `--yes` を付けます）。[1 つのプロジェクトで複数のハーネスを使う](18-install-and-lifecycle.md) を参照してください。中立的な `AGENTS.md` ブロックは Kiro CLI、Kiro IDE、Codex、Cursor、OpenCode で共有され、`.gitignore` は同梱のエントリを結合します。 |
 | `cannot switch .kiro from <row> to <row>: installed <row> has no ownership baseline`、`has an ownership baseline recorded before it listed only shipped files`、または `has an unusable ownership baseline` | インストール済みの行がどの `.kiro/` ファイルを所有しているかを示す、使用可能な記録がありません。そのため切り替えるとファイルが残ってしまうので、何も変更しません。表示された手順に従ってください。破損した `.kiro/tools/data/aidlc-manifest.json` を退避し（手順にフルパスが示されます）、表示された `config --harness <installed row>` を実行してから、もう一度切り替えを実行します。 |
 | `switching .kiro to kiro lets Kiro run hook files AI-DLC does not own` | Kiro は v3 エンジンおよび Kiro IDE で、すべての `.kiro/hooks/*.json` ファイルを実行します。示されたファイルを確認してから、ターミナルでプロンプトに答えるか、表示された `--dry-run` を実行し、それが出力する `--plan-token` で切り替えを適用してください。`config plan changed after approval` または `hook files no longer match this switch's plan` は、切り替えの確認内容がその確認後に変わったことを意味します。もう一度 `--dry-run` を実行し、示された内容を確認してください。 |
 | `cannot switch .kiro to kiro: .kiro/hooks is a link or a file, not a directory`、または `Kiro would run hooks through entries that are not regular files in .kiro/hooks` | `.kiro/hooks` をファイルを格納する実際のディレクトリにするか、一覧にある各フックエントリ（リンク、ディレクトリ、その他ファイルでないもの）を通常のファイルに置き換えるか `.kiro/hooks` の外に移してください。その後、もう一度切り替えを実行します。 |
@@ -145,7 +145,7 @@ WSL の `/mnt/c` でも特別な対応は不要です。config がロックな�
 最初のリネームの時点で同じ `Cannot use the
 filesystem at ...` の行と対処法を表示して停止し、ロールバックして、作成した空のフォルダだけを
 残します。プローブに合格しても、アトミック性やクラッシュ時の永続性は保証されません。
-[Transactions and Recovery](18-install-and-lifecycle.md#transactions-and-recovery) の機能とサポートの対応表を参照してください。
+[トランザクションと復旧](18-install-and-lifecycle.md#transactions-and-recovery) の機能とサポートの対応表を参照してください。
 S3 マウントの名前やストレージエラーだけでは、そのドライバー、バージョン、
 オプションは特定できません。
 
@@ -187,7 +187,7 @@ AI-DLC コマンドがまだ実行中の可能性がある間は、再試行を�
 
 ## Hooks Not Firing
 
-**症状**: ファイルの書き込み後にインテントの `audit/` シャードにエントリが現れない、またはサブエージェントの完了ログがない。
+**症状**: ファイルの書き込み後にインテントの `audit/` シャードにエントリが現れない、またはサブエージェントの完了ログがありません。
 
 ### Native runtime versus source-generated Bun projection
 
@@ -233,7 +233,7 @@ yet" と警告しますが、これは想定どおりです。
 
 中身を把握しているフォルダ（自分のプロジェクト、または確認済みのもの）だけを信頼してください。
 信頼すると、そのフォルダの `.kiro` フックがあなたのマシン上でコマンドを実行できるようになるためです
-（[First run](harnesses/kiro.md#first-run) を参照）。
+（[初回の実行](harnesses/kiro.md#first-run) を参照）。
 
 1. Kiro がこのフォルダを信頼するか尋ねてきたら、**Trust Folder & Continue** を選びます。
    代わりにウィンドウ上部に Restricted Mode のバナーが表示されている場合は、
@@ -363,7 +363,7 @@ Cursor が同じ計画の承認を何度も求めてくる、または選択が�
 
 Claude Code では、ステージごとのトークン使用量とコストの追跡が既定でオンになっています。fold-usage フックがトランスクリプトの使用量を gitignore されたローカルの台帳（`aidlc/.aidlc-sessions/usage-ledger.json`）に記録し、ステータスラインに `↑<in> ↓<out> $<usd>` が付加され、完了時の監査イベントにはコストの集計が含まれます。どこにも送信されることはありません（メトリクスの送信は、`AIDLC_METRICS_ENDPOINT` による別途のオプトインです）。ローカルの追跡をすべてオフにするには、`AIDLC_DISABLE_USAGE_TRACKING=1` を設定してください。台帳の更新が止まり、ステータスラインのセグメントが消え、完了イベントに集計フィールドが追加されなくなります。既存の台帳はディスクに残るため、履歴も消したい場合は手動で削除してください。フラグを解除すると追跡が再開されます。
 
-**`$<usd>` の数値はローカルでの見積もりであり、請求額ではありません。** 同梱の料金表にある**公開されている定価**から算出されます（[Rate table and overrides](../reference/06-hooks-and-tools.md#rate-table-and-overrides) を参照）。Amazon Bedrock が記録されたプロバイダである場合（`CLAUDE_CODE_USE_BEDROCK=1`）、Bedrock が実際に請求する金額は、推論プロファイル、リージョン、サービスティア、交渉済みの価格やサブスクリプション価格によって異なるため、見積もりが請求書と一致しない場合があります。長いワークフローのトークン量の大半はキャッシュ読み取り（割引されたキャッシュ読み取り料金で課金されます）なので、カウントと見積もりは着実に増えていきます。これは実際の使用量であり、水増しではありません。この数値は、個人の目安として扱ってください。
+**`$<usd>` の数値はローカルでの見積もりであり、請求額ではありません。** 同梱の料金表にある**公開されている定価**から算出されます（[料金表と上書き](../reference/06-hooks-and-tools.md#rate-table-and-overrides) を参照）。Amazon Bedrock が記録されたプロバイダである場合（`CLAUDE_CODE_USE_BEDROCK=1`）、Bedrock が実際に請求する金額は、推論プロファイル、リージョン、サービスティア、交渉済みの価格やサブスクリプション価格によって異なるため、見積もりが請求書と一致しない場合があります。長いワークフローのトークン量の大半はキャッシュ読み取り（割引されたキャッシュ読み取り料金で課金されます）なので、カウントと見積もりは着実に増えていきます。これは実際の使用量であり、水増しではありません。この数値は、個人の目安として扱ってください。
 
 **見積もりを自分の料金で算出するには**、同梱の `.claude/tools/data/model-rates.json` と同じ形の料金ファイルを `AIDLC_MODEL_RATES` に設定してください（100 万トークンあたりの USD、モデルのバージョンごとに 1 つのキーで、`opus-5-5` と `opus-5` は別々の行になります）。一部だけを記述したファイルは、そこに書かれたモデルだけを変更し、それ以外は同梱の既定値のままです。料金は使用量が記録される時点で適用されるため、変更はその時点以降のターンの算出に反映されます。台帳にすでにある合計は、記録時の料金のままです。
 
@@ -419,7 +419,7 @@ Kiro IDE では、Agent Hooks パネルでどのプロジェクトフックも�
 
 ### Kiro IDE or Kiro CLI v3 denies every read under .kiro/ ("deny fs_read matching")
 
-**症状**: すべてのステージ、エージェント、プロトコルの読み込みが拒否され、ワークフローが止まる:
+**症状**: すべてのステージ、エージェント、プロトコルの読み込みが拒否され、ワークフローが止まります:
 
 ```text
 Tool call denied by user's permissions. Rule: deny fs_read matching ".kiro/" Source: ~/.config/git/ignore
@@ -522,7 +522,7 @@ doctor も同じ方法でこれを解除します。
 
 ## State File Issues
 
-**症状**: オーケストレーターが状態の破損を報告する、またはワークフローが予期しない挙動をする。
+**症状**: オーケストレーターが状態の破損を報告する、またはワークフローが予期しない挙動をします。
 
 ### State file missing
 
@@ -544,16 +544,16 @@ doctor も同じ方法でこれを解除します。
 
 ## Dispatched Stage Timeouts
 
-**症状**: ディスパッチされたステージ（Reverse Engineering、Practices Discovery、User Stories、Code Generation）がエラーや途中で切れた出力を返す。
+**症状**: ディスパッチされたステージ（Reverse Engineering、Practices Discovery、User Stories、Code Generation）がエラーや途中で切れた出力を返します。
 
 ### What happens
 
 フレームワークは組み込みの再試行プロトコルに従います:
 
-1. 縮小したコンテキストのプロンプトで**自動的に再試行**する
-2. **再試行が失敗した場合**、2 つの選択肢がある:
-   - **インラインで実行** — メインの会話でステージを直接実行する（サブエージェントの境界なし）
-   - **スキップして後で再訪** — ステージを未完了としてマークし、後で戻る
+1. 縮小したコンテキストのプロンプトで**自動的に再試行**します
+2. **再試行が失敗した場合**、2 つの選択肢があります:
+   - **インラインで実行** — メインの会話でステージを直接実行します（サブエージェントの境界なし）
+   - **スキップして後で再訪** — ステージを未完了としてマークし、後で戻ります
 
 ### Manual recovery
 
@@ -563,18 +563,18 @@ doctor も同じ方法でこれを解除します。
 
 ## Approval Gate Stuck
 
-**症状**: ワークフローが承認ゲートであなたの返答を待っている。
+**症状**: ワークフローが承認ゲートであなたの返答を待っています。
 
 ### How to proceed
 
 求められたら返答を入力してください。選択肢は次のとおりです:
 
-- **Approve** — 次のステージに進む
-- **Request Changes** — 修正のためのフィードバックを伝える
+- **Approve** — 次のステージに進みます
+- **Request Changes** — 修正のためのフィードバックを伝えます
 
 Kiro IDE で、すでに返答したのにワークフローがまだ待っている場合は、
 [Kiro IDE hooks not running](#kiro-ide-hooks-not-running) を参照してください。Kiro CLI では
-[Kiro CLI hooks not running](#kiro-cli-hooks-not-running) を参照してください。
+[Kiro CLI のフックが動かない](#kiro-cli-hooks-not-running) を参照してください。
 
 ### Revision loop escape hatch
 
@@ -607,7 +607,7 @@ Kiro IDE で、すでに返答したのにワークフローがまだ待って�
 ### A directory source manifest is refused because it contains ignored output
 
 **症状**: ビルド後に、`src/` のようなディレクトリの申告が
-`contains ignored application source "src/main.js.map"` と返される。
+`contains ignored application source "src/main.js.map"` と返されます。
 
 Git の ignore ルールだけでは、ファイルはレビューのソース境界から除外されません。
 その境界の外にある生成物については、正確なパス（またはその出力
@@ -621,7 +621,7 @@ Git の ignore ルールだけでは、ファイルはレビューのソース�
 ### An exact source-manifest file is refused because Git ignores it
 
 **症状**: `source-manifest.json` にすでに記載されている正確なファイルが
-`is ignored by Git and cannot be source-review evidence` と返される。
+`is ignored by Git and cannot be source-review evidence` と返されます。
 
 無視された正確なファイルが受け入れられるのは、HEAD がすでにそれを追跡している場合か、
 ソースとして明示的に登録されている場合です。Git のインデックスに追加するだけ（
@@ -641,15 +641,15 @@ Git の ignore ルールだけでは、ファイルはレビューのソース�
 ### Code Generation cannot complete because files changed that no Unit covers
 
 **症状**: Code Generation の承認時に "N changes made during Code
-Generation that no Unit's review covers (...)" と返される。
+Generation that no Unit's review covers (...)" と返されます。
 
 ステージの間に、どのユニットのソースマニフェストにも記載されていない何かが
 ワークスペースで変更されました。表示された行には 3 つの対処方法が示され、アシスタントは
 状況に合うものを選びます。変更を行ったユニットがそのパスを記載し、もう一度
-レビューを受ける。誰も意図していない変更は元に戻す。ソースではないパス（
+レビューを受けます。誰も意図していない変更は元に戻します。ソースではないパス（
 リポジトリ内に書き込まれたツールのキャッシュ、ビルド出力、このプロジェクトのコードではない
 入れ子のリポジトリ）は、`.aidlc-source-paths.json`（記録されたリポジトリや記録されたチェックアウトの場合は
-それ自身のフォルダにあるファイル）の `exclude` に記載して、ソースチェックの対象から外す。除外はすぐに有効になり、
+それ自身のフォルダにあるファイル）の `exclude` に記載して、ソースチェックの対象から外します。除外はすぐに有効になり、
 追加のレビューは不要です。その行を削除すると、パスは再び対象に戻ります。
 プロジェクトの `.gitignore` がすでに無視しているパスは数えられません。また、
 このフォルダで進行中の別の作業が自身のユニットのソースマニフェストに記載しているファイル
@@ -667,304 +667,301 @@ changed after <reviewer> reviewed it"（1 回限りの復旧レビューを使�
 
 ### Plan Approval asked twice for the same plan
 
-**Symptom**: Code Generation presents the Plan Approval question again for a plan
-you already approved.
+**症状**: すでに承認した計画について、Code Generation が Plan Approval の質問を
+再び提示します。
 
-Plan Approval binds to the plan, unit test instructions, and Testing Contract
-content, to the target, and to the current stage attempt. It is NOT reopened by
-re-running `/aidlc`, by a session restart or a context compaction, by a Stop-hook
-probe, or by `/aidlc --status`. Ticking a plan checkbox does not reopen it
-either, and recording a review never touches the plan.
+Plan Approval は、計画、ユニットテストの手順、Testing Contract の内容、
+ターゲット、そして現在のステージの試行に結び付きます。`/aidlc` の再実行、
+セッションの再起動やコンテキストのコンパクション、Stop フックのプローブ、
+`/aidlc --status` では、承認は再び開かれ**ません**。計画のチェックボックスに印を付けても
+再び開かれることはなく、レビューを記録しても計画に触れることはありません。
 
-For the same target and attempt, plan, test instruction, or Testing Contract
-edits reopen approval only under Guard Policy `strict`. Under `relaxed` or
-`off`, work continues with the updated content and the original approval
-record stays intact; it does not claim you approved the edits. The
-`Guard Policy:` line of `/aidlc --status` shows the effective setting. You can still ask to review the plan again.
+同じターゲットと試行について、計画、テスト手順、Testing Contract を編集して承認が
+再び開かれるのは、Guard Policy が `strict` の場合だけです。`relaxed` または
+`off` の場合は、更新された内容で作業が続き、元の承認記録はそのまま残ります。
+その記録が、あなたが編集を承認したと主張することはありません。実際に有効な設定は
+`/aidlc --status` の `Guard Policy:` 行に表示されます。その場合でも、計画をもう一度レビューするよう依頼できます。
 
-If code generation starts without asking you about the plan at all, plan
-approval is off for this piece of work: status shows where that came from, for
-example `Plan Approval: off (from scope poc)`. The line that names each plan
-says you can ask to go over it at any time; you can also ask to be asked about
-every plan. See [Plan approval](13-customization.md#plan-approval).
+計画について一切尋ねられずにコード生成が始まった場合、この作業では計画の承認が
+オフになっています。status にはその設定の出どころが表示されます（たとえば
+`Plan Approval: off (from scope poc)`）。各計画を示す行には、いつでも計画を
+一緒に確認するよう依頼できると書かれています。すべての計画について尋ねるよう
+依頼することもできます。[プラン承認](13-customization.md#plan-approval) を参照してください。
 
-Testing Posture, scope, test strategy, or project type changes follow the same
-rule within the same intent, target, and attempt. Refresh the current contract
-and instructions as needed; a lowered fence permits continued execution
-without asking for approval again solely because those inputs changed.
+Testing Posture、スコープ、テスト戦略、プロジェクトタイプの変更も、同じインテント、
+ターゲット、試行の中では同じルールに従います。必要に応じて現在の契約と手順を
+更新してください。フェンスが下げられている場合は、それらの入力が変わったという理由だけで
+再び承認を求めることなく、実行を続けられます。
 
-If you are asked again, check what changed and which rule applies:
+再び尋ねられた場合は、何が変わったか、どのルールが当てはまるかを確認してください:
 
-- the plan content or embedded Testing Contract while the plan-approval fence
-  is on (beyond a ticked task marker, or a terminal `## Review` section left by a
-  review recorded before review records existed)
-- the unit-test instructions content, any byte of it: the instructions are handed
-  to the developer in full, so they bind byte-exactly, and a section appended to
-  them after approval reopens it when the plan-approval fence is on
-- the Testing Posture, scope, test strategy, or project type while the
-  plan-approval fence is on (a Testing Posture change made after the build's
-  review, such as a testing practice you keep at the learnings step, applies
-  from the next plan and does not reopen approval for that build)
-- the active intent, Unit, or stage target
-- the stage attempt: a backward jump, a Request Changes, a gate rejection, or a
-  workflow restart
+- 計画承認のフェンスがオンの間の、計画の内容または埋め込まれた Testing Contract
+  （タスクマーカーへの印付けや、レビュー記録が存在する前に記録されたレビューが残した
+  末尾の `## Review` セクションを除く）
+- ユニットテスト手順の内容（1 バイトでも）: 手順は開発者にそのまま渡されるため、
+  バイト単位で厳密に結び付きます。計画承認のフェンスがオンの場合、承認後に手順へ
+  セクションを追記すると承認は再び開かれます
+- 計画承認のフェンスがオンの間の、Testing Posture、スコープ、テスト戦略、
+  プロジェクトタイプ（ビルドのレビュー後に行った Testing Posture の変更、たとえば
+  学びのステップで残すことにしたテストの慣行は、次の計画から適用され、そのビルドの
+  承認を再び開くことはありません）
+- アクティブなインテント、ユニット、ステージのターゲット
+- ステージの試行: 後方へのジャンプ、Request Changes、ゲートでの却下、
+  ワークフローの再始動
 
-The question names what it is about. Other code moving after approval (a `git
-pull`, another Unit landing) never asks again: the build continues and you hear
-which files moved. The exception is a build of Units in parallel under
-`strict`: a change after you approved (your edit or commit, a `git pull`) asks
-again before the Units are set up, and stops the next Unit from landing until
-you undo it or set Guard Policy `relaxed` (see
-[Guard Policy](13-customization.md#guard-policy)). Nor does anything between
-your answer and the build:
-a long chat compacting its context, parking the work and resuming it, or another
-question coming up first. Say "review the plan" if you want to look again first,
-including right after any of those: the plan is shown for approval again before
-anything more is built.
+質問には、何についての質問かが示されます。承認後にそれ以外のコードが動いても（`git
+pull` や別のユニットの取り込み）、再び尋ねられることはありません。ビルドは続き、
+どのファイルが動いたかが伝えられます。例外は `strict` の下でユニットを並列に
+ビルドする場合です。承認後の変更（あなたの編集やコミット、`git pull`）があると、
+ユニットのセットアップ前に再び尋ねられ、それを元に戻すか Guard Policy を `relaxed` に
+設定するまで、次のユニットの取り込みは止まります（
+[Guard Policy](13-customization.md#guard-policy) を参照）。また、あなたの返答から
+ビルドまでの間に起きること、
+つまり長いチャットのコンテキストのコンパクション、作業の一時停止と再開、別の質問が
+先に出てくることでも、再び尋ねられることはありません。先にもう一度確認したい場合は、
+これらの直後も含めて "review the plan"（計画をレビューして）と伝えてください。
+さらに何かがビルドされる前に、計画が再び承認のために表示されます。
 
 ### Plan Approval is not recorded
 
-**Symptom**: you answered the Plan Approval question, but AI-DLC shows it again.
+**症状**: Plan Approval の質問に答えたのに、AI-DLC がまた同じ質問を表示します。
 
-Your answer counts from any chat on this piece of work, in your own words ("1",
-"approve", "looks good", "rename the handler"): the agent records the choice
-you made, with your words beside it. The question comes back only when the
-agent could not record a choice, most often because the reply arrived before
-the question was shown, or in a chat where the harness did not pass it to
-AI-DLC. Answer the question it shows. If it keeps coming back, run
-`/aidlc --doctor`: a harness whose prompt hook does not run cannot record any
-reply. A long chat that compacts its context while the question waits keeps
-the question open, so your answer still counts.
+あなたの返答は、この作業に関するどのチャットからでも、あなた自身の言葉（"1"、
+"approve"、"looks good"、"rename the handler"）で有効になります。エージェントは
+あなたの選択を、あなたの言葉を添えて記録します。質問が再び表示されるのは、
+エージェントが選択を記録できなかった場合だけです。最も多いのは、質問が表示される前に
+返答が届いた場合や、ハーネスが返答を AI-DLC に渡さなかったチャットで答えた場合です。
+表示された質問に答えてください。何度も表示される場合は `/aidlc --doctor` を実行してください。
+プロンプトフックが実行されないハーネスでは、返答を一切記録できません。
+質問が待っている間に長いチャットのコンテキストがコンパクションされても、
+質問は開いたままなので、あなたの返答は引き続き有効です。
 
-If AI-DLC says the project's files cannot all be read, or that the workspace
-source cannot be bound (a link that loops, a tree too large to read, or a
-source path outside the project), what happens depends on your settings. Under Guard Policy strict with plan approval on, the
-plan cannot be approved yet, because nothing could say what the build starts
-from. Otherwise the plan question is asked as usual (with plan approval off,
-the plan is built as written) and the build starts without a check of the
-project's files, with one line that says so. To have the files checked, repair
-the source boundary the message names (add the offending path to the exclude
-list in `.aidlc-source-paths.json`, which looks like
-`{"version":1,"exclude":["<path>"]}`, declare real source under an excluded
-directory in its paths list, or remove a broken symlink), then run `/aidlc`
-(`$aidlc` on Codex). `/aidlc --doctor` has a "Workspace source boundary binds"
-check that names the failing path and says which of these applies to you.
+プロジェクトのファイルをすべて読み取れない、またはワークスペースのソースを結び付けられない
+（ループするリンク、大きすぎて読めないツリー、プロジェクト外のソースパス）と AI-DLC が
+伝えた場合、何が起きるかは設定によって異なります。Guard Policy が strict で計画の承認がオンの場合、
+ビルドの出発点を示せるものがないため、計画はまだ承認できません。それ以外の場合は、
+計画の質問は通常どおり尋ねられ（計画の承認がオフの場合は、計画は書かれたとおりに
+ビルドされます）、プロジェクトのファイルをチェックせずにビルドが始まり、その旨を示す行が
+1 行表示されます。ファイルをチェックさせるには、メッセージが示すソース境界を
+修復してください（問題のパスを `.aidlc-source-paths.json` の除外リストに追加する。これは
+`{"version":1,"exclude":["<path>"]}` のような形式です。除外したディレクトリ配下にある
+実際のソースはその paths リストで申告する。または壊れたシンボリックリンクを削除する）。その後 `/aidlc`
+（Codex では `$aidlc`）を実行してください。`/aidlc --doctor` の "Workspace source boundary binds"
+チェックが、失敗しているパスと、これらのどれが当てはまるかを示します。
 
-A valid Git checkout kept inside the project can share its object store with
-jj, including through a linked worktree. If an older AI-DLC install reports
-"no resolvable HEAD commit" for a commit that Git can read from a jj-created
-pack, update AI-DLC and refresh the project's install. Repacking the repository
-or changing jj settings is unnecessary. A genuinely missing or unreadable
-HEAD object still needs repair.
+プロジェクト内に置かれた有効な Git チェックアウトは、リンクされたワークツリー経由も含めて、
+jj とオブジェクトストアを共有できます。古い AI-DLC のインストールが、jj が作成した
+pack から Git が読み取れるコミットについて "no resolvable HEAD commit" と報告する場合は、
+AI-DLC を更新し、プロジェクトのインストールを更新してください。リポジトリの再パックや
+jj の設定変更は不要です。HEAD オブジェクトが本当に欠けている、または読み取れない場合は、
+引き続き修復が必要です。
 
-If the plan's Testing Contract is refused, the message names one of three
-causes: the block is missing, it is not valid JSON, or it changed after it was
-rendered. The repair is the same for all three: re-run `render` and replace the
-whole `## Testing Contract` section. A changed block usually means a shell
-command rewrote the file and re-encoded its characters (for example PowerShell
-`Set-Content`); artifacts are edited with the file-editing tool instead. When
-your own edit broke the block, the assistant repairs it and asks you once to
-build the edited plan.
+計画の Testing Contract が拒否された場合、メッセージは 3 つの原因のいずれかを示します。
+ブロックがない、有効な JSON でない、またはレンダリング後に変更された、のいずれかです。
+修復方法は 3 つとも同じで、`render` を再実行し、`## Testing Contract` セクション全体を
+置き換えます。ブロックが変更されている場合は、通常、シェルコマンドがファイルを書き直して
+文字を再エンコードしたことが原因です（たとえば PowerShell の
+`Set-Content`）。成果物は代わりにファイル編集ツールで編集します。あなた自身の編集で
+ブロックが壊れた場合は、アシスタントがそれを修復し、編集後の計画をビルドするか一度だけ尋ねます。
 
-**Legacy Kiro IDE windows.** A Kiro IDE build that passes no typed text to
-AI-DLC approves plans with the picker only, through the older recorded
-decision and answer steps. There an answer binds to the chat session it was
-given in. When the project's files cannot be checked, you can still ask the
-assistant to build the plan anyway, by picking that or saying so, and it is
-recorded as your approval with no check of the files. Updating Kiro IDE lets
-you answer in your own words, from any chat, or edit the files.
+**旧来の Kiro IDE のウィンドウ。** 入力されたテキストを AI-DLC に渡さない Kiro IDE の
+ビルドでは、計画の承認はピッカーでのみ行われ、旧来の記録された判定と回答の
+ステップを経由します。その場合、回答はそれが行われたチャットセッションに結び付きます。
+プロジェクトのファイルをチェックできない場合でも、それを選ぶか、そう伝えることで、
+アシスタントに計画をそのままビルドするよう依頼できます。これはファイルのチェックなしの
+あなたの承認として記録されます。Kiro IDE を更新すると、どのチャットからでもあなた自身の言葉で
+答えたり、ファイルを編集したりできるようになります。
 
 ---
 
 ## A Bolt attempt was set aside — getting the files back
 
-A recovery can set aside an attempt when its reviewed files changed again and
-its one allowed re-review was already used. The recovery abort's `--discard`
-saves tracked files and non-ignored untracked files (or the remaining branch
-tip when the checkout is already gone) plus reviewed source refs in local Git
-before removing the old checkout and branch, so a fresh attempt can start.
-An ordinary Abort without `--discard` leaves the checkout in place and returns
-`parked_ref: null`, with no `parked_stamp`, `parked_mode`, `parked_repo`,
-`restore_operation`, `restore_hint`, `restore_hint_error`, or `parked_excludes`.
-After a discard, the assistant tells you why it set the attempt aside and offers
-restoration only when `restore_operation` is present, regardless of whether a
-display hint could be rendered.
-Every successful abort retains `reason: "aborted"` and echoes the supplied
-`--reason` text in the additive `abort_reason` field. When an attempt was parked,
-the result includes the saved descriptor:
-`parked_ref`, `parked_stamp`, `parked_mode` (`snapshot`, `branch-tip`, or
-`evidence-only`), and `parked_repo` (`null` for the project root, otherwise the
-sibling repository name).
+復旧処理では、レビュー済みのファイルが再び変更され、許可されている 1 回の再レビューを
+すでに使っていた場合、試行が脇に置かれることがあります。復旧の abort の `--discard`
+は、古いチェックアウトとブランチを削除する前に、追跡済みファイルと無視されていない未追跡ファイル
+（チェックアウトがすでにない場合は残っているブランチの先端）とレビュー済みのソース ref を
+ローカルの Git に保存し、新しい試行を開始できるようにします。
+`--discard` なしの通常の Abort はチェックアウトをそのまま残し、
+`parked_ref: null` を返します。`parked_stamp`、`parked_mode`、`parked_repo`、
+`restore_operation`、`restore_hint`、`restore_hint_error`、`parked_excludes` は含まれません。
+discard の後、アシスタントは試行を脇に置いた理由を伝え、表示用のヒントを
+レンダリングできたかどうかにかかわらず、`restore_operation` がある場合にのみ
+復元を提案します。
+成功した abort はいずれも `reason: "aborted"` を保持し、渡された
+`--reason` のテキストを追加の `abort_reason` フィールドにそのまま返します。試行が退避された場合、
+結果には保存された記述子が含まれます:
+`parked_ref`、`parked_stamp`、`parked_mode`（`snapshot`、`branch-tip`、または
+`evidence-only`）、`parked_repo`（プロジェクトルートの場合は `null`、それ以外は
+兄弟リポジトリの名前）。
 
-If files were saved, ask to restore them. The assistant uses the saved result's
-`restore_operation`: route `worktree`, args
-`["restore", "--slug", slug, "--parked", stamp, "--repo", repo ?? ".", "--intent", recordDirName, "--space", space]` when the
-stamp is known. The final selectors pin the owning intent. It invokes the installed `{{INVOKE}} engine worktree <args...>`
-route with each listed arg exactly as a separate argv argument, never joined
-into a shell command. `restore_hint` is human display text only, not the
-assistant's execution input. The equivalent manual command, run from the main
-project checkout, is:
+ファイルが保存されている場合は、復元を依頼してください。アシスタントは保存された結果の
+`restore_operation` を使います。スタンプがわかっている場合、ルートは `worktree`、引数は
+`["restore", "--slug", slug, "--parked", stamp, "--repo", repo ?? ".", "--intent", recordDirName, "--space", space]` です。
+最後のセレクターが所有するインテントを固定します。アシスタントはインストール済みの `{{INVOKE}} engine worktree <args...>`
+ルートを、列挙された各引数をそれぞれ独立した argv 引数としてそのまま渡して呼び出し、
+シェルコマンドとして連結することは決してありません。`restore_hint` は人が読むための表示テキストにすぎず、
+アシスタントの実行入力ではありません。メインのプロジェクトのチェックアウトから
+実行する場合の、同等の手動コマンドは次のとおりです:
 
 ```bash
 aidlc engine worktree restore --slug <slug> --parked <stamp> --repo <name|.> --intent <record-dir-name> --space <space>
 ```
 
-The operation always includes `--repo <name>` for a sibling repository or
-`--repo .` for the root. Its optional display hint is safely rendered for the
-selected shell; a native install uses the prefix above, while a Bun-based copy
-install uses `bun .claude/tools/aidlc-worktree.ts`, substituting your harness
-directory. If safe rendering fails, for example because the harness directory
-is invalid, the result omits `restore_hint` and supplies `restore_hint_error`
-with the reason. The typed operation remains available; this does not mean
-that only evidence was saved or withdraw the restoration offer.
+この操作には、兄弟リポジトリの場合は `--repo <name>`、ルートの場合は
+`--repo .` が必ず含まれます。任意の表示用ヒントは、選択されたシェル向けに安全に
+レンダリングされます。ネイティブインストールでは上記のプレフィックスを使い、Bun ベースのコピー
+インストールでは `bun .claude/tools/aidlc-worktree.ts` を使います（ハーネスディレクトリは
+お使いのものに置き換えてください）。ハーネスディレクトリが無効であるなどの理由で安全なレンダリングに
+失敗した場合、結果では `restore_hint` が省かれ、代わりに理由を示す `restore_hint_error`
+が返されます。型付きの操作は引き続き利用できます。これは証拠だけが保存されたという
+意味でも、復元の提案を取り下げるという意味でもありません。
 
-Do not drop the operation's exact stamp, repository, or owning intent selectors: without
-`--parked`, restore chooses the latest saved head. For manual invocation an exact
-stamp found in only one repository selects it before generic slug ambiguity;
-if selection is still ambiguous, use doctor's exact operation with `--repo <name>`
-or `--repo .` for the project root.
+操作に含まれる正確なスタンプ、リポジトリ、所有インテントのセレクターは省かないでください。
+`--parked` がないと、restore は最新の保存済み head を選びます。手動で呼び出す場合、1 つの
+リポジトリでしか見つからない正確なスタンプは、一般的な slug の曖昧さより先にそのリポジトリを選びます。
+それでも選択が曖昧な場合は、doctor が示す正確な操作を、`--repo <name>`
+またはプロジェクトルートなら `--repo .` を付けて使ってください。
 
-If a saved namespace is known but its discard descriptor is unavailable, the
-fallback retains `parked_ref` and derives `parked_stamp` from its namespace
-only when the stamp parses strictly; otherwise `parked_stamp` is `null`.
-It reports `parked_mode: null` and `parked_repo: null` and omits
-`restore_operation`, `restore_hint`, `restore_hint_error`, and `parked_excludes`,
-rather than guessing a repository, saved mode, or latest-attempt selection.
-Instead, `recovery_hint` asks you to run doctor to list set-aside attempts and
-their exact restore commands. The hint is plain guidance, not an executable
-operation. The assistant must not claim what files were saved or offer restoration
-from the fallback alone. If no namespace was saved, `parked_ref` is `null`;
-`parked_stamp`, `parked_mode`, `parked_repo`, `restore_operation`, `restore_hint`,
-`restore_hint_error`, `parked_excludes`, and `recovery_hint` are absent.
+保存された名前空間はわかっているが discard の記述子が利用できない場合、
+フォールバックは `parked_ref` を保持し、名前空間からスタンプを厳密に解析できる場合にのみ
+`parked_stamp` を導き出します。それ以外の場合 `parked_stamp` は `null` です。
+リポジトリ、保存モード、最新試行の選択を推測する代わりに、`parked_mode: null` と
+`parked_repo: null` を報告し、`restore_operation`、`restore_hint`、
+`restore_hint_error`、`parked_excludes` を省きます。
+その代わり、`recovery_hint` が、doctor を実行して脇に置かれた試行とその正確な復元コマンドを
+一覧表示するよう求めます。このヒントは単なる案内であり、実行可能な操作ではありません。
+アシスタントは、フォールバックだけを根拠に、どのファイルが保存されたかを主張したり復元を
+提案したりしてはなりません。名前空間が保存されなかった場合、`parked_ref` は `null` で、
+`parked_stamp`、`parked_mode`、`parked_repo`、`restore_operation`、`restore_hint`、
+`restore_hint_error`、`parked_excludes`、`recovery_hint` は含まれません。
 
-If only review evidence remained, discard reports `parked_mode: "evidence-only"`
-and `parked_commit: "-"`. Abort keeps the ref, stamp, mode, and repository but
-omits `restore_operation`, `restore_hint`, `restore_hint_error`, and
-`parked_excludes`. The assistant says: "Nothing of its
-working files remained to save; only its review evidence was kept." It does
-not offer restoration. Selecting that attempt with restore, even with `--raw`,
-refuses with `no restorable files were parked for <slug> <stamp>; only review evidence was kept`.
+レビューの証拠だけが残っていた場合、discard は `parked_mode: "evidence-only"`
+と `parked_commit: "-"` を報告します。Abort は ref、スタンプ、モード、リポジトリを保持しますが、
+`restore_operation`、`restore_hint`、`restore_hint_error`、
+`parked_excludes` は省きます。アシスタントは "Nothing of its
+working files remained to save; only its review evidence was kept."（作業ファイルは何も残っておらず保存できませんでした。レビューの証拠だけを保持しました）と伝え、
+復元は提案しません。その試行を restore で選択すると、`--raw` を付けても
+`no restorable files were parked for <slug> <stamp>; only review evidence was kept` で拒否されます。
 
-After a successful restore, open the returned `worktree_path`, normally
-`.aidlc/restored/bolt-<id8>_<slug>-<stamp>` (the recorded legacy name for a pre-upgrade attempt). It is separate from any new live attempt;
-restoring files does not resume the old attempt or make its review current.
-This is local recovery, not a remote backup. If the old checkout was already
-gone, only its remaining branch tip and review evidence could be saved; if its
-branch was gone too, only review evidence could remain.
+復元に成功したら、返された `worktree_path` を開いてください。通常は
+`.aidlc/restored/bolt-<id8>_<slug>-<stamp>` です（アップグレード前の試行の場合は記録されている旧来の名前）。これは新しく進行中の試行とは別のものです。
+ファイルを復元しても、古い試行が再開されたり、そのレビューが最新になったりすることはありません。
+これはローカルでの復旧であり、リモートのバックアップではありません。古いチェックアウトがすでに
+なかった場合は、残っていたブランチの先端とレビューの証拠だけが保存されます。ブランチも
+なかった場合は、レビューの証拠だけが残ります。
 
-**Limits depend on `parked_mode`:** a snapshot reports
-`parked_excludes: ["ignored files", "eol/text=auto normalization"]`. Ignored
-untracked files are not saved (tracked files remain included), and normalization
-may change line endings while saving; normalized bytes cannot be recovered,
-even with `--raw`. A branch tip instead reports
-`["uncommitted files (no working tree existed)"]`, and the assistant says:
-"I kept its committed work; there were no uncommitted files to save."
-Snapshots restore stored blobs directly; branch tips use ordinary checkout
-conversions unless `--raw` is given.
-See the [restore command reference](12-cli-commands.md#aidlc-engine-worktree-restore-recover-files-from-a-set-aside-attempt)
-for filter failures and raw recovery details.
+**制限は `parked_mode` によって異なります:** スナップショットは
+`parked_excludes: ["ignored files", "eol/text=auto normalization"]` を報告します。無視された
+未追跡ファイルは保存されず（追跡済みファイルは含まれます）、保存時に正規化によって
+改行コードが変わることがあります。正規化されたバイトは、`--raw` を使っても
+元に戻せません。ブランチの先端の場合は代わりに
+`["uncommitted files (no working tree existed)"]` を報告し、アシスタントは
+"I kept its committed work; there were no uncommitted files to save."（コミット済みの作業は保持しました。保存すべき未コミットのファイルはありませんでした）と伝えます。
+スナップショットは保存された blob を直接復元し、ブランチの先端は `--raw` が指定されない限り
+通常のチェックアウト時の変換を使います。
+フィルターの失敗や raw での復旧の詳細については、[restore コマンドのリファレンス](12-cli-commands.md#aidlc-engine-worktree-restore-recover-files-from-a-set-aside-attempt)
+を参照してください。
 
-Run `/aidlc --doctor` (or `aidlc doctor`) to find saved attempts. Its informational
-**Parked attempts** section lists slug, stamp, age, mode, restored-checkout
-presence, and typed recovery operations with exact `--parked <stamp>` and
-explicit `--repo <name>` or `--repo .` args, followed by owning `--intent` and `--space` selectors. Every JSON entry has
-`purge_operation`; only restorable entries have `restore_operation`. Each has
-route `worktree` and args to pass exactly as argv, never a shell command string.
-Optional `restore_command` and `purge_command` are safe human display text;
-if rendering fails, the corresponding command is omitted and
-`restore_command_error` or `purge_command_error` explains why, without removing
-the operation. Evidence-only entries have only the purge operation and its
-command-or-error fields. Impossible dates or times have `age_days: null` in JSON
-and show `unknown` in human-readable output. Saved attempts are not warnings or
-failures.
+保存された試行を見つけるには、`/aidlc --doctor`（または `aidlc doctor`）を実行してください。情報表示用の
+**Parked attempts** セクションには、slug、スタンプ、経過日数、モード、復元済みチェックアウトの
+有無、そして正確な `--parked <stamp>` と明示的な `--repo <name>` または
+`--repo .` の引数に続けて所有する `--intent` と `--space` のセレクターを付けた、型付きの復旧操作が一覧表示されます。JSON の各エントリには
+`purge_operation` があり、復元可能なエントリにだけ `restore_operation` があります。いずれも
+ルートが `worktree` で、引数はシェルコマンドの文字列ではなく argv としてそのまま渡します。
+任意の `restore_command` と `purge_command` は安全な人向けの表示テキストです。
+レンダリングに失敗した場合は対応するコマンドが省かれ、操作は残したまま、
+`restore_command_error` または `purge_command_error` がその理由を説明します。証拠のみの
+エントリには、purge の操作と、そのコマンドまたはエラーのフィールドだけがあります。ありえない日付や時刻は、JSON では
+`age_days: null` になり、人が読む出力では `unknown` と表示されます。保存された試行は警告や
+失敗ではありません。
 
-Doctor resolves namespaced attempts through their intent's registry UUID and
-legacy attempts through the exact `WORKTREE_DISCARDED` `Parked ref` provenance.
-Unknown or ambiguous owners and unattributed legacy parks are not listed.
-Once you no longer need one, remove any restored checkout first, then:
+doctor は、名前空間付きの試行はそのインテントのレジストリ UUID によって、
+旧来の試行は `WORKTREE_DISCARDED` の正確な `Parked ref` の来歴によって解決します。
+所有者が不明または曖昧なものや、帰属のない旧来の退避は一覧に表示されません。
+不要になったら、まず復元済みのチェックアウトを削除してから、次を実行してください:
 
 ```bash
 aidlc engine worktree purge --slug <slug> --parked <stamp> --repo <name|.> --intent <record-dir-name> --space <space>
 aidlc engine worktree purge --slug <slug> --older-than 30 --repo <name|.> --intent <record-dir-name> --space <space>
 ```
 
-Purge without either stamp selector removes every saved stamp for the selected intent's Bolt.
-`--older-than` accepts nonnegative finite days and selects strictly older UTC
-stamp timestamps, ignoring any `-N` suffix. The strict calendar parser rejects
-impossible dates and times rather than normalizing them. Age-filtered purge
-keeps unparseable stamps and reports them in `skipped_unparseable`. This JSON
-array is always present and otherwise empty; exact-stamp or all-stamp purge
-can remove unparseable stamps. `--older-than` cannot be combined with
-`--parked`. Purge refuses while a selected restored checkout exists, even if
-moved; it never removes a live Bolt checkout. Use the same Bun tool prefix for
-copy installs. See the [purge reference](12-cli-commands.md#aidlc-engine-worktree-purge-remove-recovery-refs).
+どちらのスタンプセレクターも付けずに purge を実行すると、選択したインテントの Bolt について保存されたすべてのスタンプが削除されます。
+`--older-than` は 0 以上の有限の日数を受け付け、UTC のスタンプのタイムスタンプが
+それより厳密に古いものを選びます。`-N` サフィックスは無視されます。厳密なカレンダーパーサーは、
+ありえない日付や時刻を正規化せずに拒否します。経過日数で絞り込む purge は
+解析できないスタンプを残し、`skipped_unparseable` で報告します。この JSON
+配列は常に存在し、該当がなければ空です。正確なスタンプ指定またはすべてのスタンプを対象とする purge
+では、解析できないスタンプも削除できます。`--older-than` は
+`--parked` と組み合わせられません。選択した復元済みチェックアウトが存在する間は、移動されていても
+purge は拒否されます。進行中の Bolt のチェックアウトを削除することは決してありません。コピー
+インストールでは同じ Bun ツールのプレフィックスを使ってください。[purge のリファレンス](12-cli-commands.md#aidlc-engine-worktree-purge-remove-recovery-refs) を参照してください。
 
-Restore and purge reject unknown or duplicate flags before selecting or changing
-anything; use only the flags in the command reference. Recovery selectors and
-doctor accept the project root (`.`) and valid Git repositories named in the
-same slug's `WORKTREE_CREATED` or `WORKTREE_DISCARDED` audit `Repo` fields even
-when those sibling names are symlinks: the framework may recover exactly where
-it recorded the attempt's worktree or parking. This admission is slug-scoped;
-records for other slugs never widen this slug's repository set. Membership in
-a current or historical intent's repo list alone cannot admit a symlink.
-Intent-list candidates and unrecorded discovered siblings must be real
-immediate child directories whose canonical paths stay directly under the
-canonical workspace root (`isWorkspaceRepoDir`). Arbitrary paths and symlink
-aliases without same-slug audit provenance are refused. These recovery selectors
-do not change live create/discard commands or the required human consent.
+restore と purge は、何かを選択したり変更したりする前に、未知のフラグや重複したフラグを拒否します。
+コマンドリファレンスにあるフラグだけを使ってください。復旧用のセレクターと
+doctor は、プロジェクトルート（`.`）と、同じ slug の `WORKTREE_CREATED` または
+`WORKTREE_DISCARDED` の監査の `Repo` フィールドに記載された有効な Git リポジトリを、
+それらの兄弟の名前がシンボリックリンクであっても受け付けます。フレームワークは、
+試行のワークツリーや退避を記録したまさにその場所から復旧できます。この受け入れは slug 単位であり、
+他の slug の記録がこの slug のリポジトリの集合を広げることはありません。現在または過去の
+インテントのリポジトリ一覧に含まれているというだけでは、シンボリックリンクは受け入れられません。
+インテントの一覧の候補や、記録されていない検出済みの兄弟は、正規化したパスが
+正規化したワークスペースルートの直下にとどまる、実在する直接の子ディレクトリでなければなりません
+（`isWorkspaceRepoDir`）。任意のパスや、同じ slug の監査の来歴がないシンボリックリンクの
+エイリアスは拒否されます。これらの復旧用セレクターは、進行中の create/discard コマンドや、
+必要な人の同意を変えるものではありません。
 
 ---
 
 ## Context Compaction
 
-**Symptom**: Claude Code summarized earlier conversation context. The session may feel like it "forgot" recent discussion.
+**症状**: Claude Code が以前の会話のコンテキストを要約しました。セッションが直近のやり取りを「忘れた」ように感じられることがあります。
 
 ### What is preserved
 
-All record-dir artifacts, `aidlc-state.md` and the `audit/` shards persist on disk. Only in-memory conversation context and partial in-progress work not yet written to files is lost.
+記録ディレクトリの成果物、`aidlc-state.md`、`audit/` シャードはすべてディスク上に残ります。失われるのは、メモリ上の会話のコンテキストと、まだファイルに書き込まれていない進行中の作業だけです。
 
 ### How to recover
 
-Run `/aidlc` after compaction. The framework:
+コンパクションの後で `/aidlc` を実行してください。フレームワークは次のように動作します:
 
-1. Reads `aidlc-state.md` to load workflow position
-2. Carries on where the work stopped
+1. `aidlc-state.md` を読み込んでワークフローの位置を把握します
+2. 作業が止まったところから続けます
 
-To have the stage that was in progress done again, say "redo this stage".
+進行中だったステージをやり直させたい場合は、"redo this stage"（このステージをやり直して）と伝えてください。
 
 ### The build stops after a compaction
 
-**Symptom** (GitHub Copilot): you approved the code plan, the build started, and after the chat compacted every build step the assistant tries is refused.
+**症状**（GitHub Copilot）: コードの計画を承認してビルドが始まったが、チャットがコンパクションされた後、アシスタントが試みるビルドのステップがすべて拒否されます。
 
-Your approval, the workflow state, and every file already written are kept; only what the assistant had not yet written to a file is gone from the chat. After a compaction the assistant must read its step again before it builds anything. It runs `next` as its own command, which hands the approved build straight back without asking you again. `/aidlc --doctor` shows the step as out of date, with the time and the reason (the chat was compacted, or the workflow state changed after the step was issued, naming what changed when it is known), until that `next` runs.
+あなたの承認、ワークフローの状態、すでに書き込まれたすべてのファイルは保持されます。チャットから失われるのは、アシスタントがまだファイルに書き込んでいなかった内容だけです。コンパクションの後、アシスタントは何かをビルドする前にステップを読み直す必要があります。アシスタントは自分のコマンドとして `next` を実行し、それによって承認済みのビルドが、あなたに再び尋ねることなくそのまま返されます。その `next` が実行されるまで、`/aidlc --doctor` はそのステップを古くなったものとして、時刻と理由（チャットがコンパクションされた、またはステップの発行後にワークフローの状態が変わった。わかっている場合は何が変わったかも示します）とともに表示します。
 
 ---
 
 ## Audit Log Growing Too Large
 
-**Symptom**: this clone's audit shard has grown to thousands of lines over a long project.
+**症状**: 長期のプロジェクトで、このクローンの監査シャードが数千行にまで大きくなりました。
 
-A long project's shard is large by design; leave it where it is. The engine reads every shard in `audit/` to know which stages you approved and which Units you finished, so moving one out of `audit/` makes that work count as not done and the engine hands it out again. (The PreToolUse guard refuses the agent's file and shell tools any write into `audit/`.)
+長期プロジェクトのシャードが大きくなるのは設計どおりです。そのままの場所に置いておいてください。エンジンは `audit/` 内のすべてのシャードを読んで、あなたがどのステージを承認し、どのユニットを完了したかを把握します。そのため、シャードを `audit/` の外に移すと、その作業は未完了と見なされ、エンジンが再び割り当ててしまいます。（PreToolUse ガードは、エージェントのファイルツールやシェルツールによる `audit/` への書き込みをすべて拒否します。）
 
 ### Git considerations
 
-The `audit/` shards are committed (not gitignored), see [What to Commit vs. Gitignore](14-artifacts-reference.md#what-to-commit-vs-gitignore). Each clone writes its own `<host>-<clone>.md` shard, so concurrent appends never merge-conflict.
+`audit/` シャードはコミットされます（gitignore されません）。[コミットするものと Gitignore するもの](14-artifacts-reference.md#what-to-commit-vs-gitignore) を参照してください。各クローンは自分専用の `<host>-<clone>.md` シャードに書き込むため、同時に追記してもマージの衝突は起きません。
 
 ### Moved, copied, or synced projects
 
-`aidlc/.aidlc-clone-id` records this clone's token and the host name it was first used on, so the shard name stays the same when the machine's name changes or the folder is copied or synced to another laptop: the work continues in one shard. A fresh `git clone` gets its own token and shard. Two copies of one folder are one clone, so if two people (or two laptops) work at the same time, give each its own `git clone`. If a sync tool leaves a conflict copy such as `<host>-<clone> 2.md`, AI-DLC reads the rows it shares with the original once, so finished work keeps counting and the copy can stay. With team Unit ownership, landing a Unit still stops on any file it did not expect, a copy included: it names the file (`Unit landing requires a clean source worktree; commit or stash: ...`).
+`aidlc/.aidlc-clone-id` には、このクローンのトークンと、最初に使われたホスト名が記録されます。そのため、マシン名が変わったり、フォルダが別のノート PC にコピーまたは同期されたりしても、シャード名は変わらず、作業は 1 つのシャードで続きます。新しく `git clone` したものには、独自のトークンとシャードが割り当てられます。1 つのフォルダの 2 つのコピーは 1 つのクローンなので、2 人（または 2 台のノート PC）が同時に作業する場合は、それぞれに別の `git clone` を用意してください。同期ツールが `<host>-<clone> 2.md` のような競合コピーを残した場合、AI-DLC は元のシャードと共通する行を一度だけ読むため、完了した作業は引き続き完了として数えられ、コピーはそのまま残しておけます。チームでのユニット所有を使っている場合、ユニットの取り込みは、コピーを含め想定外のファイルがあると引き続き止まり、そのファイルを示します（`Unit landing requires a clean source worktree; commit or stash: ...`）。
 
-If such a copy was already in your project on an earlier release and you kept working, Units you finished while the copy sat there may be handed out once more after you upgrade (the Units you finished before the copy count again). Nothing is deleted: the Unit's files are still there, so for most stages finishing it again only records it; a Code Generation Unit may ask you to approve its plan once more and build again from the code already in your branch. It happens once and never repeats, and a planned follow-up removes even that.
+以前のリリースのときにすでにそのようなコピーがプロジェクトにあり、そのまま作業を続けていた場合、コピーが存在していた間に完了したユニットが、アップグレード後にもう一度割り当てられることがあります（コピーが現れる前に完了したユニットは再び完了として数えられます）。何も削除されません。ユニットのファイルは残っているので、ほとんどのステージでは、もう一度完了させても記録されるだけです。Code Generation のユニットでは、計画の承認をもう一度求められ、ブランチにすでにあるコードから再びビルドすることがあります。これは一度だけで繰り返されることはなく、今後予定されている対応でそれもなくなります。
 
-One narrow case: a Code Generation Unit built in its own worktree that had finished but was not yet merged when you upgraded. Building it again stops with `Worktree directory already exists`, or `resume requires the completed, merged prior Bolt`. Run `aidlc engine worktree discard --slug <unit>`: it sets the earlier attempt's files aside before it removes that worktree, then the next `/aidlc` builds the Unit again, and `aidlc engine worktree restore --slug <unit>` brings the earlier files back into a separate checkout whenever you want them.
+限られたケースが 1 つあります。独自のワークツリーでビルドされた Code Generation のユニットで、アップグレード時に完了していたがまだマージされていなかったものです。これを再びビルドすると、`Worktree directory already exists` または `resume requires the completed, merged prior Bolt` で止まります。`aidlc engine worktree discard --slug <unit>` を実行してください。このコマンドはそのワークツリーを削除する前に以前の試行のファイルを脇に保存し、次の `/aidlc` でユニットが再びビルドされます。以前のファイルが必要になったら、`aidlc engine worktree restore --slug <unit>` でいつでも別のチェックアウトに戻せます。
 
 ---
 
 ## Lock Files Left Behind
 
-**Symptom**: Hooks appear to hang briefly then skip. Subsequent audit entries are not written.
+**症状**: フックが少しの間止まったように見えてからスキップされます。その後の監査エントリが書き込まれません。
 
-The audit hooks use `mkdir`-based locking (via `lib.ts`) to prevent concurrent writes. If a hook is interrupted, the lock directory may persist. Lock files are created in the system temp directory (`os.tmpdir()` -- typically `/tmp/` on macOS/Linux, `%TEMP%` on Windows).
+監査フックは、同時書き込みを防ぐために `mkdir` ベースのロック（`lib.ts` 経由）を使います。フックが中断されると、ロックディレクトリが残ることがあります。ロックファイルはシステムの一時ディレクトリ（`os.tmpdir()` -- 通常は macOS/Linux では `/tmp/`、Windows では `%TEMP%`）に作成されます。
 
 ### Finding stale locks
 
@@ -976,23 +973,23 @@ ls -la /tmp/.aidlc-*
 Get-ChildItem $env:TEMP -Filter ".aidlc-*"
 ```
 
-Lock directories are named `.aidlc-audit-<hash>.lock` and `.aidlc-subagent-<hash>.lock` inside the system temp directory.
+ロックディレクトリは、システムの一時ディレクトリ内に `.aidlc-audit-<hash>.lock` と `.aidlc-subagent-<hash>.lock` という名前で作成されます。
 
 ### Clearing stale locks
 
-Run `/aidlc --doctor` first. It automatically clears only a provably-dead
-generation, a reused PID whose creation generation no longer matches, or an old
-lock whose owner stamp never finished (missing, empty, or cut off). Matching or
-unknown live generations, stamps that name no valid owner, and unreadable stamps
-are reported but not removed.
+まず `/aidlc --doctor` を実行してください。doctor が自動で削除するのは、終了していることが
+証明できる世代、作成世代が一致しなくなった再利用された PID、所有者スタンプが最後まで書かれなかった
+（欠けている、空、または途中で切れている）古いロックだけです。一致する、または不明な
+生存中の世代、有効な所有者を示さないスタンプ、読み取れないスタンプは、
+報告されますが削除されません。
 
-Before any manual cleanup, stop all AI-DLC processes using the affected locks,
-confirm ownership and that the projects are quiescent, and preserve diagnostic
-evidence. Investigate only the named lock; do not bulk-delete lock directories.
-Locks and their owner-stamped `.reap` recovery gates are transient and recreated
-as needed. `.gate-mutex` files are persistent advisory-lock anchors and may
-remain empty in the temp directory; an empty file is not evidence of a stale
-owner. Project transaction locks use the [ownership checks above](#transaction-lock-ownership).
+手動でクリーンアップする前に、該当するロックを使っているすべての AI-DLC プロセスを停止し、
+所有者とプロジェクトが静止していることを確認して、診断用の証拠を保存してください。
+調べるのは名前が示されたロックだけにし、ロックディレクトリを一括削除しないでください。
+ロックと、所有者スタンプ付きの `.reap` 復旧ゲートは一時的なもので、必要に応じて
+再作成されます。`.gate-mutex` ファイルは永続的なアドバイザリーロックのアンカーで、
+一時ディレクトリに空のまま残ることがあります。空のファイルは、古い所有者がいる証拠ではありません。
+プロジェクトのトランザクションロックには、[上記の所有者チェック](#transaction-lock-ownership)を使います。
 
 ---
 
@@ -1000,92 +997,92 @@ owner. Project transaction locks use the [ownership checks above](#transaction-l
 
 ### Shows "ready" when workflow is active
 
-The statusline reads the `**Lifecycle Phase**` field from `aidlc-state.md`. If that field is missing or empty, it falls back to `[AIDLC] ready`.
+ステータスラインは `aidlc-state.md` の `**Lifecycle Phase**` フィールドを読み取ります。そのフィールドがない、または空の場合は `[AIDLC] ready` にフォールバックします。
 
-**Fix:** Run `/aidlc --doctor` to check state file integrity. Verify the `## Current Status` section contains a `**Lifecycle Phase**` entry.
+**対処:** `/aidlc --doctor` を実行して状態ファイルの整合性を確認してください。`## Current Status` セクションに `**Lifecycle Phase**` のエントリがあることを確認してください。
 
 ### Shows stale data
 
-Expected behavior — the statusline updates when the state file is next written, typically at stage transitions.
+想定どおりの動作です。ステータスラインは、次に状態ファイルが書き込まれたとき（通常はステージの遷移時）に更新されます。
 
 ### Not appearing at all
 
-1. AI-DLC's status line shows only when you chose it at setup or turned it on:
-   run `/aidlc --statusline on` (`$aidlc --statusline on` on Codex). On Claude
-   Code it goes into your own `.claude/settings.local.json`; a status line your
-   organization's managed settings choose still wins.
-2. Run `aidlc doctor` and repair the reported native command or host wiring.
-3. On a copy install, verify Bun is on the host process PATH.
-4. With no state file, `[AIDLC] ready` is the expected output.
+1. AI-DLC のステータスラインは、セットアップ時に選んだか、オンにした場合にのみ表示されます:
+   `/aidlc --statusline on`（Codex では `$aidlc --statusline on`）を実行してください。Claude
+   Code では、あなた自身の `.claude/settings.local.json` に設定されます。組織のマネージド設定が
+   選んだステータスラインがある場合は、そちらが優先されます。
+2. `aidlc doctor` を実行し、報告されたネイティブコマンドやホストの接続を修復してください。
+3. コピーインストールの場合は、Bun がホストプロセスの PATH 上にあることを確認してください。
+4. 状態ファイルがない場合、`[AIDLC] ready` と表示されるのは想定どおりです。
 
 ---
 
 ## Using `--doctor`
 
-The `--doctor` utility command validates your setup. Run it whenever something seems wrong:
+`--doctor` ユーティリティコマンドはセットアップを検証します。何かがおかしいと思ったら実行してください:
 
 ```
 /aidlc --doctor
 ```
 
-It checks: prerequisite (`bun`), hook availability (every framework hook wired by `settings.json` must exist in `.claude/hooks/`, and a wired-but-missing hook fails loudly; a valid custom non-AI-DLC `statusLine` intentionally exempts the unwired `aidlc-statusline.ts`), hooks-not-globally-disabled (a resolved `disableAllHooks: true` in any Claude Code settings layer fails loudly), managed project-hook policy (`allowManagedHooksOnly: true`), project structure (`settings.json`), workspace shell readiness (`.claude/` + `aidlc/spaces/default/memory/`), state/audit consistency (the workflow Status against a recorded `WORKFLOW_COMPLETED`, and each Stage Progress checkbox against the stage starts and completions the audit recorded for the current attempt. A stage the audit shows as started whose checkbox still reads `[ ]` is what makes the workflow refuse to finish it, and the warning names the exact line to change. Under team Unit Ownership the per-unit Construction checkboxes are derived from Unit Progress, so they are not compared), hook heartbeats, graph integrity (no cycles, every graph entry has a file), the **Composed plugin surface** (enabled plugin stages are compiled; contribution sidecars and targets are valid; recorded structural additions and prose fragments remain present and unchanged), selection-aware plugin-authored checks, scope validation across all 11 scopes, **Composed scope durability** (every composer-authored scope resolves to a real plan: a scope file with no grid column, a durable `aidlc/scopes/<name>.md` record not yet projected, or a runnable workflow naming an unresolvable scope all fail, with `graph compile` as the remedy wherever compile can reach the cause; a missing column with no record behind it is reported apart, since compile emits a column only for a scope some stage declares), stage schema + graph references, and keyword overlap across scopes. Passing advisory rows include **Duplicate producers** for consumed artifacts whose producer is ambiguous by graph load order, **Rule drift** (with lifecycle-stale overlaps reported separately as stale-suppressed), **Paired sensor coverage**, stage/gate ledgers with no `HUMAN_TURN`, approval gates waiting for a human for more than 24 hours, plugin advisory checks, uncommitted workspace records, an open in-flight compose question, fresh background-subagent state, a file an earlier version wrote for the compose question (no longer read, safe to delete), and, when `repos.json` exists, declared-repo and managed-`.gitignore` drift. A background-subagent entry older than 2 hours fails with the exact `rm aidlc/.aidlc-*` remediation; doctor never deletes it. **Hook drops** is conditional: a hook that silently degraded (e.g. a plugin compose that could not apply a contribution, or a failed recompile) records a severity-tagged line to `<hooks-health>/<hook>.drops`; a `[degraded]` drop **fails** doctor (so a CI gate catches a half-applied plugin), while any other drop is a passing row naming each hook's most frequent reasons (each up to its first colon; the detail stays in the file), raised to a `Hook failures, the latest within the last day` warning while the hook's latest failure is under 24 hours old (it clears a day later or when you delete the file; an `[advisory]` line never raises it). A hook's normal decisions, such as the Stop hook letting a turn end because you have to answer first, go to `<hook>.trace` and are never counted. The plugin compose hook rewrites its drops file each run, so fixing the cause and re-composing self-clears it. Clean and warnings-only reports exit 0; any failed check exits 1. Healthy rows collapse by section unless `--verbose` is present, while every warning and failure remains visible. The report writes to stdout either way. Core checks are **read-only**: on a fresh shell with no intent yet they create nothing, so the command is safe to run before the first intent is created. Plugin checks execute installed plugin code that is required by convention to be read-only, but the runtime cannot enforce that property. Once an intent exists doctor records a `HEALTH_CHECKED` (and `GUARDRAIL_LOADED`) audit row.
+チェックする項目は次のとおりです: 前提条件（`bun`）、フックの利用可否（`settings.json` で接続されたすべてのフレームワークフックが `.claude/hooks/` に存在する必要があり、接続されているのに存在しないフックは明示的に失敗します。有効なカスタムの非 AI-DLC `statusLine` がある場合は、接続されていない `aidlc-statusline.ts` を意図的に対象外とします）、フックがグローバルに無効化されていないこと（Claude Code のいずれかの設定レイヤーで `disableAllHooks: true` に解決されると明示的に失敗します）、マネージドなプロジェクトフックのポリシー（`allowManagedHooksOnly: true`）、プロジェクト構造（`settings.json`）、ワークスペースシェルの準備状況（`.claude/` + `aidlc/spaces/default/memory/`）、状態と監査の整合性（ワークフローの Status を記録された `WORKFLOW_COMPLETED` と、また Stage Progress の各チェックボックスを現在の試行について監査が記録したステージの開始と完了と照合します。監査では開始済みなのにチェックボックスが `[ ]` のままのステージがあると、ワークフローはそのステージの完了を拒否します。警告には変更すべき正確な行が示されます。チームでのユニット所有では、ユニットごとの Construction のチェックボックスは Unit Progress から導出されるため、照合されません）、フックのハートビート、グラフの整合性（循環がなく、すべてのグラフエントリにファイルがある）、**Composed plugin surface**（有効なプラグインのステージがコンパイルされている、コントリビューションのサイドカーとターゲットが有効である、記録された構造的な追加と文章の断片が存在し変更されていない）、選択に応じたプラグイン作成のチェック、全 11 スコープにわたるスコープの検証、**Composed scope durability**（コンポーザーが作成したすべてのスコープが実際の計画に解決されること。グリッドの列がないスコープファイル、まだ投影されていない永続的な `aidlc/scopes/<name>.md` 記録、解決できないスコープを示す実行可能なワークフローはいずれも失敗し、コンパイルで原因に対処できる場合は `graph compile` が対処方法として示されます。裏付けとなる記録がない欠けた列は別に報告されます。コンパイルは、いずれかのステージが宣言しているスコープについてのみ列を出力するためです）、ステージのスキーマとグラフの参照、スコープ間のキーワードの重複。合格するアドバイザリーの行には、グラフの読み込み順によって生成元が曖昧になる消費対象の成果物についての **Duplicate producers**、**Rule drift**（ライフサイクル上古くなった重複は stale-suppressed として別に報告されます）、**Paired sensor coverage**、`HUMAN_TURN` のないステージやゲートの台帳、24 時間を超えて人の対応を待っている承認ゲート、プラグインのアドバイザリーチェック、コミットされていないワークスペースの記録、進行中の compose の質問、新しいバックグラウンドサブエージェントの状態、以前のバージョンが compose の質問用に書き込んだファイル（もう読み込まれないので削除して問題ありません）、そして `repos.json` が存在する場合は、宣言されたリポジトリとマネージドな `.gitignore` のずれが含まれます。2 時間より古いバックグラウンドサブエージェントのエントリは、正確な `rm aidlc/.aidlc-*` の対処方法とともに失敗します。doctor がそれを削除することは決してありません。**Hook drops** は条件付きです。暗黙のうちに機能が低下したフック（たとえばコントリビューションを適用できなかったプラグインの compose や、失敗した再コンパイル）は、重大度タグ付きの行を `<hooks-health>/<hook>.drops` に記録します。`[degraded]` のドロップは doctor を**失敗**させます（そのため CI のゲートが中途半端に適用されたプラグインを検出できます）。それ以外のドロップは、各フックで最も多い理由（それぞれ最初のコロンまで。詳細はファイルに残ります）を示す合格の行になり、そのフックの最新の失敗が 24 時間以内であれば `Hook failures, the latest within the last day` の警告に引き上げられます（1 日経つか、ファイルを削除すると解消されます。`[advisory]` の行で引き上げられることはありません）。フックの通常の判断、たとえば先にあなたが答える必要があるため Stop フックがターンを終了させる場合などは `<hook>.trace` に書かれ、決して数えられません。プラグインの compose フックは実行のたびに drops ファイルを書き直すため、原因を直して再度 compose すれば自然に解消されます。問題がない場合と警告のみの場合のレポートは終了コード 0 で終了し、失敗したチェックが 1 つでもあれば終了コード 1 で終了します。`--verbose` がない場合、正常な行はセクションごとに折りたたまれますが、警告と失敗はすべて表示されたままです。どちらの場合もレポートは標準出力に書き出されます。コアのチェックは**読み取り専用**です。まだインテントのない新しいシェルでは何も作成しないため、最初のインテントを作成する前でも安全に実行できます。プラグインのチェックは、慣例として読み取り専用であることが求められているインストール済みのプラグインのコードを実行しますが、ランタイムがその性質を強制することはできません。インテントが存在すると、doctor は `HEALTH_CHECKED`（と `GUARDRAIL_LOADED`）の監査行を記録します。
 
-On Kiro IDE and Kiro CLI v3, it also checks each ignore source independently for rules hiding `.kiro/`, naming the file and line. Global-source matches fail; workspace-source matches warn because doctor cannot tell which Kiro you run: Kiro IDE's `kiroAgent.agentIgnoreFiles` governs whether they apply there, and Kiro CLI v3 applies `.kiroignore` but not `.gitignore`. See [Kiro Read Denials](#kiro-read-denials). On every harness but Cursor it also warns "AIDLC hooks have not run in this project yet" when no AI-DLC hook has run in the project. That is expected before your first chat message; after one, its fix names your tool's step (see, for example, [Kiro IDE hooks not running](#kiro-ide-hooks-not-running) or [GitHub Copilot hooks not running](#github-copilot-hooks-not-running)). On Kiro CLI, a workflow whose hooks never ran fails "Hooks have never executed" with the engine its hooks need; see [Kiro CLI hooks not running](#kiro-cli-hooks-not-running).
+Kiro IDE と Kiro CLI v3 では、`.kiro/` を隠すルールがないか、ignore の各ソースを個別にチェックし、ファイルと行を示します。グローバルなソースでの一致は失敗となり、ワークスペースのソースでの一致は警告となります。doctor にはどの Kiro を実行しているかわからないためです。Kiro IDE では `kiroAgent.agentIgnoreFiles` によってそれらが適用されるかどうかが決まり、Kiro CLI v3 は `.kiroignore` を適用しますが `.gitignore` は適用しません。[Kiro Read Denials](#kiro-read-denials) を参照してください。Cursor 以外のすべてのハーネスでは、プロジェクトで AI-DLC のフックが一度も実行されていない場合に "AIDLC hooks have not run in this project yet"（このプロジェクトではまだ AIDLC のフックが実行されていません）という警告も表示します。最初のチャットメッセージの前であれば想定どおりです。メッセージを送った後であれば、その対処にはお使いのツールでの手順が示されます（たとえば [Kiro IDE hooks not running](#kiro-ide-hooks-not-running) や [GitHub Copilot hooks not running](#github-copilot-hooks-not-running) を参照）。Kiro CLI では、フックが一度も実行されていないワークフローは、フックに必要なエンジンを示して "Hooks have never executed" で失敗します。[Kiro CLI のフックが動かない](#kiro-cli-hooks-not-running) を参照してください。
 
-The **Workspace record visibility** advisory, beside the uncommitted-records
-row, catches user ignore rules added after config. It names the rule's file,
-line, and hidden committed record paths; narrow the rule rather than
-force-adding individual records. This warning does not change doctor's exit
-code. The row is absent when the records are visible, outside a Git repository,
-or when Git is unavailable.
+コミットされていない記録の行の隣にある **Workspace record visibility** のアドバイザリーは、
+config の後に追加されたユーザーの ignore ルールを検出します。ルールのファイル、
+行、隠れているコミット済みの記録のパスを示します。個々の記録を強制的に追加するのではなく、
+ルールの対象を絞ってください。この警告は doctor の終了コードを
+変えません。記録が見えている場合、Git リポジトリの外にある場合、
+または Git が利用できない場合、この行は表示されません。
 
-On Claude Code, doctor also reads the machine-managed `managed-settings.json` and alphabetical `managed-settings.d/` fragments. If the effective `allowManagedHooksOnly` value is `true`, organization policy blocks every hook declared by the project's `.claude/settings.json`; only your Claude Code administrator can lift that policy. When that policy is not set and heartbeats are still absent after workflow progress, set `"disableAllHooks": false` in this project's `.claude/settings.local.json`; it works in the same chat.
-When a workflow has issues, `--doctor` also prints a **Workflow diagnosis** section listing structured findings (unresolved gates, a missing runtime graph, cold hooks, and similar "it will not advance" causes) — the same analysis `--doctor --export` writes to its report.
+Claude Code では、doctor はマシンで管理される `managed-settings.json` と、アルファベット順の `managed-settings.d/` のフラグメントも読み取ります。実際に有効な `allowManagedHooksOnly` の値が `true` の場合、組織のポリシーによって、プロジェクトの `.claude/settings.json` で宣言されたすべてのフックがブロックされます。そのポリシーを解除できるのは Claude Code の管理者だけです。そのポリシーが設定されていないのに、ワークフローが進んだ後もハートビートがない場合は、このプロジェクトの `.claude/settings.local.json` で `"disableAllHooks": false` を設定してください。同じチャットで有効になります。
+ワークフローに問題がある場合、`--doctor` は構造化された所見（未解決のゲート、ランタイムグラフの欠落、冷えたフック、その他の「先に進まない」原因）を一覧表示する **Workflow diagnosis** セクションも出力します。これは `--doctor --export` がレポートに書き出すのと同じ分析です。
 
-See [CLI Commands](12-cli-commands.md#aidlc-doctor-health-check) for full details on what each check validates and how to fix failures.
+各チェックが何を検証し、失敗をどう修正するかの詳細については、[CLI コマンド](12-cli-commands.md#aidlc-doctor-health-check) を参照してください。
 
 ---
 
 ## Sharing a Diagnostic Report
 
-When a workflow is stuck or misbehaving — a gate that will not open, a stage that
-will not advance, an approved report repeatedly refused — and you want a
-maintainer to look, run:
+ワークフローが止まっている、または挙動がおかしい場合（開かないゲート、先に進まない
+ステージ、承認済みのレポートが繰り返し拒否されるなど）に、メンテナーに見てもらいたいときは、
+次を実行してください:
 
 ```
 /aidlc --doctor --export
 ```
 
-This runs a fresh `--doctor` pass, then writes a small, **redacted** diagnostic
-report to `aidlc/diagnostics/` (override with `--output <dir>`). It packages
-a timestamped `.tar.gz` when a system `tar` is available; otherwise it keeps the
-report directory and tells you to compress it yourself. Share that archive (or
-directory) — it carries the diagnosis and redacted evidence, **not your work
-product**. No workspace source, raw state/audit/runtime-graph files, or
-artifact/contribution/question/memory bodies are included; paths are normalized,
-intent ids and Unit names are hashed, and secret-like values are scrubbed.
+これは新たに `--doctor` を実行してから、小さな**秘匿化済み**の診断レポートを
+`aidlc/diagnostics/` に書き出します（`--output <dir>` で変更できます）。システムに `tar` が
+あれば、タイムスタンプ付きの `.tar.gz` にまとめます。ない場合はレポートのディレクトリをそのまま残し、
+自分で圧縮するよう伝えます。そのアーカイブ（または
+ディレクトリ）を共有してください。含まれるのは診断と秘匿化済みの証拠で、**あなたの作業
+成果物は含まれません**。ワークスペースのソース、状態・監査・ランタイムグラフの生ファイル、
+成果物・コントリビューション・質問・メモリの本文は含まれません。パスは正規化され、
+インテント ID とユニット名はハッシュ化され、シークレットらしき値は除去されます。
 
-The report reconstructs the workflow timeline from the audit trail and runs
-deterministic condition→remedy rules. The two most common causes it catches:
+レポートは監査証跡からワークフローのタイムラインを再構成し、
+決定論的な「条件→対処」のルールを実行します。検出する原因のうち最も多い 2 つは次のとおりです:
 
-- **Unresolved approval gates** — a stage whose gate never resolved is the single
-  most common "it will not advance" cause.
-- **Missing runtime graph / cold hooks**: a runtime graph that is absent, or a
-  hook that last fired more than a day before the newest stage or approval step
-  recorded on the intent, points at a recompile that did not run. Opening a chat,
-  a prompt and doctor's own audit rows are not counted as work, so an intent
-  nobody is working on does not read as having cold hooks.
+- **未解決の承認ゲート** — ゲートが一度も解決されていないステージは、
+  「先に進まない」原因として最も多いものです。
+- **ランタイムグラフの欠落 / 冷えたフック**: ランタイムグラフがない、または
+  フックが最後に発火したのが、インテントに記録された最新のステージや承認のステップより
+  1 日以上前である場合は、再コンパイルが実行されなかったことを示しています。チャットを開くこと、
+  プロンプト、doctor 自身の監査行は作業として数えられないため、誰も作業していない
+  インテントが冷えたフックを持つと判定されることはありません。
 
-`report.md` inside the report lists every finding with a remedy; a remedy that
-names a recovery bypass (such as an `AIDLC_DISABLE_*` env var) is flagged
-as not safe to automate. See [CLI Commands](12-cli-commands.md#aidlc-doctor-export-write-a-diagnostic-report)
-for the full report contents and safety model.
+レポート内の `report.md` には、すべての所見が対処方法とともに一覧表示されます。復旧のための回避手段
+（`AIDLC_DISABLE_*` 環境変数など）を示す対処方法には、自動化するのは安全でないという
+印が付きます。レポートの内容全体と安全モデルについては、[CLI コマンド](12-cli-commands.md#aidlc-doctor-export-write-a-diagnostic-report)
+を参照してください。
 
 ---
 
 ## Next Steps
 
-- [State Tracking and Audit Trail](10-state-and-audit.md) — State file structure
-- [Session Management](11-session-management.md): carrying on after compaction
-- [CLI Commands](12-cli-commands.md) — `--doctor`, `--status`, `--stage` usage
-- [Glossary](glossary.md): definitions for compaction, hook
+- [状態の追跡と監査証跡](10-state-and-audit.md) — 状態ファイルの構造
+- [セッション管理](11-session-management.md): コンパクション後の作業の継続
+- [CLI コマンド](12-cli-commands.md) — `--doctor`、`--status`、`--stage` の使い方
+- [用語集](glossary.md): コンパクション、フックの定義

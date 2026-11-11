@@ -1,21 +1,20 @@
 # Your First Workflow
 
-This chapter explains what you see at each step of an AI-DLC run and what you
-decide there. It follows the run in
-[Getting Started](01-getting-started.md#5-your-first-run-in-claude-code), a
-REST API for inventory management, whose screens that page shows up to the
-first approval; [Worked Examples](16-worked-examples.md) follows whole runs. For
-a comparison of Classic, Express, Feature, and the other choices, see
-[Workflow Profiles](workflow-profiles.md).
+この章では、AI-DLC の実行の各ステップで何が表示され、そこで何を決めるのかを説明します。
+[はじめに](01-getting-started.md#5-your-first-run-in-claude-code) の実行例である
+在庫管理用の REST API を題材にします。そのページでは最初の承認までの画面を示しています。
+実行全体の流れは [実例集](16-worked-examples.md) で紹介しています。
+Classic、Express、Feature などの選択肢の比較は
+[ワークフロープロファイル](workflow-profiles.md) を参照してください。
 
-> **Note**: The transcripts in this chapter show **Claude Code**. On Kiro CLI,
-> Kiro IDE, Codex CLI, and opencode the workflow - stages, agents, gates,
-> artifacts - is identical, but the Claude-only welcome banner does not appear,
-> and AI-DLC's status line shows only on Claude Code and Codex, once you turn it
-> on. Use `/aidlc --status` on Kiro and opencode; Codex uses `$aidlc --status`
-> and its built-in `update_plan` progress display.
-> Your harness's chapter under
-> [Running on other harnesses](harnesses/README.md) lists every difference.
+> **注**: この章の実行記録は **Claude Code** のものです。Kiro CLI、
+> Kiro IDE、Codex CLI、opencode でもワークフロー（ステージ、エージェント、ゲート、
+> 成果物）は同じですが、Claude 専用のウェルカムバナーは表示されません。
+> また、AI-DLC のステータスラインは Claude Code と Codex でのみ、有効にした後に表示されます。
+> Kiro と opencode では `/aidlc --status` を使ってください。Codex では `$aidlc --status`
+> と組み込みの `update_plan` による進捗表示を使います。
+> 違いの一覧は、
+> [他のハーネスでの実行](harnesses/README.md) にある各ハーネスの章に記載しています。
 
 ---
 
@@ -25,34 +24,34 @@ a comparison of Classic, Express, Feature, and the other choices, see
 /aidlc Build a REST API for inventory management
 ```
 
-When Claude Code starts in the project, it shows the AI-DLC welcome message,
-the `companyAnnouncements` entry in `.claude/settings.json`. Under its AI-DLC
-heading it says "Run `/aidlc` to start or resume a workflow. Describe what to
-build and AI-DLC proposes a plan for you to confirm." and then lists the
-phases, the stages, and the scopes (the ready-made plans) with the stages each
-one runs. `companyAnnouncements` is a Claude
-Code setting with no equivalent on the other harnesses; there, no welcome
-appears and the run begins with the plan question below.
+プロジェクトで Claude Code を起動すると、AI-DLC のウェルカムメッセージが表示されます。
+これは `.claude/settings.json` の `companyAnnouncements` エントリーです。AI-DLC の
+見出しの下には "Run `/aidlc` to start or resume a workflow. Describe what to
+build and AI-DLC proposes a plan for you to confirm."（/aidlc を実行してワークフローを開始または再開します。作るものを説明すると、AI-DLC が確認用の計画を提案します。）と表示され、続いて
+フェーズ、ステージ、スコープ（既製の計画）と、それぞれが実行するステージが一覧表示されます。
+`companyAnnouncements` は Claude
+Code の設定であり、他のハーネスには相当するものがありません。他のハーネスではウェルカムは
+表示されず、実行は下記の計画の質問から始まります。
 
 ### Starting from an existing document
 
-There is no mandatory location for an existing vision document, PRD, or brief.
-For a direct text or Markdown read, name the file in your initial request, for
-example `/aidlc Read ./vision.md and build what it describes`. Relative paths
-resolve from the project root. When nothing is at that path, the workflow looks
-for project files with that name: with one match it reads it and tells you which
-file (at the latest when it asks you to approve the stage), with several it offers a numbered pick, and with none it asks for the
-path. It finds only document files (Markdown, text, PDF, Word, and similar),
-outside hidden folders such as `.docker` or `.aws` and outside any nested
-repository. It never lists git-ignored files, symlinks, or files that look like
-secrets (`.env`, `*.pem`, `*.key`, `id_*`, or a name with
-"secret", "credential", "password", or "token" in it), and never reads outside
-the project. When it cannot list every file, it chooses none and asks for the
-path.
+既存のビジョンドキュメント、PRD、ブリーフの置き場所に決まりはありません。
+テキストや Markdown をそのまま読ませるには、最初の依頼の中でファイル名を指定します。
+たとえば `/aidlc Read ./vision.md and build what it describes` のようにします。相対パスは
+プロジェクトのルートから解決されます。そのパスに何もない場合、ワークフローはその名前の
+プロジェクトファイルを探します。1 つ見つかればそれを読み、どのファイルかを伝えます
+（遅くともステージの承認を求める時点で）。複数見つかれば番号付きの選択肢を提示し、見つからなければ
+パスを尋ねます。探すのはドキュメントファイル（Markdown、テキスト、PDF、Word など）だけで、
+`.docker` や `.aws` のような隠しフォルダーや、入れ子になったリポジトリの中は対象外です。
+git で無視されたファイル、シンボリックリンク、シークレットに見えるファイル
+（`.env`、`*.pem`、`*.key`、`id_*`、または名前に
+"secret"、"credential"、"password"、"token" を含むもの）は決して一覧に含めず、
+プロジェクトの外を読むこともありません。すべてのファイルを一覧できない場合は、どれも選ばずに
+パスを尋ねます。
 
-You can also paste document content directly into the request. Wrap it in
-`<document>` and `</document>` so the workflow can tell your directions from
-document data. Your directions can come before the block, after it, or both:
+ドキュメントの内容を依頼に直接貼り付けることもできます。その場合は
+`<document>` と `</document>` で囲み、ワークフローがあなたの指示とドキュメントのデータを
+区別できるようにします。指示はブロックの前でも後でも、その両方でもかまいません。
 
 ```text
 /aidlc Build the product described below.
@@ -62,75 +61,73 @@ document data. Your directions can come before the block, after it, or both:
 Keep the first release read-only.
 ```
 
-The delimited content is untrusted data, not instructions. Everything from the
-first `<document>` to the last `</document>` is the document, so a
-`</document>` inside your pasted text cannot turn the rest of it into
-instructions. A `<document>` with no closing marker makes the rest of the
-message the document, and a `</document>` with no opening marker makes
-everything before it the document. The workflow says in one line how it split
-your message. Multiline input is stored as one JSON string in committed
-`<record>/project-description.json`, outside the line-oriented state file; its
-`Project` field remains a safe single-line preview of your directions outside
-the document, so Markdown lines resembling workflow fields cannot alter the
-selected scope or lifecycle state. A message that is only a document, with no
-words outside it, is taken as "Build what the pasted document describes.", and
-the plan question that follows says so.
+区切られた内容は信頼できないデータとして扱われ、指示とはみなされません。最初の
+`<document>` から最後の `</document>` までのすべてがドキュメントになるため、貼り付けたテキスト内の
+`</document>` によって残りの部分が指示に変わることはありません。閉じマーカーのない
+`<document>` はメッセージの残りをドキュメントとし、開始マーカーのない `</document>` は
+それより前のすべてをドキュメントとします。ワークフローは、メッセージをどう分割したかを 1 行で伝えます。
+複数行の入力は、行単位の状態ファイルとは別に、コミットされる
+`<record>/project-description.json` に 1 つの JSON 文字列として保存されます。その
+`Project` フィールドは、ドキュメント外のあなたの指示を安全な 1 行のプレビューとして保持します。
+そのため、ワークフローのフィールドに似た Markdown の行によって、選択されたスコープやライフサイクルの
+状態が変わることはありません。ドキュメントだけで、その外に言葉がないメッセージは
+"Build what the pasted document describes."（貼り付けたドキュメントに書かれたものを作る）として扱われ、
+続く計画の質問でもその旨が示されます。
 
-You can also add a document yourself at any time with
-`/aidlc knowledge onboard <path>`, naming a file or folder anywhere in your
-project; one outside the knowledge folder is copied in and the line says where.
+ドキュメントは、いつでも自分で追加することもできます。
+`/aidlc knowledge onboard <path>` で、プロジェクト内の任意のファイルやフォルダーを指定します。
+ナレッジフォルダーの外にあるものはフォルダー内にコピーされ、その場所が 1 行で示されます。
 
-A PDF or Word file works the same way: name it, for example
-`/aidlc Build what ./brief.pdf describes`. The workflow copies it into
-`aidlc/spaces/<space>/knowledge/documents/`, adds it to the
-[knowledge base](08-knowledge.md), tells you in one line where it copied it and
-its document id (at the latest when it asks you to approve the stage), and
-reads its text. You never run a command or type the id, and it never replaces a
-file already in that folder. When the file is git-ignored (or git cannot
-say), it asks first whether you want it copied anyway, because the copy would be committed. When no
-text can be read (no extractor for that kind of file, or a scanned document),
-it says why and asks you for a text or Markdown version. Text over 200,000
-characters is not read directly; the workflow asks you for a supported file.
-Document paths, filenames, and content are always treated as untrusted data,
-never as instructions.
+PDF や Word のファイルも同じように扱えます。たとえば
+`/aidlc Build what ./brief.pdf describes` のように名前を指定します。ワークフローはそれを
+`aidlc/spaces/<space>/knowledge/documents/` にコピーして
+[ナレッジベース](08-knowledge.md) に追加し、コピー先とドキュメント ID を 1 行で伝え
+（遅くともステージの承認を求める時点で）、そのテキストを読みます。コマンドを実行したり ID を
+入力したりする必要はなく、そのフォルダーにすでにあるファイルを置き換えることもありません。
+ファイルが git で無視されている場合（または git で判定できない場合）は、コピーがコミットされることになるため、
+それでもコピーするかどうかを先に尋ねます。テキストを読み取れない場合
+（その種類のファイルの抽出手段がない、またはスキャンされたドキュメントである場合）は、
+その理由を伝え、テキストまたは Markdown 版を求めます。200,000 文字を超えるテキストは
+直接は読まれず、ワークフローは対応している形式のファイルを求めます。
+ドキュメントのパス、ファイル名、内容は常に信頼できないデータとして扱われ、
+指示とはみなされません。
 
-[Writing a Vision Document](writing-inputs/vision-document-guide.md) covers
-what to put in one, and
-[Writing a Technical Environment Document](writing-inputs/technical-environment-guide.md)
-covers the stack and its rules, which go in your space's team knowledge
-rather than the request.
+[ビジョンドキュメントの書き方](writing-inputs/vision-document-guide.md) では
+何を書くべきかを、
+[技術環境ドキュメントの書き方](writing-inputs/technical-environment-guide.md)
+では技術スタックとそのルールを説明しています。これらは依頼ではなく、
+スペースのチームナレッジに置きます。
 
 ---
 
 ## Choosing the Plan
 
-The agent reads your request and proposes a plan: a ready-made set of stages
-for this kind of work. The question names the plan, how many stages and
-approval gates it has, and how many stages repeat for each unit of work in
-Construction. For the inventory API the agent proposed `mvp`, 19 stages; a
-`feature` plan runs all 33. You can:
+エージェントは依頼を読み、計画を提案します。計画とは、この種の作業向けに用意された
+既製のステージの組み合わせです。質問には、計画の名前、ステージと承認ゲートの数、
+Construction でユニットごとに繰り返すステージの数が示されます。在庫 API の例では
+エージェントは 19 ステージの `mvp` を提案しました。`feature` の計画は 33 ステージすべてを実行します。次のことができます。
 
-- go ahead with the proposed plan;
-- use a different plan: the agent lists the other ready-made plans with their
-  length, and you pick one or type its name;
-- tailor a plan to this task, so the agent proposes a set of stages of its own
-  from your words.
+- 提案された計画で進める
+- 別の計画を使う: エージェントが他の既製の計画を長さとともに一覧表示するので、
+  1 つを選ぶか名前を入力します
+- この作業に合わせて計画を調整する: エージェントがあなたの言葉から独自のステージの
+  組み合わせを提案します
 
-[Workflow Profiles](workflow-profiles.md) describes each plan, and
-[Scopes, Depth, and Test Strategy](05-scopes-and-depth.md) how to change depth
-or test strategy later.
+各計画の説明は [ワークフロープロファイル](workflow-profiles.md) に、
+後から深さやテスト戦略を変更する方法は
+[スコープ、深さ、テスト戦略](05-scopes-and-depth.md) にあります。
 
 ---
 
 ## Initialization Phase (Automatic)
 
-Once you have chosen the plan, the three initialization stages run in well
-under a second. You do not interact with them: they create the record for this
-piece of work in the active space and set it up.
+計画を選ぶと、3 つの Initialization ステージが 1 秒もかからずに実行されます。
+操作は必要ありません。これらのステージは、アクティブなスペースにこの作業の記録を作成し、
+準備を整えます。
 
 ### Stage 0.1: Workspace Scaffold
 
-The framework creates the record at `aidlc/spaces/<space>/intents/<YYMMDD>-<label>/` (the `<space>` is `default` unless you use a named space). It creates one folder per phase your plan actually runs, so the record shows the plan rather than every phase that exists. The inventory API's `mvp` plan has no Operation stages, so its record has no `operation/` folder (its top level, as listed after the first stage):
+フレームワークは `aidlc/spaces/<space>/intents/<YYMMDD>-<label>/` に記録を作成します（名前付きスペースを使わない限り、`<space>` は `default` です）。計画で実際に実行するフェーズごとに 1 つのフォルダーを作成するため、記録には存在するすべてのフェーズではなく、計画の内容が表れます。在庫 API の `mvp` の計画には Operation のステージがないため、その記録には `operation/` フォルダーがありません（最初のステージの後のトップレベルの一覧）。
 
 ```text
 aidlc/spaces/default/intents/261013-inventory-rest-api/
@@ -144,56 +141,56 @@ aidlc/spaces/default/intents/261013-inventory-rest-api/
   project-description.json
 ```
 
-A `feature` plan runs all five phases; a `bugfix` plan skips Ideation but keeps
-its deployment stages, so `ideation/` is absent while `operation/` appears. The
-space's shared folders, such as `aidlc/spaces/default/knowledge/` for team
-knowledge, are created beside `intents/` at the same time.
+`feature` の計画は 5 つのフェーズすべてを実行します。`bugfix` の計画は Ideation をスキップしますが
+デプロイのステージは残すため、`ideation/` はなく、`operation/` があります。
+チームナレッジ用の `aidlc/spaces/default/knowledge/` のようなスペースの共有フォルダーも、
+同時に `intents/` と並べて作成されます。
 
-Per-stage folders are not created up front. A stage's folder (for example
-`inception/requirements-analysis/`) appears the first time that stage writes an
-artifact, so the record only ever lists work that produced something.
+ステージごとのフォルダーは事前には作成されません。ステージのフォルダー（たとえば
+`inception/requirements-analysis/`）は、そのステージが最初に成果物を書き込んだときに
+作られるため、記録には何かを生み出した作業だけが並びます。
 
 ### Stage 0.2: Workspace Detection
 
-A deterministic rule-based scanner looks at the files at the top of the project and up to six levels into known source directories (`src/`, `app/`, `lib/`, `pages/`, `components/`, `tests/`). It classifies greenfield vs brownfield based on source files, framework configs, and package manifests. When no top-level signal fires, it also looks inside other folders, up to three levels down, so a project whose source lives in a container folder (e.g. `wordbook/`, `backend/`) is still detected as brownfield. AI-DLC's own files, such as the harness directory and `aidlc/`, never count as your code, so an empty folder stays greenfield.
+決定論的なルールベースのスキャナーが、プロジェクトのトップレベルのファイルと、既知のソースディレクトリ（`src/`、`app/`、`lib/`、`pages/`、`components/`、`tests/`）の 6 階層下までを調べます。ソースファイル、フレームワークの設定、パッケージマニフェストに基づいて、greenfield か brownfield かを分類します。トップレベルで手がかりが見つからない場合は、他のフォルダーの中も 3 階層下まで調べるため、ソースがコンテナー用のフォルダー（例: `wordbook/`、`backend/`）にあるプロジェクトも brownfield として検出されます。ハーネスのディレクトリや `aidlc/` などの AI-DLC 自身のファイルは、あなたのコードとしては数えられないため、空のフォルダーは greenfield のままです。
 
-Your word wins over the scan. Start with `/aidlc --project-type brownfield "<what to build>"` (or `greenfield`) to say which it is, or say it in plain words at any point ("this is existing code, the frontend is in ui-repo"). AI-DLC scans the folder again, records the type as yours, and for existing code runs Reverse Engineering, then returns to the stage you were on; finished stages stay finished, and the reply names any that were done before the code was known so you can redo one. If the work started as a new project in an empty folder and the folder gains code before Construction, AI-DLC asks you once which it is. The choice holds for that piece of work only; the next piece of work scans the folder again.
+スキャンよりもあなたの言葉が優先されます。`/aidlc --project-type brownfield "<what to build>"`（または `greenfield`）で開始してどちらかを伝えるか、いつでも平易な言葉で伝えてください（「これは既存のコードで、フロントエンドは ui-repo にある」など）。AI-DLC はフォルダーを再スキャンし、種別をあなたの指定として記録します。既存のコードの場合は Reverse Engineering を実行し、元のステージに戻ります。完了したステージは完了したままで、返信にはコードが判明する前に完了したステージが示されるので、必要ならやり直せます。作業が空のフォルダーで新しいプロジェクトとして始まり、Construction の前にフォルダーにコードが追加された場合は、AI-DLC がどちらなのかを 1 回だけ尋ねます。この選択はその作業にのみ適用され、次の作業ではフォルダーが再びスキャンされます。
 
 ### Stage 0.3: State Initialization
 
-The orchestrator writes the intent's `aidlc-state.md` (under its record dir) with the stage plan from the plan you chose, its depth and test strategy, and the scanner's classification. In an empty folder the scan finds no code, so the plan leaves out Reverse Engineering; if the work is on existing code, say so and AI-DLC runs it.
+オーケストレーターは、インテントの `aidlc-state.md`（その記録ディレクトリ内）に、選んだ計画に基づくステージ計画、その深さとテスト戦略、スキャナーの分類を書き込みます。空のフォルダーではスキャンでコードが見つからないため、計画から Reverse Engineering が除かれます。既存のコードに対する作業であれば、そう伝えると AI-DLC がそれを実行します。
 
 ---
 
 ## Ideation Phase (Interactive)
 
-After Initialization, the workflow enters Ideation. Each stage from here on runs interactively with an approval gate.
+Initialization の後、ワークフローは Ideation に入ります。ここからの各ステージは、承認ゲート付きで対話的に実行されます。
 
 ### Stage 1.1: Intent Capture (aidlc-product-agent)
 
-On Claude Code, when you chose AI-DLC's status line at setup (or turned it on with `/aidlc --statusline on`), the status line at the bottom of your terminal follows the work (Kiro and opencode use `/aidlc --status`; Codex uses `$aidlc --status` and its built-in `update_plan` progress display). In the inventory API run, one stage later, it read (the bar's block characters and the separator dot shown as plain text, and the model segment on the right left out):
+Claude Code では、セットアップ時に AI-DLC のステータスラインを選んだ場合（または `/aidlc --statusline on` で有効にした場合）、ターミナル下部のステータスラインが作業の進行を表示します（Kiro と opencode では `/aidlc --status` を、Codex では `$aidlc --status` と組み込みの `update_plan` による進捗表示を使います）。在庫 API の実行では、1 ステージ後に次のように表示されました（バーのブロック文字と区切りの点はプレーンテキストで示し、右側のモデルの部分は省略しています）。
 
 ```text
 [AIDLC] inventory-rest-api - IDEATION [##--------] 1/4 > Feasibility -- Architect Agent
 ```
 
-From the left: the piece of work (with more than one space, the space's name comes first), the current phase, the phase progress bar and ratio (both count the finished stages of this phase), the current stage, and the agent leading it. In Construction, `Unit N of M` takes the place of the bar. On the right, Claude Code's model, then `ctx:N%`, how much of the context window is used (shown when Claude Code reports it), and, once Claude Code has reported usage, the tokens in and out and a cost estimate for the active workflow and current session. Set `AIDLC_DISABLE_USAGE_TRACKING=1` to turn usage tracking (and that segment) off.
+左から順に、作業（スペースが複数ある場合は先頭にスペース名）、現在のフェーズ、フェーズの進捗バーと比率（どちらもこのフェーズの完了したステージを数えます）、現在のステージ、それを率いるエージェントです。Construction では、バーの代わりに `Unit N of M` が表示されます。右側には Claude Code のモデル、続いてコンテキストウィンドウの使用率を示す `ctx:N%`（Claude Code が報告した場合に表示）、さらに Claude Code が使用量を報告した後は、アクティブなワークフローと現在のセッションの入出力トークン数とコストの見積もりが表示されます。使用量の追跡（とその表示部分）をオフにするには `AIDLC_DISABLE_USAGE_TRACKING=1` を設定します。
 
-> The cost is a local estimate priced from public list prices, not a bill; when Amazon Bedrock is your recorded provider it may not match what you are actually charged. See [Troubleshooting](15-troubleshooting.md#statusline-shows-a-cost-segment-you-dont-want-or-usage-tracking-concerns) to price it at your own rates or hide it.
+> コストは公開された定価から算出したローカルの見積もりであり、請求額ではありません。記録されたプロバイダーが Amazon Bedrock の場合、実際の請求額と一致しないことがあります。独自の料金で計算する方法や非表示にする方法は [トラブルシューティング](15-troubleshooting.md#statusline-shows-a-cost-segment-you-dont-want-or-usage-tracking-concerns) を参照してください。
 
-The aidlc-product-agent writes the stage's questions to a file in the record and asks how you want to answer them: **Guide me**, **I'll edit the file**, or **Chat** ([the screen](01-getting-started.md#5-your-first-run-in-claude-code)).
+aidlc-product-agent は、ステージの質問を記録内のファイルに書き出し、どのように回答するかを尋ねます。選択肢は **Guide me**、**I'll edit the file**、**Chat** です（[画面](01-getting-started.md#5-your-first-run-in-claude-code)）。
 
-- **Guide me** asks the questions in the chat, a few at a time, each with options to pick and room to type your own answer
-- **I'll edit the file** has you fill in the answers in the questions file it names; tell it when you are done
-- **Chat** lets you discuss freely; the agent pulls the decisions out of the conversation
+- **Guide me** は、チャットで質問を数問ずつ尋ねます。各質問には選べる選択肢と、自由に回答を入力できる欄があります
+- **I'll edit the file** では、示された質問ファイルに回答を記入します。終わったらそのことを伝えてください
+- **Chat** では自由に議論でき、エージェントが会話から決定事項を拾い上げます
 
-See [Interaction Modes](07-interaction-modes.md) for details on each mode. You can switch modes mid-stage. You choose once: later stages reuse your choice and say so in one line, and you change it by saying so.
+各モードの詳細は [インタラクションモード](07-interaction-modes.md) を参照してください。ステージの途中でモードを切り替えることもできます。選択は 1 回だけです。後のステージではその選択が再利用され、その旨が 1 行で示されます。変更したいときはそう伝えてください。
 
-When every question is answered, the agent may read your answers back for one confirmation before it writes the stage's documents (the summary confirmation, on in most plans). After writing them, a stage can ask you to settle what it had to assume. A reviewer agent then checks the main document, and the last question before the approval is whether anything from the stage is worth remembering next time (the learnings question, on in most plans).
+すべての質問に回答すると、エージェントはステージのドキュメントを書く前に、回答を読み上げて 1 回確認を求めることがあります（サマリー確認。ほとんどの計画で有効です）。ドキュメントを書いた後、ステージが前提にせざるを得なかった点について、あなたに決めてもらうよう求めることがあります。その後、レビュアーエージェントが主要なドキュメントを確認し、承認前の最後の質問として、このステージから次回のために覚えておくべきことがあるかを尋ねます（学びの質問。ほとんどの計画で有効です）。
 
 ### Approval Gate
 
-Then you see what the stage produced, what the review found, and the approval question. From the inventory API run, shortened:
+続いて、ステージが生み出したもの、レビューの結果、承認の質問が表示されます。在庫 API の実行から抜粋します。
 
 ```text
 Intent Capture & Framing is ready for your review. It produced intent-statement.md,
@@ -227,30 +224,29 @@ one to be fixed, or reject one as not applying, saying why.
    2. Request Changes
 ```
 
-In a project that is not in git, the first gate also says, once: "This project
+git で管理されていないプロジェクトでは、最初のゲートで 1 回だけ "This project
 has no git, so AI-DLC can't undo the changes it makes to your files; to get an
-undo, run `git init` and commit them." Without a commit, a file of yours that the
-build changes cannot be put back.
+undo, run `git init` and commit them."（このプロジェクトには git がないため、AI-DLC はファイルへの変更を元に戻せません。元に戻せるようにするには git init を実行してコミットしてください。）とも表示されます。コミットがなければ、
+ビルドが変更したあなたのファイルを元に戻すことはできません。
 
-Each finding has an ID, a severity, where it is, and what would resolve it. The
-engine owns the stable finding list. Later checks report only what changed,
-while your decisions remain exactly as you made them. Choose **Approve** to
-continue with every open finding accepted as risk (the line just above the
-question names them), or **Request Changes** to return to the listed artifacts. To decide
-one differently, say so in your own words: approving and asking for R-03 to
-be fixed records that you asked for the fix, so the next check looks at it
-again; rejecting R-03 as not applying records it that way, with your reason,
-and brings the same gate back with the review as it stands, since nothing else
-changed. When rejecting an open finding as inapplicable, give its ID and reason. If
-a reviewer marks one fixed and you disagree, request changes
-with that ID and explain why it is not fixed; the engine reopens it for the
-next check. Ordinary revision feedback changes no finding decision. After a
-backward jump, Keep and Modify retain this list and its decisions. Redo from
-scratch starts a fresh list at `R-01`. Upgrading mid-workflow keeps earlier
-decisions by ID. See [Interaction Modes](07-interaction-modes.md) for details
-on the revision process.
+各指摘には、ID、重大度、場所、解決方法が示されます。安定した指摘の一覧は
+エンジンが管理します。以降のチェックでは変更点だけが報告され、
+あなたの判断は下したとおりに保たれます。開いているすべての指摘をリスクとして受け入れて
+続行するには **Approve** を選びます（質問のすぐ上の行にそれらが示されます）。一覧の成果物に戻るには
+**Request Changes** を選びます。特定の指摘について別の判断をしたい場合は、自分の言葉で伝えてください。
+承認しつつ R-03 の修正を求めると、修正を求めたことが記録され、次のチェックで
+再確認されます。R-03 を該当しないとして却下すると、理由とともにそのように記録され、
+他に何も変わっていないため、現在のレビュー結果のまま同じゲートが再表示されます。
+開いている指摘を該当しないとして却下するときは、その ID と理由を伝えてください。
+レビュアーが修正済みとした指摘に同意できない場合は、その ID を添えて変更を依頼し、
+修正されていない理由を説明してください。エンジンは次のチェックに向けてその指摘を再度開きます。
+通常の修正フィードバックでは、指摘に対する判断は変わりません。後方へのジャンプの後は、
+Keep と Modify ではこの一覧とその判断が保持されます。Redo from
+scratch では `R-01` から新しい一覧が始まります。ワークフローの途中でアップグレードしても、
+以前の判断は ID ごとに保持されます。修正の流れの詳細は
+[インタラクションモード](07-interaction-modes.md) を参照してください。
 
-After approval, a progress line appears:
+承認すると、進捗の行が表示されます。
 
 ```text
 Progress: 1 of 19 stages done. Next: Feasibility & Constraints.
@@ -258,112 +254,110 @@ Progress: 1 of 19 stages done. Next: Feasibility & Constraints.
 
 ### Remaining Ideation Stages
 
-In a `feature` run the workflow continues through Market Research, Feasibility & Constraints, Scope Definition, Team Formation, Rough Mockups, and Approval & Handoff; a smaller plan runs fewer (the inventory API's `mvp` plan went from Intent Capture to Feasibility & Constraints). Each follows the same pattern: agent works, you review, you approve.
+`feature` の実行では、ワークフローは続いて Market Research、Feasibility & Constraints、Scope Definition、Team Formation、Rough Mockups、Approval & Handoff を進みます。小さな計画ではもっと少なくなります（在庫 API の `mvp` の計画では、Intent Capture から Feasibility & Constraints に進みました）。どのステージも同じパターンです。エージェントが作業し、あなたがレビューし、承認します。
 
-Some stages are **conditional** — they may be skipped based on your scope. When a stage is skipped, the orchestrator shows why and advances automatically.
+一部のステージは **条件付き** で、スコープによってはスキップされます。ステージがスキップされると、オーケストレーターがその理由を示し、自動的に先へ進みます。
 
 ---
 
 ## Inception Phase
 
-Inception elaborates requirements and designs the solution. Stage 2.1 (Reverse Engineering) runs only for **brownfield** projects (existing codebases), so the inventory API's empty folder skipped it. It runs in the background with no questions for you: with collaborators off (the default in every plan but `enterprise`), the aidlc-developer-agent scans the code and writes the nine code knowledge documents itself; with collaborators on, the developer scans and the aidlc-architect-agent then writes them. Either way you review the result at its approval gate.
+Inception では要件を詳細化し、解決策を設計します。ステージ 2.1（Reverse Engineering）は **brownfield** のプロジェクト（既存のコードベース）でのみ実行されるため、在庫 API の空のフォルダーではスキップされました。このステージはバックグラウンドで実行され、あなたへの質問はありません。コラボレーターがオフの場合（`enterprise` 以外のすべての計画での既定値）は、aidlc-developer-agent がコードをスキャンし、9 つのコードナレッジドキュメントを自ら書きます。コラボレーターがオンの場合は、developer がスキャンし、その後 aidlc-architect-agent がそれらを書きます。どちらの場合も、結果は承認ゲートでレビューします。
 
-The other Inception stages, from Requirements Analysis through Delivery Planning, work with you in the chat the way Intent Capture did. Practices Discovery and User Stories also bring in support agents when collaborators are on (see [Subagent Delegation](#subagent-delegation)).
+Requirements Analysis から Delivery Planning までの他の Inception ステージは、Intent Capture と同じようにチャットであなたと一緒に進めます。Practices Discovery と User Stories では、コラボレーターがオンの場合にサポートエージェントも参加します（[サブエージェントへの委任](#subagent-delegation) を参照）。
 
 ---
 
 ## Construction Phase
 
-For a new solo workflow that includes Unit decomposition and a source-producing
-Construction stage, the default is **unit-major, serial execution with verified
-Unit checkpoints**. One Unit goes through its applicable design stages and Code
-Generation before the next begins. A [Bolt](glossary.md) remains the delivery
-slice planned in 2.9; runtime order follows `unit-of-work-dependency.md` rather
-than the grouping in `bolt-plan.md`.
+ユニット分割とソースを生成する Construction ステージを含む新しいソロワークフローでは、
+既定値は **検証付きのユニットチェックポイントを伴う unit-major の直列実行** です。
+1 つのユニットが、適用可能な設計ステージと Code
+Generation を終えてから、次のユニットが始まります。[Bolt](glossary.md) は引き続き
+2.9 で計画したデリバリーの単位です。実行時の順序は、`bolt-plan.md` のグループ分けではなく
+`unit-of-work-dependency.md` に従います。
 
-During Delivery Planning, the conductor proposes a real project check, such as
-`bun test`, `pytest`, or `make check`, and asks **Use this command to verify each
-completed Unit?** with the actual command and **Approve** / **Request Changes**.
-Your approval is recorded before the intent's `Construction Verification Command`
-is set. That same command is reused at every Unit/batch checkpoint; changing it
-requires another recorded human approval. If a greenfield project has no runnable
-check yet, you may defer selection; the first checkpoint asks before running any
-verification (on Kiro IDE and Kiro CLI v3, a side-by-side build asks once its plans
-are approved, before its workers start). The conductor never invents or auto-approves a command.
+Delivery Planning の間に、コンダクターは `bun test`、`pytest`、`make check` などの
+実際のプロジェクトのチェックを提案し、実際のコマンドとともに **Use this command to verify each
+completed Unit?**（完了した各ユニットの検証にこのコマンドを使いますか？）と尋ね、**Approve** / **Request Changes** を提示します。
+インテントの `Construction Verification Command` が設定される前に、あなたの承認が記録されます。
+同じコマンドがすべてのユニット/バッチのチェックポイントで再利用されます。変更するには、
+改めて人間による承認の記録が必要です。greenfield のプロジェクトにまだ実行可能なチェックがない場合は、
+選択を後回しにできます。その場合、最初のチェックポイントで検証を実行する前に尋ねられます
+（Kiro IDE と Kiro CLI v3 では、並列ビルドの計画が承認された後、ワーカーが開始する前に尋ねられます）。
+コンダクターがコマンドを勝手に作ったり、自動承認したりすることはありません。
 
-With skeleton-on, the first DAG Unit is the smallest working integrated slice.
-It completes its design and code, including your Plan Approval and required
-summary confirmations. The recorded, human-authorized project check then
-demonstrates the slice end to end, and the approval question shows **Verified
-with `<verification_command>` (exit 0)** before you approve the skeleton and
-later Units start. Reviewing only the first design stage does not demonstrate a
-working skeleton.
+skeleton-on の場合、DAG の最初のユニットは、動作する最小の統合スライスです。
+そのユニットは、あなたの Plan Approval と必須のサマリー確認を含め、設計とコードを完了します。
+その後、記録された人間承認済みのプロジェクトのチェックでスライスがエンドツーエンドで動作することを
+示し、スケルトンを承認して後続のユニットが始まる前に、承認の質問に **Verified
+with `<verification_command>` (exit 0)** が表示されます。最初の設計ステージをレビューするだけでは、
+動作するスケルトンを示したことにはなりません。
 
-If you ask to leave planned work out of a build ("skip the remaining stories"),
-the build goes on without it and its approval says what was left out, for
-example "Left out of this build: AC2.1.1, AC2.1.2 and AC2.2.1." The Unit's
-`traceability.json` keeps each of those items as `Deferred`, with your words.
+計画した作業をビルドから外すよう求めた場合（「残りのストーリーはスキップして」など）は、
+それを除いてビルドが続き、承認の際に何が除外されたかが示されます。たとえば
+"Left out of this build: AC2.1.1, AC2.1.2 and AC2.2.1."（このビルドから除外: AC2.1.1、AC2.1.2、AC2.2.1）のように表示されます。ユニットの
+`traceability.json` には、それらの項目があなたの言葉とともに `Deferred` として残ります。
 
-Code Generation is told which files you had before the work started, and
-builds around them, changing one only when you ask for it or the work cannot
-be built without it. When the build changes or
-deletes a file you had before the work started (a
-README, LICENSE, docs or configs; on existing code, any file it deletes and the
-changed files AI-DLC does not read as code or a build file by their name, so a
-README or `.env` but not `package.json`, a `Dockerfile` or a YAML config), its
-approval says so once, with the
-command that puts each one back when git holds your copy, for example "The
+Code Generation には、作業開始前からあったファイルが伝えられ、それらを避けてビルドします。
+ファイルを変更するのは、あなたが求めた場合か、それなしではビルドできない場合だけです。
+作業開始前からあったファイルをビルドが変更または
+削除した場合（README、LICENSE、ドキュメントや設定ファイル。既存のコードでは、削除されたすべてのファイルと、
+AI-DLC が名前からコードやビルドファイルとして扱わない変更されたファイル。つまり
+README や `.env` は対象ですが、`package.json`、`Dockerfile`、YAML の設定ファイルは対象外です）は、
+承認の際に 1 回だけその旨が示されます。git にあなたのコピーがある場合は、
+それぞれを元に戻すコマンドも示されます。たとえば "The
 build changed README.md, a file you had before this work started. To put it
-back, run `git checkout HEAD -- README.md`.", or that there is no committed
-copy to put back. Built Unit by Unit, each Unit's approval names what that
-Unit changed and puts it back as that Unit found it. AI-DLC's own files, as its
-setup or a later `aidlc config` wrote them, are not among them, and neither is AI-DLC's marked part of a file
-it shares with you, such as AGENTS.md or `.gitignore`, when git holds your copy
-of it: your part of that file still is.
+back, run `git checkout HEAD -- README.md`."（ビルドが、作業開始前からあったファイル README.md を変更しました。元に戻すには上記のコマンドを実行してください。）のようになります。コミット済みのコピーがない場合は、
+元に戻せるコピーがないことが示されます。ユニットごとにビルドする場合は、各ユニットの承認で
+そのユニットが変更したものが示され、そのユニットが着手した時点の状態に戻せます。
+セットアップや後の `aidlc config` が書き込んだ AI-DLC 自身のファイルは対象外です。
+また、AGENTS.md や `.gitignore` のようにあなたと共有するファイルのうち AI-DLC がマークした部分も、
+git にあなたのコピーがある場合は対象外です。そのファイルのあなたの部分は対象です。
 
-If no autonomy choice is already recorded, the workflow then asks how to continue building the remaining work: **Continue automatically** or **Review each checkpoint**.
+自律性の選択がまだ記録されていない場合、ワークフローは続いて、残りの作業をどのようにビルドするかを尋ねます。選択肢は **Continue automatically** と **Review each checkpoint** です。
 
-Skeleton-off offers this choice at Construction entry instead. Your answer is
-recorded as `Construction Autonomy Mode` and respected on resume; explicit
-on-demand requests can change it later. **Continue automatically** skips routine
-completion questions, while Plan Approval, enabled summary confirmation,
-verification command selection, and failures still require your attention.
-Summary confirmation applies only when
-`directive.ceremony.summary_confirmation === "on"`. **Review each checkpoint**
-waits for your approval at each completed Unit.
+skeleton-off の場合は、代わりに Construction の開始時にこの選択が提示されます。回答は
+`Construction Autonomy Mode` として記録され、再開時にも尊重されます。明示的な
+オンデマンドの依頼で後から変更できます。**Continue automatically** は通常の
+完了の質問をスキップしますが、Plan Approval、有効なサマリー確認、
+検証コマンドの選択、失敗には引き続きあなたの対応が必要です。
+サマリー確認が適用されるのは
+`directive.ceremony.summary_confirmation === "on"` の場合だけです。**Review each checkpoint** は、
+ユニットが完了するたびにあなたの承認を待ちます。
 
-Execution is a separate choice. Unit-major stays serial. If you explicitly choose
-stage-major and swarm execution, eligible Code Generation Units may run in
-parallel, with guided or automatic batch checkpoints. An inline Unit already
-approved at its checkpoint is not rebuilt in a later swarm batch.
-Before preparing that batch, explicitly commit the approved application source,
-including the inline skeleton's source; the conductor does not commit it
-implicitly. The tool checks the whole batch before creating children and names
-the commit-and-retry step if the source is not yet reproducible.
+実行方式は別の選択です。unit-major は直列のままです。明示的に
+stage-major とスウォーム実行を選んだ場合は、対象となる Code Generation のユニットを並列に
+実行でき、バッチのチェックポイントはガイド付きまたは自動になります。チェックポイントで
+すでに承認されたインラインのユニットが、後のスウォームのバッチで再ビルドされることはありません。
+そのバッチを準備する前に、インラインのスケルトンのソースを含め、承認済みのアプリケーションのソースを
+明示的にコミットしてください。コンダクターが暗黙的にコミットすることはありません。
+ツールは子を作成する前にバッチ全体を確認し、ソースがまだ再現可能でない場合は
+コミットして再試行するステップを示します。
 
-Existing workflows without the checkpoint setting keep their legacy first-stage
-review and stage-gate behavior. Design-only workflows and flows without Units
-keep their existing stage approvals; team-owned Units keep their own gate rhythm.
-Preserve any explicit iteration choice. After all applicable Unit work, Build and
-Test and CI Pipeline run once across the solution.
+チェックポイントの設定を持たない既存のワークフローは、旧来の最初のステージでの
+レビューとステージゲートの動作を維持します。設計のみのワークフローやユニットのないフローは
+既存のステージ承認を維持し、チーム所有のユニットは独自のゲートのリズムを維持します。
+明示的なイテレーションの選択は保持されます。適用可能なユニットの作業がすべて終わると、Build and
+Test と CI Pipeline がソリューション全体に対して 1 回実行されます。
 
 ---
 
 ## Operation Phase
 
-Operation deploys and monitors the solution. All 7 stages are conditional — smaller scopes like `mvp` and `poc` may skip this entire phase.
+Operation では、ソリューションをデプロイして監視します。7 つのステージはすべて条件付きであり、`mvp` や `poc` のような小さなスコープでは、このフェーズ全体がスキップされることがあります。
 
-After the final stage (4.7 Feedback & Optimization), the workflow is complete.
+最後のステージ（4.7 Feedback & Optimization）が終わると、ワークフローは完了です。
 
 ---
 
 ## How Execution Modes Work
 
-Throughout the workflow, you encounter two execution modes:
+ワークフロー全体を通じて、2 つの実行モードがあります。
 
 ### Inline Execution
 
-Most stages run inline. The conductor loads the agent persona and executes stage steps directly in your conversation. You interact with the agent in real time.
+ほとんどのステージはインラインで実行されます。コンダクターがエージェントのペルソナを読み込み、会話の中で直接ステージのステップを実行します。あなたはリアルタイムでエージェントとやり取りします。
 
 ```mermaid
 sequenceDiagram
@@ -388,7 +382,7 @@ sequenceDiagram
 
 ### Subagent Delegation
 
-Four stages dispatch to background subagents: 2.1 Reverse Engineering (pipeline: developer scan, then architect synthesis-and-write), 2.2 Practices Discovery (subagent hub-and-spoke: lead draft, three mutually blind support reviews, human interview, lead integration), 2.4 User Stories (mob: collaborators contribute in parallel, and judgment-call disagreements may surface to you mid-stage), and 3.5 Code Generation (subagent). Practices Discovery deliberately brings you into the room between the spokes and final integration; the User Stories mob may also surface judgment calls mid-stage. Those support agents take part when collaborators are on (the `collaborators` setting, shipped on only for `enterprise`; `/aidlc --collaborators on` turns it on for one piece of work). With collaborators off, each of these stages runs its lead alone: the developer both scans the code and writes the code knowledge base, Practices Discovery goes from the lead's draft straight to your interview, and User Stories has no mob round. Workspace detection (0.2) runs deterministically inside `aidlc-utility intent-create` rather than as a subagent.
+4 つのステージはバックグラウンドのサブエージェントに処理を委ねます。2.1 Reverse Engineering（パイプライン: developer がスキャンし、その後 architect が統合して書き出す）、2.2 Practices Discovery（サブエージェントのハブ・アンド・スポーク: リードが草案を作り、互いの結果を見ない 3 つのサポートレビューを経て、人間へのインタビュー、リードによる統合）、2.4 User Stories（モブ: コラボレーターが並列に貢献し、判断を要する意見の相違がステージの途中であなたに示されることがあります）、3.5 Code Generation（サブエージェント）です。Practices Discovery は、スポークと最終的な統合の間に意図的にあなたを加えます。User Stories のモブでも、ステージの途中で判断を要する事項が示されることがあります。これらのサポートエージェントが参加するのは、コラボレーターがオンの場合です（`collaborators` 設定。出荷時にオンなのは `enterprise` だけで、`/aidlc --collaborators on` で 1 つの作業についてオンにできます）。コラボレーターがオフの場合、これらの各ステージはリードだけで実行されます。developer がコードのスキャンとコードナレッジベースの作成の両方を行い、Practices Discovery はリードの草案から直接あなたへのインタビューに進み、User Stories にはモブのラウンドがありません。ワークスペースの検出（0.2）は、サブエージェントではなく `aidlc-utility intent-create` の中で決定論的に実行されます。
 
 ```mermaid
 sequenceDiagram
@@ -412,7 +406,7 @@ sequenceDiagram
 
 ## Artifacts Produced
 
-By the end of a `feature`-scoped workflow, the intent's record dir (`aidlc/spaces/<space>/intents/<YYMMDD>-<label>/`) contains:
+`feature` スコープのワークフローが終わると、インテントの記録ディレクトリ（`aidlc/spaces/<space>/intents/<YYMMDD>-<label>/`）には次のものが含まれます。
 
 ```
 aidlc/spaces/<space>/intents/<YYMMDD>-<label>/
@@ -425,37 +419,37 @@ aidlc/spaces/<space>/intents/<YYMMDD>-<label>/
   verification/           # Phase boundary verification reports
 ```
 
-(Team knowledge lives one level up, at the space level in `aidlc/spaces/<space>/knowledge/` — a sibling of `intents/` — so it accumulates across every intent. Team-affirmed practices and learnings live alongside it in the active space's memory layer at `aidlc/spaces/<active-space>/memory/`, where they likewise persist across intents.)
+（チームナレッジは 1 つ上の階層、スペースレベルの `aidlc/spaces/<space>/knowledge/`（`intents/` と同じ階層）にあるため、すべてのインテントにわたって蓄積されます。チームが確認したプラクティスと学びは、それと並んでアクティブなスペースのメモリ層 `aidlc/spaces/<active-space>/memory/` にあり、同様にインテントをまたいで保持されます。）
 
 ---
 
 ## Status Line
 
-Throughout the workflow on Claude Code, AI-DLC's status line (once you turn it on: setup asks, or `/aidlc --statusline on`) shows your current position (Kiro and opencode use `/aidlc --status` and the progress line at each gate; Codex uses `$aidlc --status` and its built-in `update_plan` progress display). From the inventory API run, with the bar and the separator dot shown as plain text and the model segment left out:
+Claude Code では、ワークフロー全体を通じて、AI-DLC のステータスライン（有効にした後。セットアップ時に尋ねられるか、`/aidlc --statusline on` で有効にします）が現在の位置を表示します（Kiro と opencode では `/aidlc --status` と各ゲートでの進捗の行を、Codex では `$aidlc --status` と組み込みの `update_plan` による進捗表示を使います）。在庫 API の実行から、バーと区切りの点をプレーンテキストで示し、モデルの部分を省略したものです。
 
 ```text
 [AIDLC] inventory-rest-api - IDEATION [##--------] 1/4 > Feasibility -- Architect Agent
 ```
 
-| Segment | Meaning |
+| 部分 | 意味 |
 |---------|---------|
-| `inventory-rest-api` | The piece of work; with more than one space, the space's name comes first |
-| `IDEATION` | Current phase |
-| `[##--------]` | Phase progress bar (10 characters, the same count as the ratio) |
-| `1/4` | Finished stages within the phase; in Construction, `Unit N of M` takes the place of the bar and the ratio |
-| `> Feasibility` | Current stage |
-| `-- Architect Agent` | The agent leading it |
-| `ctx:N%` | How much of the context window is used (shown when Claude Code reports it) |
-| Tokens and cost | Tokens in and out and an estimated cost for the active workflow and current session (Claude Code only; shown once Claude Code has reported usage; turned off by `AIDLC_DISABLE_USAGE_TRACKING=1`). The cost is a list-price estimate, not a bill |
+| `inventory-rest-api` | 作業。スペースが複数ある場合は先頭にスペース名が付きます |
+| `IDEATION` | 現在のフェーズ |
+| `[##--------]` | フェーズの進捗バー（10 文字。比率と同じ数を示します） |
+| `1/4` | フェーズ内で完了したステージ。Construction では、バーと比率の代わりに `Unit N of M` が表示されます |
+| `> Feasibility` | 現在のステージ |
+| `-- Architect Agent` | それを率いるエージェント |
+| `ctx:N%` | コンテキストウィンドウの使用率（Claude Code が報告した場合に表示） |
+| トークンとコスト | アクティブなワークフローと現在のセッションの入出力トークン数とコストの見積もり（Claude Code のみ。Claude Code が使用量を報告した後に表示。`AIDLC_DISABLE_USAGE_TRACKING=1` でオフ）。コストは定価に基づく見積もりであり、請求額ではありません |
 
-Before any work is selected, it reads `[AIDLC] ready`.
+作業が選択される前は `[AIDLC] ready` と表示されます。
 
 ---
 
 ## Next Steps
 
-- [Spaces and Intents](03-spaces-and-intents.md) — how the workspace holds many runs, and how to start and switch between them
-- [Phases and Stages](04-phases-and-stages.md) — detailed breakdown of all 5 phases and 33 stages
-- [Interaction Modes](07-interaction-modes.md) — Guide Me, Edit File, and Chat explained
-- [Session Management](11-session-management.md) — resuming, redoing, and jumping between stages
-- [Glossary](glossary.md) — terminology reference
+- [スペースとインテント](03-spaces-and-intents.md) — ワークスペースが複数の実行をどのように保持するか、またそれらの開始方法と切り替え方法
+- [フェーズとステージ](04-phases-and-stages.md) — 5 つのフェーズと 33 のステージの詳細
+- [インタラクションモード](07-interaction-modes.md) — Guide Me、Edit File、Chat の説明
+- [セッション管理](11-session-management.md) — 再開、やり直し、ステージ間のジャンプ
+- [用語集](glossary.md) — 用語のリファレンス

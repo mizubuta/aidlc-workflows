@@ -52,313 +52,305 @@ outputs: "build-instructions.md, build-and-test-summary.md, test-results.md, cro
 
 ### Step 1: Analyze Testing Requirements
 
-Read code generation outputs across all units from
-`<record>/construction/*/code-generation/code-summary.md` and per-unit test
-instructions from
-`<record>/construction/*/code-generation/unit-test-instructions.md`. For a
-zero-Unit scope such as `express` or `infra`, read the stage-level equivalents
-under `<record>/construction/code-generation/`.
+すべてのユニットのコード生成の出力を
+`<record>/construction/*/code-generation/code-summary.md` から、ユニットごとのテスト
+手順を
+`<record>/construction/*/code-generation/unit-test-instructions.md` から読み込む。`express` や `infra` のような
+ユニットがゼロのスコープでは、
+`<record>/construction/code-generation/` 配下にあるステージレベルの同等のファイルを読み込む。
 
-Build a source-complete inventory of every measurable quality target before
-generating instructions. Read all applicable stage-level and per-unit sources:
+手順を生成する前に、測定可能なすべての品質目標について、ソースを漏れなく網羅した
+インベントリを作成する。該当するステージレベルおよびユニットごとのソースをすべて読み込む:
 
-- every artifact under `nfr-requirements/`
-- every artifact under `nfr-design/`
-- every current `## Testing Contract` in `code-generation-plan.md`, including
-  postapproval edits permitted by Code Generation Step 3's lowered-fence rule;
-  do not describe those edits as human-approved.
-  A CI obligation (the contract's "Run the selected tests in CI before merge."
-  line, or a memory note's "CI execution before merge") applies only when the
-  plan runs CI Pipeline: `aidlc-state.md` lists `ci-pipeline` as an `EXECUTE`
-  stage whose checkbox is not `[S]`. When the plan does not run it, record that
-  target `N/A` with the reason "the plan runs no CI Pipeline": it is not
-  applicable, so it is never `Unverified` and never a failure. While CI
-  Pipeline is still ahead (its checkbox is `[ ]`), the target is CI Pipeline's
-  to meet: record Owning Stage `ci-pipeline`, Verdict `N/A`, and the reason "CI
-  Pipeline, later in this plan, sets up CI to run these tests before merge".
-  It is never `Unverified` and never a failure here.
+- `nfr-requirements/` 配下のすべての成果物
+- `nfr-design/` 配下のすべての成果物
+- `code-generation-plan.md` にある現行のすべての `## Testing Contract`。Code Generation の Step 3 の
+  フェンスを下げるルールで許可された承認後の編集も含む。
+  それらの編集を人間が承認したものとして記述してはならない。
+  CI の義務（契約の "Run the selected tests in CI before merge."
+  の行、またはメモリのノートの "CI execution before merge"）は、
+  プランが CI Pipeline を実行する場合にのみ適用される: つまり `aidlc-state.md` が `ci-pipeline` を、チェックボックスが `[S]` ではない `EXECUTE`
+  ステージとして列挙している場合である。プランがそれを実行しない場合は、その
+  目標を `N/A` として、理由 "the plan runs no CI Pipeline" とともに記録する: 該当しないため、
+  `Unverified` にも失敗にも決してならない。CI
+  Pipeline がまだ先にある間（チェックボックスが `[ ]`）は、その目標を満たすのは CI Pipeline
+  である: Owning Stage に `ci-pipeline`、Verdict に `N/A`、理由に "CI
+  Pipeline, later in this plan, sets up CI to run these tests before merge" を記録する。
+  ここでは `Unverified` にも失敗にも決してならない。
 
-For each target, record a stable target ID (derive one from the source path and
-section when the source has none), source path/section, expected value, the
-check or instruction file that will produce its actual value, and the later
-validation stage that owns it when Build and Test cannot execute it locally.
-Catalog all required test types from this inventory.
+各目標について、安定した目標 ID（ソースに ID がない場合はソースのパスとセクションから
+導出する）、ソースのパス/セクション、期待値、実際の値を生み出すチェックまたは手順ファイル、
+そして Build and Test がローカルで実行できない場合にそれを担う後続の
+検証ステージを記録する。
+このインベントリから、必要なテストの種類をすべて洗い出す。
 
 ### Step 2: Generate Build Instructions
 
-Create `<record>/construction/build-and-test/build-instructions.md`:
-- Dependency installation steps
-- Environment setup (env vars, config files, local services)
-- Build commands (compile, bundle, transpile)
-- Build verification steps
-- For infrastructure-as-code, the static checks for each changed IaC root or
-  app: format and validation (for example `terraform fmt -check` and
-  `terraform validate`, `cdk synth`, `cfn-lint`), plus any policy-as-code
-  rules the project runs
-- Troubleshooting common build issues
+`<record>/construction/build-and-test/build-instructions.md` を作成する:
+- 依存関係のインストール手順
+- 環境のセットアップ（環境変数、設定ファイル、ローカルサービス）
+- ビルドコマンド（コンパイル、バンドル、トランスパイル）
+- ビルドの検証手順
+- Infrastructure as Code の場合は、変更された IaC のルートまたはアプリごとの静的チェック:
+  フォーマットと検証（たとえば `terraform fmt -check` と
+  `terraform validate`、`cdk synth`、`cfn-lint`）、およびプロジェクトが実行する
+  Policy as Code のルール
+- よくあるビルドの問題のトラブルシューティング
 
 ### Step 3-7: Generate Test Instructions (Strategy-Aware)
 
-Consult the active test strategy from `aidlc-state.md` → `**Test Strategy**`, or the run-stage's `test_strategy` when an isolated run carries one (see stage-protocol.md §8 "Test Strategy"). Generate additional test instruction files based on the strategy level:
+`aidlc-state.md` → `**Test Strategy**` から、または分離実行が run-stage の `test_strategy` を持っている場合はそれから、有効なテスト戦略を参照する（stage-protocol.md §8 "Test Strategy" を参照）。戦略のレベルに基づいて、追加のテスト手順ファイルを生成する:
 
-**Minimal strategy** — generate no additional test instruction files. Unit
-tests are covered per-unit by Code Generation.
+**Minimal 戦略** — 追加のテスト手順ファイルは生成しない。ユニット
+テストは Code Generation によってユニットごとにカバーされる。
 
-**Standard strategy** — generate:
-- `integration-test-instructions.md`: Key boundary tests, cross-unit interaction
+**Standard 戦略** — 次を生成する:
+- `integration-test-instructions.md`: 主要な境界のテスト、ユニット間の相互作用
 
-**Comprehensive strategy** — generate all applicable:
-- `integration-test-instructions.md`: Cross-unit interaction, external dependency handling
-- `performance-test-instructions.md` (IF NFR performance requirements exist): Load testing, benchmarks, regression detection
-- `security-test-instructions.md` (IF NFR security requirements exist): SAST/DAST, auth testing, injection testing
-- Additional types as applicable (contract tests, E2E, accessibility) — create specifically named files
+**Comprehensive 戦略** — 該当するものをすべて生成する:
+- `integration-test-instructions.md`: ユニット間の相互作用、外部依存関係の扱い
+- `performance-test-instructions.md`（NFR のパフォーマンス要件がある場合）: 負荷テスト、ベンチマーク、リグレッションの検出
+- `security-test-instructions.md`（NFR のセキュリティ要件がある場合）: SAST/DAST、認証のテスト、インジェクションのテスト
+- 該当する場合はその他の種類（コントラクトテスト、E2E、アクセシビリティ） — 種類ごとに名前を付けたファイルを作成する
 
-All files go in `<record>/construction/build-and-test/`.
+すべてのファイルは `<record>/construction/build-and-test/` に置く。
 
-Each instruction file should include:
-- Test framework setup and configuration
-- How to run the tests (commands, flags, filters)
-- Expected coverage targets appropriate to the strategy level
-- Test data management and environment setup
+各手順ファイルには次を含めるべきである:
+- テストフレームワークのセットアップと設定
+- テストの実行方法（コマンド、フラグ、フィルター）
+- 戦略のレベルに応じた、期待されるカバレッジ目標
+- テストデータの管理と環境のセットアップ
 
-These three instruction files are declared under `optional_produces`, because a
-Minimal run writes none of them and a Standard run writes only the integration
-one; only the build instructions, the summary, the results and the cross-unit
-traceability are always written.
+これら 3 つの手順ファイルは `optional_produces` の下に宣言されている。Minimal の
+実行ではいずれも書かれず、Standard の実行では統合テストのものだけが書かれるためである。
+常に書かれるのは、ビルド手順、サマリー、結果、ユニット間の
+トレーサビリティだけである。
 
-These are soft guidelines — the LLM can generate additional test types at any strategy level if context demands it (e.g., a Minimal security-patch may still warrant security test instructions).
+これらは緩やかなガイドラインである — コンテキストが求める場合、LLM はどの戦略レベルでも追加の種類のテストを生成できる（例: Minimal の security-patch でも、セキュリティテストの手順が必要になる場合がある）。
 
 ### Step 8: Generate Build and Test Summary
 
-Create `<record>/construction/build-and-test/build-and-test-summary.md`:
-- Overall build status and prerequisites
-- Test type inventory (which test types were generated)
-- Coverage expectations for the project and each Unit
-- A `## Target Verification Matrix` with one row per target and these columns:
+`<record>/construction/build-and-test/build-and-test-summary.md` を作成する:
+- 全体のビルド状況と前提条件
+- テストの種類のインベントリ（どの種類のテストを生成したか）
+- プロジェクトと各ユニットに期待されるカバレッジ
+- 目標ごとに 1 行を持ち、次の列を持つ `## Target Verification Matrix`:
   Target ID, Source, Expected, Actual, Evidence, Owning Stage, Verdict
-- Each applicable target begins with Actual and Evidence `Pending`, and Verdict
-  `Pending`. `N/A` is valid only when the source inventory found no applicable
-  measurable target (then write one explanatory `N/A` row), or for a target the
-  plan makes inapplicable here, as Step 1 says for the CI obligation of a plan
-  that runs no CI Pipeline or has it still ahead. An applicable target may never
-  use `N/A`.
-- Readiness assessment (build-ready, test-ready, deployment-ready)
-- Known limitations or outstanding items
+- 該当する各目標は、Actual と Evidence を `Pending`、Verdict を
+  `Pending` として開始する。`N/A` が有効なのは、ソースのインベントリに該当する
+  測定可能な目標が見つからなかった場合（その場合は説明用の `N/A` 行を 1 つ書く）か、
+  プランによってここでは該当しなくなる目標の場合だけである。後者は、Step 1 が述べる、CI Pipeline を
+  実行しない、またはそれがまだ先にあるプランの CI の義務がそれにあたる。該当する目標が
+  `N/A` を使うことは決してできない。
+- 準備状況の評価（ビルド可能、テスト可能、デプロイ可能）
+- 既知の制約や未解決の項目
 
 ### Step 9: Execute Build and Tests
 
-Attempt to execute the build and test commands documented in the instruction files:
+手順ファイルに記載したビルドとテストのコマンドの実行を試みる:
 
-1. **Build**: Run the build commands from `build-instructions.md` via Bash. Capture output.
-2. **Unit tests**: Collect the run commands from both the stage-level
-   `<record>/construction/code-generation/unit-test-instructions.md` file (when
-   present, including Express) and all per-unit
-   `<record>/construction/*/code-generation/unit-test-instructions.md` files.
-   Deduplicate identical commands and run each distinct command ONCE via Bash.
-   Per-unit commands should already be scoped to their Unit. A stage-level or
-   malformed per-unit file may carry a project-wide command; run that command
-   once, never N times. Capture and report stage-level/per-unit pass/fail
-   results without double counting.
-   When a coverage floor is set for the whole project (by the Testing
-   Contract, a team rule, or a threshold in the project's coverage
-   configuration for all measured source), run the project's full-suite
-   coverage command once on the assembled project with its own
-   coverage configuration (an identical command already run in this step in
-   the same repository counts), and record its command, exit code and report
-   in `test-results.md`.
-   In a multi-repo intent, run it once in each repository the floor applies
-   to, with that repository's own command and coverage configuration, and
-   name the repository in the row's Evidence. That run, never a unit-scoped
-   one, is the Evidence for a project-wide coverage-floor row in the Target
-   Verification Matrix, and one repository's run is never the Evidence for
-   another repository's floor. A unit-scoped command whose output shows all
-   of its selected tests passed and the threshold of a floor set for the
-   whole project (one that applies to all measured source, even when the
-   runner checks it file by file) as the only cause of its non-zero exit
-   counts as passed, from a new or an already-approved instructions file:
-   record its exit code and this reason in `test-results.md`. That applies
-   only when that exit stopped no later step of the command: when a step after
-   it did not run because of it (one chained, such as `… && <lint>`, one in a
-   script or lifecycle hook the command calls, or a later task or phase of a
-   build tool; tell from the scripts, hooks and task or phase definitions the
-   command runs and from its output), the command is not exempt and its
-   non-zero exit is a failed command.
-   Any other non-zero exit (a failed or errored test, a threshold set for one
-   path or Unit), or output that does not show both, is a failed command. A
-   coverage target set for one Unit needs its own check on that Unit's scope
-   and its own evidence; a passing full-suite run does not make it `Met`.
-3. **Integration tests** (if applicable): Run integration test commands. Capture results.
-4. **Other applicable checks**: Run every applicable command from performance,
-   security, contract, E2E, accessibility, and other generated instruction
-   files. A check may be deferred only when it requires a deployed or
-   production-like environment AND the current execution plan contains a later
-   validation stage that explicitly owns that check (for example,
-   `performance-validation`). Record the owning stage and expected evidence
-   path. A deferred target remains `Unverified` and cannot contribute to a
-   successful stage result. If no later owning stage is scheduled, the target
-   is `Unverified`, not deferred successfully.
-   For infrastructure-as-code, a preview of the change against real
-   environments (`terraform plan`, `cdk diff`, a CloudFormation change set) is
-   such a check when it needs cloud credentials or remote state: Environment
-   Provisioning owns it when the plan runs that stage. Never apply or deploy
-   from this stage.
-5. **Finalize and report results**: Create or update
-   `<record>/construction/build-and-test/test-results.md` and the Build and Test
-   Summary on every exit path, including loop-back, halt-and-ask, abort, and
-   accepted failure, with:
-   - Build status (success/failure + output)
-   - Test results (total, passed, failed, skipped)
-   - Failure details (test name, assertion, stack trace)
-   - Coverage report (if test framework supports it)
-   - The finalized Target Verification Matrix: actual value, evidence path or
-     command output, owning stage, and exactly one final verdict per applicable
-     target: `Met`, `Not Met`, or `Unverified`. `Pending` is allowed only while
-     Step 8 is being prepared; no `Pending` verdict may remain when Step 9
-     exits.
-   - Wherever this stage reports browser behavior as tested (a matrix row,
-     a `cross-unit-traceability.md` entry, the summary, or the readiness
-     assessment), name where the check ran: Node, a DOM emulator (jsdom,
-     Happy DOM), or a real browser engine (for example Chromium driven by
-     Playwright). Tests in Node or a DOM emulator, including an
-     assembled-bundle journey, are integration evidence: they cannot show
-     native browser behavior such as calling `fetch` without its `window`
-     receiver, so never call them browser or end-to-end evidence. Only a run
-     in a real browser engine makes a target that requires behavior in a
-     browser `Met`; without one, including when no browser can launch here,
-     that target is `Unverified`.
-   - `## Loop-Back Log` (only when the failure ladder's rung 3 or 4 fires a
-     loop-back): one `### Loop-back N — <ISO timestamp>` entry per attempt,
-     carrying Diagnosis / Root-cause stage / Planned fix / Estimated impact. This section
-     is APPEND-ONLY and must survive re-runs of this stage (choose Modify,
-     never Redo, on loop-back re-entry — Redo would erase the ledger).
+1. **ビルド**: `build-instructions.md` のビルドコマンドを Bash で実行する。出力を取得する。
+2. **ユニットテスト**: ステージレベルの
+   `<record>/construction/code-generation/unit-test-instructions.md` ファイル（
+   存在する場合。Express を含む）と、ユニットごとのすべての
+   `<record>/construction/*/code-generation/unit-test-instructions.md` ファイルの両方から実行コマンドを集める。
+   同一のコマンドは重複を除き、異なるコマンドをそれぞれ 1 回だけ Bash で実行する。
+   ユニットごとのコマンドは、すでにそのユニットにスコープされているはずである。ステージレベルのファイルや
+   不正な形式のユニットごとのファイルには、プロジェクト全体のコマンドが含まれている場合がある。そのコマンドは
+   1 回だけ実行し、N 回実行してはならない。ステージレベル/ユニットごとの合否の
+   結果を、二重に数えずに取得して報告する。
+   プロジェクト全体にカバレッジの下限が設定されている場合（Testing
+   Contract、チームのルール、または測定対象のすべてのソースに対するプロジェクトのカバレッジ
+   設定のしきい値による）、組み立てたプロジェクトに対して、プロジェクト自身のカバレッジ設定で
+   プロジェクトのフルスイートのカバレッジコマンドを 1 回実行し
+   （同じリポジトリでこのステップですでに実行した同一のコマンドもそれに数える）、そのコマンド、終了コード、レポートを
+   `test-results.md` に記録する。
+   マルチリポジトリのインテントでは、下限が適用される各リポジトリで、
+   そのリポジトリ自身のコマンドとカバレッジ設定を使って 1 回ずつ実行し、
+   行の Evidence にリポジトリ名を記す。ユニットにスコープされた実行ではなく、その実行が、Target
+   Verification Matrix におけるプロジェクト全体のカバレッジ下限の行の Evidence となる。また、あるリポジトリの実行が
+   別のリポジトリの下限の Evidence になることは決してない。ユニットにスコープされたコマンドについて、
+   選択したテストがすべて合格し、プロジェクト全体に設定された下限（ランナーがファイルごとにチェックする
+   場合でも、測定対象のすべてのソースに適用される下限）のしきい値だけが 0 以外の終了の原因であることが
+   出力から分かる場合、そのコマンドは、手順ファイルが新規のものでも承認済みのものでも、合格として扱う:
+   その終了コードとこの理由を `test-results.md` に記録する。これが適用されるのは、
+   その終了によってコマンドの後続のステップが止まらなかった場合に限る: それより後のステップが
+   そのせいで実行されなかった場合（`… && <lint>` のように連結されたもの、コマンドが呼び出す
+   スクリプトやライフサイクルフックの中のもの、ビルドツールの後続のタスクやフェーズ。
+   どれにあたるかは、コマンドが実行するスクリプト、フック、タスクやフェーズの定義と、その出力から判断する）、
+   そのコマンドは例外にならず、0 以外の終了は失敗したコマンドとなる。
+   その他の 0 以外の終了（失敗またはエラーになったテスト、1 つのパスやユニットに設定された
+   しきい値）や、両方を示していない出力は、失敗したコマンドである。
+   1 つのユニットに設定されたカバレッジ目標には、そのユニットのスコープに対する独自のチェックと
+   独自の証拠が必要である。フルスイートの実行が合格しても、それが `Met` になるわけではない。
+3. **統合テスト**（該当する場合）: 統合テストのコマンドを実行する。結果を取得する。
+4. **その他の該当するチェック**: パフォーマンス、セキュリティ、
+   コントラクト、E2E、アクセシビリティ、その他の生成された手順ファイルにある、該当するすべてのコマンドを
+   実行する。チェックを先送りできるのは、それがデプロイ済みまたは
+   本番相当の環境を必要とし、かつ現在の実行プランに、そのチェックを明示的に担う後続の
+   検証ステージ（たとえば
+   `performance-validation`）が含まれている場合だけである。担当するステージと期待される証拠の
+   パスを記録する。先送りした目標は `Unverified` のままであり、
+   ステージの成功という結果には寄与できない。後続の担当ステージが予定されていない場合、その目標は
+   `Unverified` であり、先送りに成功したことにはならない。
+   Infrastructure as Code の場合、実環境に対する変更のプレビュー
+   （`terraform plan`、`cdk diff`、CloudFormation の変更セット）は、クラウドの認証情報や
+   リモートの状態を必要とする場合にそうしたチェックとなる: プランがそのステージを実行する場合は、Environment
+   Provisioning がそれを担う。このステージから適用やデプロイを
+   決して行ってはならない。
+5. **結果の確定と報告**: ループバック、停止して確認、中止、
+   受け入れた失敗を含むすべての終了経路で、
+   `<record>/construction/build-and-test/test-results.md` と Build and Test
+   Summary を作成または更新し、次を含める:
+   - ビルドの状況（成功/失敗 + 出力）
+   - テストの結果（合計、合格、失敗、スキップ）
+   - 失敗の詳細（テスト名、アサーション、スタックトレース）
+   - カバレッジレポート（テストフレームワークが対応している場合）
+   - 確定した Target Verification Matrix: 実際の値、証拠のパスまたは
+     コマンドの出力、担当ステージ、そして該当する目標ごとにちょうど 1 つの最終判定:
+     `Met`、`Not Met`、`Unverified` のいずれか。`Pending` が許されるのは
+     Step 8 を準備している間だけであり、Step 9 が終了するときには `Pending` の判定を
+     1 つも残してはならない。
+   - このステージがブラウザの挙動をテスト済みとして報告する箇所（マトリックスの行、
+     `cross-unit-traceability.md` のエントリ、サマリー、準備状況の
+     評価）ではどこでも、チェックを実行した場所を明記する: Node、DOM エミュレーター（jsdom、
+     Happy DOM）、または実際のブラウザエンジン（たとえば Playwright で動かす
+     Chromium）。Node や DOM エミュレーターでのテストは、
+     組み立てたバンドルを通したジャーニーも含め、統合テストの証拠である: それらは
+     `window` レシーバーなしで `fetch` を呼び出すといったネイティブのブラウザの挙動を示せないため、
+     ブラウザや E2E の証拠と呼んではならない。ブラウザでの挙動を必要とする目標を `Met` にできるのは、
+     実際のブラウザエンジンでの実行だけである。それがない場合は、ここでブラウザを起動できない場合も含め、
+     その目標は `Unverified` である。
+   - `## Loop-Back Log`（失敗のラダーの第 3 段または第 4 段がループバックを
+     発動した場合のみ）: 試行ごとに 1 つの `### Loop-back N — <ISO timestamp>` エントリを置き、
+     Diagnosis / Root-cause stage / Planned fix / Estimated impact を記載する。このセクションは
+     追記専用であり、このステージの再実行後も必ず残さなければならない（ループバックでの
+     再入時には Modify を選び、決して Redo を選ばない — Redo は台帳を消去してしまう）。
 
-**Failure predicate**: Build and Test has failed when any build or test command
-fails OR any applicable target is `Not Met` or `Unverified`. One exception: a
-browser target whose only gap is that no real browser engine ran it is said at
-the approval gate (Step 12), not handled as a failure. Before entering
-failure handling, finalize the matrix and summary with all evidence available
-on that exit path. Weakening, relaxing, lowering, or disabling a defined
-quality target is never an acceptable fix.
+**失敗の判定条件**: いずれかのビルドまたはテストのコマンドが失敗した場合、または
+該当するいずれかの目標が `Not Met` か `Unverified` である場合、Build and Test は失敗している。例外が 1 つある:
+実際のブラウザエンジンで実行されていないことだけが不足であるブラウザの目標は、
+承認ゲート（Step 12）で伝え、失敗としては扱わない。失敗の処理に
+入る前に、その終了経路で得られるすべての証拠を使ってマトリックスとサマリーを確定する。
+定義された品質目標を弱める、緩める、下げる、無効にすることは、
+決して許容される修正ではない。
 
-**On failure**: Run the same failure-escalation ladder for command failures,
-`Not Met` targets, and `Unverified` targets:
+**失敗時**: コマンドの失敗、`Not Met` の目標、`Unverified` の目標に対して、
+同じ失敗エスカレーションのラダーを実行する:
 
-1. **In-stage fix (max 2 attempts)** — for root causes inside this stage's own
-   remit (test config, build scripts, environment setup, or an executable target
-   check): read the failure evidence, identify the failing configuration or
-   scaffolding, apply the fix, re-run the failing step, and refresh the target
-   matrix.
-2. **Classify and estimate impact** — when in-stage attempts are exhausted OR the
-   diagnosis points upstream: decide whether the root cause lies in the
-   generated source or test code — regardless of defect size — or an approach
-   chosen at code-generation (library/version, container image, instance type,
-   algorithm, flag). If so, look for an identifiable fix in a swappable
-   dimension (newer image, driver, wheel index, a CLI flag) and ESTIMATE ITS
-   IMPACT — effort, financial cost, risk. Never declare a feasible path out of
-   scope on an IMPACT-UNESTIMATED effort assumption.
-3. **Autonomous bounded loop-back** — if `Construction Autonomy Mode:
-   autonomous` (in aidlc-state.md), an impact-estimated fix exists, and fewer than
-   3 entries exist under `## Loop-Back Log` in test-results.md: follow the
-   loop-back protocol module
-   (`aidlc-common/protocols/stage-protocol-loopback.md`),
-   "Build-and-Test failure loop-back". Record the diagnosis +
-   impact-estimated fix plan, then reopen code-generation for the unit(s) the
-   fix names (every unit only when the cause spans them all) and replay
-   forward through its settlement-aware route. Do NOT present this stage's
-   approval gate on the failed run.
-4. **Halt-and-ask** — if the mode is gated (or unset), the 3-loop-back bound
-   is exhausted, or no identifiable fix exists: log the failure in
-   test-results.md and present the impact-estimated halt-and-ask question
-   defined in the loop-back protocol module
-   (`aidlc-common/protocols/stage-protocol-loopback.md`),
-   "Build-and-Test failure loop-back", listing every candidate fix WITH ITS
-   ESTIMATED IMPACT. Giving up is the human's decision to make, never the
-   agent's. When rung 2 found no identifiable fix at all, present that
-   section's no-fix variant instead — it drops the "Retry with fix" option
-   entirely rather than inventing a fix to retry with.
+1. **ステージ内での修正（最大 2 回）** — 根本原因がこのステージ自身の
+   担当範囲（テストの設定、ビルドスクリプト、環境のセットアップ、または実行可能な目標の
+   チェック）内にある場合: 失敗の証拠を読み、失敗している設定や
+   足場を特定し、修正を適用し、失敗したステップを再実行して、目標の
+   マトリックスを更新する。
+2. **分類と影響の見積もり** — ステージ内での試行を使い果たした場合、または
+   診断が上流を指している場合: 根本原因が、欠陥の大きさにかかわらず、生成された
+   ソースコードやテストコードにあるのか、それとも code-generation で
+   選んだアプローチ（ライブラリ/バージョン、コンテナイメージ、インスタンスタイプ、
+   アルゴリズム、フラグ）にあるのかを判断する。そうであれば、差し替え可能な
+   側面（より新しいイメージ、ドライバー、wheel のインデックス、CLI のフラグ）で特定できる修正を探し、その
+   影響を見積もる — 工数、金銭的コスト、リスク。影響を見積もっていない工数の想定に基づいて、
+   実現可能な道をスコープ外と宣言しては決してならない。
+3. **自律的で上限付きのループバック** — `Construction Autonomy Mode:
+   autonomous`（aidlc-state.md 内）であり、影響を見積もった修正が存在し、かつ
+   test-results.md の `## Loop-Back Log` の下のエントリが 3 件未満の場合: ループバック
+   プロトコルのモジュール
+   （`aidlc-common/protocols/stage-protocol-loopback.md`）の
+   "Build-and-Test failure loop-back" に従う。診断と
+   影響を見積もった修正プランを記録し、その後、修正が名指しするユニット
+   （原因がすべてのユニットにまたがる場合のみすべてのユニット）の code-generation を再び開き、
+   決着を考慮したルートで前方へ再実行する。失敗した実行について、このステージの
+   承認ゲートを提示してはならない。
+4. **停止して確認** — モードがゲート付き（または未設定）の場合、3 回のループバックの上限を
+   使い果たした場合、または特定できる修正が存在しない場合: 失敗を
+   test-results.md に記録し、ループバックプロトコルのモジュール
+   （`aidlc-common/protocols/stage-protocol-loopback.md`）の
+   "Build-and-Test failure loop-back" で定義された、影響を見積もった停止して確認の質問を提示し、
+   すべての修正候補をその見積もった影響とともに列挙する。断念するかどうかは人間が下す判断であり、
+   決してエージェントの判断ではない。第 2 段で特定できる修正がまったく見つからなかった場合は、
+   代わりにそのセクションの修正なしのバリアントを提示する — それは、再試行するための修正を作り出すのではなく、
+   "Retry with fix" の選択肢を完全に取り除く。
 
-**Loop-back replay invariant** (loop-back protocol module,
-`aidlc-common/protocols/stage-protocol-loopback.md`): artifact-only
-code-generation workflows may
-settle directly to the all-covered gate, while sticky receipt-mode workflows
-re-emit per-unit work. Both routes apply the planned fix and deterministic
-Modify/Keep decisions before the gate, then record a fresh current-attempt
-review for every reopened code-generation unit; the reopen invalidates those
-units' prior reviews and approval fails without replacements. Units the fix
-does not name keep their work and approvals. Under unit-major
-iteration the replay uses the serial per-unit walk, never the autonomous swarm.
+**ループバックの再実行の不変条件**（ループバックプロトコルのモジュール、
+`aidlc-common/protocols/stage-protocol-loopback.md`）: 成果物のみの
+code-generation のワークフローは、
+すべてカバー済みのゲートへ直接決着できる。一方、スティッキーなレシートモードのワークフローは
+ユニットごとの作業を再発行する。どちらのルートも、ゲートの前に計画した修正と決定論的な
+Modify/Keep の判断を適用し、その後、再び開いたすべての code-generation のユニットについて、
+現在の試行の新しいレビューを記録する。再び開くことでそれらのユニットの以前のレビューは無効になり、
+置き換えがなければ承認は失敗する。修正が名指ししないユニットは、作業と承認を保持する。ユニット優先の
+反復では、再実行は自律的なスウォームではなく、ユニットごとの逐次的な処理を使う。
 
-**Single-stage runs**: in a `--single` run (`/aidlc --stage build-and-test
---single`) rungs 3-4 never execute a jump — there is no main-workflow position
-to move. Stop at rung 2, log the diagnosis + impact-estimated options in
-test-results.md, and present them in this run's isolated-run summary.
+**単一ステージの実行**: `--single` の実行（`/aidlc --stage build-and-test
+--single`）では、第 3〜4 段がジャンプを実行することは決してない — 移動すべきメインワークフローの位置が
+存在しないためである。第 2 段で停止し、診断と影響を見積もった選択肢を
+test-results.md に記録し、この実行の分離実行サマリーでそれらを提示する。
 
-**On success**: Only when every executed command passed AND every applicable
-target is `Met` (or the inventory has the single explanatory `N/A` row), update
-the Build and Test Summary with a successful readiness result.
+**成功時**: 実行したすべてのコマンドが合格し、かつ該当するすべての
+目標が `Met` である場合（またはインベントリに説明用の `N/A` 行が 1 つだけある場合）にのみ、
+Build and Test Summary を、準備状況の評価が成功した結果で更新する。
 
 ### Step 10: Cross-Unit Final Coverage Gate
 
-This is a stage-level gate, not the Construction phase boundary. Run
-`{{INVOKE}} engine sensor-traceability --stage build-and-test`: it prints every
-requirement and acceptance criterion this run traced, whether it is built or
-marked `N/A` with its reason, and the Units and files that build it. Write
-`<record>/construction/build-and-test/cross-unit-traceability.md` from that
-output with a pass/fail verdict, per-ID coverage, owning stage/Unit, target
-file, and every uncovered element. Any uncovered ID is a build-and-test finding
-that must be surfaced at the approval gate.
+これはステージレベルのゲートであり、Construction フェーズの境界ではない。
+`{{INVOKE}} engine sensor-traceability --stage build-and-test` を実行する: これは、この実行で
+トレースしたすべての要件と受け入れ基準について、構築済みか、
+理由とともに `N/A` とマークされているか、そしてそれを構築するユニットとファイルを出力する。その出力から
+`<record>/construction/build-and-test/cross-unit-traceability.md` を書き、
+合否の判定、ID ごとのカバレッジ、担当するステージ/ユニット、対象
+ファイル、カバーされていないすべての要素を記載する。カバーされていない ID はすべて、
+承認ゲートで必ず提示しなければならない build-and-test の指摘事項である。
 
 ### Step 11: Completion Handoff
 
-Hand completion to `stage-protocol.md` via
-`{{INVOKE}} engine orchestrate report --stage build-and-test --result <outcome>`.
-That `report` call owns every lifecycle transition and advancement; never perform one in prose, and never narrate this bookkeeping to the user.
+`{{INVOKE}} engine orchestrate report --stage build-and-test --result <outcome>` を通じて、
+完了を `stage-protocol.md` に引き渡す。
+その `report` 呼び出しが、ライフサイクルの遷移と前進をすべて担う。散文の中で遷移を実行してはならず、この記録処理をユーザーに説明してもならない。
 
 ### Step 12: Completion
 
-Present completion message and approval gate:
+完了メッセージと承認ゲートを提示する:
 
 ```
 # :hammer: Build and Test Complete
 ```
 
-Summary of all test instruction sets generated, readiness assessment, then:
+生成したすべてのテスト手順セットのサマリー、準備状況の評価を示し、その後:
 
-When a target, done condition, or acceptance criterion that requires behavior
-in a browser was checked only in Node or a DOM emulator, say so once, in one
-line, naming what and where it ran, for example: "The transfer journey was
-checked in Happy DOM, not a real browser." The person decides at the gate with
-that in front of them.
+ブラウザでの挙動を必要とする目標、完了条件、または受け入れ基準が、
+Node や DOM エミュレーターでしかチェックされなかった場合は、そのことを 1 回、1 行で伝え、
+何をどこで実行したかを明記する。たとえば: "The transfer journey was
+checked in Happy DOM, not a real browser."（送金のジャーニーは、実際のブラウザではなく Happy DOM でチェックされました。）利用者は、
+それを目の前にしてゲートで判断する。
 
 ```
 **Review:** `<record>/construction/build-and-test/`
 ```
 
-Approval gate: strictly 2-option (Approve / Request Changes).
+承認ゲート: 厳密に 2 択（Approve / Request Changes）。
 
 ## Sensors
 
-This stage produces test-instruction markdown files under
-`<record>/construction/build-and-test/` and runs the project's build
-and test commands as part of execution. The instruction artefacts are
-the agent-authored outputs the markdown-shape sensors check; the build
-itself emits exit codes and a results report.
+このステージは、`<record>/construction/build-and-test/` 配下にテスト手順の
+Markdown ファイルを生成し、実行の一部としてプロジェクトのビルドと
+テストのコマンドを実行する。手順の成果物は、
+Markdown の形式をチェックするセンサーが対象とする、エージェントが作成した出力である。ビルド
+自体は終了コードと結果のレポートを出力する。
 
-Imports: `required-sections`, `upstream-coverage`, `type-check`.
+インポート: `required-sections`, `upstream-coverage`, `type-check`.
 
-Upstream targets: `code-generation-plan`, `unit-test-instructions`, `code-summary`.
+上流の対象: `code-generation-plan`, `unit-test-instructions`, `code-summary`.
 
-`type-check` inspects matching TypeScript/TSX code touched during test
-generation.
+`type-check` は、テスト生成中に変更された、該当する TypeScript/TSX のコードを
+検査する。
 
-`linter` is intentionally NOT imported. The canonical lint runs in the build
-pipeline this stage drives, so importing it would duplicate findings; the
-build exit code remains the authoritative signal.
+`linter` は意図的にインポートしていない。標準の lint はこのステージが駆動する
+ビルドパイプラインの中で実行されるため、インポートすると指摘が重複する。
+ビルドの終了コードが引き続き正式なシグナルである。
 
 ## Learn
 
-When `directive.protocol_modules` lists `learnings`, follow
-`stage-protocol-learnings.md`: keep the diary at `directive.memory_path` while
-working, and take the learnings step before the approval gate; that module says
-when it asks the person anything. When the module is absent, skip both the diary
-and the step.
+`directive.protocol_modules` に `learnings` が含まれている場合は、
+`stage-protocol-learnings.md` に従う。作業中は `directive.memory_path` に日誌を付け、
+承認ゲートの前に学びのステップを実施する。そのモジュールが、利用者に何かを尋ねるタイミングを定めている。
+モジュールがない場合は、日誌とステップの両方を省略する。

@@ -1,61 +1,60 @@
 # AI-DLC on Cursor
 
-The Cursor runtime is one of the framework's harness distributions, for
-[Cursor](https://cursor.com). One tree serves both the **Cursor IDE** and the
-**Cursor CLI** (`agent`): they share the same `.cursor/` discovery. One
-deterministic core, many harnesses: the engine, state machine, audit log,
-graph, swarm referee, and learnings gate are byte-identical across every
-distribution - only the shell differs. The source/development tree is
-**generated** into ignored local `dist/cursor/` from `core/` +
-`harness/cursor/` by `bun scripts/package.ts cursor`; never hand-edit it.
+Cursor ランタイムは、[Cursor](https://cursor.com) 向けの、フレームワークのハーネス配布物の
+1 つです。1 つのツリーで **Cursor IDE** と **Cursor CLI**（`agent`）の両方に対応します。
+両者は同じ `.cursor/` の検出の仕組みを共有しています。決定論的なコアは 1 つ、ハーネスは多数。
+エンジン、ステートマシン、監査ログ、グラフ、スウォームのレフェリー、学びのゲートは、
+すべての配布物でバイト単位で同一であり、異なるのはシェルだけです。ソース/開発用のツリーは、
+`bun scripts/package.ts cursor` によって `core/` +
+`harness/cursor/` から、無視対象のローカル `dist/cursor/` に**生成**されます。決して手で編集しないでください。
 
-Harness-specific onboarding lives in `.cursor/rules/aidlc-onboarding.mdc`,
-loaded automatically through `alwaysApply: true`. The root `AGENTS.md` block
-is harness-neutral and shared with other installed harnesses whose engine
-directories differ.
+ハーネス固有のオンボーディングは `.cursor/rules/aidlc-onboarding.mdc` にあり、
+`alwaysApply: true` によって自動的に読み込まれます。ルートの `AGENTS.md` ブロックは
+ハーネス中立であり、エンジンディレクトリが異なる他のインストール済みハーネスとも
+共有されます。
 
 ## Layout
 
-Cursor is the most "native" port so far - it consumes the standard core
-projection directly (no `emit.ts`, no split dot-dir). The distribution is:
+Cursor はこれまでで最も「ネイティブ」な移植です。標準のコア投影をそのまま利用します
+（`emit.ts` も、分割されたドットディレクトリもありません）。配布物の構成は次のとおりです。
 
-- **`.cursor/`** - the framework tree. Cursor reads only a few subdirs as
-  native meaning: `rules/` (always-applied onboarding, one standing and four phase method pointers),
-  `agents/` (the 14 personas as native subagents), `skills/` (the orchestrator,
-  utility shortcuts, and generated stage runners), `hooks.json` + `hooks/`
-  (the hook wiring and adapter), `cli.json` (permissions), and `mcp.json` (MCP
-  servers, if you add one). The engine dirs beside them (`tools/`,
-  `aidlc-common/`, `knowledge/`, `sensors/`, `scopes/`) are inert data to
-  Cursor and safely share the directory.
-- **`aidlc/`** - the workspace shell (the pre-built
-  `aidlc/spaces/default/memory/` method tree the engine reads), a sibling of
-  `.cursor/`.
-- **`AGENTS.md`** - project-root ambient instructions Cursor auto-reads.
+- **`.cursor/`** - フレームワークのツリーです。Cursor がネイティブな意味を持つものとして読むのは、
+  いくつかのサブディレクトリだけです。`rules/`（常に適用されるオンボーディング、常設のメソッドポインター 1 つとフェーズ別のメソッドポインター 4 つ）、
+  `agents/`（ネイティブなサブエージェントとしての 14 のペルソナ）、`skills/`（オーケストレーター、
+  ユーティリティのショートカット、生成されたステージランナー）、`hooks.json` + `hooks/`
+  （フックの配線とアダプター）、`cli.json`（権限）、`mcp.json`（MCP
+  サーバーを追加する場合）です。その隣にあるエンジンのディレクトリ（`tools/`、
+  `aidlc-common/`、`knowledge/`、`sensors/`、`scopes/`）は Cursor にとっては
+  意味を持たないデータであり、同じディレクトリを安全に共有できます。
+- **`aidlc/`** - ワークスペースのシェルです（エンジンが読む、事前ビルド済みの
+  `aidlc/spaces/default/memory/` メソッドツリー）。
+  `.cursor/` と同じ階層に置かれます。
+- **`AGENTS.md`** - Cursor が自動的に読み込む、プロジェクトルートの常時適用の指示です。
 
 ## Prerequisites
 
-- **Cursor** - the IDE, or the Cursor CLI (install with
-  `curl https://cursor.com/install -fsS | bash`; invoked as `agent`). Both read
-  this install's `.cursor/` surfaces. Verified against cursor-agent 2026.07;
-  hooks (`.cursor/hooks.json`) and skills (`.cursor/skills/`) are
-  current-line features.
-- **bun** only for source development or the optional manual-copy
-  `install.ts` helper. Once installed, native and versioned release runtimes
-  invoke `aidlc`.
-- **A paid Cursor plan for named models** - Free accounts can only use `Auto`.
-  The tiered persona surfaces ship with **no model pins** (all tiers project to
-  null on Cursor: model availability is plan-dependent), so every agent
-  inherits your session model. Headless CLI runs that pass `--model` need a
-  plan that allows it. Bedrock BYOK is IDE-only: static keys on Pro, an IAM role
-  on Teams (doc-verified against Cursor's model settings, not live-verified
-  here); the CLI routes models through Cursor's own backend.
+- **Cursor** - IDE、または Cursor CLI（
+  `curl https://cursor.com/install -fsS | bash` でインストールし、`agent` として起動します）。どちらも
+  このインストールの `.cursor/` の各要素を読み込みます。cursor-agent 2026.07 で検証済みです。
+  フック（`.cursor/hooks.json`）とスキル（`.cursor/skills/`）は
+  現行ラインの機能です。
+- **bun** は、ソース開発、またはオプションの手動コピー用
+  `install.ts` ヘルパーを使う場合にのみ必要です。インストール後は、ネイティブとバージョン付きのリリースランタイムが
+  `aidlc` を呼び出します。
+- **名前付きモデルには有料の Cursor プラン** - 無料アカウントでは `Auto` しか使えません。
+  階層化されたペルソナの各要素は**モデルを固定せずに**出荷されます（Cursor ではすべての階層が
+  null に投影されます。利用できるモデルはプランに依存するためです）。そのため、すべてのエージェントは
+  セッションのモデルを引き継ぎます。`--model` を渡すヘッドレスの CLI 実行には、それを許可する
+  プランが必要です。Bedrock BYOK は IDE のみで利用できます。Pro では静的キー、Teams では IAM ロールを使います
+  （Cursor のモデル設定のドキュメントで確認したもので、ここでは実環境で検証していません）。
+  CLI は Cursor 自身のバックエンドを通してモデルを利用します。
 
 ## Install
 
 ### Native channel (recommended)
 
-Install the native command as described in
-[Install and Lifecycle](../18-install-and-lifecycle.md), then:
+[インストールとライフサイクル](../18-install-and-lifecycle.md) の説明に従ってネイティブコマンドを
+インストールしてから、次を実行します。
 
 ```bash
 cd your-project
@@ -63,186 +62,184 @@ aidlc config --harness cursor
 aidlc doctor
 ```
 
-Cursor may skip project hooks in a folder that is not in a git repository, and
-without them your approvals are never recorded. If the project is not a git
-repository yet, run `git init` in it before opening it in Cursor (fully
-restart Cursor if it is already open).
-`aidlc config`, the copy installer, and `/aidlc --doctor` all say so when it is
-missing.
+Cursor は、git リポジトリではないフォルダーではプロジェクトのフックをスキップすることがあり、
+フックがないと承認が一切記録されません。プロジェクトがまだ git
+リポジトリでない場合は、Cursor で開く前にそのフォルダーで `git init` を実行してください（すでに開いている場合は
+Cursor を完全に再起動してください）。
+git リポジトリでない場合は、`aidlc config`、コピーインストーラー、`/aidlc --doctor` のいずれもその旨を
+知らせます。
 
 ### Versioned manual-copy alternative
 
-Download and extract a specific release's `aidlc-copy-runtime-X.Y.Z.tar.gz` as described in
-[Install and Lifecycle: Copy Channel](../18-install-and-lifecycle.md#copy-channel),
-then install that versioned projection:
+[インストールとライフサイクル: コピーチャネル](../18-install-and-lifecycle.md#copy-channel) の説明に従って、
+特定のリリースの `aidlc-copy-runtime-X.Y.Z.tar.gz` をダウンロードして展開し、
+そのバージョン付きの投影をインストールします。
 
 ```bash
 bun "$RUNTIME_ROOT/cursor/install.ts" your-project
 ```
 
-The copy installer is single-harness: its root sections use private
-`AIDLC CURSOR` markers and it does not write an `aidlc config` ownership
-baseline. Multi-harness projects must add Cursor with
-`aidlc config --harness cursor` instead; the copy installer refuses root
-blocks already managed by `aidlc config`.
+コピーインストーラーは単一ハーネス用です。ルートのセクションには専用の
+`AIDLC CURSOR` マーカーを使い、`aidlc config` の所有権の
+ベースラインは書き込みません。複数ハーネスのプロジェクトでは、代わりに
+`aidlc config --harness cursor` で Cursor を追加する必要があります。コピーインストーラーは、
+すでに `aidlc config` が管理しているルートブロックを拒否します。
 
-The installer preflights the full copy, refuses project-owned collisions,
-preserves `.cursor/.gitignore` and existing method memory, structurally
-merges `.cursor/hooks.json` and `.cursor/cli.json`, and adds marked AI-DLC
-sections to existing `AGENTS.md` and `.gitignore` files instead of replacing
-them. It records framework ownership in `.cursor/aidlc-install.json`;
-re-running it upgrades managed files while preserving `aidlc/active-space`
-and explicit plugin selection/composed state, and reapplying that space to
-all mutable rule and persona pointers, including files restored after deletion.
-Plugin-composed stage files are preserved only when a contribution sidecar or
-seam sentinel identifies that stage, and the installer prints every managed
-path it preserves; unrelated core stages continue through normal receipt-hash
-collision/upgrade handling. The `aidlc/` shell ships the pre-built
-`aidlc/spaces/default/memory/` method tree the engine reads; `/aidlc --doctor`
-fails its "workspace shell ready" check without it.
+インストーラーはコピー全体を事前確認し、プロジェクトが所有するファイルとの衝突を拒否します。
+`.cursor/.gitignore` と既存のメソッドメモリーは保持し、`.cursor/hooks.json` と `.cursor/cli.json` は
+構造的にマージします。既存の `AGENTS.md` と `.gitignore` ファイルは置き換えず、
+マーク付きの AI-DLC セクションを追加します。フレームワークの所有権は `.cursor/aidlc-install.json` に記録します。
+再実行すると、`aidlc/active-space`
+と明示的なプラグイン選択/合成状態を保持したまま管理対象ファイルをアップグレードし、そのスペースを
+変更可能なすべてのルールとペルソナのポインター（削除後に復元されたファイルを含む）に再適用します。
+プラグインで合成されたステージファイルは、コントリビューションのサイドカーまたは
+シームのセンチネルがそのステージを特定している場合にのみ保持され、インストーラーは保持した管理対象の
+パスをすべて表示します。無関係なコアステージは、通常のレシートハッシュによる
+衝突/アップグレード処理を引き続き受けます。`aidlc/` シェルには、エンジンが読む事前ビルド済みの
+`aidlc/spaces/default/memory/` メソッドツリーが含まれています。これがないと `/aidlc --doctor`
+の "workspace shell ready" チェックは失敗します。
 
-Open the project in the Cursor IDE (or start `agent` in it) and run
-`/aidlc --doctor`, then `/aidlc` followed by what you want to build. Native
-utility shortcuts are `/aidlc-status`, `/aidlc-jump --stage <slug>` (or
-`--phase <name>`), and `/aidlc-scope <name>`.
+Cursor IDE でプロジェクトを開き（またはそのフォルダーで `agent` を起動し）、
+`/aidlc --doctor` を実行してから、`/aidlc` に続けて作りたいものを入力してください。ネイティブの
+ユーティリティショートカットは `/aidlc-status`、`/aidlc-jump --stage <slug>`（または
+`--phase <name>`）、`/aidlc-scope <name>` です。
 
 ## What's different on this harness
 
-- **Questions render as numbered prose options** (no structured-question
-  widget); the questions FILE with `[Answer]:` tags remains the source of
-  truth.
-- **Hooks ride `.cursor/hooks.json`** through the AIDLC adapter
-  (`.cursor/hooks/aidlc-cursor-adapter.ts`), which maps Cursor's camelCase hook
-  events (`sessionStart`, `sessionEnd`, `beforeSubmitPrompt`, `preToolUse`,
-  `postToolUse`, `postToolUseFailure`, `preCompact`, `stop`) onto the byte-shared
-  core hook bodies (run as bun subprocesses): human-turn recording on each human turn, the
-  state-transition, reviewer read-scope, review-freeze, and plan-approval
-  guards before a tool runs, audit +
-  sensors on write/edit, failed-Task attribution cleanup, stage-graph rebuilds on
-  shell, and state validation before compaction. The **PreToolUse guards**
-  answer on Cursor's `{"permission":"allow"|"deny"}` stdout channel (`deny`
-  may add `agent_message`) and register `failClosed: true`. Empty stdout is
-  invalid JSON, so the IDE blocks the call; malformed input also denies the
-  operation. A guard that is missing or crashes refuses nothing, as on every
-  other harness, and `doctor` names it. Cursor names its shell tool `Shell`; the adapter
-  maps it to the core hooks' `Bash`. An edit that arrives as `StrReplace` with the file
-  in `path` is handled as `Edit`, so it is recorded and checked like any other edit. Cursor's
-    first-class `Delete` tool (unique to this harness - everywhere else deletion
-    goes through the shell) is presented to the reviewer-scope guard as a write so a
-    unit-scoped reviewer cannot delete a sibling unit's artifacts. Shell payloads'
-    nested `cwd`/`working_directory` fields are promoted to the shared guard
-    contract, so relative reads and writes are checked where Cursor will execute them.
-- **Forwarding-loop enforcement is advisory.** Cursor's `stop` hook cannot
-  refuse a stop, so when the core stop hook answers `block` the adapter surfaces
-  a follow-up nudge instead (the same posture as opencode). Its host
-  `loop_limit` is 10 rather than Cursor's default 5, which covers the core's
-  autonomous no-progress cap of 8. The forwarding loop in the conductor skill
-  is the real discipline.
-- **Background agents are side workers.** A Cursor background agent you start
-  while a workflow runs in the foreground chat (a review, a test run, a code
-  change) is left out of that workflow. At session start it gets a short note,
-  instead of the workflow context, saying the workflow belongs to the
-  foreground chat: don't run `/aidlc` or AIDLC workflow commands, or edit
-  `aidlc/` or AIDLC's own files under `.cursor/` (its hooks, tools, skills,
-  agents, and `aidlc` rules); your own Cursor configuration, such as
-  `.cursor/mcp.json`, is fine, and so are reads and
-  `bun .cursor/tools/aidlc.ts status`. Its stops get no forwarding nudge, its prompts never count as a
-  human turn, and its session end is not recorded. Nothing is blocked: the
-  note is the only guard, so an agent that ignores it could still move the
-  workflow, as a second session could on any harness. Cursor flags a
-  background agent only on `sessionStart`, `beforeSubmitPrompt`, and
-  `sessionEnd`, so the adapter records the flag in
-  `aidlc/.aidlc-cursor-subagents/` for the conversation's later stops and
-  removes it at `sessionEnd`; if the record cannot be written, the agent runs
-  normally and its stops get the foreground nudge.
-- **A real session-end moment exists** (unlike Codex): `sessionEnd` fires, so
-  `SESSION_ENDED` audit events are emitted. Pre-compaction validation also fires
-  (`preCompact`).
-- **Personas are native subagents.** The 14 persona `.md` files in
-  `.cursor/agents/` are discovered by frontmatter `name`; the conductor adopts
-  them inline for most stages and delegates via the `task` tool for the two
-  subagent stages (2.1 reverse-engineering, 3.5 code-generation). Worker agents
-  do not get the `task` tool, so a delegate cannot delegate again.
-- **Subagent identity is reconstructed.** Cursor emits no per-subagent identity
-  on hook payloads (its `subagentStart`/`subagentStop` events are documented but
-  never fire on the CLI), so the adapter maintains a protected project-local
-  runtime ledger under `aidlc/.aidlc-cursor-subagents/` plus independent
-  `aidlc/.aidlc-cursor-subagent-*.json` active-delegation witnesses. Top-level
-  conversations register themselves at `sessionStart`/`beforeSubmitPrompt`
-  (subagent conversations get neither event), each Task spawn records its
-  agent, and reviewer read-scope enforcement attributes calls from conversations
-  that are not registered top-level sessions. A parent's next synchronous Task
-  dispatch retires and logs its prior record (Cursor CLI emits no Task
-  `postToolUse`); genuine cross-parent ambiguity stays conservative whenever a
-  reviewer is live, so it cannot disable reviewer-scope enforcement. Delegated
-  tools cannot access the ledger or dispatch record, including through ancestor
-  deletes or unquoted shell glob/character-class paths. If the primary ledger is
-  missing or unreadable while any delegation witness remains active, operations
-  fail closed rather than losing delegated-agent attribution. Delegates may use
-  ordinary Shell commands, but general-purpose interpreters and dynamic command
-  evaluation are denied; use Cursor's native read/search tools and let the parent
-  conversation run executable probes. AI-DLC's own commands that a delegate is
-  given, such as Reverse Engineering's scope fingerprint and its check, run as
-  their instructions spell them, one plain command at a time. These delegate
-  limits apply only while the reviewer read-scope or state-transition check
-  holds for the piece of work: when both stand aside (Guard Policy off does
-  that), delegates run builds, tests and searches like the main conversation, a
-  Task starts even when its record cannot be written, and Cursor's own approval
-  applies.
-- **Generated stage and scope runners are explicit-only.** Cursor receives
-  `disable-model-invocation: true` on generated runner skills, including plugin
-  runners, so ordinary coding prompts cannot auto-activate state-mutating
-  workflow shortcuts.
-- **Utility shortcuts are native skills.** `/aidlc-status`, `/aidlc-jump`, and
-  `/aidlc-scope` improve slash-menu discovery without creating a second engine
-  path. They all carry `disable-model-invocation: true`; Cursor invokes them
-  only when the user chooses them. The legacy `.cursor/commands/` surface is
-  not shipped.
-- **Method rules are read instructions, not imports.** Cursor rules do not
-  expand `@`-import lines. `.cursor/rules/aidlc.mdc` is always applied and
-  points to the active space's org/team/project files; four
-  `.cursor/rules/aidlc-phase-*.mdc` rules are agent-decided and point to the
-  matching phase file only when relevant (live-verified on cursor-agent: a
-  phase-framed prompt loads exactly the matching phase rule, an unrelated
-  prompt loads none). The `sessionStart` hook separately
-  injects live workflow context. All five rule files read
-  `aidlc/active-memory/`, the engine's git-ignored copy of the active
-  space's method; `/aidlc space <name>` rewrites the copy, never the rules.
-- **Construction swarm runs as task-tool fan-out only** (`AIDLC_USE_SWARM=1` is
-  a loud no-op - no Workflow tool exists).
-- **No statusline / welcome message** - use `/aidlc-status` (or
-  `/aidlc --status`) and the progress lines at gates.
-- **Tab autocomplete is untouched** by this install - it rides Cursor's own
-  models regardless of configuration.
-- **Permissions**: `.cursor/cli.json` pre-approves only AI-DLC's own workflow
-  commands: its engine commands, `doctor`, `version`, `status` (and their
-  `--doctor`, `--version` and `--status` spellings, and doctor with
-  `--verbose`), `config --help`, `config --show` and the read-only
-  `config <section> --show` (with or without `--json`) and `--help`
-  forms, turning a
-  check back on (`config flags --clear-bypass <switch> --yes`), and its
-  `aidlc-*.ts` tools (a project-level `cli.json` carries permissions only). A
-  native install pre-approves the same commands run as the installed `aidlc`
-  command, and `aidlc engine ...`. Every other
-  shell command follows your Cursor approval settings, including any other
-  `config` change (turning a check off too), the commands that change the machine's AI-DLC install (`use`,
-  `update`, `rollback`, `uninstall`, `system`), and the tool scripts behind
-  them.
-- **MCP servers**: none ship; configure your own under `.cursor/mcp.json` if
-  needed.
-- **Headless `agent -p` runs cannot pass approval gates.** The human-presence
-  mint rides `beforeSubmitPrompt`, which Cursor fires only for an interactive
-  submission (verified against cursor-agent 2026.07) - so a print-mode run
-  records no `HUMAN_TURN` and a gated stage refuses its approval by design,
-  rather than letting an unattended model approve its own work. Use headless
-  mode for the read-only utilities (`--status`, `--doctor`, `--version`) and for
-  autonomous Construction (which is exempt because it has no human at the gate);
-  run gated workflows in an interactive Cursor session. This is a property of
-  the framework's presence gate, not a Cursor limitation - every harness mints
-  presence from a human-prompt event.
-- **In-session configuration is interactive.** Use `/aidlc --config [section]`
-  in a Cursor chat so the conductor can gather choices before landing exact
-  deterministic config flags.
+- **質問は番号付きの散文の選択肢として表示されます**（構造化された質問の
+  ウィジェットはありません）。`[Answer]:` タグを含む質問ファイルが、引き続き信頼できる
+  唯一の情報源です。
+- **フックは `.cursor/hooks.json` に載ります**。AIDLC アダプター
+  （`.cursor/hooks/aidlc-cursor-adapter.ts`）が、Cursor の camelCase のフック
+  イベント（`sessionStart`、`sessionEnd`、`beforeSubmitPrompt`、`preToolUse`、
+  `postToolUse`、`postToolUseFailure`、`preCompact`、`stop`）を、バイト単位で共有された
+  コアのフック本体（bun のサブプロセスとして実行）に対応づけます。人間のターンごとの人間ターン記録、
+  ツール実行前の状態遷移、レビュアー読み取りスコープ、レビュー凍結、計画承認の
+  各ガード、書き込み/編集時の監査 +
+  センサー、失敗した Task の帰属情報のクリーンアップ、シェル実行時のステージグラフ再構築、
+  コンパクション前の状態検証を行います。**PreToolUse ガード**は
+  Cursor の `{"permission":"allow"|"deny"}` 標準出力チャネルで応答し（`deny`
+  では `agent_message` を追加できます）、`failClosed: true` を登録します。空の標準出力は
+  不正な JSON となるため IDE は呼び出しをブロックし、不正な入力も操作を
+  拒否します。ガードが欠けているかクラッシュした場合は、他のすべてのハーネスと同様に何も拒否せず、
+  `doctor` がそのガードの名前を示します。Cursor はシェルツールを `Shell` と呼びます。アダプターは
+  これをコアフックの `Bash` に対応づけます。ファイルを
+  `path` に持つ `StrReplace` として届いた編集は `Edit` として扱われるため、他の編集と同様に記録・チェックされます。Cursor の
+    第一級の `Delete` ツール（このハーネス固有のもので、他のすべてのハーネスでは削除は
+    シェル経由で行われます）は、レビュアースコープのガードには書き込みとして提示されます。そのため
+    ユニットにスコープされたレビュアーは、兄弟ユニットの成果物を削除できません。シェルのペイロードの
+    入れ子になった `cwd`/`working_directory` フィールドは共有のガード
+    契約に引き上げられるため、相対パスの読み書きは Cursor が実際に実行する場所でチェックされます。
+- **転送ループの強制は助言的です。** Cursor の `stop` フックは停止を
+  拒否できないため、コアの stop フックが `block` と応答すると、アダプターは代わりに
+  フォローアップの促しを表示します（opencode と同じ姿勢です）。ホストの
+  `loop_limit` は Cursor のデフォルトの 5 ではなく 10 であり、コアの
+  自律実行時の進捗なし上限である 8 をカバーします。実際の規律を担うのは、コンダクタースキルの
+  転送ループです。
+- **バックグラウンドエージェントは補助ワーカーです。** フォアグラウンドのチャットでワークフローが実行中に
+  起動した Cursor のバックグラウンドエージェント（レビュー、テスト実行、コード
+  変更など）は、そのワークフローから除外されます。セッション開始時には、ワークフローの
+  コンテキストの代わりに、ワークフローはフォアグラウンドのチャットのものであると伝える短い注記を受け取ります。
+  `/aidlc` や AIDLC のワークフローコマンドを実行しないこと、また
+  `aidlc/` や `.cursor/` 配下の AIDLC 自身のファイル（フック、ツール、スキル、
+  エージェント、`aidlc` ルール）を編集しないこと、という内容です。利用者自身の Cursor 設定（
+  `.cursor/mcp.json` など）の編集や、読み取り、
+  `bun .cursor/tools/aidlc.ts status` は問題ありません。その停止には転送の促しが出ず、そのプロンプトが
+  人間のターンとして数えられることもなく、セッション終了も記録されません。何もブロックはされません。
+  この注記が唯一のガードであるため、注記を無視したエージェントは、どのハーネスでも 2 つ目のセッションが
+  そうできるのと同様に、ワークフローを進めてしまう可能性があります。Cursor が
+  バックグラウンドエージェントであることを示すのは `sessionStart`、`beforeSubmitPrompt`、
+  `sessionEnd` のときだけなので、アダプターはその会話の以降の停止のためにフラグを
+  `aidlc/.aidlc-cursor-subagents/` に記録し、
+  `sessionEnd` で削除します。記録を書き込めない場合、エージェントは通常どおり
+  実行され、その停止にはフォアグラウンドと同じ促しが出ます。
+- **実際のセッション終了のタイミングがあります**（Codex とは異なります）。`sessionEnd` が発火するため、
+  `SESSION_ENDED` 監査イベントが出力されます。コンパクション前の検証も発火します
+  （`preCompact`）。
+- **ペルソナはネイティブなサブエージェントです。** `.cursor/agents/` にある 14 個のペルソナ `.md` ファイルは、
+  frontmatter の `name` によって検出されます。コンダクターはほとんどのステージで
+  ペルソナをインラインで採用し、2 つのサブエージェントステージ（2.1 reverse-engineering、
+  3.5 code-generation）では `task` ツールを介して委任します。ワーカーエージェントには
+  `task` ツールが与えられないため、委任先がさらに委任することはできません。
+- **サブエージェントの識別情報は再構築されます。** Cursor はフックのペイロードにサブエージェントごとの識別情報を
+  出力しません（`subagentStart`/`subagentStop` イベントはドキュメントには記載されていますが、
+  CLI では発火しません）。そのためアダプターは、`aidlc/.aidlc-cursor-subagents/` 配下に
+  保護されたプロジェクトローカルのランタイム台帳と、独立した
+  `aidlc/.aidlc-cursor-subagent-*.json` のアクティブ委任の証跡を維持します。トップレベルの
+  会話は `sessionStart`/`beforeSubmitPrompt` で自身を登録し
+  （サブエージェントの会話はどちらのイベントも受け取りません）、各 Task の起動はその
+  エージェントを記録し、レビュアー読み取りスコープの強制は、登録済みのトップレベルセッションではない
+  会話からの呼び出しを帰属させます。親が次に同期的な Task を
+  ディスパッチすると、以前の記録は退役させられ、ログに残されます（Cursor CLI は Task の
+  `postToolUse` を出力しないためです）。本当に複数の親にまたがる曖昧さがある場合は、
+  レビュアーが稼働している間は常に保守的に扱われるため、レビュアースコープの強制が無効になることはありません。委任された
+  ツールは、祖先ディレクトリの削除や、引用符なしのシェルのグロブ/文字クラスのパスを経由しても、
+  台帳やディスパッチ記録にアクセスできません。いずれかの委任の証跡がアクティブなまま主台帳が
+  欠けているか読めない場合、操作は委任先エージェントの帰属を失うのではなく、
+  フェイルクローズします。委任先は
+  通常の Shell コマンドを使えますが、汎用インタープリターと動的なコマンド
+  評価は拒否されます。Cursor のネイティブな読み取り/検索ツールを使い、実行を伴う調査は親の
+  会話に任せてください。委任先に渡される AI-DLC 自身のコマンド（Reverse Engineering のスコープの
+  フィンガープリントとそのチェックなど）は、指示に書かれたとおりに、1 回に 1 つのプレーンなコマンドとして
+  実行されます。これらの委任先の制限は、その作業についてレビュアー読み取りスコープまたは状態遷移のチェックが
+  有効な間だけ適用されます。両方が退いている場合（Guard Policy を off にするとそうなります）、
+  委任先はメインの会話と同様にビルド、テスト、検索を実行でき、
+  Task は記録を書き込めない場合でも開始され、Cursor 自身の承認が
+  適用されます。
+- **生成されたステージランナーとスコープランナーは明示的な呼び出し専用です。** Cursor では、
+  プラグインのランナーを含む生成されたランナースキルに `disable-model-invocation: true` が付与されるため、
+  通常のコーディングのプロンプトによって、状態を変更する
+  ワークフローのショートカットが自動的に起動することはありません。
+- **ユーティリティショートカットはネイティブなスキルです。** `/aidlc-status`、`/aidlc-jump`、
+  `/aidlc-scope` は、2 つ目のエンジン経路を作らずにスラッシュメニューでの見つけやすさを向上させます。
+  いずれも `disable-model-invocation: true` を持ち、Cursor がこれらを呼び出すのは
+  ユーザーが選んだときだけです。従来の `.cursor/commands/` の仕組みは
+  同梱されていません。
+- **メソッドのルールはインポートではなく、読むべき指示です。** Cursor のルールは
+  `@` インポート行を展開しません。`.cursor/rules/aidlc.mdc` は常に適用され、
+  アクティブなスペースの org/team/project ファイルを指します。4 つの
+  `.cursor/rules/aidlc-phase-*.mdc` ルールはエージェントが適用を判断するもので、関連する場合にのみ
+  対応するフェーズファイルを指します（cursor-agent で実環境検証済み: フェーズを前提とした
+  プロンプトでは対応するフェーズルールだけが読み込まれ、無関係な
+  プロンプトでは何も読み込まれません）。これとは別に、`sessionStart` フックが
+  ライブのワークフローコンテキストを注入します。5 つのルールファイルはすべて
+  `aidlc/active-memory/`（エンジンが git 無視で保持する、アクティブな
+  スペースのメソッドのコピー）を読みます。`/aidlc space <name>` が書き換えるのはコピーであり、ルールではありません。
+- **Construction のスウォームは task ツールによるファンアウトとしてのみ実行されます**（`AIDLC_USE_SWARM=1` は
+  明示的に何もしない設定です。Workflow ツールが存在しないためです）。
+- **ステータスライン/ウェルカムメッセージはありません** - `/aidlc-status`（または
+  `/aidlc --status`）と、ゲートでの進捗行を使ってください。
+- **Tab のオートコンプリートは影響を受けません**（このインストールによって） - 設定に関係なく、
+  Cursor 自身のモデルで動作します。
+- **権限**: `.cursor/cli.json` が事前承認するのは、AI-DLC 自身のワークフロー
+  コマンドだけです。エンジンコマンド、`doctor`、`version`、`status`（およびその
+  `--doctor`、`--version`、`--status` の表記と、
+  `--verbose` 付きの doctor）、`config --help`、`config --show`、読み取り専用の
+  `config <section> --show`（`--json` の有無を問わず）と `--help`
+  の形式、チェックを
+  元に戻す操作（`config flags --clear-bypass <switch> --yes`）、そして
+  `aidlc-*.ts` ツールです（プロジェクトレベルの `cli.json` は権限のみを持ちます）。
+  ネイティブインストールでは、インストール済みの `aidlc`
+  コマンドとして実行される同じコマンドと、`aidlc engine ...` を事前承認します。それ以外の
+  シェルコマンドはすべて Cursor の承認設定に従います。これには、その他の
+  `config` の変更（チェックをオフにする操作も含む）、マシンの AI-DLC インストールを変更するコマンド（`use`、
+  `update`、`rollback`、`uninstall`、`system`）、およびそれらの背後にあるツールスクリプトが
+  含まれます。
+- **MCP サーバー**: 同梱されていません。必要であれば `.cursor/mcp.json` に
+  独自に設定してください。
+- **ヘッドレスの `agent -p` 実行は承認ゲートを通過できません。** 人間の存在の
+  発行は `beforeSubmitPrompt` に載っていますが、Cursor はこれを対話的な
+  送信に対してのみ発火します（cursor-agent 2026.07 で検証済み）。そのため print モードの実行では
+  `HUMAN_TURN` が記録されず、ゲート付きのステージは設計上その承認を拒否します。
+  無人のモデルに自身の作業を承認させないためです。ヘッドレス
+  モードは、読み取り専用のユーティリティ（`--status`、`--doctor`、`--version`）と、
+  自律的な Construction（ゲートに人間がいないため対象外です）に使ってください。
+  ゲート付きのワークフローは対話的な Cursor セッションで実行してください。これは
+  フレームワークの存在ゲートの性質であり、Cursor の制限ではありません。どのハーネスも、
+  人間のプロンプトのイベントから存在を発行します。
+- **セッション内の設定は対話的に行います。** Cursor のチャットで `/aidlc --config [section]`
+  を使うと、コンダクターが選択内容を集めてから、正確な
+  決定論的設定フラグを適用できます。
 
 ## Verifying an install
 
@@ -251,24 +248,24 @@ bun .cursor/tools/aidlc-utility.ts doctor        # all checks pass on a fresh co
 agent -p "/aidlc --status" --output-format text --trust   # /aidlc --status through the CLI
 ```
 
-The doctor's Cursor-specific checks: the hook wiring at `.cursor/hooks.json`,
-the permission pre-approval for AI-DLC's commands at `.cursor/cli.json`, the standing
-rule at `.cursor/rules/aidlc.mdc`, all four phase-rule pointers, and whether
-the project is in a git repository.
+doctor の Cursor 固有のチェックは、`.cursor/hooks.json` のフック配線、
+`.cursor/cli.json` での AI-DLC のコマンドの権限の事前承認、`.cursor/rules/aidlc.mdc` の常設
+ルール、4 つのフェーズルールのポインターすべて、そして
+プロジェクトが git リポジトリ内にあるかどうかです。
 
-> **Scripting trap: Cursor CLI always exits 0.** Headless `agent -p "<prompt>"
-> --output-format text --trust` returns exit code 0 even when the run errors, so
-> a CI check must assert on the emitted text, never on the exit status. Named
-> models (`--model`) need a paid plan; without one, use `Auto`.
+> **スクリプトの落とし穴: Cursor CLI は常に終了コード 0 で終了します。** ヘッドレスの `agent -p "<prompt>"
+> --output-format text --trust` は、実行がエラーになっても終了コード 0 を返します。そのため
+> CI のチェックでは、終了ステータスではなく、出力されたテキストに対してアサートしてください。名前付き
+> モデル（`--model`）には有料プランが必要です。有料プランがない場合は `Auto` を使ってください。
 
 ## Next steps
 
-Installed and verified? The methodology is the same on every harness - keep
-going with the neutral chapters:
+インストールと検証は済みましたか。方法論はどのハーネスでも同じです。
+ハーネス中立の章に進んでください。
 
-- [Your First Workflow](../02-your-first-workflow.md) - an annotated end-to-end run.
-- [Phases and Stages](../04-phases-and-stages.md) - the 5 phases and 33 stages.
-- [Scopes, Depth, and Test Strategy](../05-scopes-and-depth.md) - right-sizing a run.
-- [Glossary](../glossary.md) - every term defined.
+- [はじめてのワークフロー](../02-your-first-workflow.md) - 注釈付きのエンドツーエンドの実行例です。
+- [フェーズとステージ](../04-phases-and-stages.md) - 5 つのフェーズと 33 のステージです。
+- [スコープ、深さ、テスト戦略](../05-scopes-and-depth.md) - 実行の規模を適切に決める方法です。
+- [用語集](../glossary.md) - すべての用語の定義です。
 
-Other harnesses: [AI-DLC on opencode](opencode.md) · [the harness family index](README.md).
+その他のハーネス: [opencode での AI-DLC](opencode.md) · [ハーネスファミリーの索引](README.md)。

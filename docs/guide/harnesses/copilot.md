@@ -1,80 +1,79 @@
 # AI-DLC on GitHub Copilot (CLI + VS Code)
 
-The Copilot runtime is one of the framework's harness distributions, for **GitHub
-Copilot** — and one install serves BOTH Copilot surfaces: the standalone
-Copilot CLI (`copilot`) and VS Code agent mode. GitHub converged the two on
-the same project discovery paths (`.github/skills/`, `.github/agents/`,
-`.github/hooks/`, the root `AGENTS.md`), so the framework ships one tree they
-both read. One deterministic core, many harnesses: the engine, state machine,
-audit log, graph, swarm referee, and learnings gate are byte-identical across
-every distribution — only the shell differs. The source/development tree is
-**generated** into ignored local `dist/copilot/` from `core/` +
-`harness/copilot/` by `bun scripts/package.ts copilot`; never hand-edit it.
+Copilot ランタイムは、このフレームワークのハーネスディストリビューションの 1 つで、**GitHub
+Copilot** 向けのものです。1 回のインストールで Copilot の両方の画面に対応します: スタンドアロンの
+Copilot CLI（`copilot`）と VS Code のエージェントモードです。GitHub は両者のプロジェクト探索パスを
+同じもの（`.github/skills/`、`.github/agents/`、
+`.github/hooks/`、ルートの `AGENTS.md`）に統一したため、フレームワークは両者が
+読む 1 つのツリーを提供します。決定論的なコアは 1 つで、ハーネスは多数: エンジン、ステートマシン、
+監査ログ、グラフ、スウォームのレフェリー、学びのゲートはすべてのディストリビューションでバイト単位で同一であり、
+異なるのはシェルだけです。ソース/開発用のツリーは、`bun scripts/package.ts copilot` によって `core/` +
+`harness/copilot/` から無視対象のローカル `dist/copilot/` に**生成**されます。手で編集しないでください。
 
-The full onboarding remains in the root `AGENTS.md`: Copilot-specific setup
-and the live `@`-import block for method files, followed by neutral project
-guidance. Copilot's managed root block stays exclusive, not shared with harnesses
-that ship the neutral-only block. Keep those imports when merging project instructions.
+完全なオンボーディングは引き続きルートの `AGENTS.md` にあります: Copilot 固有のセットアップと、
+メソッドファイル用のライブな `@` インポートのブロック、続いて中立的なプロジェクトの
+ガイダンスです。Copilot が管理するルートのブロックは専用のままであり、中立的なブロックだけを提供する
+ハーネスとは共有されません。プロジェクトの指示をマージするときは、これらのインポートを残してください。
 
 ## Layout: the engine dir and the .github shell
 
-- **`.aidlc/`** — the AIDLC engine tree (tools, hooks + the Copilot adapter,
-  agents, knowledge, scopes, sensors, aidlc-common, and `bin/aidlc-engine`,
-  the Copilot CLI's command launcher). Neither Copilot surface
-  scans it; everything user-visible rides `.github/`.
-- **`.github/`** — only natively-consumed, `aidlc`-named emissions: the hook
-  wiring (`hooks/aidlc.json`), the 14 persona custom agents
-  (`agents/aidlc-*-agent.md`), and the full skill tree (`skills/aidlc*/` —
-  orchestrator, per-stage runners, scope runners, session skills). Your
-  repository's own `.github/` content (workflows, templates) is untouched:
-  the install MERGES these files in, all collision-free by prefix.
-- **`.vscode/settings.json`**: one VS Code setting, `chat.agent.maxRequests`,
-  added only when your project does not set it (see
-  [VS Code request cap](#vs-code-request-cap)). The copy runtime leaves this
-  file out.
+- **`.aidlc/`** — AIDLC のエンジンツリーです（ツール、フック + Copilot アダプター、
+  エージェント、ナレッジ、スコープ、センサー、aidlc-common、そして Copilot CLI のコマンドランチャーである
+  `bin/aidlc-engine`）。どちらの Copilot の画面も
+  これをスキャンしません。利用者に見えるものはすべて `.github/` に載ります。
+- **`.github/`** — ネイティブに読み込まれる、`aidlc` という名前の出力だけです: フックの
+  配線（`hooks/aidlc.json`）、14 のペルソナのカスタムエージェント
+  （`agents/aidlc-*-agent.md`）、そして完全なスキルツリー（`skills/aidlc*/` —
+  オーケストレーター、ステージごとのランナー、スコープのランナー、セッションスキル）です。リポジトリ
+  自身の `.github/` の内容（ワークフロー、テンプレート）には手を付けません:
+  インストールはこれらのファイルをマージし、プレフィックスによってすべて衝突しません。
+- **`.vscode/settings.json`**: VS Code の設定 `chat.agent.maxRequests` を 1 つだけ、
+  プロジェクトがそれを設定していない場合にのみ追加します（
+  [VS Code request cap](#vs-code-request-cap) を参照）。コピー用のランタイムには
+  このファイルは含まれません。
 
 ## Prerequisites
 
-- **Copilot CLI ≥ 1.0.74 and/or VS Code ≥ 1.130** — the verified line for
-  PascalCase hook registration (both surfaces then deliver identical
-  snake_case payloads), the blocking PreToolUse deny channel, the blocking
-  Stop hook, and `.github` skills/agents discovery. Check with
-  `copilot --version` / `code --version`. VS Code agent hooks are a Preview
-  feature, and the doctor checks only the optional Copilot CLI version, so
-  check `code --version` yourself. The
-  [Facilitator Guide](../facilitator-guide.md#github-copilot-on-windows)
-  has a readiness check that proves the hooks run.
-- **bun** only when generating or running the source/development `dist/`
-  projection. Native installs and versioned release runtimes use `aidlc`.
-- **Folder trust**: each Copilot surface checks its own.
-  - The Copilot CLI runs repo hooks only in a folder its `trustedFolders`
-    list covers (the folder itself or a folder above it). The list is in
-    `config.json` under `COPILOT_HOME`, else `~/.copilot`
-    (`%USERPROFILE%\.copilot` on Windows). An interactive `copilot` run asks
-    you to confirm folder trust before it takes a prompt; choose "Yes, and
-    remember this folder for future sessions" to record it. `aidlc config`
-    tells you when the list does not cover the folder.
-  - VS Code agent mode never reads that list. Its hooks run only in a
-    trusted workspace (VS Code Workspace Trust) with the **Chat: Use Hooks**
-    setting (`chat.useHooks`) on. That setting is a preview feature your
-    organization can switch off. `aidlc config` turns it on in the folder's
-    `.vscode/settings.json` when the project does not set it, and the
-    folder's value beats a user setting that is off. A skipped hook leaves
-    no message in the chat; the Agent Debug Logs panel shows it.
-  - `/aidlc --doctor` warns when the CLI list does not cover the folder. It
-    cannot see the VS Code switches, but when no hook has run for your
-    message, AI-DLC says so in the chat (see "AI-DLC says when its hooks
-    have not run" below).
-- **A model provider** — nothing in this install pins a model. Signed-in
-  Copilot works as-is; BYOK works with no GitHub auth at all (e.g. Amazon
-  Bedrock's Anthropic-compatible endpoint:
-  `COPILOT_PROVIDER_BASE_URL=https://bedrock-runtime.<region>.amazonaws.com/anthropic`,
-  `COPILOT_PROVIDER_TYPE=anthropic`, a bearer token, and
+- **Copilot CLI ≥ 1.0.74 および/または VS Code ≥ 1.130** — 次の機能が検証済みのバージョンです:
+  PascalCase でのフック登録（その結果、両方の画面が同一の
+  snake_case のペイロードを渡します）、ブロッキングする PreToolUse の拒否チャネル、ブロッキングする
+  Stop フック、そして `.github` のスキル/エージェントの探索。
+  `copilot --version` / `code --version` で確認してください。VS Code のエージェントフックは Preview
+  機能であり、doctor はオプションの Copilot CLI のバージョンしかチェックしないため、
+  `code --version` は自分で確認してください。
+  [ファシリテーターガイド](../facilitator-guide.md#github-copilot-on-windows)
+  には、フックが実行されることを確かめる準備状況のチェックがあります。
+- **bun** は、ソース/開発用の `dist/`
+  プロジェクションを生成または実行する場合にのみ必要です。ネイティブのインストールとバージョン付きのリリースランタイムは `aidlc` を使います。
+- **フォルダーの信頼**: Copilot の各画面がそれぞれ独自にチェックします。
+  - Copilot CLI は、`trustedFolders`
+    リストがカバーするフォルダー（そのフォルダー自体またはその上位のフォルダー）でのみリポジトリのフックを実行します。このリストは
+    `COPILOT_HOME`、なければ `~/.copilot`
+    （Windows では `%USERPROFILE%\.copilot`）の下の `config.json` にあります。対話型の `copilot` の実行では、
+    プロンプトを受け付ける前にフォルダーの信頼を確認するよう求められます。記録するには "Yes, and
+    remember this folder for future sessions" を選んでください。リストがそのフォルダーをカバーしていない場合は、`aidlc config`
+    がそれを知らせます。
+  - VS Code のエージェントモードは、そのリストを決して読みません。そのフックは、
+    信頼されたワークスペース（VS Code Workspace Trust）で、かつ **Chat: Use Hooks**
+    設定（`chat.useHooks`）がオンの場合にのみ実行されます。この設定は、組織がオフにできる
+    プレビュー機能です。プロジェクトがこの設定をしていない場合、`aidlc config` はフォルダーの
+    `.vscode/settings.json` でこれをオンにします。フォルダーの値は、オフになっている
+    ユーザー設定より優先されます。スキップされたフックはチャットに
+    メッセージを残しません。Agent Debug Logs パネルに表示されます。
+  - CLI のリストがフォルダーをカバーしていない場合、`/aidlc --doctor` が警告します。
+    VS Code のスイッチは確認できませんが、メッセージに対してフックが 1 つも実行されなかった場合は、
+    AI-DLC がチャットでそのことを伝えます（後述の「AI-DLC says when its hooks
+    have not run」を参照）。
+- **モデルプロバイダー** — このインストールには、モデルを固定するものは何もありません。サインイン済みの
+  Copilot はそのまま動作します。BYOK は GitHub の認証がまったくなくても動作します（例: Amazon
+  Bedrock の Anthropic 互換エンドポイント:
+  `COPILOT_PROVIDER_BASE_URL=https://bedrock-runtime.<region>.amazonaws.com/anthropic`、
+  `COPILOT_PROVIDER_TYPE=anthropic`、ベアラートークン、そして
   `COPILOT_MODEL=<catalog name>` + `COPILOT_PROVIDER_WIRE_MODEL=<Bedrock
-  model id>` — `copilot help providers` documents the set). In VS Code, use
-  the model picker or a Custom Endpoint provider. Every AI-DLC agent uses the
-  model and effort of your Copilot session, so choose them there; see
-  [Choosing a Model and Effort](../18-install-and-lifecycle.md#choosing-a-model-and-effort).
+  model id>` — 一式は `copilot help providers` に記載されています）。VS Code では、
+  モデルピッカーまたは Custom Endpoint プロバイダーを使ってください。AI-DLC のすべてのエージェントは、
+  Copilot セッションのモデルとエフォートを使うため、それらはそこで選んでください。
+  [モデルと推論量の選び方](../18-install-and-lifecycle.md#choosing-a-model-and-effort) を参照してください。
 
 ## Install
 
@@ -94,11 +93,11 @@ aidlc doctor
 
 ### Versioned manual-copy alternative
 
-Download and extract a specific release's `aidlc-copy-runtime-X.Y.Z.tar.gz` as described in
-[Install and Lifecycle: Copy Channel](../18-install-and-lifecycle.md#copy-channel),
-then set `RUNTIME_ROOT` to the extracted `runtime/` directory.
+[インストールとライフサイクル: コピーチャネル](../18-install-and-lifecycle.md#copy-channel)
+の説明に従って特定リリースの `aidlc-copy-runtime-X.Y.Z.tar.gz` をダウンロードして展開し、
+`RUNTIME_ROOT` を展開した `runtime/` ディレクトリに設定します。
 
-1. Copy the distribution into your project:
+1. ディストリビューションをプロジェクトにコピーします:
 
    ```bash
    mkdir -p your-project/.aidlc your-project/aidlc your-project/.github
@@ -107,400 +106,393 @@ then set `RUNTIME_ROOT` to the extracted `runtime/` directory.
    cp -R "$RUNTIME_ROOT/copilot/.github/." your-project/.github/  # MERGE — everything is aidlc-prefixed, nothing of yours is overwritten
    ```
 
-2. Run the copy's own setup once:
-   `cd your-project && bun .aidlc/tools/aidlc.ts config --from "$RUNTIME_ROOT" --harness copilot`.
-   It adds AI-DLC's lines to your `AGENTS.md` (including the method include)
-   and `.gitignore`, after everything already there, or creates them when the
-   project has none (per-clone audit shards are committed deliberately;
-   cursors and machine-local runtime stay ignored). Without it, AI-DLC adds
-   them when the first chat starts.
-   For VS Code, also add `"chat.agent.maxRequests": 200` to your
-   `.vscode/settings.json` if it does not set that key (see
-   [VS Code request cap](#vs-code-request-cap)). The copy runtime does not
-   include that file, so copying it never replaces your own.
+2. コピーしたもの自身のセットアップを 1 回実行します:
+   `cd your-project && bun .aidlc/tools/aidlc.ts config --from "$RUNTIME_ROOT" --harness copilot`。
+   これは、AI-DLC の行を `AGENTS.md`（メソッドのインクルードを含む）と
+   `.gitignore` の既存の内容の後に追加します。プロジェクトにこれらのファイルがない場合は
+   作成します（クローンごとの監査シャードは意図的にコミットされ、
+   カーソルとマシンローカルのランタイムは無視されたままです）。これを実行しない場合は、最初のチャットの開始時に AI-DLC が
+   それらを追加します。
+   VS Code の場合は、`.vscode/settings.json` が `"chat.agent.maxRequests": 200` のキーを設定していなければ、
+   それも追加してください（
+   [VS Code request cap](#vs-code-request-cap) を参照）。コピー用のランタイムには
+   そのファイルが含まれないため、コピーによって自分のファイルが置き換えられることはありません。
 
-3. Trust the folder: start `copilot` interactively once in the project and
-   accept the trust prompt (or add the project's absolute path to
-   `trustedFolders` in `~/.copilot/config.json`).
+3. フォルダーを信頼します: プロジェクトで `copilot` を対話型で 1 回起動し、
+   信頼のプロンプトを承認します（または、プロジェクトの絶対パスを
+   `~/.copilot/config.json` の `trustedFolders` に追加します）。
 
-4. Run `/aidlc --doctor`, then `/aidlc` followed by what you want to build —
-   in either surface.
+4. `/aidlc --doctor` を実行し、続いて `/aidlc` の後に作りたいものを書いて実行します —
+   どちらの画面でもかまいません。
 
-Framework developers who need the Bun-shaped projection can clone the
-repository, run `bun install --frozen-lockfile` and `bun scripts/package.ts`,
-then use the ignored local `dist/copilot/` output.
+Bun 形式のプロジェクションが必要なフレームワーク開発者は、リポジトリをクローンし、
+`bun install --frozen-lockfile` と `bun scripts/package.ts` を実行してから、
+無視対象のローカル `dist/copilot/` の出力を使ってください。
 
 ## What's different on this harness
 
-- **One install, two surfaces.** Skills, personas, instructions, and hooks
-  behave identically on the CLI and in VS Code agent mode; the divergences
-  below are called out explicitly.
-- **Runners start only when you type them.** Every generated runner
-  (`/aidlc-bugfix`, `/aidlc-<stage>`, `/aidlc-init`, and the rest, plugin
-  runners included) carries `disable-model-invocation: true`, so the agent
-  never starts one on its own and the runners' descriptions stay out of
-  Copilot's skill list. Typing one works as before in VS Code chat and the
-  interactive CLI. A headless `copilot -p "/aidlc-bugfix ..."` hands your line
-  to the agent as plain text; the root `AGENTS.md` tells it to read that
-  runner's file and follow it, so the runner still runs.
-- **Questions render as numbered prose options.** Although both surfaces expose
-  native picker tools, picker answers return as tool results and do not fire
-  the trusted `UserPromptSubmit` event required by the human-presence guard.
-  While the session-selected workflow has valid `Status: Running` state, the
-  matcher-free PreToolUse guard denies those picker calls and directs the model
-  to render numbered prose and end the turn; without a running workflow,
-  including completed or unusable state, it leaves native pickers untouched.
-  The human's next chat message does; the questions FILE with `[Answer]:` tags
-  stays the source of truth.
-- **Only what you type counts as your reply.** When the agent hands work to a
-  subagent (a reviewer, a builder), VS Code and the Copilot CLI deliver the
-  agent's written brief to the hooks the same way they deliver your chat
-  messages. AI-DLC recognizes that brief and never records it as your turn: it
-  does not satisfy an approval, is not read as your answer or your requested
-  changes, and does not apply a typed switch. Anything you type, including
-  while a subagent is still running, counts as before. The exception, in VS
-  Code only, is the first few seconds after a subagent starts in your chat
-  while its brief has not arrived: a message then that AI-DLC cannot match to
-  a brief is taken to be that brief and is not counted, and if it was yours
-  you are asked to reply again. The Copilot CLI never sends a brief into your
-  chat, so there every message you type counts. AI-DLC's own note to the
-  agent when a turn ends with work still pending (such as "The last AI-DLC step
-  stopped on a problem: ...") is not your turn either: the Copilot CLI hands it
-  back as a chat message, and AI-DLC recognizes it and does not record it as
-  yours.
-- **Typing `/aidlc` with your request keeps your words.** Copilot hands a
-  skill you invoke by its slash name to AI-DLC as the skill's own text with
-  your words filled in, not as the line you typed. AI-DLC rebuilds that line
-  (`/aidlc` plus your words, taken verbatim from where the skill's text carries
-  them) when the text is exactly the installed skill file with your words in
-  it, so your request is on the record and reaches the work even when the
-  agent's first command carries none of it. Anything that is not exactly that
-  file is recorded as Copilot delivered it.
-- **AI-DLC's agents get the stage rules, and the builder waits for your plan
-  approval.** Whether the agent starts one of AI-DLC's agents with VS Code's
-  `runSubagent` tool or the CLI's `task` tool, AI-DLC hands it the current
-  stage's rules, and during Code Generation it does not start the developer
-  agent until you have approved the plan. The agent gets the same "approve the
-  plan first" refusal on both surfaces.
-- **AI-DLC says when its hooks have not run.** Both surfaces skip repo hooks
-  without a word in the chat (see Folder trust above), so AI-DLC watches for
-  it. When no hook has run for your first message, or once a stage has
-  started in a workflow where no hook has ever run, the next step does no
-  work: in VS Code the agent turns Chat: Use Hooks on in
-  the folder's `.vscode/settings.json` itself (VS Code asks you to allow the
-  edit) and says "Fixed. Send your next message here to carry on."; your next
-  message in the same chat runs with the hooks. If the setting was already
-  on, it says your organization has switched it off. If you switched the
-  human-presence check off, the work carries on and the agent tells you once
-  instead. Before your first Copilot chat in the folder, `/aidlc --doctor`
-  warns "AIDLC hooks have not run in this project yet"; after a stage it fails
-  with the same steps. A hook that runs
-  but crashes still lets your action through, and leaves its error line in
-  `.aidlc-engine/hooks-health/<hook>.drops`, which doctor reads.
-- **Hooks enforce natively.** The adapter
-  (`.aidlc/hooks/aidlc-copilot-adapter.ts`, wired by
-  `.github/hooks/aidlc.json`) converts a core-guard block into Copilot's
-  `permissionDecision: deny` — the reviewer read-scope bound and the
-  state-transition guard actually refuse the tool call. SessionStart and Stop
-  responses carry both the CLI's top-level fields and VS Code's required
-  `hookSpecificOutput` envelope.
-  Live-verified on the CLI; on VS Code agent mode the same deny/block
-  channels are documented and the adapter normalizes documented names such as
-  `runTerminalCommand`, `createFile`, `editFiles`, and `readFile`,
-  but the IDE side has not yet been verified live — treat IDE enforcement
-  as best-effort until it has.
-  The adapter also reads the Copilot runtime's own tool names and shapes,
-  which a host that does not rename them may send: `powershell` and `pwsh`
-  as the shell, `grep` with its `paths`, and an `apply_patch` whose patch
-  arrives as plain text or in `toolArgs`.
-- **In VS Code, AI-DLC's routine commands run without an Allow prompt.** VS
-  Code agent mode normally asks "Run command? Allow / Skip" before every
-  terminal command, so each workflow step would wait for a click. The adapter
-  answers `allow` for the routine commands AI-DLC runs during a stage: `next`,
-  `continue`, `report`, and `park`, the read-only `next` forms, `doctor` (or
-  `--doctor`) with the flags the engine names, `--version`, `--status`, and
-  `--help`, AI-DLC's own checks (`engine sensor-traceability`,
-  `sensor-required-sections`, `sensor-upstream-coverage`, and
-  `sensor-claim-sources`, which read files; the traceability check also
-  writes a stage's own coverage table in the record when the stage runs it to
-  start that table), and the project commands in
-  AI-DLC's own command table (`engine log`, `engine state`, `engine runtime`,
-  `engine learnings`, `engine testing-posture`, `engine intent list`,
-  `engine intent add-checkout`, and the rest), in the direct, source-dispatcher, compiled, or tool-script spelling.
-  The copy channel's `aidlc-utility.ts <verb>` gets the same answer as its
-  `engine workspace <verb>` spelling. It answers only when all of these hold:
-  - the call carries VS Code's chat session, every AI-DLC guard has passed,
-    and a workflow command is matched to this session's workflow;
-  - it is one plain command that PowerShell, cmd, and a POSIX shell all read
-    the same way: no chaining, pipe, redirect other than one trailing `2>&1`,
-    environment assignment in front, or shell expansion, and no character any
-    of those shells treats specially (such as `$`, a backtick, `%`, `^`, `!`,
-    `#`, braces, `@`, `\`, or a typographic quote), even inside quotes. A
-    quoted word may hold spaces, `?`, parentheses, and `;`, and an apostrophe
-    inside double quotes. Double-quoted text may also hold `|`, `&`, `<`, or
-    `>` when it has a space, as in
-    `--details "Q1: A - both ends included (closed range)"` or
-    `--options "Keep the note|Skip it"`; outside quotes, in single quotes, or
-    in double quotes with no space, those keep the prompt. Text outside plain
-    ASCII (accented letters, for example) also keeps the prompt. On Windows,
-    where VS Code's terminal is PowerShell or cmd, a backslash is a plain path
-    separator, so a path such as `C:\work\app`, `.aidlc\tools\...`, or
-    `--project-dir 'C:\work\app'` (as the engine prints a project folder)
-    runs without a click; only a backslash right before a closing quote keeps
-    the prompt. In a Git Bash or WSL terminal a backslash still keeps it. In a
-    PowerShell terminal one `cd` or `Set-Location` to the project folder
-    itself, by its full path, may come first:
-    `cd C:\work\app; aidlc engine orchestrate next` runs like
-    `aidlc engine orchestrate next`, also while a plan waits for approval. A
-    `cd` to any other folder, a subfolder included, keeps the prompt, because
-    the installed `aidlc` takes the folder it runs in as the project. Run the
-    command without the `cd`, or `cd` to the project folder itself;
-  - every argument that reads as a path stays inside the project;
-  - no option hands AI-DLC a command of its own to run (`--check-cmd`);
-  - a bare `aidlc` is the installed launcher: when the project holds a file
-    named `aidlc` (such as `aidlc.cmd`, or any extension your `PATHEXT` lists)
-    in its root or in a folder on your `PATH`, the command keeps the prompt,
-    because cmd runs a file in the working folder before it searches `PATH`.
+- **1 回のインストールで 2 つの画面。** スキル、ペルソナ、指示、フックは、
+  CLI と VS Code のエージェントモードで同じように動作します。相違点は
+  以下で明示しています。
+- **ランナーは、入力したときにだけ開始します。** 生成されるすべてのランナー
+  （`/aidlc-bugfix`、`/aidlc-<stage>`、`/aidlc-init` など。プラグインの
+  ランナーを含む）は `disable-model-invocation: true` を持つため、エージェントが
+  自分からランナーを開始することはなく、ランナーの説明は
+  Copilot のスキル一覧に載りません。入力すれば、VS Code のチャットと
+  対話型の CLI で従来どおり動作します。ヘッドレスの `copilot -p "/aidlc-bugfix ..."` は、入力した行を
+  プレーンテキストとしてエージェントに渡します。ルートの `AGENTS.md` が、その
+  ランナーのファイルを読んで従うようエージェントに指示するため、ランナーはそれでも実行されます。
+- **質問は番号付きの散文の選択肢として表示されます。** どちらの画面にも
+  ネイティブのピッカーツールがありますが、ピッカーでの回答はツールの結果として返り、
+  人間の存在を確認するガードが必要とする、信頼済みの `UserPromptSubmit` イベントを発火させません。
+  セッションで選択されたワークフローが有効な `Status: Running` の状態にある間は、
+  マッチャーなしの PreToolUse ガードがそれらのピッカー呼び出しを拒否し、番号付きの散文を表示して
+  ターンを終了するようモデルに指示します。実行中のワークフローがない場合は
+  （完了済みや使用できない状態を含む）、ネイティブのピッカーには手を付けません。
+  回答となるのは人間の次のチャットメッセージです。`[Answer]:` タグを持つ質問ファイルが
+  引き続き信頼できる情報源です。
+- **自分で入力したものだけが返信として数えられます。** エージェントが作業を
+  サブエージェント（レビュアー、ビルダー）に渡すとき、VS Code と Copilot CLI は、
+  エージェントが書いた指示を、チャットメッセージと同じ方法でフックに渡します。
+  AI-DLC はその指示を認識し、決してあなたのターンとして記録しません: それは
+  承認を満たさず、あなたの回答や変更の要求として読まれず、
+  入力によるスイッチも適用しません。あなたが入力したものは、サブエージェントの実行中であっても、
+  従来どおり数えられます。例外は VS
+  Code だけで、チャットでサブエージェントが開始してから、その指示が届くまでの最初の数秒間です:
+  その間のメッセージで AI-DLC がどの指示とも照合できないものは、
+  その指示とみなされて数えられず、それがあなたのものだった場合は
+  もう一度返信するよう求められます。Copilot CLI は指示をチャットに送ることがないため、
+  そこでは入力したメッセージがすべて数えられます。作業が保留中のままターンが終わったときに
+  AI-DLC がエージェントに送る注記（"The last AI-DLC step
+  stopped on a problem: ..." など）も、あなたのターンではありません: Copilot CLI はそれを
+  チャットメッセージとして返しますが、AI-DLC はそれを認識し、あなたのものとして記録しません。
+- **`/aidlc` とリクエストを入力すると、その言葉が保たれます。** Copilot は、
+  スラッシュ名で呼び出したスキルを、入力した行としてではなく、あなたの言葉を埋め込んだ
+  スキル自身のテキストとして AI-DLC に渡します。テキストが、インストールされたスキルファイルに
+  あなたの言葉を入れたものと完全に一致する場合、AI-DLC はその行
+  （`/aidlc` とあなたの言葉。言葉はスキルのテキストが保持している箇所からそのまま取ります）を
+  組み立て直します。そのため、エージェントの最初のコマンドにリクエストがまったく含まれていなくても、
+  リクエストは記録に残り、作業に届きます。そのファイルと完全には一致しないものは、
+  Copilot が渡したとおりに記録されます。
+- **AI-DLC のエージェントはステージのルールを受け取り、ビルダーはプランの承認を
+  待ちます。** エージェントが AI-DLC のエージェントを VS Code の
+  `runSubagent` ツールで開始しても CLI の `task` ツールで開始しても、AI-DLC は現在の
+  ステージのルールをそれに渡します。また Code Generation の間は、プランを承認するまで
+  developer エージェントを開始しません。エージェントは、どちらの画面でも同じ「先にプランを
+  承認してください」という拒否を受け取ります。
+- **フックが実行されなかった場合は AI-DLC がそう伝えます。** どちらの画面も、リポジトリのフックを
+  チャットに何も表示せずにスキップする（前述のフォルダーの信頼を参照）ため、AI-DLC がそれを
+  監視しています。最初のメッセージに対してフックが 1 つも実行されなかった場合、または一度もフックが
+  実行されていないワークフローでステージが開始した場合、次のステップは何も
+  作業をしません: VS Code では、エージェントが
+  フォルダーの `.vscode/settings.json` で Chat: Use Hooks を自らオンにし（VS Code がその
+  編集の許可を求めます）、"Fixed. Send your next message here to carry on." と伝えます。同じチャットでの
+  次のメッセージはフック付きで実行されます。設定がすでにオンだった場合は、
+  組織がそれをオフにしていると伝えます。人間の存在のチェックをオフにしている場合は、
+  作業は続行され、エージェントがその旨を 1 回伝えます。そのフォルダーで最初の Copilot チャットを
+  する前は、`/aidlc --doctor` が "AIDLC hooks have not run in this project yet" と警告します。
+  ステージの後は、同じ手順を示して失敗します。実行はされたものの
+  クラッシュしたフックは、それでも操作を通し、エラーの行を
+  `.aidlc-engine/hooks-health/<hook>.drops` に残します。doctor はこれを読みます。
+- **フックはネイティブに強制します。** アダプター
+  （`.aidlc/hooks/aidlc-copilot-adapter.ts`。
+  `.github/hooks/aidlc.json` で配線されます）は、コアのガードによるブロックを Copilot の
+  `permissionDecision: deny` に変換します — レビュアーの読み取り範囲の制限と
+  状態遷移のガードが、実際にツール呼び出しを拒否します。SessionStart と Stop の
+  応答は、CLI のトップレベルのフィールドと、VS Code が必要とする
+  `hookSpecificOutput` のエンベロープの両方を持ちます。
+  CLI では実環境で検証済みです。VS Code のエージェントモードでは、同じ拒否/ブロックの
+  チャネルが文書化されており、アダプターは
+  `runTerminalCommand`、`createFile`、`editFiles`、`readFile` などの文書化された名前を正規化しますが、
+  IDE 側はまだ実環境で検証されていません — 検証されるまでは、IDE での強制は
+  ベストエフォートとして扱ってください。
+  アダプターは、Copilot ランタイム自身のツール名と形式も読み取ります。
+  これらは、名前を変更しないホストが送ることがあるものです: シェルとしての `powershell` と `pwsh`、
+  `paths` を伴う `grep`、そしてパッチが
+  プレーンテキストまたは `toolArgs` で届く `apply_patch` です。
+- **VS Code では、AI-DLC の定型コマンドは Allow のプロンプトなしで実行されます。** VS
+  Code のエージェントモードは通常、ターミナルコマンドのたびに "Run command? Allow / Skip" と尋ねるため、
+  ワークフローの各ステップがクリックを待つことになります。アダプターは、
+  AI-DLC がステージ中に実行する定型コマンドに対して `allow` と答えます: `next`、
+  `continue`、`report`、`park`、読み取り専用の `next` の形式、エンジンが指定するフラグ付きの `doctor`（または
+  `--doctor`）、`--version`、`--status`、
+  `--help`、AI-DLC 自身のチェック（`engine sensor-traceability`、
+  `sensor-required-sections`、`sensor-upstream-coverage`、
+  `sensor-claim-sources`。これらはファイルを読みます。トレーサビリティのチェックは、ステージがそれを実行して
+  ステージ自身のカバレッジ表を開始する場合に、記録内にその表を書き込みもします）、そして
+  AI-DLC 自身のコマンド表にあるプロジェクトのコマンド（`engine log`、`engine state`、`engine runtime`、
+  `engine learnings`、`engine testing-posture`、`engine intent list`、
+  `engine intent add-checkout` など）で、直接、ソースディスパッチャー、コンパイル済み、ツールスクリプトのいずれの書き方でもかまいません。
+  コピーチャネルの `aidlc-utility.ts <verb>` も、
+  `engine workspace <verb>` の書き方と同じ答えを得ます。答えるのは、次のすべてが成り立つ場合だけです:
+  - 呼び出しが VS Code のチャットセッションを持ち、AI-DLC のすべてのガードを通過し、
+    ワークフローのコマンドがこのセッションのワークフローと照合されていること。
+  - PowerShell、cmd、POSIX シェルのすべてが同じように読む、1 つの単純なコマンドである:
+    連結、パイプ、末尾の 1 つの `2>&1` 以外のリダイレクト、
+    前置きの環境変数の代入、シェル展開がなく、それらのシェルのいずれかが特別に扱う文字
+    （`$`、バッククォート、`%`、`^`、`!`、
+    `#`、波括弧、`@`、`\`、タイポグラフィ上の引用符など）も、引用符の中であっても含まないこと。
+    引用符で囲まれた語は、スペース、`?`、丸括弧、`;` を含めてよく、ダブルクォートの中では
+    アポストロフィも含められます。ダブルクォートで囲まれたテキストは、スペースを含む場合は
+    `|`、`&`、`<`、`>` も含められます。たとえば
+    `--details "Q1: A - both ends included (closed range)"` や
+    `--options "Keep the note|Skip it"` です。引用符の外、シングルクォートの中、
+    スペースのないダブルクォートの中では、それらの文字があるとプロンプトが残ります。プレーンな
+    ASCII 以外のテキスト（たとえばアクセント付きの文字）もプロンプトを残します。Windows で、
+    VS Code のターミナルが PowerShell または cmd の場合、バックスラッシュは単なるパスの
+    区切り文字なので、`C:\work\app`、`.aidlc\tools\...`、
+    `--project-dir 'C:\work\app'`（エンジンがプロジェクトフォルダーを出力する形式）のようなパスは
+    クリックなしで実行されます。プロンプトが残るのは、閉じ引用符の直前のバックスラッシュだけです。
+    Git Bash や WSL のターミナルでは、バックスラッシュがあると引き続きプロンプトが残ります。
+    PowerShell のターミナルでは、プロジェクトフォルダー
+    そのものへのフルパスでの `cd` または `Set-Location` を 1 つだけ先頭に置けます:
+    `cd C:\work\app; aidlc engine orchestrate next` は
+    `aidlc engine orchestrate next` と同じように実行され、プランが承認待ちの間も同様です。
+    それ以外のフォルダー（サブフォルダーを含む）への `cd` はプロンプトを残します。インストールされた
+    `aidlc` は、実行されたフォルダーをプロジェクトとみなすためです。コマンドを
+    `cd` なしで実行するか、プロジェクトフォルダーそのものに `cd` してください。
+  - パスとして読める引数はすべてプロジェクト内にとどまること。
+  - AI-DLC に独自に実行するコマンドを渡すオプション（`--check-cmd`）がないこと。
+  - 素の `aidlc` はインストールされたランチャーであること: プロジェクトのルートまたは
+    `PATH` 上のフォルダーに `aidlc` という名前のファイル（`aidlc.cmd` や、`PATHEXT` に
+    列挙された任意の拡張子のもの）がある場合、そのコマンドにはプロンプトが残ります。
+    cmd は `PATH` を検索する前に作業フォルダー内のファイルを実行するためです。
 
-  Everything else gets no answer from AI-DLC, so VS Code's prompt or your own
-  approval settings apply: commands the agent writes for your project (build,
-  test, `git`, and the like), machine-level commands (`update`, `uninstall`,
-  `use`, `config`, `system ...`), the hook, adapter, and statusline entries the
-  host runs, and these AI-DLC commands, which keep the prompt so you see each
-  one before it runs:
-  - commands that throw away or merge your work: `engine worktree discard`,
-    `purge`, and `merge`, `unit land`, `engine intent archive`,
-    `engine swarm finalize`, and `engine bolt abort` (with or without
-    `--discard`, since aborting a Bolt needs your consent);
-  - commands that change which stages, gates, or reviews you see:
-    `engine recompose` when you have not replied since the last question
-    (after you approve a plan change, the recompose that applies it runs
-    without a click), `next --skip`, `next --add`, `engine jump execute`,
-    `engine scope change`, `engine intent create --skip`,
-    `engine intent remove-checkout` (it takes code out of what the review
-    covers), `engine config set` and `next config set`,
-    `engine bolt set-autonomy`, the `engine state` status changes while the
-    state-transition check is off for that work (by you or by your Guard
-    Policy), since then the change would land, and the
-    gate setters (`set-unit-gate-rhythm`, `set-construction-checkpoints`,
-    `set-skeleton-stance`, `set-status`). While that check is on, AI-DLC
-    refuses an `engine state` status change itself, so there is nothing to
-    click. `set-construction-checkpoints`, and
-    `engine config set` for one of your checks (plan approval, summary
-    confirmation, a fence, or Guard Policy), run without a click when you
-    asked for that change in the chat since the last decision, and turning a
-    check back on always does;
-  - commands that switch the work in progress: `engine intent switch` (or
-    `engine intent <name>`) and `engine space switch` (or `engine space <name>`);
-  - the team `unit` commands, which share claims and approvals through your
-    remote (all but `unit merge-status`);
-  - commands that run code AI-DLC does not ship or rewrite its installed
-    skills: `engine sensor fire` (it runs whatever a check names) and
-    `engine sensor-linter` and `sensor-type-check` (they run your project's
-    linter and type checker), `engine knowledge onboard`, `sync`, and
-    `engine workspace document-input --onboard` (they run the document
-    extractor your harness names),
-    `engine plugin sync`, `select`, and `build`, `plugin build`, and
-    `engine gen runners` and `runner-scopes`.
+  それ以外のものには AI-DLC は答えないため、VS Code のプロンプトか、あなた自身の
+  承認設定が適用されます: エージェントがプロジェクトのために書くコマンド（ビルド、
+  テスト、`git` など）、マシンレベルのコマンド（`update`、`uninstall`、
+  `use`、`config`、`system ...`）、ホストが実行するフック、アダプター、ステータスラインの
+  エントリ、そして次の AI-DLC のコマンドです。これらはプロンプトを残すので、実行前に
+  1 つずつ確認できます:
+  - 作業を破棄またはマージするコマンド: `engine worktree discard`、
+    `purge`、`merge`、`unit land`、`engine intent archive`、
+    `engine swarm finalize`、`engine bolt abort`（
+    `--discard` の有無にかかわらず。Bolt の中止にはあなたの同意が必要なためです）。
+  - 表示されるステージ、ゲート、レビューを変えるコマンド:
+    最後の質問以降にあなたが返信していない場合の `engine recompose`
+    （プランの変更を承認した後、それを適用する recompose は
+    クリックなしで実行されます）、`next --skip`、`next --add`、`engine jump execute`、
+    `engine scope change`、`engine intent create --skip`、
+    `engine intent remove-checkout`（レビューの対象からコードを
+    外します）、`engine config set` と `next config set`、
+    `engine bolt set-autonomy`、その作業について（あなた自身または Guard
+    Policy によって）状態遷移のチェックがオフになっている間の `engine state` のステータス変更
+    （その場合は変更が実際に反映されるためです）、そして
+    ゲートの設定コマンド（`set-unit-gate-rhythm`、`set-construction-checkpoints`、
+    `set-skeleton-stance`、`set-status`）。そのチェックがオンの間は、
+    AI-DLC が `engine state` のステータス変更そのものを拒否するため、クリックするものは
+    ありません。`set-construction-checkpoints` と、
+    あなたのチェックの 1 つ（プランの承認、サマリーの
+    確認、フェンス、Guard Policy）に対する `engine config set` は、最後の判断以降にチャットで
+    その変更を求めていた場合はクリックなしで実行され、チェックをオンに戻す場合は
+    常にクリックなしで実行されます。
+  - 進行中の作業を切り替えるコマンド: `engine intent switch`（または
+    `engine intent <name>`）と `engine space switch`（または `engine space <name>`）。
+  - リモートを通じて claim や承認を共有する、チームの `unit` コマンド
+    （`unit merge-status` 以外のすべて）。
+  - AI-DLC が提供していないコードを実行するコマンド、またはインストールされたスキルを書き換えるコマンド:
+    `engine sensor fire`（チェックが指定するものを何でも実行します）、
+    `engine sensor-linter` と `sensor-type-check`（プロジェクトの
+    リンターと型チェッカーを実行します）、`engine knowledge onboard`、`sync`、
+    `engine workspace document-input --onboard`（ハーネスが指定するドキュメント
+    抽出ツールを実行します）、
+    `engine plugin sync`、`select`、`build`、`plugin build`、
+    `engine gen runners` と `runner-scopes`。
 
-  A conditional stage the engine lets the agent skip by its own applicability
-  check stays click-free, and so does `doctor`, which may refresh its update
-  check from the release feed as it does when you run it yourself. Skipping
-  the click records no decision for you: before the engine records a stage
-  approval, you must have sent a chat message since the stage started and
-  since the last decision, which the prompt hook records: after the gate was
-  shown, or one the agent names as your answer to it. That check confirms you took a turn, not what you
-  meant, so read what the agent reports back. This does not use VS Code's own
-  auto-approve, so it also works where an organization policy turns that off;
-  it does need chat hooks enabled, as the rest of AI-DLC does. On the Copilot
-  CLI the adapter gives no permission decision; how the same commands run
-  there without a prompt is two points below.
-- **In the Copilot CLI, AI-DLC's record of your work is written without a
-  prompt.** While the `/aidlc` skill is in use, Copilot creates and edits the
-  files under `aidlc/spaces/<space>/intents/` without asking "Do you want to
-  create ...?", because the skill allows that path (`allowed-tools` in
-  `.github/skills/aidlc/SKILL.md`). Copilot matches the path by its ending, so a
-  folder of yours whose path ends in `aidlc/spaces/<name>/intents/` counts too.
-  Your own `--deny-tool` still wins, and Copilot asks as before for writes to
-  any other file, the space's `memory/` files included.
-- **In the Copilot CLI on Linux and macOS, AI-DLC's routine commands run
-  without a prompt.** The commands VS Code runs without an Allow click (the
-  list above, under the same conditions) go out as
-  `.aidlc/bin/aidlc-engine <command>`, a launcher AI-DLC installs in the
-  project, which the `/aidlc` skill allows (`shell(.aidlc/bin/aidlc-engine)`
-  in its `allowed-tools`). The launcher runs only the commands AI-DLC's hooks
-  pass to it; anything else, typed by the agent or run with the hooks off,
-  stops with the plain command to run instead, which Copilot then asks about.
-  The commands that keep the prompt in VS Code keep it here, and so do the
-  agent's own commands. In a Windows terminal AI-DLC's commands are asked as
-  before.
-  - Copilot checks a shell rule against a command's first word, and these
-    commands now start with the launcher, so your own `--deny-tool=shell(bun)`
-    or `shell(aidlc)` no longer stops them. To stop them, deny the launcher too:
-    `--deny-tool='shell(.aidlc/bin/aidlc-engine)'`.
-  - Where an organisation manages Copilot's permissions, the launcher saves
-    no dialogs: once its
+  エンジン自身の適用可否のチェックによってエージェントがスキップできる条件付きステージは、
+  クリックなしのままです。`doctor` も同様で、自分で実行したときと同じように、
+  リリースフィードから更新チェックを更新することがあります。クリックを省いても、
+  あなたの判断が記録されるわけではありません: エンジンがステージの承認を記録する前に、
+  ステージの開始以降かつ最後の判断以降に、あなたがチャットメッセージを送っている
+  必要があり、それはプロンプトのフックが記録します: ゲートが表示された後のメッセージか、
+  エージェントがゲートへの回答として示すメッセージです。このチェックが確認するのは、あなたがターンを取ったことであって、
+  あなたが何を意図したかではないため、エージェントの報告内容を読んでください。これは VS Code 自身の
+  自動承認を使わないため、組織のポリシーで自動承認がオフになっている環境でも動作します。
+  ただし、AI-DLC の他の部分と同様に、チャットのフックが有効である必要があります。Copilot
+  CLI ではアダプターは許可の判断を返しません。同じコマンドが CLI で
+  プロンプトなしに実行される仕組みは、2 項目後で説明します。
+- **Copilot CLI では、作業に関する AI-DLC の記録はプロンプトなしで
+  書き込まれます。** `/aidlc` スキルの使用中、Copilot は
+  `aidlc/spaces/<space>/intents/` 配下のファイルを "Do you want to
+  create ...?" と尋ねずに作成・編集します。スキルがそのパスを許可しているためです（
+  `.github/skills/aidlc/SKILL.md` の `allowed-tools`）。Copilot はパスを末尾で照合するため、
+  パスが `aidlc/spaces/<name>/intents/` で終わるあなた自身のフォルダーも対象になります。
+  あなた自身の `--deny-tool` は引き続き優先され、それ以外のファイル（スペースの `memory/` のファイルを含む）
+  への書き込みについては、Copilot は従来どおり確認を求めます。
+- **Linux と macOS の Copilot CLI では、AI-DLC の定型コマンドはプロンプトなしで
+  実行されます。** VS Code で Allow のクリックなしに実行されるコマンド（上記の
+  一覧。条件も同じ）は、
+  `.aidlc/bin/aidlc-engine <command>` として実行されます。これは AI-DLC がプロジェクトに
+  インストールするランチャーで、`/aidlc` スキルがそれを許可しています（スキルの `allowed-tools` 内の
+  `shell(.aidlc/bin/aidlc-engine)`）。ランチャーは、AI-DLC のフックが渡したコマンドだけを
+  実行します。それ以外のもの（エージェントが入力したものや、フックがオフの状態で実行されたもの）は、
+  代わりに実行すべきプレーンなコマンドを示して停止し、Copilot がそれについて確認を求めます。
+  VS Code でプロンプトが残るコマンドはここでも残り、エージェント自身のコマンドも
+  同様です。Windows のターミナルでは、AI-DLC のコマンドは従来どおり
+  確認が求められます。
+  - Copilot はシェルのルールをコマンドの最初の語に対して照合します。これらの
+    コマンドは今ではランチャーで始まるため、あなた自身の `--deny-tool=shell(bun)`
+    や `shell(aidlc)` ではもう止まりません。止めるには、ランチャーも拒否してください:
+    `--deny-tool='shell(.aidlc/bin/aidlc-engine)'`。
+  - 組織が Copilot の権限を管理している場合、ランチャーによってダイアログが
+    減ることはありません: その
     [enterprise managed settings](https://docs.github.com/en/copilot/reference/enterprise-administrators/enterprise-managed-settings)
-    hold any permission rule, Copilot asks before every command they do not
-    allow, AI-DLC's included. A managed deny of `Shell(bun *)` or
-    `Shell(aidlc *)` alone does not block AI-DLC's commands; Copilot asks
-    about them instead. To block them, an administrator denies
-    `Shell(.aidlc/bin/aidlc-engine)` and `Shell(.aidlc/bin/aidlc-engine *)` as
-    well as bun or aidlc, in `permissions.deny`.
-  - A `copilot -p` script that allows exactly `shell(bun)` or `shell(aidlc)`
-    adds `--allow-tool='shell(.aidlc/bin/aidlc-engine)'`. Without it Copilot
-    refuses the launcher: `-p` has no one to ask, and the skill's rule does not
-    apply there.
-- **Command tracking is exact and best-effort.** AI-DLC tracks simple direct
-  orchestrator, source-dispatcher, and real compiled `next`, `continue`,
-  `report`, and `park` commands. One trailing `2>&1` is supported. Inspection
-  commands are not classified from `aidlc` substrings; ambiguous wrappers and
-  commands whose arguments contain active shell expansion (`$VAR`, globs,
-  brace expansion, or a leading `~`) run unchanged and untracked, because the hook cannot hash the
-  argv the shell will eventually produce. Direct-looking compounds are refused. An
-  explicit `--project-dir` outside the current physical project is refused
-  before current-project coordination is written.
-- **A `continue` AI-DLC cannot match still moves on.** When the hook cannot
-  find or trust its record for an AI-DLC command (for example after the record
-  was deleted, or when the hook and the terminal spell the project path
-  differently), it lets the command run instead of refusing it, and the engine
-  answers from disk: the next part when its own record matches, the current
-  step when it does not. You no longer get "could not match this Copilot
-  command" followed by part 1 again. The audit keeps one
-  `COORDINATION_STOOD_ASIDE` row for each such pass. In VS Code, a routine
-  command that passes this way still runs without an Allow click.
-- **The engine owns continuation replay on every harness.** Copilot uses the
-  same record-local, atomic single-use cursor as Claude, Codex, Cursor, Kiro,
-  Kiro IDE, and opencode. Native token validation runs first; the engine then
-  compares the complete token SHA-256 and publishes the exact successor before
-  stdout under the active-directive lock. Copilot's session ownership and
-  delivery evidence enrich that marker but do not own replay. Missing,
-  malformed, v1, and pre-shared markers recover once inside the same
-  transaction; a fresh `next` resets the cursor. See the shared cursor contract
-  in the Developer Reference for crash, migration, rollback, and filesystem
-  limits.
-- **Stop preserves the current delivered Copilot directive.** An exact host
-  `tool_use_id`, or the adapter ID carried through rewritten engine input and
-  returned by PostToolUse, can settle delivery for session-scoped Stop and
-  Resume behavior. If exact correlation is unavailable, execution is allowed
-  untracked and Post does not guess. A fresh simple `next` restores tracked
-  delivery; correlation loss does not create a permanent deny. Once a claim is
-  attempted, project, state, or session ownership rejection is an explicit deny:
-  another session cannot execute the owner's current token as untracked work.
-  A `report` that moves the workflow on (an approval, a skip, a finished
-  step) is not a stopping point: the agent runs `next` straight away (or parks,
-  when the person asked in the same reply to stop the workflow there for now),
-  and if it stops anyway, Stop names a fresh `next`, and `park` for a person who
-  asked to stop, so the next stage starts in the same turn. Only the workflow-complete report and an isolated single-stage run end
-  the turn there.
-- **Legacy Resume and conversation waits are session-scoped.** Stop allows a
-  genuine conversational response to end cleanly. A Resume marker written by a
-  pre-2.6.19 installation remains owner-scoped; explicit `next --resume`
-  supersedes it and continues directly. Prompt text and rules content are not
-  persisted in the coordination marker.
-- **Host evidence is intentionally bounded.** Rewriting and carried-ID echo
-  were live-verified on Copilot CLI 1.0.79 on macOS in noninteractive mode.
-  VS Code's `tool_use_id`, `updatedInput`, and `tool_response` path is covered
-  from its documented Preview contract but is not live-verified here. Copilot
-  cloud agent is outside this release's supported AI-DLC surface.
-- **Most stages load their rules in one extra step.** VS Code's terminal tool
-  keeps a command result whole only up to 20,000 characters; a longer one is
-  saved to a file and the chat sees only its start and end. AI-DLC keeps every
-  instruction it prints on Copilot under 19,000 bytes, so a stage whose rules
-  do not fit beside it sends them first and the model runs the `continue`
-  command printed with them before the stage starts. In Construction that
-  happens for each stage of each Unit. On a native install this reaches a
-  workflow already in progress as soon as you run `aidlc update`; no
-  `aidlc config` refresh is needed. A project pinned to an earlier release in
-  `.aidlc-version` keeps running that release, so a pinned project gets this
-  once you run `aidlc config --pin` with this release or later.
-- **Let the extra steps run without a click.** If VS Code asks you to allow
-  each terminal command, choose **Configure Auto Approve...** from its Allow
-  options and add `"aidlc engine orchestrate": true` to the
-  `chat.tools.terminal.autoApprove` setting. VS Code then runs AI-DLC's
-  workflow steps without asking, and other commands keep their usual
-  confirmation. The one-click **Allow `aidlc ...` in this Session** or
-  **Allow `aidlc ...` in this Workspace** also works, but it skips the click for
-  every `aidlc` command, including `aidlc config`, `aidlc update`, and
-  `aidlc uninstall`. On a copied Bun runtime the steps start with
-  `bun .aidlc/tools/`, so the one-click option there would allow every `bun`
-  command. AI-DLC itself installs no auto-approve setting.
-- **Hook wiring is matcher-free by design**: VS Code parses but IGNORES hook
-  matchers, so every adapter target self-filters on `tool_name` instead — a
-  matcher would silently broaden on the IDE.
-- **Reviewer identity is correlated, not delivered**: PreToolUse payloads
-  carry no per-call agent field; the adapter brackets delegations via
-  SubagentStart/SubagentStop (including VS Code's `agent_type`/`agent_id`
-  fields) and forwards the identity when exactly one subagent is active.
-  Ambiguous overlap fails open for that call (the reviewer-module prose bound still
-  governs).
-- **Personas carry no `model:` pin.** The two surfaces disagree on model
-  value syntax (the CLI forwards frontmatter strings verbatim to the BYOK
-  provider; an IDE display name 400s there). Agents inherit the session
-  model — tier projection on this harness is model-omitted by type.
-- **Worker personas use an explicit built-in `tools:` allowlist.** It omits
-  Copilot's `agent` delegation tool to enforce no nested delegation. Copilot
-  has no all-except-agent form, so delegated workers do not inherit arbitrary
-  MCP tools.
-- **AIDLC plugins use Copilot-native surfaces.** Composed plugin personas and
-  generated stage/scope runners land in `.github/{agents,skills}`; plugin
-  selection regenerates those paths and never creates `.aidlc/skills` or
-  `.opencode/agents`.
-- **Session-end**: VS Code does not document SessionEnd, so the shared hook
-  manifest omits it on both hosts. The adapter reconciles the prior session at
-  the next SessionStart with inferred provenance (the codex pattern).
-- **The method include rides AGENTS.md `@`-imports** (live-verified on the
-  CLI; VS Code documents `@`-import expansion but it has not been verified
-  live there). The `@`-lines and the `.github/agents/` persona twins read
-  `aidlc/active-memory/`, the engine's git-ignored copy of the active
-  space's method; `/aidlc space <name>` rewrites the copy, never the block.
-- **No statusline**; use `/aidlc --status` and the progress lines at gates.
-- **Construction swarm is subagent fan-out only** (`AIDLC_USE_SWARM=1` is a
-  loud no-op).
-- **MCP**: none ships. If you add servers, note the surfaces diverge here —
-  the CLI reads `~/.copilot/mcp-config.json`, VS Code reads `.vscode/mcp.json`;
-  the conductor can use them, but delegated worker personas cannot.
+    に何らかの権限ルールがあると、Copilot は、それらが許可していないすべてのコマンドについて
+    （AI-DLC のものを含め）確認を求めます。管理設定で `Shell(bun *)` や
+    `Shell(aidlc *)` だけを拒否しても、AI-DLC のコマンドはブロックされず、Copilot が
+    確認を求めるだけです。それらをブロックするには、管理者が bun や aidlc に加えて
+    `Shell(.aidlc/bin/aidlc-engine)` と `Shell(.aidlc/bin/aidlc-engine *)` も
+    `permissions.deny` で拒否します。
+  - `shell(bun)` または `shell(aidlc)` だけを許可する `copilot -p` のスクリプトでは、
+    `--allow-tool='shell(.aidlc/bin/aidlc-engine)'` を追加します。これがないと、Copilot は
+    ランチャーを拒否します: `-p` には確認を求める相手がおらず、スキルのルールも
+    そこでは適用されないためです。
+- **コマンドの追跡は厳密かつベストエフォートです。** AI-DLC は、単純で直接的な
+  オーケストレーター、ソースディスパッチャー、実際のコンパイル済みの `next`、`continue`、
+  `report`、`park` のコマンドを追跡します。末尾の 1 つの `2>&1` はサポートされます。調査用の
+  コマンドは、`aidlc` という部分文字列からは分類されません。曖昧なラッパーや、
+  引数に有効なシェル展開（`$VAR`、グロブ、
+  波括弧展開、先頭の `~`）を含むコマンドは、変更されず追跡もされずに実行されます。シェルが最終的に生成する
+  argv を、フックがハッシュできないためです。直接的に見える複合コマンドは拒否されます。
+  現在の物理的なプロジェクトの外を指す明示的な `--project-dir` は、
+  現在のプロジェクトの調整情報が書き込まれる前に拒否されます。
+- **AI-DLC が照合できない `continue` でも先に進みます。** フックが AI-DLC のコマンドについて
+  自身の記録を見つけられない、または信頼できない場合（たとえば記録が
+  削除された後や、フックとターミナルでプロジェクトのパスの表記が
+  異なる場合）、フックはコマンドを拒否せずに実行させ、エンジンが
+  ディスクから応答します: 自身の記録が一致すれば次のパートを、一致しなければ現在の
+  ステップを返します。"could not match this Copilot
+  command" の後に再びパート 1 が表示されることは、もうありません。監査には、そのような通過ごとに
+  `COORDINATION_STOOD_ASIDE` の行が 1 つ残ります。VS Code では、このように通過した定型
+  コマンドも、Allow のクリックなしで実行されます。
+- **どのハーネスでも、継続のリプレイはエンジンが担います。** Copilot は、
+  Claude、Codex、Cursor、Kiro、
+  Kiro IDE、opencode と同じ、記録ローカルでアトミックな使い捨てのカーソルを使います。まずネイティブのトークン検証が実行され、
+  次にエンジンが、アクティブなディレクティブのロックの下で、トークン全体の SHA-256 を比較し、
+  stdout の前に正確な後継を公開します。Copilot のセッションの所有権と
+  配信の証拠は、そのマーカーを補強しますが、リプレイを担うわけではありません。欠落した、
+  不正な形式の、v1 の、共有以前のマーカーは、同じトランザクション内で 1 回だけ
+  回復します。新たな `next` はカーソルをリセットします。クラッシュ、移行、ロールバック、ファイルシステムの
+  制限については、Developer Reference の共有カーソルの契約を参照してください。
+- **Stop は、現在配信済みの Copilot のディレクティブを保持します。** ホストの正確な
+  `tool_use_id`、または書き換えられたエンジンの入力を通して運ばれ、
+  PostToolUse によって返されるアダプターの ID によって、セッションスコープの Stop と
+  Resume の動作のための配信を確定できます。正確な対応付けができない場合は、実行は
+  追跡なしで許可され、Post は推測しません。新たな単純な `next` が追跡付きの
+  配信を回復します。対応付けが失われても、恒久的な拒否にはなりません。claim が
+  試みられた後は、プロジェクト、状態、セッションの所有権による拒否は明示的な拒否となります:
+  別のセッションが、所有者の現在のトークンを追跡なしの作業として実行することはできません。
+  ワークフローを先に進める `report`（承認、スキップ、完了した
+  ステップ）は停止点ではありません: エージェントはすぐに `next` を実行し（または、
+  利用者が同じ返信でワークフローをいったんそこで止めるよう求めた場合は park し）、
+  それでも停止した場合は、Stop が新たな `next` を、停止を求めた利用者には `park` を
+  示すため、次のステージは同じターンの中で開始します。そこでターンを終えるのは、ワークフロー完了の報告と、分離された単一ステージの実行だけです。
+- **従来の Resume と会話の待機はセッションスコープです。** Stop は、
+  本当の会話としての応答がきれいに終わることを許します。
+  2.6.19 より前のインストールが書いた Resume マーカーは、所有者スコープのままです。明示的な `next --resume`
+  はそれを置き換え、直接続行します。プロンプトのテキストとルールの内容は、
+  調整用のマーカーには保存されません。
+- **ホストの証拠は意図的に範囲を限定しています。** 書き換えと、運ばれた ID のエコーは、
+  macOS 上の Copilot CLI 1.0.79 の非対話モードで実環境で検証されました。
+  VS Code の `tool_use_id`、`updatedInput`、`tool_response` の経路は、
+  文書化された Preview の契約に基づいてカバーしていますが、ここでは実環境で検証されていません。Copilot
+  のクラウドエージェントは、このリリースでサポートされる AI-DLC の画面の対象外です。
+- **ほとんどのステージは、追加の 1 ステップでルールを読み込みます。** VS Code のターミナルツールは、
+  コマンドの結果を 20,000 文字までしかそのまま保持しません。それより長いものは
+  ファイルに保存され、チャットにはその先頭と末尾しか見えません。AI-DLC は、Copilot で出力する
+  すべての指示を 19,000 バイト未満に収めるため、ルールが指示と一緒に
+  収まらないステージは先にルールを送り、モデルはそれと一緒に出力された `continue`
+  コマンドを実行してからステージを開始します。Construction では、
+  これが各ユニットの各ステージで起こります。ネイティブのインストールでは、`aidlc update` を実行するとすぐに、
+  進行中のワークフローにもこれが反映されます。
+  `aidlc config` での更新は不要です。`.aidlc-version` で以前のリリースに固定された
+  プロジェクトは、そのリリースのまま実行され続けるため、固定されたプロジェクトでこれが反映されるのは、
+  このリリース以降で `aidlc config --pin` を実行したときです。
+- **追加のステップをクリックなしで実行させましょう。** VS Code がターミナルコマンドごとに
+  許可を求める場合は、Allow の選択肢から **Configure Auto Approve...** を選び、
+  `chat.tools.terminal.autoApprove` 設定に `"aidlc engine orchestrate": true` を
+  追加してください。これで VS Code は AI-DLC の
+  ワークフローのステップを確認なしで実行し、他のコマンドは通常どおりの
+  確認を求めます。ワンクリックの **Allow `aidlc ...` in this Session** や
+  **Allow `aidlc ...` in this Workspace** でも動作しますが、これは
+  `aidlc config`、`aidlc update`、
+  `aidlc uninstall` を含むすべての `aidlc` コマンドのクリックを省いてしまいます。コピーした Bun ランタイムでは、ステップが
+  `bun .aidlc/tools/` で始まるため、そこでのワンクリックの選択肢はすべての `bun`
+  コマンドを許可してしまいます。AI-DLC 自身は自動承認の設定をインストールしません。
+- **フックの配線は、設計上マッチャーなしです**: VS Code はフックのマッチャーを解析しますが
+  無視するため、アダプターの各ターゲットは代わりに `tool_name` で自らフィルタリングします —
+  マッチャーを使うと、IDE では黙って対象が広がってしまいます。
+- **レビュアーの識別情報は、配信されるのではなく対応付けによって得られます**: PreToolUse のペイロードには
+  呼び出しごとのエージェントのフィールドがありません。アダプターは
+  SubagentStart/SubagentStop（VS Code の `agent_type`/`agent_id`
+  フィールドを含む）で委譲を囲み、ちょうど 1 つのサブエージェントがアクティブな場合に識別情報を転送します。
+  曖昧な重なりがある場合、その呼び出しについてはフェイルオープンとなります（レビュアーモジュールの散文による制限は
+  引き続き適用されます）。
+- **ペルソナは `model:` の固定を持ちません。** 2 つの画面では、モデルの
+  値の構文が一致しません（CLI はフロントマターの文字列をそのまま BYOK
+  プロバイダーに転送し、IDE の表示名はそこで 400 エラーになります）。エージェントはセッションの
+  モデルを継承します — このハーネスでのティアのプロジェクションは、型としてモデルを省略します。
+- **ワーカーのペルソナは、明示的な組み込みの `tools:` 許可リストを使います。** これは、
+  ネストした委譲を防ぐために Copilot の `agent` 委譲ツールを省いています。Copilot
+  には「agent 以外のすべて」という形式がないため、委譲されたワーカーは任意の
+  MCP ツールを継承しません。
+- **AIDLC のプラグインは Copilot ネイティブの画面を使います。** 合成されたプラグインのペルソナと、
+  生成されたステージ/スコープのランナーは `.github/{agents,skills}` に配置されます。プラグインの
+  選択はそれらのパスを再生成し、`.aidlc/skills` や
+  `.opencode/agents` を作成することはありません。
+- **セッションの終了**: VS Code は SessionEnd を文書化していないため、共有のフック
+  マニフェストは両方のホストでこれを省いています。アダプターは、前のセッションを
+  次の SessionStart で、推定した来歴とともに整合させます（codex のパターン）。
+- **メソッドのインクルードは AGENTS.md の `@` インポートで読み込まれます**（CLI では
+  実環境で検証済み。VS Code は `@` インポートの展開を文書化していますが、そこでは実環境で
+  検証されていません）。`@` の行と `.github/agents/` のペルソナの対は、
+  アクティブなスペースのメソッドを git で無視されたコピーとしてエンジンが置く
+  `aidlc/active-memory/` を読みます。`/aidlc space <name>` が書き換えるのはそのコピーであり、ブロックではありません。
+- **ステータスラインはありません**。`/aidlc --status` と、ゲートでの進捗の行を使ってください。
+- **Construction のスウォームはサブエージェントへのファンアウトのみです**（`AIDLC_USE_SWARM=1` は
+  通知付きの何もしない操作です）。
+- **MCP**: 何も同梱されていません。サーバーを追加する場合は、ここで画面ごとに異なる点に注意してください —
+  CLI は `~/.copilot/mcp-config.json` を読み、VS Code は `.vscode/mcp.json` を読みます。
+  コンダクターはそれらを使えますが、委譲されたワーカーのペルソナは使えません。
 
 ## VS Code request cap
 
-VS Code agent mode stops after `chat.agent.maxRequests` requests in one turn
-(default 50) and asks "Continue to iterate?". The chat then waits silently
-until someone answers, so an unattended Construction stage, which easily
-makes more than 50 tool calls, sits paused mid-way. `aidlc config --harness
-copilot` (first install and every refresh) therefore adds
-`"chat.agent.maxRequests": 200` to the project's `.vscode/settings.json`:
+VS Code のエージェントモードは、1 ターンで `chat.agent.maxRequests` 回のリクエストを行うと停止し
+（デフォルトは 50）、"Continue to iterate?" と尋ねます。チャットは誰かが答えるまで
+黙って待つため、50 回を超えるツール呼び出しを容易に行う無人の Construction ステージは、
+途中で一時停止したままになります。そのため、`aidlc config --harness
+copilot`（初回インストール時と毎回の更新時）は、
+プロジェクトの `.vscode/settings.json` に `"chat.agent.maxRequests": 200` を追加します:
 
-- only when the project does not set that key; a value your team already
-  set is never changed, even with `--force`;
-- without touching other keys, comments, or layout (the file is JSONC), and
-  it creates the file when there is none;
-- only the value AI-DLC added is recorded as AI-DLC's. If a later release
-  stops shipping the setting, config removes it only while it still holds
-  the value AI-DLC wrote, and removes the file only if AI-DLC created it.
-  `aidlc uninstall` never edits project files, so your settings stay;
-- once AI-DLC has added the key, taking it out of a settings file you keep
-  is your choice, and config does not add it back. A checkout with no
-  settings file at all gets it again.
+- プロジェクトがそのキーを設定していない場合に限ります。チームがすでに設定した値は、
+  `--force` を指定しても決して変更されません。
+- 他のキー、コメント、レイアウトには手を付けず（ファイルは JSONC です）、
+  ファイルがない場合は作成します。
+- AI-DLC のものとして記録されるのは、AI-DLC が追加した値だけです。後のリリースが
+  この設定を提供しなくなった場合、config は、AI-DLC が書いた値がまだ残っている場合にのみそれを削除し、
+  ファイルは AI-DLC が作成した場合にのみ削除します。
+  `aidlc uninstall` はプロジェクトのファイルを決して編集しないため、設定は残ります。
+- AI-DLC がキーを追加した後、保持している設定ファイルからそれを取り除くかどうかは
+  あなたの選択であり、config がそれを再び追加することはありません。設定ファイルが
+  まったくないチェックアウトでは、再び追加されます。
 
-The setting is window-scoped, so the project value wins over a user setting.
-AI-DLC's `.gitignore` block keeps `.vscode/*` out of git, so the value
-belongs to each checkout: config adds it where it runs. A copied project
-(the copy channel) has no config step that merges this file, and its
-runtime does not ship one, so add the key yourself. `/aidlc --doctor` warns
-when the project value is below 100, unset (your user setting, else VS
-Code's default of 50, then applies), not a number (a number in quotes
-included), or unreadable, and names the line to write. It does not warn
-about a key your team took out of a settings file it keeps after AI-DLC
-added it.
+この設定はウィンドウスコープであるため、プロジェクトの値がユーザー設定より優先されます。
+AI-DLC の `.gitignore` のブロックは `.vscode/*` を git から除外するため、この値は
+チェックアウトごとのものです: config は、それが実行された場所に値を追加します。コピーしたプロジェクト
+（コピーチャネル）には、このファイルをマージする config の手順がなく、その
+ランタイムもファイルを同梱していないため、キーは自分で追加してください。`/aidlc --doctor` は、
+プロジェクトの値が 100 未満の場合、未設定の場合（その場合はユーザー設定、なければ VS
+Code のデフォルトの 50 が適用されます）、数値でない場合（引用符で囲まれた数値を
+含む）、または読み取れない場合に警告し、書くべき行を示します。AI-DLC が
+キーを追加した後に、チームが保持している設定ファイルからそれを取り除いた場合は警告しません。
 
-A multi-root window reads this window-scoped setting from its
-`.code-workspace` file, not from a folder's `.vscode/settings.json`. So in a
-Copilot project, `aidlc system workspace-sync` also writes
-`"settings": { "chat.agent.maxRequests": 200 }` into the `aidlc.code-workspace`
-it generates, once: only into a file that has no settings yet. The keys and
-values already in the file's settings are your team's and stay, including a
-removed key; workspace-sync rewrites the file, so comments in it are not kept. When that file exists, doctor checks it too, since it is the file in
-charge whenever you open the workspace.
+マルチルートのウィンドウは、このウィンドウスコープの設定を、フォルダーの `.vscode/settings.json` からではなく
+`.code-workspace` ファイルから読みます。そのため
+Copilot のプロジェクトでは、`aidlc system workspace-sync` は、生成する `aidlc.code-workspace` にも
+`"settings": { "chat.agent.maxRequests": 200 }` を 1 回だけ書き込みます:
+書き込むのは、まだ設定がないファイルに限ります。ファイルの設定にすでにあるキーと
+値はチームのものであり、取り除かれたキーも含めてそのまま残ります。workspace-sync はファイルを書き直すため、ファイル内のコメントは保持されません。そのファイルが存在する場合は、doctor がそれもチェックします。
+ワークスペースを開くときは常に、そのファイルが優先されるためです。
 
 ## Verify
 
@@ -509,18 +501,18 @@ cd your-project
 copilot -p "/aidlc --doctor" -s --allow-all-tools   # or run /aidlc --doctor in VS Code chat
 ```
 
-The doctor checks the engine tree and every adapter dependency, root
-`AGENTS.md`, the `.github` wiring files, the Copilot CLI version floor, and
-folder trust. The Copilot CLI is optional: a
-VS Code-only install reports `Harness CLI: optional copilot is not installed`
-and passes. VS Code puts its own stand-in `copilot` on its terminals' PATH
-that asks "Install GitHub Copilot CLI? (y/N)" when the CLI is absent, so the
-doctor and first-run setup never run it: they look past that folder for a real
-CLI and report it as not installed when there is none. An installed CLI below the
-floor is a warning, never a failure. The deterministic engine tests for
-this harness are `tests/unit/t248-copilot-packaging.test.ts`,
-`t249-copilot-adapter.test.ts`, `t250-copilot-adapter-security.test.ts`, and
-`t-copilot-directive-budget.test.ts`;
-the live journeys are `tests/e2e/t-exec-copilot-status.serial.test.ts` and
-`tests/e2e/t-exec-copilot-release-journey.serial.test.ts`, gated on
-`AIDLC_COPILOT_EXEC_LIVE=1`; the Full Suite runs both on Linux, macOS and Windows.
+doctor は、エンジンツリーとアダプターのすべての依存関係、ルートの
+`AGENTS.md`、`.github` の配線ファイル、Copilot CLI のバージョンの下限、
+フォルダーの信頼をチェックします。Copilot CLI はオプションです:
+VS Code のみのインストールは `Harness CLI: optional copilot is not installed` と報告して
+合格します。VS Code は、CLI がない場合に "Install GitHub Copilot CLI? (y/N)" と尋ねる
+独自の代替の `copilot` をターミナルの PATH に置くため、doctor と
+初回のセットアップはそれを決して実行しません: そのフォルダーを飛ばして本物の
+CLI を探し、見つからなければ未インストールと報告します。下限より古い CLI がインストールされている場合は
+警告であり、失敗には決してなりません。このハーネスの決定論的なエンジンのテストは
+`tests/unit/t248-copilot-packaging.test.ts`、
+`t249-copilot-adapter.test.ts`、`t250-copilot-adapter-security.test.ts`、
+`t-copilot-directive-budget.test.ts` です。
+ライブのジャーニーは `tests/e2e/t-exec-copilot-status.serial.test.ts` と
+`tests/e2e/t-exec-copilot-release-journey.serial.test.ts` で、
+`AIDLC_COPILOT_EXEC_LIVE=1` によって有効になります。Full Suite は、その両方を Linux、macOS、Windows で実行します。

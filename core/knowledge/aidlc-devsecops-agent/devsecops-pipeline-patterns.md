@@ -1,106 +1,106 @@
 # DevSecOps Pipeline Patterns
 
-Integrating security into every stage of the CI/CD pipeline, shifting detection left and enforcing automated gates.
+CI/CD パイプラインのすべての段階にセキュリティを組み込み、検出をシフトレフトし、自動化されたゲートを適用する。
 
 ## Shift-Left Security Principles
 
-- Find vulnerabilities as early as possible: in the IDE, at commit time, and during CI — not after deployment.
-- Make security checks fast and non-blocking in early stages (warnings), then enforcing (gates) in later stages.
-- Treat security findings like bugs: track, prioritize, and fix them within normal sprint cycles.
-- Security is a shared responsibility, not a gatekeeping function. Enable developers with tooling and education.
+- 脆弱性はできるだけ早く見つける: IDE で、コミット時に、そして CI の中で見つけ、デプロイ後まで持ち越さない。
+- 初期の段階ではセキュリティチェックを高速かつ非ブロッキング（警告）にし、後の段階で強制（ゲート）にする。
+- セキュリティの指摘はバグと同様に扱う: 追跡し、優先順位を付け、通常のスプリントサイクルの中で修正する。
+- セキュリティは共有責任であり、門番の役割ではない。ツールと教育で開発者を支援する。
 
 ## SAST — Static Application Security Testing
 
-**Purpose**: Analyse source code for vulnerabilities without executing it.
+**目的**: ソースコードを実行せずに分析し、脆弱性を見つける。
 
-**Tools**:
-- **Amazon CodeGuru Reviewer**: ML-powered code review for Java and Python. Integrates with CodeCommit and GitHub.
-- **SonarQube / SonarCloud**: Multi-language static analysis. Covers security, reliability, maintainability.
-- **Semgrep**: Lightweight, pattern-based scanning. Fast, supports custom rules, good for enforcing team standards.
-- **Bandit** (Python), **ESLint security plugins** (JavaScript/TypeScript).
+**ツール**:
+- **Amazon CodeGuru Reviewer**: Java と Python 向けの ML によるコードレビュー。CodeCommit や GitHub と統合できる。
+- **SonarQube / SonarCloud**: 多言語対応の静的解析。セキュリティ、信頼性、保守性をカバーする。
+- **Semgrep**: 軽量なパターンベースのスキャン。高速で、カスタムルールをサポートし、チームの標準を強制するのに適している。
+- **Bandit**（Python）、**ESLint のセキュリティプラグイン**（JavaScript/TypeScript）。
 
-**Pipeline Integration**:
-- Run SAST on every pull request. Report findings as PR comments or annotations.
-- Define severity thresholds: block merges on Critical/High findings; warn on Medium.
-- Maintain a suppression file for accepted risks (with justification and expiry date).
+**パイプラインへの統合**:
+- すべてのプルリクエストで SAST を実行する。指摘は PR のコメントまたはアノテーションとして報告する。
+- 重大度のしきい値を定める: Critical/High の指摘ではマージをブロックし、Medium では警告する。
+- 受け入れたリスクについては抑制ファイルを（根拠と有効期限を付けて）管理する。
 
 ## DAST — Dynamic Application Security Testing
 
-**Purpose**: Test the running application by sending crafted requests to find runtime vulnerabilities.
+**目的**: 細工したリクエストを実行中のアプリケーションに送り、実行時の脆弱性を見つける。
 
-- Run against staging or ephemeral environments, not production.
-- Tools: OWASP ZAP (open source), Burp Suite (commercial), AWS Inspector for network scanning.
-- Integrate into the CD pipeline after deployment to a test environment.
-- DAST complements SAST; each catches different vulnerability classes.
+- 本番ではなく、ステージング環境またはエフェメラル環境に対して実行する。
+- ツール: OWASP ZAP（オープンソース）、Burp Suite（商用）、ネットワークスキャン用の AWS Inspector。
+- テスト環境へのデプロイ後に、CD パイプラインに組み込む。
+- DAST は SAST を補完する。それぞれが異なる種類の脆弱性を検出する。
 
 ## Dependency Vulnerability Scanning
 
-**Purpose**: Detect known CVEs in third-party libraries and transitive dependencies.
+**目的**: サードパーティライブラリと推移的依存関係に含まれる既知の CVE を検出する。
 
-**Tools**:
-- **Amazon Inspector**: Scans EC2 instances, Lambda functions, and ECR images for software vulnerabilities.
-- **Snyk**: Developer-focused, supports npm, pip, Maven, Go modules. Provides fix PRs.
-- **Dependabot** (GitHub native): Automated dependency update PRs with vulnerability alerts.
-- **npm audit / pip-audit / cargo audit**: Built-in language-level tools for quick local checks.
+**ツール**:
+- **Amazon Inspector**: EC2 インスタンス、Lambda 関数、ECR イメージのソフトウェア脆弱性をスキャンする。
+- **Snyk**: 開発者向けで、npm、pip、Maven、Go モジュールをサポートする。修正用の PR を提供する。
+- **Dependabot**（GitHub ネイティブ）: 脆弱性アラートと連動した、依存関係更新 PR の自動作成。
+- **npm audit / pip-audit / cargo audit**: ローカルで手早く確認するための、言語レベルの組み込みツール。
 
-**Pipeline Integration**:
-- Scan on every build. Fail the build on Critical/High severity CVEs with known exploits.
-- Generate an SBOM (Software Bill of Materials) using Syft or Trivy for supply chain transparency.
-- Review and update dependencies at least monthly; automate with Dependabot or Renovate.
+**パイプラインへの統合**:
+- すべてのビルドでスキャンする。既知のエクスプロイトがある Critical/High の CVE ではビルドを失敗させる。
+- サプライチェーンの透明性のため、Syft または Trivy を使って SBOM（Software Bill of Materials）を生成する。
+- 依存関係は少なくとも毎月見直して更新する。Dependabot または Renovate で自動化する。
 
 ## IaC Security Scanning
 
-**Purpose**: Detect misconfigurations in infrastructure-as-code before deployment.
+**目的**: デプロイ前に Infrastructure as Code の設定ミスを検出する。
 
-**Tools**:
-- **cfn-lint**: CloudFormation linter. Validates syntax and best practices.
-- **cfn-nag**: CloudFormation static analysis. Finds overly permissive IAM policies, unencrypted resources.
-- **Checkov**: Multi-framework scanner (CloudFormation, Terraform, CDK, Kubernetes). Policy-as-code with custom rules.
-- **cdk-nag**: CDK-native. Checks CDK constructs against AWS Solutions rules and NIST/HIPAA packs.
+**ツール**:
+- **cfn-lint**: CloudFormation のリンター。構文とベストプラクティスを検証する。
+- **cfn-nag**: CloudFormation の静的解析。過度に許可的な IAM ポリシーや暗号化されていないリソースを見つける。
+- **Checkov**: 複数フレームワーク対応のスキャナー（CloudFormation、Terraform、CDK、Kubernetes）。カスタムルールによる Policy as Code。
+- **cdk-nag**: CDK ネイティブ。CDK コンストラクトを AWS Solutions のルールや NIST/HIPAA のパックに照らしてチェックする。
 
-**Pipeline Integration**:
-- Run IaC scanning before `cdk synth` or `cfn deploy`. Fail the pipeline on High findings.
-- Use cdk-nag as a CDK Aspect so violations are caught at synthesis time, not after.
-- Maintain exception rules in code (not out-of-band) with mandatory justification comments.
+**パイプラインへの統合**:
+- `cdk synth` や `cfn deploy` の前に IaC スキャンを実行する。High の指摘ではパイプラインを失敗させる。
+- cdk-nag を CDK Aspect として使い、違反を合成後ではなく合成時に検出する。
+- 例外ルールは（帯域外ではなく）コード内で管理し、根拠を示すコメントを必須にする。
 
 ## Secret Detection
 
-**Purpose**: Prevent credentials, API keys, and tokens from being committed to source control.
+**目的**: 認証情報、API キー、トークンがソース管理にコミットされるのを防ぐ。
 
-**Tools**:
-- **git-secrets** (AWS Labs): Pre-commit hook that blocks patterns matching AWS credentials.
-- **truffleHog**: Scans git history for high-entropy strings and known secret patterns.
-- **Gitleaks**: Fast, configurable, supports CI and pre-commit. Good default ruleset.
-- **GitHub secret scanning**: Built-in for GitHub repos; alerts on committed secrets from known providers.
+**ツール**:
+- **git-secrets**（AWS Labs）: AWS の認証情報に一致するパターンをブロックする pre-commit フック。
+- **truffleHog**: git の履歴をスキャンし、エントロピーの高い文字列や既知のシークレットのパターンを探す。
+- **Gitleaks**: 高速で設定可能。CI と pre-commit をサポートする。デフォルトのルールセットが優れている。
+- **GitHub secret scanning**: GitHub リポジトリに組み込まれており、既知のプロバイダーのシークレットがコミットされるとアラートを出す。
 
-**Best Practices**:
-- Install pre-commit hooks for secret detection on every developer machine.
-- Run secret scanning in CI as a backup for missed pre-commit hooks.
-- If a secret is committed: revoke immediately, rotate, then clean git history.
-- Store secrets in AWS Secrets Manager or SSM Parameter Store, never in code or environment files.
+**ベストプラクティス**:
+- シークレット検出用の pre-commit フックを、すべての開発者のマシンにインストールする。
+- pre-commit フックの漏れに備え、CI でもシークレットスキャンを実行する。
+- シークレットがコミットされた場合: ただちに失効させ、ローテーションし、その後 git の履歴をクリーンアップする。
+- シークレットは AWS Secrets Manager または SSM Parameter Store に保存し、コードや環境ファイルには決して置かない。
 
 ## Container Image Scanning
 
-**Purpose**: Detect OS-level and application-level vulnerabilities in container images.
+**目的**: コンテナイメージに含まれる OS レベルおよびアプリケーションレベルの脆弱性を検出する。
 
-- **Amazon ECR image scanning**: Basic (Clair-based) and Enhanced (Inspector-powered) scanning.
-- **Trivy**: Comprehensive open-source scanner. Covers OS packages, language libraries, and IaC files.
-- Scan images on push to ECR and before deployment. Block deployment of images with Critical findings.
-- Use minimal base images (distroless, Alpine) to reduce attack surface.
-- Rebuild and rescan images weekly to pick up newly disclosed CVEs.
+- **Amazon ECR のイメージスキャン**: Basic（Clair ベース）と Enhanced（Inspector による）のスキャン。
+- **Trivy**: 包括的なオープンソースのスキャナー。OS パッケージ、言語ライブラリ、IaC ファイルをカバーする。
+- ECR へのプッシュ時とデプロイ前にイメージをスキャンする。Critical の指摘があるイメージはデプロイをブロックする。
+- 攻撃対象領域を減らすため、最小限のベースイメージ（distroless、Alpine）を使う。
+- 新たに公開された CVE を取り込むため、イメージを毎週再ビルドして再スキャンする。
 
 ## Security Gates in CI/CD
 
-Define clear pass/fail criteria at each pipeline stage:
+パイプラインの各段階で、明確な合否基準を定める:
 
-| Stage | Gate | Action on Failure |
+| 段階 | ゲート | 失敗時のアクション |
 |-------|------|-------------------|
-| Commit | Secret detection | Block commit (pre-commit hook) |
-| PR | SAST scan | Block merge on Critical/High |
-| Build | Dependency scan | Fail build on Critical with exploit |
-| Build | IaC scan | Fail build on High |
-| Deploy to staging | DAST scan | Block promotion to production |
-| Deploy to prod | Image scan | Block deployment on Critical |
-| Post-deploy | Inspector continuous scan | Alert and create ticket |
+| コミット | シークレット検出 | コミットをブロック（pre-commit フック） |
+| PR | SAST スキャン | Critical/High でマージをブロック |
+| ビルド | 依存関係スキャン | エクスプロイトのある Critical でビルドを失敗 |
+| ビルド | IaC スキャン | High でビルドを失敗 |
+| ステージングへのデプロイ | DAST スキャン | 本番への昇格をブロック |
+| 本番へのデプロイ | イメージスキャン | Critical でデプロイをブロック |
+| デプロイ後 | Inspector の継続的スキャン | アラートを出してチケットを作成 |
 
-Automate exceptions with time-boxed waivers that require security team approval and auto-expire.
+例外は、セキュリティチームの承認を必要とし自動的に失効する期限付きの免除として自動化する。

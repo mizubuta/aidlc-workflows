@@ -1,36 +1,36 @@
 # Pipeline & Deploy Agent
 
-> **Agent deep dive** · [User Guide](../00-introduction.md) › [Agents](../06-agents.md) › [deep dives](README.md) · Technical reference: [pipeline-deploy-agent](../../reference/agents/pipeline-deploy-agent.md)
+> **エージェントの詳細** · [ユーザーガイド](../00-introduction.md) › [エージェント](../06-agents.md) › [エージェントの詳細](README.md) · 技術リファレンス: [pipeline-deploy-agent](../../reference/agents/pipeline-deploy-agent.md)
 
-The aidlc-pipeline-deploy-agent is your CI/CD engineer and release manager. It translates build specifications and infrastructure targets into fully automated pipelines that take code from commit to production with quality gates, rollback safety, and full auditability.
+aidlc-pipeline-deploy-agent は、あなたの CI/CD エンジニア兼リリースマネージャーです。ビルド仕様とインフラストラクチャのターゲットを、品質ゲート、安全なロールバック、完全な監査可能性を備え、コードをコミットから本番環境まで運ぶ完全に自動化されたパイプラインに落とし込みます。
 
-The aidlc-pipeline-deploy-agent leads four stages spanning Inception, Construction, and Operation. It has Bash access for running pipeline tools, deployment scripts, and smoke test commands.
+aidlc-pipeline-deploy-agent は、Inception、Construction、Operation にまたがる 4 つのステージをリードします。パイプラインツール、デプロイスクリプト、スモークテストのコマンドを実行するための Bash へのアクセス権を持ちます。
 
 ## Stages Led
 
-| Stage | Phase | Description |
+| ステージ | フェーズ | 説明 |
 |-------|-------|-------------|
-| 2.2 Practices Discovery | Inception | Draft, interview, and integrate the hub-and-spoke findings; promote approved practices to active-space team/project memory |
-| 3.7 CI Pipeline | Construction | CI pipeline configuration with quality gates |
-| 4.1 Deployment Pipeline | Operation | CD pipeline with deployment strategy and rollback procedures |
-| 4.3 Deployment Execution | Operation | Execute deployments, run smoke tests, monitor health |
+| 2.2 Practices Discovery | Inception | ハブ＆スポークの調査結果を起草し、インタビューを行い、統合します。承認されたプラクティスを、アクティブなスペースのチーム／プロジェクトのメモリに昇格させます |
+| 3.7 CI Pipeline | Construction | 品質ゲートを備えた CI パイプラインの構成 |
+| 4.1 Deployment Pipeline | Operation | デプロイ戦略とロールバック手順を備えた CD パイプライン |
+| 4.3 Deployment Execution | Operation | デプロイの実行、スモークテストの実行、正常性の監視 |
 
 ## Stages Supported
 
-The aidlc-pipeline-deploy-agent does not support any stages in an advisory capacity.
+aidlc-pipeline-deploy-agent は、助言的な立場でサポートするステージを持ちません。
 
 ## What to Expect
 
-In Practices Discovery, the aidlc-pipeline-deploy-agent drafts first, then integrates mutually blind quality, developer, and devsecops contributions after the human interview (with collaborators off, its draft goes straight to the interview). In its delivery stages, it asks about CI/CD infrastructure, deployment targets, branching strategy, and rollback requirements; produces pipeline configurations, deployment strategies, and rollback runbooks; and monitors Deployment Execution.
+Practices Discovery では、aidlc-pipeline-deploy-agent がまず草案を作成し、利用者へのインタビューの後に、互いの内容を知らずに作成された quality、developer、devsecops の貢献を統合します（協力者がオフの場合、草案はそのままインタビューに進みます）。デリバリーのステージでは、CI/CD インフラストラクチャ、デプロイ先、ブランチ戦略、ロールバックの要件について質問し、パイプラインの構成、デプロイ戦略、ロールバックのランブックを作成し、Deployment Execution を監視します。
 
 ## How It Collaborates
 
-The aidlc-pipeline-deploy-agent receives buildable source and test suites from the aidlc-developer-agent, quality gate definitions from the aidlc-quality-agent, and environment endpoints from the aidlc-aws-platform-agent. Its deployed services are handed off to the aidlc-operations-agent for observability setup, and deployment artifacts go to the aidlc-quality-agent for performance validation.
+aidlc-pipeline-deploy-agent は、aidlc-developer-agent からビルド可能なソースとテストスイートを、aidlc-quality-agent から品質ゲートの定義を、aidlc-aws-platform-agent から環境のエンドポイントを受け取ります。デプロイされたサービスはオブザーバビリティの設定のために aidlc-operations-agent に引き渡され、デプロイの成果物はパフォーマンスの検証のために aidlc-quality-agent に渡されます。
 
 ## Key Principles
 
-- Every commit is a release candidate — if it passes all gates, it is ready for production
-- Every deployment must have a tested rollback path
-- CI pipelines should complete in minutes, not hours — slow pipelines encourage batching
-- Quality gates exist to prevent defective artifacts from reaching users
-- A deployment is not done until smoke tests confirm the service is healthy
+- すべてのコミットはリリース候補です。すべてのゲートを通過すれば、本番環境に出せる状態です
+- すべてのデプロイには、テスト済みのロールバック経路が必要です
+- CI パイプラインは数時間ではなく数分で完了すべきです。遅いパイプラインは変更をまとめて投入することを助長します
+- 品質ゲートは、欠陥のある成果物が利用者に届くのを防ぐために存在します
+- スモークテストでサービスが正常であることを確認するまで、デプロイは完了していません

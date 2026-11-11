@@ -53,7 +53,7 @@ Windows では、`install.ps1` をダウンロードし、その PowerShell ウ�
 
 | ハーネス | 呼び出し | 章 |
 |---------|--------|---------|
-| **Claude Code** | `/aidlc` | [ユーザーガイド](../00-introduction.md) 全体で扱っています（例は Claude Code で実行しています）。インストールは [Getting Started](../01-getting-started.md) を参照。 |
+| **Claude Code** | `/aidlc` | [ユーザーガイド](../00-introduction.md) 全体で扱っています（例は Claude Code で実行しています）。インストールは [はじめに](../01-getting-started.md) を参照。 |
 | **Kiro IDE**（≥ 1.1.70）と **Kiro CLI**（≥ 2.24.1、v3 エンジン）。セットアップでは Kiro（`--harness kiro`）として表示 | `/aidlc` | [Kiro で AI-DLC を実行する](kiro.md) — 両方の環境で共通の 1 つのツリー: 前提条件（Opus 4.8）、インストール、フック、Kiro での相違点。 |
 | **Kiro CLI**（≥ 2.6）。セットアップでは Kiro CLI (V2)（`--harness kiro-v2`）として表示 | `/aidlc` | 同じページ内のセクション [Kiro CLI (V2)](kiro.md#kiro-cli-v2) — エンジンを固定しないハーネス: 前提条件、インストール、Kiro での相違点。Kiro CLI ≥ 2.24.1 で Kiro の v3 エンジンを使う場合は、上の Kiro を使ってください。 |
 | **Codex CLI**（≥ 0.145.0） | `$aidlc` | [Codex CLI での AI-DLC](codex-cli.md) — 前提条件、信頼設定の事前投入、Bedrock の設定、Git リポジトリの要件。 |
@@ -66,7 +66,7 @@ Kiro（IDE または CLI）上の AI-DLC は **Claude Opus 4.8** で最もよく
 手動でコピーする場合は、Bun をインストールし、特定リリースの
 `aidlc-copy-runtime-X.Y.Z.tar.gz` をダウンロードして展開し、
 `runtime/<harness>/` ディレクトリを丸ごとコピーしてから、そのセットアップを一度実行します（
-[Copy Channel](../18-install-and-lifecycle.md#copy-channel) を参照）。ネイティブの `aidlc`
+[コピーチャネル](../18-install-and-lifecycle.md#copy-channel) を参照）。ネイティブの `aidlc`
 実行ファイルは不要です。コピーによってあなたの `.gitignore` や
 `AGENTS.md` が置き換えられることはありません。AI-DLC は独自の行をそれらに追加します。
 リポジトリのチェックアウトから生成済みツリーをコピーしないでください。フレームワーク開発者は代わりに、ソースのチェックアウトで

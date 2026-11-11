@@ -1,29 +1,29 @@
 # Prioritization Frameworks
 
 ## Purpose
-Structured methods for deciding what to build first. Every framework encodes trade-offs — choose the one that matches your decision context.
+何から先に作るかを決めるための体系的な手法。どのフレームワークにもトレードオフが組み込まれている。自分の意思決定の状況に合うものを選ぶ。
 
 ## Framework Selection Guide
 
-| Framework | Best For | Complexity | Stakeholder Buy-in |
+| フレームワーク | 最適な用途 | 複雑さ | ステークホルダーの賛同 |
 |-----------|----------|------------|---------------------|
-| MoSCoW | Fixed-scope releases, contract work | Low | Easy |
-| WSJF | Lean/SAFe teams, flow-based delivery | Medium | Medium |
-| RICE | Data-driven product teams | Medium | High |
-| Kano Model | UX-focused products, feature differentiation | High | High |
+| MoSCoW | スコープが固定されたリリース、契約業務 | 低 | 得やすい |
+| WSJF | Lean/SAFe のチーム、フローベースのデリバリー | 中 | 中 |
+| RICE | データ駆動のプロダクトチーム | 中 | 高 |
+| Kano Model | UX 重視のプロダクト、機能による差別化 | 高 | 高 |
 
 ## MoSCoW Method
 
 ### Categories
-- **Must Have** — Non-negotiable for this release. System is unusable without it.
-- **Should Have** — Important but not critical. Painful to omit but workarounds exist.
-- **Could Have** — Desirable. Include if time/budget allows.
-- **Won't Have (this time)** — Explicitly out of scope. Prevents scope creep.
+- **Must Have** — このリリースでは譲れない。これがなければシステムは使い物にならない。
+- **Should Have** — 重要だが致命的ではない。省くと痛手だが回避策はある。
+- **Could Have** — あると望ましい。時間や予算が許せば含める。
+- **Won't Have (this time)** — 明示的にスコープ外とする。スコープクリープを防ぐ。
 
 ### Rules of Thumb
-- Must Haves should not exceed 60% of planned capacity
-- If everything is a Must Have, you have not prioritized — push back
-- "Won't Have" is the most valuable category: it creates clarity
+- Must Have は計画したキャパシティの 60% を超えないようにする
+- すべてが Must Have なら、優先順位付けができていない。押し返す
+- "Won't Have" は最も価値のあるカテゴリーである。明確さを生み出すからだ
 
 ## WSJF (Weighted Shortest Job First)
 
@@ -35,12 +35,12 @@ Cost of Delay = User-Business Value + Time Criticality + Risk Reduction
 ```
 
 ### Scoring
-Rate each factor 1-10 relative to other items in the backlog (Fibonacci scale: 1, 2, 3, 5, 8, 13 also works). Divide by estimated duration (relative size).
+各要素を、バックログ内の他の項目と比較して 1〜10 で評価する（フィボナッチ数列の尺度 1, 2, 3, 5, 8, 13 でもよい）。それを見積もった所要期間（相対的なサイズ）で割る。
 
 ### When WSJF Wins
-- When you need to maximize value throughput, not just value
-- Small high-value items naturally float to the top
-- Forces teams to consider the cost of NOT doing something now
+- 価値そのものではなく、価値のスループットを最大化する必要がある場合
+- 小さく価値の高い項目が自然と上位に浮かび上がる
+- 何かを今やら「ない」ことのコストをチームに考えさせる
 
 ## RICE Scoring
 
@@ -50,55 +50,55 @@ RICE Score = (Reach x Impact x Confidence) / Effort
 ```
 
 ### Component Definitions
-- **Reach**: How many users/transactions affected per quarter (use real numbers)
-- **Impact**: Per-user effect (3 = massive, 2 = high, 1 = medium, 0.5 = low, 0.25 = minimal)
-- **Confidence**: Data quality (100% = high confidence with data, 80% = medium, 50% = low/gut feel)
-- **Effort**: Person-months of work (use whole numbers)
+- **Reach**: 四半期あたりに影響を受けるユーザー数やトランザクション数（実数を使う）
+- **Impact**: ユーザー1人あたりの効果（3 = 非常に大きい、2 = 大きい、1 = 中程度、0.5 = 小さい、0.25 = ごくわずか）
+- **Confidence**: データの質（100% = データに裏付けられた高い確信、80% = 中程度、50% = 低い／勘）
+- **Effort**: 作業量の人月（整数を使う）
 
 ### Example
-| Feature | Reach | Impact | Confidence | Effort | RICE |
+| 機能 | Reach | Impact | Confidence | Effort | RICE |
 |---------|-------|--------|------------|--------|------|
-| Search autocomplete | 10,000 | 2 | 80% | 2 | 8,000 |
-| Admin dashboard | 50 | 3 | 100% | 4 | 37.5 |
-| Onboarding wizard | 5,000 | 3 | 50% | 3 | 2,500 |
+| 検索のオートコンプリート | 10,000 | 2 | 80% | 2 | 8,000 |
+| 管理ダッシュボード | 50 | 3 | 100% | 4 | 37.5 |
+| オンボーディングウィザード | 5,000 | 3 | 50% | 3 | 2,500 |
 
 ### Key Insight
-Confidence is the honesty check. Low-confidence, high-impact ideas should be validated (spike, prototype, user test) before committing full build effort.
+Confidence は誠実さのチェックである。確信度が低くインパクトの大きいアイデアは、本格的な構築に着手する前に検証する（スパイク、プロトタイプ、ユーザーテスト）。
 
 ## Kano Model
 
 ### Category Definitions
-- **Basic (Must-Be)**: Expected features. Absence causes dissatisfaction; presence does not delight. (e.g., login works, pages load)
-- **Performance (One-Dimensional)**: More is better. Linear relationship between investment and satisfaction. (e.g., speed, storage)
-- **Excitement (Attractive)**: Unexpected features that delight. Absence does not disappoint. (e.g., smart suggestions, delightful animations)
-- **Indifferent**: Users do not care either way. Stop investing here.
-- **Reverse**: Features some users actively dislike. (e.g., forced tutorials, auto-play)
+- **Basic (Must-Be)**: 当然あると期待される機能。ないと不満を招くが、あっても喜びは生まない。（例: ログインが機能する、ページが読み込まれる）
+- **Performance (One-Dimensional)**: 多いほどよい。投資と満足度が比例する。（例: 速度、ストレージ）
+- **Excitement (Attractive)**: 予想外で喜びをもたらす機能。なくても失望はされない。（例: 賢い提案、心地よいアニメーション）
+- **Indifferent**: ユーザーはどちらでも気にしない。ここへの投資はやめる。
+- **Reverse**: 一部のユーザーが積極的に嫌う機能。（例: 強制的なチュートリアル、自動再生）
 
 ### Classification Method
-Ask two questions per feature:
-1. "How would you feel if this feature were present?" (functional)
-2. "How would you feel if this feature were absent?" (dysfunctional)
+機能ごとに2つの質問をする:
+1. "How would you feel if this feature were present?"（この機能があったらどう感じますか？）（充足時）
+2. "How would you feel if this feature were absent?"（この機能がなかったらどう感じますか？）（不充足時）
 
-Map answers (Like, Expect, Neutral, Tolerate, Dislike) to the Kano evaluation table.
+回答（Like, Expect, Neutral, Tolerate, Dislike）を Kano の評価表に対応付ける。
 
 ## Handling Ties and Disputes
 
 ### When Scores Are Equal
-1. Prefer the item with higher confidence — less risk
-2. Prefer the item that unblocks other work — multiplier effect
-3. Prefer the item with shorter time-to-value — faster feedback loop
+1. 確信度の高い項目を優先する — リスクが小さい
+2. 他の作業のブロックを解消する項目を優先する — 波及効果がある
+3. 価値が出るまでの時間が短い項目を優先する — フィードバックループが速い
 
 ### When Stakeholders Disagree
-- Make the framework transparent — show the math, not just the result
-- Separate "I want this" from "users need this" with data (analytics, support tickets, user research)
-- Use time-boxing: "We will revisit in 2 sprints with usage data"
-- Escalation path: Product owner makes the final call, documents rationale
+- フレームワークを透明にする — 結果だけでなく計算を示す
+- 「自分がこれを欲しい」と「ユーザーにこれが必要」をデータ（アナリティクス、サポートチケット、ユーザーリサーチ）で切り分ける
+- タイムボックスを使う: 「利用データをもとに 2 スプリント後に再検討する」
+- エスカレーションの経路: プロダクトオーナーが最終判断を下し、その根拠を文書化する
 
 ## Decision Matrix Template
 
-| Item | Business Value (1-5) | User Impact (1-5) | Effort (1-5, inverted) | Risk (1-5) | Weighted Score |
+| 項目 | ビジネス価値 (1-5) | ユーザーへのインパクト (1-5) | 工数 (1-5、反転) | リスク (1-5) | 加重スコア |
 |------|---------------------|-------------------|----------------------|------------|----------------|
-| Feature A | | | | | |
-| Feature B | | | | | |
+| 機能 A | | | | | |
+| 機能 B | | | | | |
 
-Assign weights to each column based on current strategic priorities (e.g., Business Value x2 if revenue-focused quarter).
+現在の戦略上の優先事項に基づいて、各列に重みを割り当てる（例: 収益重視の四半期なら Business Value を x2）。

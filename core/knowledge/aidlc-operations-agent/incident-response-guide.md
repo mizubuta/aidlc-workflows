@@ -1,107 +1,107 @@
 # Incident Response Guide
 
-Structured processes for detecting, responding to, and learning from production incidents.
+本番インシデントの検知、対応、そこからの学習のための体系的なプロセス。
 
 ## Incident Severity Levels
 
-| Level | Name | Criteria | Response Time | Examples |
+| レベル | 名称 | 基準 | 応答時間 | 例 |
 |-------|------|----------|---------------|---------|
-| **SEV1** | Critical | Complete service outage or data loss affecting all users | < 15 minutes | Production down, data breach, payment processing failure |
-| **SEV2** | Major | Significant degradation affecting many users, no workaround | < 30 minutes | Partial outage, error rate > 10%, major feature broken |
-| **SEV3** | Minor | Limited impact, workaround available | < 2 hours | Non-critical feature broken, intermittent errors, slow performance |
-| **SEV4** | Low | Cosmetic or minor issue, no user impact | Next business day | UI glitch, non-critical log errors, minor config drift |
+| **SEV1** | Critical | すべてのユーザーに影響する完全なサービス停止またはデータ損失 | 15 分未満 | 本番停止、データ侵害、決済処理の障害 |
+| **SEV2** | Major | 多くのユーザーに影響する大幅な劣化があり、回避策がない | 30 分未満 | 部分的な停止、エラー率 10% 超、主要機能の故障 |
+| **SEV3** | Minor | 影響が限定的で、回避策がある | 2 時間未満 | 重要でない機能の故障、断続的なエラー、パフォーマンスの低下 |
+| **SEV4** | Low | 見た目上または軽微な問題で、ユーザーへの影響がない | 翌営業日 | UI の不具合、重要でないログのエラー、軽微な設定のドリフト |
 
 ## Escalation Matrix
 
-Define who to contact at each severity level:
+重大度レベルごとに連絡先を定義する。
 
-| Severity | Primary Responder | Escalation (30 min) | Escalation (1 hour) |
+| 重大度 | 一次対応者 | エスカレーション（30 分） | エスカレーション（1 時間） |
 |----------|------------------|---------------------|---------------------|
-| SEV1 | On-call engineer | Engineering manager + Incident commander | VP Engineering + Stakeholder communication |
-| SEV2 | On-call engineer | Team lead | Engineering manager |
-| SEV3 | On-call engineer | Team lead (if unresolved in 4 hours) | — |
-| SEV4 | Any team member | — | — |
+| SEV1 | オンコールエンジニア | エンジニアリングマネージャー + インシデントコマンダー | エンジニアリング担当 VP + ステークホルダーへの連絡 |
+| SEV2 | オンコールエンジニア | チームリード | エンジニアリングマネージャー |
+| SEV3 | オンコールエンジニア | チームリード（4 時間以内に解決しない場合） | — |
+| SEV4 | チームメンバーの誰か | — | — |
 
 ## On-Call Rotation
 
-- Rotate weekly among team members. Ensure at least 2 people are trained for on-call at all times.
-- Primary and secondary on-call: secondary takes over if primary is unreachable within 10 minutes.
-- On-call handoff includes: review of active alerts, ongoing issues, recent deployments, and known risks.
-- Compensate on-call fairly: time off in lieu, on-call stipend, or both.
-- Maximum on-call frequency: no more than 1 week in 4. If the team is too small, address staffing.
+- チームメンバーで毎週ローテーションする。常に少なくとも 2 人がオンコールの訓練を受けているようにする。
+- プライマリとセカンダリのオンコール: プライマリに 10 分以内に連絡がつかない場合は、セカンダリが引き継ぐ。
+- オンコールの引き継ぎには、アクティブなアラート、進行中の問題、最近のデプロイ、既知のリスクの確認を含める。
+- オンコールには公正に報いる: 代休、オンコール手当、またはその両方。
+- オンコールの最大頻度: 4 週に 1 週を超えない。チームが小さすぎる場合は、人員配置の問題に対処する。
 
 ## Incident Commander Role
 
-For SEV1 and SEV2 incidents, designate an Incident Commander (IC) who:
-- **Coordinates** response efforts; does not debug directly.
-- **Communicates** status updates to stakeholders at regular intervals (every 15-30 minutes).
-- **Delegates** workstreams: investigation, mitigation, communication, documentation.
-- **Decides** when to escalate, when to roll back, when to declare resolution.
-- **Documents** timeline, actions taken, and decisions made in a shared incident channel.
+SEV1 と SEV2 のインシデントでは、次の役割を担うインシデントコマンダー（IC）を指名する。
+- 対応の取り組みを**調整する**。自分では直接デバッグしない。
+- 定期的な間隔（15〜30 分ごと）でステークホルダーにステータスの更新を**伝える**。
+- 作業の流れを**委任する**: 調査、緩和、コミュニケーション、文書化。
+- いつエスカレーションするか、いつロールバックするか、いつ解決を宣言するかを**決める**。
+- タイムライン、実施した対応、下した判断を、共有のインシデントチャンネルに**記録する**。
 
-The IC is not necessarily the most senior engineer; it is the person who can coordinate effectively under pressure.
+IC は必ずしも最も上級のエンジニアではない。プレッシャーの下で効果的に調整できる人である。
 
 ## Communication During Incidents
 
 ### Internal
-- Create a dedicated Slack/Teams channel: `#incident-YYYY-MM-DD-short-description`.
-- Post structured updates: **Status** (investigating/identified/mitigating/resolved), **Impact** (who is affected), **Next Step** (what we are doing), **ETA** (when the next update will be).
-- Keep the channel focused; move side discussions to threads.
+- 専用の Slack/Teams チャンネルを作成する: `#incident-YYYY-MM-DD-short-description`。
+- 構造化された更新を投稿する: **ステータス**（調査中/特定済み/緩和中/解決済み）、**影響**（誰が影響を受けているか）、**次のステップ**（何をしているか）、**ETA**（次の更新はいつか）。
+- チャンネルの焦点を保ち、脇道の議論はスレッドに移す。
 
 ### External
-- SEV1: Status page update within 20 minutes. Customer communication within 1 hour.
-- SEV2: Status page update within 1 hour if customer-visible.
-- Use pre-drafted templates for common scenarios: "We are experiencing elevated error rates..."
-- Never speculate about root cause in external communications until confirmed.
+- SEV1: 20 分以内にステータスページを更新する。1 時間以内に顧客に連絡する。
+- SEV2: 顧客から見える場合は、1 時間以内にステータスページを更新する。
+- よくあるシナリオには事前に作成したテンプレートを使う: "We are experiencing elevated error rates..."（現在、エラー率が上昇しています...）
+- 根本原因が確認されるまで、外部向けのコミュニケーションで根本原因について推測を述べてはならない。
 
 ## Post-Incident Review (Blameless Postmortem)
 
-Conduct within 48 hours of incident resolution for SEV1/SEV2.
+SEV1/SEV2 では、インシデントの解決から 48 時間以内に実施する。
 
 ### Structure
-1. **Timeline**: Minute-by-minute account from detection to resolution.
-2. **Impact**: Users affected, duration, financial/data impact.
-3. **Root Cause**: Technical cause(s) of the incident.
-4. **Contributing Factors**: Process, tooling, or knowledge gaps that allowed the incident.
-5. **What Went Well**: Effective parts of the response.
-6. **What Could Be Improved**: Gaps in detection, response, or communication.
-7. **Action Items**: Specific, assigned, time-boxed improvements.
+1. **タイムライン**: 検知から解決までの分単位の経緯。
+2. **影響**: 影響を受けたユーザー、期間、金銭面/データ面の影響。
+3. **根本原因**: インシデントの技術的な原因。
+4. **寄与要因**: インシデントを許したプロセス、ツール、知識のギャップ。
+5. **うまくいったこと**: 対応のうち効果的だった部分。
+6. **改善できること**: 検知、対応、コミュニケーションのギャップ。
+7. **アクションアイテム**: 具体的で、担当者が割り当てられ、期限が決められた改善策。
 
 ### Blameless Principles
-- Focus on systems and processes, not individuals.
-- People made the best decisions they could with the information available.
-- Ask "what" and "how", not "who".
-- The goal is to improve the system so the same failure cannot recur.
+- 個人ではなく、システムとプロセスに焦点を当てる。
+- 人々は、入手できた情報の範囲で最善の判断を下した。
+- 「誰が」ではなく、「何が」と「どのように」を問う。
+- 目標は、同じ障害が再発しないようにシステムを改善することである。
 
 ## SSM Automation Runbooks
 
-Create automated runbooks for common operational tasks and incident responses:
+よくある運用タスクとインシデント対応のために、自動化された Runbook を作成する。
 
-- **Restart service**: ECS task restart, Lambda function redeployment.
-- **Scale out**: Increase desired count, adjust auto-scaling thresholds.
-- **Database failover**: Trigger RDS failover, verify application reconnection.
-- **Clear queue backlog**: Increase consumer concurrency, purge DLQ after inspection.
-- **Rotate credentials**: Update secrets in Secrets Manager, trigger dependent service reloads.
+- **サービスの再起動**: ECS タスクの再起動、Lambda 関数の再デプロイ。
+- **スケールアウト**: 必要数を増やし、オートスケーリングのしきい値を調整する。
+- **データベースのフェイルオーバー**: RDS のフェイルオーバーをトリガーし、アプリケーションの再接続を確認する。
+- **キューの滞留の解消**: コンシューマーの並行数を増やし、調査後に DLQ をパージする。
+- **認証情報のローテーション**: Secrets Manager のシークレットを更新し、依存するサービスの再読み込みをトリガーする。
 
-Store runbooks as SSM Automation documents in version control. Reference them in alarm actions for automated remediation.
+Runbook は SSM Automation ドキュメントとしてバージョン管理に保存する。自動修復のために、アラームのアクションからそれらを参照する。
 
 ## Automated Remediation Patterns
 
-- CloudWatch alarm triggers Lambda function to restart unhealthy ECS tasks.
-- Auto Scaling policies respond to custom metrics (queue depth, error rate) not just CPU.
-- EventBridge rules detect specific error patterns and invoke Step Functions for multi-step remediation.
-- Always include circuit breakers: limit automated remediation attempts (max 3 restarts in 10 minutes) to prevent remediation loops.
+- CloudWatch アラームが Lambda 関数をトリガーし、正常でない ECS タスクを再起動する。
+- Auto Scaling ポリシーは、CPU だけでなくカスタムメトリクス（キューの深さ、エラー率）にも反応する。
+- EventBridge ルールが特定のエラーパターンを検知し、複数ステップの修復のために Step Functions を呼び出す。
+- 必ずサーキットブレーカーを含める: 修復のループを防ぐため、自動修復の試行回数を制限する（10 分間に最大 3 回の再起動）。
 
 ## RTO and RPO Targets
 
-- **RTO (Recovery Time Objective)**: Maximum acceptable downtime. How quickly must the system be restored?
-- **RPO (Recovery Point Objective)**: Maximum acceptable data loss. How much data can we afford to lose?
+- **RTO（目標復旧時間）**: 許容できる最大の停止時間。システムをどれだけ早く復旧しなければならないか。
+- **RPO（目標復旧時点）**: 許容できる最大のデータ損失。どれだけのデータまでなら失っても許容できるか。
 
-| Tier | RTO | RPO | Strategy |
+| 階層 | RTO | RPO | 戦略 |
 |------|-----|-----|----------|
-| Critical (payments, auth) | < 5 minutes | 0 (zero data loss) | Multi-AZ active-active, synchronous replication |
-| High (order processing) | < 30 minutes | < 5 minutes | Multi-AZ with automated failover, point-in-time recovery |
-| Standard (reporting, analytics) | < 4 hours | < 1 hour | Regular backups, automated restoration |
-| Low (internal tools) | < 24 hours | < 24 hours | Daily backups, manual restoration |
+| Critical（決済、認証） | 5 分未満 | 0（データ損失ゼロ） | マルチ AZ のアクティブ-アクティブ、同期レプリケーション |
+| High（注文処理） | 30 分未満 | 5 分未満 | 自動フェイルオーバー付きのマルチ AZ、ポイントインタイムリカバリ |
+| Standard（レポート、分析） | 4 時間未満 | 1 時間未満 | 定期的なバックアップ、自動復元 |
+| Low（社内ツール） | 24 時間未満 | 24 時間未満 | 日次バックアップ、手動復元 |
 
-Test RTO/RPO targets quarterly through game days and disaster recovery drills.
+RTO/RPO の目標は、ゲームデーと災害復旧訓練を通じて四半期ごとにテストする。

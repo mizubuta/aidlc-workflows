@@ -2,244 +2,216 @@
 
 ### Before initial protected prepare
 
-Bolt directories and branches use the selected intent's `bolt-<id8>_<slug>`
-identity, where `<id8>` is the same registry UUID suffix as Unit claims. This
-isolates same-named Units across parallel intents. Use emitted paths and branch
-names, not names reconstructed from Unit slugs. Creation without a registry
-UUID refuses; adopt or re-create the intent before Construction. See
-[Bolt identity](../../knowledge/aidlc-shared/worktree-info-schema.md#bolt-identity)
-for naming and provenance-gated completion of pre-upgrade legacy Bolts.
+Bolt のディレクトリとブランチには、選択されたインテントの `bolt-<id8>_<slug>` という
+識別子を使う。ここで `<id8>` は、ユニットのクレームと同じレジストリ UUID の接尾辞である。これにより、
+並行するインテントの間で同名のユニットが分離される。ユニットの slug から再構成した名前ではなく、
+出力されたパスとブランチ名を使う。レジストリ UUID なしでの作成は拒否される。Construction の前に、
+インテントを採用（adopt）するか作り直す。命名と、アップグレード前のレガシー Bolt の来歴に基づく完了については、
+[Bolt の識別子](../../knowledge/aidlc-shared/worktree-info-schema.md#bolt-identity)を参照する。
 
-For protected Code Generation, the approved parent application source must be
-committed and reproducible from the selected worktree base before initial
-`prepare`. This applies to both legacy autonomous workflows and new checkpoint
-workflows; neither autonomy nor relaxed Change Control exempts the source.
-Uncommitted framework records are not themselves a reason to commit unrelated
-files: the requirement concerns the approved application-source snapshot.
+保護された Code Generation では、承認済みの親アプリケーションソースが、最初の
+`prepare` の前にコミットされ、選択されたワークツリーのベースから再現できなければならない。これはレガシーの自律ワークフローにも
+新しいチェックポイントワークフローにも適用される。自律性も緩和された Change Control も、ソースを免除しない。
+未コミットのフレームワークの記録は、それ自体が無関係なファイルをコミットする理由にはならない。
+この要件が対象とするのは、承認済みのアプリケーションソースのスナップショットである。
 
-`prepare` performs a read-only preflight for every emitted Unit before creating
-the first child worktree. If approved application source is uncommitted, surface
-the actionable commit-and-retry error: no child was created by this refusal and
-there is no orphan to discard. Ask the human to commit that approved source, or
-perform the commit only when explicitly authorized. **Never commit automatically**
-to satisfy prepare. Retry with the current Plan Approval evidence after the
-source is committed; if the approved source changed, follow the source preflight
-remedy. Plan content edits after approval follow Code Generation Step 3's
-after-approval rules; a lowered fence permits continuation without reapproval.
-The commit itself never supplies approval.
+`prepare` は、最初の子ワークツリーを作成する前に、出力されたすべてのユニットについて読み取り専用の事前チェックを行う。
+承認済みのアプリケーションソースが未コミットの場合は、対処可能な「コミットして再試行」のエラーを表面化する。
+この拒否によって作成された子はなく、破棄すべき孤立物もない。承認済みのソースをコミットするよう人間に依頼するか、
+明示的に許可された場合にのみ自分でコミットする。prepare を満たすために **決して自動的にコミットしない**。
+ソースがコミットされたら、現在の Plan Approval のエビデンスで再試行する。承認済みのソースが変わった場合は、
+ソースの事前チェックの対処法に従う。承認後の計画内容の編集は、Code Generation Step 3 の承認後ルールに従う。
+フェンスが下げられていれば、再承認なしで続行できる。
+コミットそのものが承認を与えることは決してない。
 
-The skeleton-to-swarm transition includes this explicit commit step: after the
-inline skeleton has passed its integrated check and human checkpoint approval,
-commit the approved skeleton application source before preparing the parallel
-batch. Do not omit it because the skeleton checkpoint or autonomy grant passed.
+スケルトンからスウォームへの移行には、この明示的なコミットステップが含まれる。インラインのスケルトンが
+統合チェックと人間のチェックポイント承認を通過した後、並列バッチを準備する前に、
+承認済みのスケルトンのアプリケーションソースをコミットする。スケルトンのチェックポイントや自律性の付与を
+通過したからといって、このステップを省略してはならない。
 
 ### Continuing a partially completed batch
 
-On continuation, `next` may emit the batch's full or remaining Unit set. Once
-the current checkpoint revision has a recorded native preparation, the engine
-omits `resume_existing` and returns the prepared workers to this continuation
-path. A narrower emitted set does not by itself request new plans or approval.
+継続時、`next` はバッチの全ユニットセットまたは残りのユニットセットを出力することがある。
+現在のチェックポイントのリビジョンにネイティブな準備の記録がある場合、エンジンは
+`resume_existing` を省略し、準備済みのワーカーをこの継続経路に戻す。
+出力されたセットが狭くなっても、それだけで新しい計画や承認を求めることにはならない。
 
-For a remaining Unit already prepared in the current attempt, verify its
-existing approval in both the parent and its recorded worktree:
+現在の試行ですでに準備済みの残りのユニットについては、親と、記録されたワークツリーの両方で
+既存の承認を検証する:
 
 ```bash
 {{INVOKE}} engine testing-posture verify --unit "<unit>"
 {{INVOKE}} engine testing-posture verify --unit "<unit>" --project-dir "<recorded worktree>"
 ```
 
-When both checks return `execution_allowed: true` (exit 0), continue with the protected worker brief and preserved
-worktree. Skip initial planning, Plan Approval, and `prepare` for that Unit, then
-follow the worker/check/reviewer/finalize steps below. Retain the original group
-manifest and receipts even when only one member remains. `ok: false` can coexist
-with allowed continuation: it truthfully says the current content is not
-approved and does not require a new approval stop when execution is allowed.
-Use `reason` for the continuation message; `approval_reason` is the detailed
-stale binding diagnosis, not a refusal to execute.
-A directory's presence
-alone is not approval; failed verification requires the named repair with the
-existing work preserved. Units without an existing current preparation follow
-the initial plan/approval/prepare procedure.
+両方のチェックが `execution_allowed: true`（終了コード 0）を返したら、保護されたワーカーブリーフと保持された
+ワークツリーで続行する。そのユニットについては最初の計画作成、Plan Approval、`prepare` をスキップし、
+以下のワーカー/チェック/レビュアー/finalize のステップに従う。メンバーが 1 つしか残っていなくても、
+元のグループのマニフェストとレシートは保持する。`ok: false` は、継続が許可されている状態と共存しうる。
+これは現在の内容が承認されていないことを正直に示すものであり、実行が許可されている場合は
+新たな承認のための停止を必要としない。
+継続のメッセージには `reason` を使う。`approval_reason` は古くなったバインディングの詳細な診断であり、
+実行の拒否ではない。
+ディレクトリが存在するだけでは承認にはならない。検証に失敗した場合は、既存の作業を保持したまま、
+指名された修復を行う必要がある。現在の準備が存在しないユニットは、
+最初の計画/承認/prepare の手順に従う。
 
-For postapproval plan, test instruction, or Testing Contract edits in the same
-Unit and attempt, use Code Generation Step 3's after-approval rules. When the
-fence is lowered, continue with the current tool-produced brief and preserve
-the original approval evidence without relabelling the edits as approved.
-The worker's effective plan-approval fence comes from its live verified parent
-intent. Existing workers observe a lowering or raising on their next check;
-do not use a copied worker setting to decide whether continuation is allowed.
-Missing artifacts or malformed contract JSON require repair before execution,
-not an automatic new approval ceremony.
+同じユニットと試行における、承認後の計画、テスト指示、Testing Contract の編集には、
+Code Generation Step 3 の承認後ルールを使う。フェンスが下げられている場合は、現在のツール生成ブリーフで続行し、
+編集を承認済みと付け替えることなく、元の承認エビデンスを保持する。
+ワーカーに有効な plan-approval フェンスは、検証済みの稼働中の親インテントから得られる。
+既存のワーカーは、次のチェックでフェンスの引き下げや引き上げを観測する。
+継続が許可されるかどうかの判断に、コピーされたワーカーの設定を使ってはならない。
+成果物の欠落や不正な形式の contract JSON は、自動的な新しい承認の儀式ではなく、
+実行前の修復を必要とする。
 
-A prior failure still uses the halt-and-ask Retry/Abort decision. Continuing the
-same approved batch does not remove that human stop. An explicit batch checkpoint
-Request Changes uses the revision procedure below instead.
+以前の失敗には、引き続き halt-and-ask の Retry/Abort の判断を使う。同じ承認済みバッチを継続しても、
+その人間による停止はなくならない。バッチのチェックポイントでの明示的な Request Changes には、
+代わりに以下のリビジョン手順を使う。
 
 ### Resuming a reviewed batch after Request Changes
 
-When the engine emits `resume_existing: true`, at least one pending Unit still
-needs preparation or recovery for the current rejection revision. Verify the
-parent's `execution_allowed` first. If the rejection retired the prior approval,
-`plan_approval.units` lists each Unit with `status: "revise"` and the person's
-checkpoint words as `feedback`: revise those plans and test instructions (add
-the requested change as its own plan step), then run `next`, which asks for
-fresh Plan Approval of the revised plans. If a current approval
-or allowed postapproval continuation already exists for the same intent, Unit,
-and attempt, retain its actual approval evidence when retrying interrupted
-preparation: do not clear the answer or replace its receipt just to retry setup.
-`execution_allowed: true` with `ok: false` permits continuation, not a claim
-that the edited content was approved or that an older attempt can be revived.
+エンジンが `resume_existing: true` を出力した場合、少なくとも 1 つの保留中のユニットが、現在の却下リビジョンのために
+まだ準備または回復を必要としている。まず親の `execution_allowed` を検証する。却下によって以前の承認が無効になった場合、
+`plan_approval.units` は各ユニットを `status: "revise"` とともに列挙し、利用者の
+チェックポイントでの言葉を `feedback` として持つ。それらの計画とテスト指示を改訂し（要求された変更を
+それ自体の計画ステップとして追加する）、`next` を実行する。これにより、改訂した計画の
+新たな Plan Approval が求められる。同じインテント、ユニット、試行について、現在の承認
+または許可された承認後の継続がすでに存在する場合は、中断された準備を再試行するときに、その実際の承認エビデンスを保持する。
+セットアップを再試行するためだけに回答を消去したり、レシートを置き換えたりしてはならない。
+`execution_allowed: true` と `ok: false` の組み合わせは継続を許可するものであり、
+編集された内容が承認されたことや、古い試行を復活できることを主張するものではない。
 
-Add `--resume-existing` to the ordinary `{{INVOKE}} engine swarm prepare` call
-with the directive's batch number and exact Unit set. Already prepared members
-are retained by the tool's idempotent path. The same flag covers these supported
-worktree states:
+通常の `{{INVOKE}} engine swarm prepare` 呼び出しに、ディレクティブのバッチ番号と正確なユニットセットとともに
+`--resume-existing` を追加する。すでに準備済みのメンバーは、ツールの冪等な経路によって保持される。
+同じフラグで、次のサポートされるワークツリーの状態に対応する:
 
-- **The child still exists:** the tool validates and preserves its source and
-  archives old framework metadata for the same rejection revision before
-  re-establishing current execution evidence. Do not delete that worktree or
-  substitute ordinary prepare to bypass a refusal.
-- **Native source landing removed the child:** when durable landing evidence
-  proves that Unit's previous source reached the parent, the tool can fork a
-  fresh child from that already-landed parent source. It preserves the rejection
-  revision and binds that revision's actual Plan Approval; it does not revive the old
-  approval or pretend the original child survived.
-- **A prepared revision child was explicitly discarded:** the native discard
-  must follow that child's own creation and start. The tool correlates it with
-  the earlier landing and current approval before recreating the worker.
-  Directory absence or a discard of a different/older worker is insufficient.
+- **子がまだ存在する:** ツールはそのソースを検証して保持し、現在の実行エビデンスを再確立する前に、
+  同じ却下リビジョンの古いフレームワークのメタデータをアーカイブする。拒否を回避するために、
+  そのワークツリーを削除したり、通常の prepare で代用したりしてはならない。
+- **ネイティブなソースの取り込みによって子が削除された:** そのユニットの以前のソースが親に到達したことを
+  永続的な取り込みのエビデンスが証明している場合、ツールはすでに取り込まれた親のソースから
+  新しい子をフォークできる。却下リビジョンを保持し、そのリビジョンの実際の Plan Approval をバインドする。
+  古い承認を復活させたり、元の子が残っているふりをしたりはしない。
+- **準備済みのリビジョンの子が明示的に破棄された:** ネイティブな破棄は、その子自身の作成と開始の後に
+  行われていなければならない。ツールは、ワーカーを再作成する前に、それを以前の取り込みと現在の承認に対応づける。
+  ディレクトリが存在しないことや、別の/古いワーカーの破棄だけでは不十分である。
 
-After preparation succeeds, a later `next` continues those workers without
-another Plan Approval, including when peers in the revision have already landed.
+準備が成功した後、以降の `next` は、リビジョン内のほかのユニットがすでに取り込まれている場合も含め、
+別の Plan Approval なしでそれらのワーカーを継続する。
 
-Successful native source landing may remove the child, so do not promise that
-every post-merge worktree is preserved. Follow the emitted resume route and the
-tool's recovery message. If source cannot be reconciled with the approved
-starting point, explain the refusal and preserve the remaining work while the
-human resolves it; never infer approval of a different source tree.
+ネイティブなソースの取り込みが成功すると子が削除されることがあるため、マージ後のすべてのワークツリーが
+保持されると約束してはならない。出力された再開ルートとツールの回復メッセージに従う。ソースを承認済みの
+開始点と整合させられない場合は、拒否を説明し、人間が解決する間、残りの作業を保持する。
+異なるソースツリーの承認を推測してはならない。
 
 ### A Unit that voids its one recovery receipt
 
-If an autonomous Unit invalidates its one recovery receipt, halt before
-`finalize`: do not put the Unit in `--claimed`, do not merge it, and present a
-human Retry/Abort decision through the halt-and-ask seam. On Retry, return to
-the main workspace, abort and park/discard the old Bolt, then rerun the current
-`aidlc-swarm.ts prepare` step for that Unit with the original batch/base/repo
-arguments. The fresh worktree and `BOLT_STARTED` boundary reset review
-accounting without claiming convergence. Never synthesize `GATE_REJECTED`.
-The discard parks tracked files and non-ignored untracked files (or the
-remaining branch tip when the checkout is gone) plus reviewed source refs
-before removing the live checkout and branch. When present, the returned
-`restore_operation` recovers the parked work in a separate checkout without
-reinstating the old review authority. If only review evidence remained, there
-are no saved working files to restore, so neither `restore_operation` nor
-`restore_hint` is returned.
+自律的なユニットが唯一の回復レシートを無効にした場合は、`finalize` の前に停止する。
+そのユニットを `--claimed` に入れず、マージせず、halt-and-ask の継ぎ目を通じて人間に Retry/Abort の判断を提示する。
+Retry の場合は、メインのワークスペースに戻り、古い Bolt を中止して退避/破棄し、そのユニットについて
+元の batch/base/repo 引数で、現在の `aidlc-swarm.ts prepare` ステップを再実行する。
+新しいワークツリーと `BOLT_STARTED` の境界は、収束を主張することなくレビューの集計をリセットする。
+決して `GATE_REJECTED` を合成しない。
+破棄では、ライブのチェックアウトとブランチを削除する前に、追跡対象ファイルと無視されていない未追跡ファイル
+（チェックアウトがなくなっている場合は残っているブランチの先端）と、レビュー済みのソース参照を退避する。
+返された `restore_operation` が存在する場合は、古いレビューの権限を復元することなく、
+別のチェックアウトに退避した作業を回復する。レビューのエビデンスしか残っていなかった場合は、
+復元すべき保存済みの作業ファイルがないため、`restore_operation` も
+`restore_hint` も返されない。
 
 ### Retry after a native worker discard
 
-When the reviewer-exhaustion procedure calls for Retry, use the native
-abort/discard procedure for that Unit and then call `next`. Follow its current
-preparation route: `--resume-existing` for an outstanding checkpoint revision,
-ordinary `prepare` for an initial batch. Preserve current valid Plan Approval;
-do not replace a group's receipts merely because one worker was discarded.
+レビュアー枯渇時の手順が Retry を求める場合は、そのユニットについてネイティブな
+中止/破棄の手順を使い、その後 `next` を呼び出す。その現在の準備ルートに従う。
+未解決のチェックポイントリビジョンには `--resume-existing`、最初のバッチには通常の `prepare` を使う。
+現在有効な Plan Approval を保持する。1 つのワーカーが破棄されたというだけで、グループのレシートを置き換えてはならない。
 
-When the native discard records the worker's committed approved baseline, the
-tool can restore that exact source and approval even if a peer has since landed
-on the parent. Other running workers retain their source, receipts, and review
-attempts. The replacement gets a new Bolt start for its new reviewer attempt.
-Without that source binding, the normal committed-parent preflight still
-applies and names the required repair. Do not infer approval from an older
-creation or from a missing directory.
+ネイティブな破棄がワーカーのコミット済みの承認済みベースラインを記録している場合、
+その後ほかのユニットが親に取り込まれていても、ツールはその正確なソースと承認を復元できる。
+実行中のほかのワーカーは、ソース、レシート、レビューの試行を保持する。
+置き換えのワーカーには、新しいレビュアーの試行のために新しい Bolt の開始が与えられる。
+そのソースのバインディングがない場合は、通常のコミット済み親の事前チェックが引き続き適用され、
+必要な修復が示される。古い作成や存在しないディレクトリから承認を推測してはならない。
 
-Load this module for every `invoke-swarm` directive and every `run-stage` with
-`directive.swarm_settled === true`; use only the subsection for the active
-harness.
+すべての `invoke-swarm` ディレクティブと、`directive.swarm_settled === true` を持つ
+すべての `run-stage` について、このモジュールを読み込む。アクティブなハーネスのサブセクションだけを使う。
 
-**Iteration and approved Units.** Unit-major remains serial and never invokes
-swarm. On stage-major with explicit `Construction Execution: swarm`, skeleton-on completes and
-approves the first Unit's real integrated checkpoint before eligible Code
-Generation batches fan out. Use exactly `directive.units`; inline Units already
-approved at their checkpoints are excluded from later swarm work. Planning,
-any enabled summary confirmation (the stage protocol's
-`directive.ceremony.summary_confirmation === "on"` rule), and Plan Approval remain
-required for each emitted Unit.
-The engine asks one Plan Approval question for every Unit of the batch whose
-plan is waiting (the Construction module's **Grouped Plan Approval**).
+**イテレーションと承認済みユニット。** Unit-major は引き続き逐次的であり、決してスウォームを呼び出さない。
+明示的な `Construction Execution: swarm` を持つ stage-major では、対象となる Code Generation のバッチが展開される前に、
+skeleton-on が最初のユニットの実際の統合チェックポイントを完了して承認する。
+`directive.units` をそのまま使う。チェックポイントですでに承認されたインラインのユニットは、
+以降のスウォームの作業から除外される。計画作成、有効になっている要約の確認（ステージプロトコルの
+`directive.ceremony.summary_confirmation === "on"` ルール）、Plan Approval は、
+出力された各ユニットについて引き続き必須である。
+エンジンは、計画が待機中であるバッチのすべてのユニットについて、1 つの Plan Approval の質問をする
+（Construction モジュールの **Grouped Plan Approval**）。
 
 ### Batch checkpoint
 
-A `run-stage` with `swarm_checkpoint` is a completed batch waiting for its
-completion decision before the next batch. Branch here before body, reviewer,
-ordinary gate, or `swarm_settled` handling. The object carries `batch`, `units`,
-`fingerprint`, `ready`, `approved`, `human_required`, and `errors`. Use the exact
-batch number and comma-joined emitted Units; do not rebuild them or rerun their
-reviews merely because the directive is `run-stage`.
+`swarm_checkpoint` を持つ `run-stage` は、次のバッチの前に完了の判断を待っている完了済みのバッチである。
+本体、レビュアー、通常のゲート、`swarm_settled` の処理の前に、ここで分岐する。
+このオブジェクトは `batch`、`units`、`fingerprint`、`ready`、`approved`、`human_required`、`errors` を持つ。
+正確なバッチ番号と、出力されたユニットをカンマで連結したものを使う。ディレクティブが `run-stage` であるというだけで、
+それらを作り直したり、レビューを再実行したりしてはならない。
 
-Readiness requires every Unit's current native `SWARM_UNIT_CONVERGED` receipt
-to carry `Command SHA-256` matching the intent's authorized Construction
-Verification Command. The batch approval binds that digest too. Older receipts
-without it, or a newly authorized command, require fresh native verification
-before a batch not yet approved can be approved. A batch already approved keeps
-its approval when the person approves a new command; the new command checks the
-batches still to be approved.
+準備完了には、各ユニットの現在のネイティブな `SWARM_UNIT_CONVERGED` レシートが、
+インテントの承認済み Construction Verification Command と一致する `Command SHA-256` を持っていることが必要である。
+バッチの承認もそのダイジェストをバインドする。ダイジェストを持たない古いレシートや、新たに承認されたコマンドの場合は、
+まだ承認されていないバッチを承認する前に、新たなネイティブ検証が必要になる。すでに承認されたバッチは、
+利用者が新しいコマンドを承認しても承認を保持する。新しいコマンドは、まだ承認されていないバッチをチェックする。
 
 ```bash
 {{INVOKE}} engine bolt swarm-checkpoint --action status --batch <N> --units "<comma-separated emitted Units>"
 ```
 
-If `ready` is false, explain the named evidence errors and repair the missing
-source landing, verification, or review through its owning procedure. Do not
-invent verification or approval. Only after status reports `ready: true` may
-guided/gated completion issue `swarm-checkpoint --action ask` and use the human
-question-and-answer flow below; `ask` refuses an unready batch, with one
-exception: when `changed_after_check` is true (under a strict Guard Policy, the
-batch's files or outputs changed after it was checked), `ask` offers the person
-Request Changes only, so they can always send the batch back. Under a relaxed or
-off Guard Policy such a change is kept instead: the batch stays ready, and `ask`
-and `approve` return the one line to tell the person in `notices`. Automatic
-completion uses the recorded autonomous policy, needs no `ask`, and omits `--user-input`.
+`ready` が false の場合は、指摘されたエビデンスのエラーを説明し、欠落しているソースの取り込み、検証、レビューを、
+それぞれを担う手順で修復する。検証や承認をでっち上げてはならない。status が `ready: true` を報告した後でのみ、
+guided/gated の完了は `swarm-checkpoint --action ask` を発行し、以下の人間との質疑応答フローを使ってよい。
+`ask` は準備ができていないバッチを拒否するが、例外が 1 つある。`changed_after_check` が true の場合
+（厳格な Guard Policy のもとで、バッチのファイルや出力がチェック後に変更された場合）、`ask` は利用者に
+Request Changes だけを提示し、利用者がいつでもバッチを差し戻せるようにする。緩和された、またはオフの
+Guard Policy のもとでは、そのような変更は代わりに保持される。バッチは準備完了のままで、`ask`
+と `approve` は利用者に伝えるべき 1 行を `notices` で返す。自動完了は記録された自律ポリシーを使い、
+`ask` を必要とせず、`--user-input` を省略する。
 
-At a human batch checkpoint, take the section 13 learnings step only when
-`directive.protocol_modules` lists `learnings`. With the module listed, it asks
-only about a correction the person made for the batch's Units (the module says
-when); persist only what they keep, then open the batch approval with `ask` below as a separate question and turn.
-In automatic batches, a correction they made waits for the next human checkpoint or
-final handoff, only when `directive.protocol_modules` lists `learnings`. When the
-module is absent, keep no diary and ask no learning question; go straight to the
-batch approval procedure when a human is required. Bookkeeping settlement never
-repeats an already handled ritual.
+人間によるバッチのチェックポイントでは、`directive.protocol_modules` に `learnings` が列挙されている場合にのみ、
+セクション 13 の学びのステップを行う。このモジュールが列挙されている場合は、バッチのユニットについて
+利用者が行った修正についてのみ尋ねる（いつ尋ねるかはモジュールが定める）。利用者が残すものだけを永続化し、
+その後、別の質問と別のターンとして、以下の `ask` でバッチの承認を開始する。
+自動バッチでは、利用者が行った修正は、`directive.protocol_modules` に `learnings` が列挙されている場合に限り、
+次の人間のチェックポイントまたは最終の引き渡しまで待つ。モジュールがない場合は、日誌をつけず、
+学びの質問もしない。人間が必要な場合は、そのままバッチの承認手順に進む。
+記録処理の決着が、すでに処理済みの儀式を繰り返すことは決してない。
 
-After confirming `ready: true` and before presenting **Approve** / **Request Changes**,
-bind the question to the current batch fingerprint and per-Unit `Command SHA-256`
-set. The command finds the session it runs in by itself, so pass no session and
-never look one up:
+`ready: true` を確認した後、**Approve** / **Request Changes** を提示する前に、
+質問を現在のバッチのフィンガープリントと、ユニットごとの `Command SHA-256` のセットにバインドする。
+コマンドは自分が実行されているセッションを自ら見つけるので、セッションを渡さず、
+決してセッションを探してはならない:
 
 ```bash
 {{INVOKE}} engine bolt swarm-checkpoint --action ask --batch <N> --units "<Units>"
 ```
 
-Then present the choices and wait for the human. Show "Verified with
-`<full command>` (exit 0). Approve this completed batch?" using the complete
-recorded command, never abbreviated. Copy the canonical `command` from the
-verification-command tool output into a code span whose delimiter preserves any
-backticks. The human's reply to this checkpoint question, in this chat or a new one,
-authorizes the action you read from it: approve, or reject with what they asked
-to change (their words are kept with the record; add `--reason` when you want to
-say more). When their reply only picked Request Changes, ask what should change
-before you record it. A reply typed in a new chat is kept for the question while it is the
-newest question asked; run the approve or reject command there, with no session,
-and never ask it again. A reply to a different question does not count. When they approved and asked for a change, approve, then make the change
-and say in one line what you changed. Add `--fix-finding "<review-artifact>#R-NN"`
-to `approve` for each review finding they asked to have fixed, and
-`--reject-finding '<review-artifact>#R-NN=<their reason>'` to `reject` for each one
-they rejected. The response is one-shot and
-bound to this batch, exact Unit set, current fingerprint, and per-Unit command
-digest set. Re-running swarm `finalize` withdraws every open checkpoint question
-and captured checkpoint response for this intent, in any session. After fresh
-verification and source landing, obtain a new directive, confirm `ready: true`,
-and ask again; a reply captured before `finalize` cannot approve the new evidence.
-A human Request Changes always requires this ready question-and-answer flow,
-even under autonomous policy.
+その後、選択肢を提示して人間を待つ。省略していない、記録された完全なコマンドを使って "Verified with
+`<full command>` (exit 0). Approve this completed batch?"（訳: 完全なコマンドで検証済み（終了コード 0）。この完了したバッチを承認しますか?）を表示する。
+検証コマンドツールの出力から正規の `command` を、バッククォートを保持できる区切り文字の
+コードスパンにコピーする。このチェックポイントの質問に対する人間の返答は、このチャットでも新しいチャットでも、
+そこから読み取ったアクションを承認する。承認するか、変更を求められた内容とともに却下する
+（利用者の言葉は記録とともに保持される。補足したい場合は `--reason` を追加する）。
+返答が Request Changes を選んだだけの場合は、記録する前に何を変えるべきかを尋ねる。
+新しいチャットで入力された返答は、その質問が最も新しく尋ねられた質問である間、その質問のために保持される。
+そこで承認または却下のコマンドを、セッションを指定せずに実行し、決して再度尋ねない。
+別の質問への返答は数えない。利用者が承認し、かつ変更を求めた場合は、承認してから変更を行い、
+何を変えたかを 1 行で伝える。修正を求められた各レビュー指摘について、`approve` に
+`--fix-finding "<review-artifact>#R-NN"` を追加し、却下された各指摘について、`reject` に
+`--reject-finding '<review-artifact>#R-NN=<their reason>'` を追加する。
+この応答は 1 回限りで、このバッチ、正確なユニットセット、現在のフィンガープリント、
+ユニットごとのコマンドダイジェストのセットにバインドされる。swarm の `finalize` を再実行すると、
+このインテントについて、どのセッションのものであれ、未解決のチェックポイントの質問と取得済みのチェックポイントの応答が
+すべて取り下げられる。新たな検証とソースの取り込みの後、新しいディレクティブを取得し、`ready: true` を確認して、
+もう一度尋ねる。`finalize` の前に取得された返答は、新しいエビデンスを承認できない。
+人間による Request Changes には、自律ポリシーのもとでも、常にこの準備完了時の質疑応答フローが必要である。
 
 ```bash
 # Only after a real human Approve:
@@ -250,441 +222,409 @@ even under autonomous policy.
 {{INVOKE}} engine bolt swarm-checkpoint --action reject --batch <N> --units "<Units>" --user-input 'Request Changes' --reason '<human feedback>'
 ```
 
-Re-run `next` after batch approval or rejection. Approval advances batch routing,
-not the whole Code Generation stage. A changed fingerprint or refused action
-requires current evidence and another directive, not a fabricated user answer.
-Plan Approval remains mandatory for every Unit regardless of how batch completion
-is approved; grouped Plan Approval changes only the presentation.
+バッチの承認または却下の後、`next` を再実行する。承認によって進むのはバッチのルーティングであり、
+Code Generation ステージ全体ではない。フィンガープリントが変わった場合やアクションが拒否された場合は、
+でっち上げたユーザーの回答ではなく、現在のエビデンスと別のディレクティブが必要である。
+バッチの完了がどのように承認されるかにかかわらず、Plan Approval はすべてのユニットについて必須のままである。
+グループ化された Plan Approval が変えるのは提示の仕方だけである。
 
-**Settled-swarm re-entry.** `swarm_settled: true` is a re-entry over completed
-Unit bodies and review receipts. First apply the Construction module's metadata
-routing. A `swarm_checkpoint` uses the Batch checkpoint procedure above; a
-`construction_checkpoint` uses Unit checkpoint actions; a
-`construction_policy.completion_only` directive skips body, questions, reviewer,
-and learnings, and reports `awaiting-approval` then `approved` without
-`--user-input`, then `next`. For an ordinary settle, do not dispatch builders or
-reviewers again: use `human_completion_required` for the remaining completion
-presentation. A false value skips routine human completion/learnings questions
-and reports without invented user input. An absent policy retains the legacy
-approval procedure: run the stage-level learnings ritual only when
-`directive.protocol_modules` lists `learnings`, then the approval gate, and
-report the human's result. This rule applies equally after session resume.
+**決着済みスウォームへの再入。** `swarm_settled: true` は、完了したユニットの本体とレビューのレシートに対する再入である。
+まず Construction モジュールのメタデータルーティングを適用する。`swarm_checkpoint` には上記の
+Batch checkpoint の手順を使い、`construction_checkpoint` にはユニットのチェックポイントのアクションを使う。
+`construction_policy.completion_only` のディレクティブでは、本体、質問、レビュアー、学びをスキップし、
+`--user-input` なしで `awaiting-approval`、続いて `approved` を報告してから、`next` を実行する。
+通常の決着では、ビルダーやレビュアーを再度ディスパッチしてはならない。残りの完了の提示には
+`human_completion_required` を使う。値が false の場合は、定型の人間による完了/学びの質問をスキップし、
+ユーザー入力をでっち上げずに報告する。ポリシーがない場合は、レガシーの承認手順を維持する。
+`directive.protocol_modules` に `learnings` が列挙されている場合にのみステージレベルの学びの儀式を行い、
+その後に承認ゲートを行い、人間の結果を報告する。このルールはセッション再開後にも同様に適用される。
 
-**Post-finalize source landing.** After every `finalize` call, before `next` or
-the human gate, run `bun {{HARNESS_DIR}}/tools/aidlc-worktree.ts merge --slug
+**finalize 後のソースの取り込み。** 各 `finalize` 呼び出しの後、`next` または人間のゲートの前に、
+ステータスが `converged` で `merge_failures` に含まれない各結果行について、`bun {{HARNESS_DIR}}/tools/aidlc-worktree.ts merge --slug
 <that converged result row's bolt_slug> --target <that row's landing_branch>
---strategy squash` for each result row whose status is `converged` and which is
-absent from `merge_failures`. `landing_branch` is the branch prepare found
-checked out in that repo's main checkout, where the Units land whatever base
-they forked from; a row without it lands on the branch checked out there. The merge
-recovers the creating repository from a unique durable source authority; its
-intent remains the selected workflow intent. Pass `--intent`/`--space` only
-when they name the session's active workflow; swarm refuses a mismatch before
-mutation or audit emission. The merge consumes the immutable `Source Commit`,
-lands it with the person's own git (their hooks, filters and merge drivers run,
-as for any commit they make), and emits `SWARM_SOURCE_MERGED`; modern
-convergence does not advance the batch until that row exists.
+--strategy squash` を実行する。`landing_branch` は、prepare がそのリポジトリのメインのチェックアウトで
+チェックアウトされているのを見つけたブランチであり、ユニットはフォーク元のベースが何であれそこに取り込まれる。
+これを持たない行は、そこでチェックアウトされているブランチに取り込まれる。マージは、一意で永続的なソースの権威から
+作成元のリポジトリを回復する。そのインテントは、選択されたワークフローのインテントのままである。
+`--intent`/`--space` は、それらがセッションのアクティブなワークフローを指す場合にのみ渡す。
+swarm は、変更や監査イベントの出力の前に不一致を拒否する。マージは不変の `Source Commit` を消費し、
+利用者自身の git でそれを取り込み（利用者が行う任意のコミットと同様に、利用者のフック、フィルタ、マージドライバが実行される）、
+`SWARM_SOURCE_MERGED` を出力する。現在の収束処理では、その行が存在するまでバッチは進まない。
 
-The person's git may change what lands. A hook that reformats files, a filter,
-or a merge driver is theirs: the landing keeps its result, the row records the
-reviewed commit, the landed commit and the files that differ (`Landed changes`,
-`Driver merges`), and the merge returns one line per difference in `notices`
-(for example "Your pre-commit hook changed 3 files while landing Unit
-auth-mfa: ..."). Say each line once and carry on; never refuse, undo or ask
-about it, under any Guard Policy. A hook that refuses the commit returns
-`status: "commit-refused"` with the hook's own `output`, the `staged` paths and
-a `next` step, and leaves the main checkout exactly as git left it, with the
-landing staged. Say in one line that the person's hook refused the landing of
-that Unit and why, in the `output` field's words. Fix what it named in the
-staged landing (edit the file and `git add` it in the main checkout, or pass
-`--message` for a commit-message rule) and run the same merge again: it
-finishes the staged landing and records the fix under `Landed changes`. If you
-cannot fix it, stop, leave the checkout as git left it, and say what `staged`
-lists.
+利用者の git は、取り込まれる内容を変えることがある。ファイルを整形し直すフック、フィルタ、マージドライバは
+利用者のものである。取り込みはその結果を保持し、行にはレビュー済みのコミット、取り込まれたコミット、差異のあるファイル
+（`Landed changes`、`Driver merges`）が記録され、マージは差異ごとに 1 行を `notices` で返す
+（例: "Your pre-commit hook changed 3 files while landing Unit
+auth-mfa: ..."）。各行を 1 回伝えて先に進む。どの Guard Policy のもとでも、それを拒否したり、
+元に戻したり、それについて尋ねたりしてはならない。コミットを拒否するフックの場合は、フック自身の `output`、
+`staged` のパス、`next` のステップとともに `status: "commit-refused"` が返され、
+メインのチェックアウトは git が残したとおりの状態で、取り込みはステージされたままになる。
+利用者のフックがそのユニットの取り込みを拒否したことと、その理由を、`output` フィールドの言葉で 1 行で伝える。
+ステージされた取り込みの中で指摘された点を修正し（メインのチェックアウトでファイルを編集して `git add` するか、
+コミットメッセージのルールであれば `--message` を渡す）、同じマージを再度実行する。マージは
+ステージされた取り込みを完了し、修正を `Landed changes` に記録する。修正できない場合は停止し、
+チェックアウトを git が残したままにして、`staged` が列挙するものを伝える。
 
-A landing that clashes with a Unit landed before it returns `status:
-"conflict"` with the files git could not merge (`conflict_files`) and a `next`
-step, and leaves the landing staged in the main checkout. Combine both sides in
-each of them so each Unit keeps what its approved plan asked for, never dropping
-one Unit's side; while the batch is out they are the main checkout's only files
-you can write. Then `git add` them (`git rm` one that stays deleted) and run the
-same merge again: it finishes the landing and returns one
-notice naming the files combined; say it once. If the two plans want different
-things there, stop and say which files clash and that `git reset --merge` in
-that checkout drops the landing; run it only when the person asks. A landing
-git did not start because files it changes hold changes not committed in the
-main checkout (an AI-DLC update to `.gitignore` the person has not committed,
-say) names them and the step: say it in one line, commit those changes only on
-the person's word, then run the same merge again.
+それより前に取り込まれたユニットと衝突する取り込みは、git がマージできなかったファイル（`conflict_files`）と
+`next` のステップとともに `status:
+"conflict"` を返し、取り込みをメインのチェックアウトにステージしたままにする。
+各ファイルで両側を統合し、各ユニットがその承認済みの計画が求めたものを保持するようにする。一方のユニットの側を
+落としてはならない。バッチが進行中の間、それらはメインのチェックアウトで書き込みが許される唯一のファイルである。
+その後それらを `git add` し（削除されたままにするものは `git rm`）、同じマージを再度実行する。マージは取り込みを完了し、
+統合したファイルを示す通知を 1 つ返すので、それを 1 回伝える。2 つの計画がそこで異なるものを求めている場合は、
+停止して、どのファイルが衝突しているかと、そのチェックアウトで `git reset --merge` を実行すれば取り込みが取り消されることを伝える。
+それは利用者が求めた場合にのみ実行する。変更対象のファイルに、メインのチェックアウトで未コミットの変更
+（たとえば、利用者がまだコミットしていない AI-DLC による `.gitignore` の更新）があるために git が開始しなかった取り込みは、
+それらのファイルとステップを示す。それを 1 行で伝え、利用者の指示があった場合にのみその変更をコミットしてから、
+同じマージを再度実行する。
 
-Any other non-zero result before `[merge-succeeded:<sha>]` preserves the
-worktree and names its own step: follow it and run the same merge again,
-without rerunning `finalize`; when it names none, stop and say it in one line,
-with the checkout as it is. If the message carries
-`[merge-succeeded:<sha>]` and `SWARM_SOURCE_MERGED` exists, the reviewed source
-is already authoritative and only cleanup failed; rerun the same merge, which
-performs cleanup-only reconciliation without reapplying source or duplicating
-authority. If the marker exists but `SWARM_SOURCE_MERGED` does not (the record
-could not be written after the landing), do not retry the merge: preserve the
-worktree and follow the named stage-restart or explicit human-approved bypass
-remedy.
+`[merge-succeeded:<sha>]` より前のその他のゼロ以外の結果は、ワークツリーを保持し、
+それ自身のステップを示す。それに従い、`finalize` を再実行せずに同じマージを再度実行する。
+ステップが示されない場合は停止し、チェックアウトをそのままにして 1 行で伝える。メッセージに
+`[merge-succeeded:<sha>]` が含まれ、`SWARM_SOURCE_MERGED` が存在する場合、レビュー済みのソースは
+すでに権威あるものとなっており、失敗したのはクリーンアップだけである。同じマージを再実行すると、
+ソースを再適用したり権威を重複させたりすることなく、クリーンアップのみの整合処理が行われる。
+マーカーは存在するが `SWARM_SOURCE_MERGED` が存在しない場合（取り込み後に記録を書き込めなかった場合）は、
+マージを再試行してはならない。ワークツリーを保持し、示されたステージの再開、または人間が明示的に承認したバイパスの
+対処法に従う。
 
-Cleanup also refuses if the Bolt branch is checked out at a foreign worktree
-path, preserving its branch and retained/parked refs. Surface the owner path;
-do not treat another intent's same-named Unit as cleanup for this batch.
+Bolt のブランチが別のワークツリーのパスでチェックアウトされている場合も、クリーンアップは拒否され、
+そのブランチと保持/退避された参照は保持される。所有者のパスを表面化する。
+別のインテントの同名のユニットを、このバッチのクリーンアップとして扱ってはならない。
 
-**Recoverable abort/discard.** In every harness's recovery path below, aborting
-and discarding the old Bolt means park/discard: snapshot tracked and non-ignored
-untracked files (or keep the remaining branch tip when the checkout is gone) and
-park reviewed source refs before removing the live checkout and branch. The
-conductor must obtain the human's selection and execute the returned recovery
-command unchanged. When present, the returned `restore_operation` recovers
-parked work in an isolated `.aidlc/restored/bolt-<id8>_<slug>-<stamp>` checkout on
-`restore/bolt-<id8>_<slug>-<stamp>`, never overwriting a new live Bolt. Its saved
-args select the exact slug, stamp, and repository, then append
-`--intent <record-dir-name> --space <space>` so later execution cannot drift to
-another active intent. If only review evidence remained, there are no saved
-working files to restore, so neither `restore_operation` nor `restore_hint` is
-returned. Namespaced and legacy restores both require the selected intent's
-exact `WORKTREE_DISCARDED` `Parked ref` and stamp provenance; legacy restores
-retain their legacy name. Restored artifacts and receipts are not
-current-attempt evidence; retry still requires a fresh `prepare` and review
-boundary as described below.
+**回復可能な中止/破棄。** 以下のすべてのハーネスの回復経路において、古い Bolt の中止と破棄とは、
+退避/破棄を意味する。ライブのチェックアウトとブランチを削除する前に、追跡対象ファイルと無視されていない未追跡ファイルの
+スナップショットを取り（チェックアウトがなくなっている場合は残っているブランチの先端を保持し）、
+レビュー済みのソース参照を退避する。コンダクターは人間の選択を得て、返された回復コマンドを
+変更せずに実行しなければならない。返された `restore_operation` が存在する場合は、
+`restore/bolt-<id8>_<slug>-<stamp>` 上の隔離された `.aidlc/restored/bolt-<id8>_<slug>-<stamp>` チェックアウトに
+退避した作業を回復し、新しいライブの Bolt を決して上書きしない。保存された引数は正確な slug、スタンプ、
+リポジトリを選択し、その後に `--intent <record-dir-name> --space <space>` を追加するので、
+以降の実行が別のアクティブなインテントにずれることはない。レビューのエビデンスしか残っていなかった場合は、
+復元すべき保存済みの作業ファイルがないため、`restore_operation` も `restore_hint` も返されない。
+名前空間付きの復元とレガシーの復元はどちらも、選択されたインテントの正確な `WORKTREE_DISCARDED` の `Parked ref`
+とスタンプの来歴を必要とする。レガシーの復元はレガシーの名前を保持する。復元された成果物とレシートは、
+現在の試行のエビデンスではない。再試行には、以下で説明するとおり、引き続き新たな `prepare` と
+レビューの境界が必要である。
 
 ### 12b. Autonomous Code Generation Plan Contract
 
-An `invoke-swarm` directive for `code-generation` changes where generation
-runs, not whether planning and Plan Approval happen. Before `aidlc-swarm.ts
-prepare`:
+`code-generation` に対する `invoke-swarm` ディレクティブが変えるのは、生成が実行される場所であり、
+計画作成と Plan Approval が行われるかどうかではない。`aidlc-swarm.ts
+prepare` の前に:
 
-For a session continuing an already prepared partial batch, first apply this
-module's **Continuing a partially completed batch** rule. Valid remaining
-workers keep their original plans and approvals and proceed to the protected
-brief in step 4; do not reset their questions or run initial preparation again.
+すでに準備済みの部分的なバッチを継続するセッションでは、まずこのモジュールの
+**Continuing a partially completed batch** ルールを適用する。有効な残りのワーカーは
+元の計画と承認を保持し、ステップ 4 の保護されたブリーフに進む。それらの質問をリセットしたり、
+最初の準備を再度実行したりしてはならない。
 
-After initial approval, plan, test instruction, and Testing Contract edits for
-the same intent, Unit, and attempt follow Code Generation Step 3's after-approval
-rules: under a lowered `plan-approval` fence the build continues with the edited
-files; with the fence on, `next` asks the person again. Other code moving never
-asks again. This also applies to approved members of a group; it does not change
-initial approval, source reproducibility, new-attempt approval, or completion
-gates. Missing artifacts or malformed contract JSON must be repaired before
-execution; `next` names the repair.
+最初の承認の後、同じインテント、ユニット、試行に対する計画、テスト指示、Testing Contract の編集は、
+Code Generation Step 3 の承認後ルールに従う。`plan-approval` フェンスが下げられている場合、ビルドは
+編集されたファイルで続行する。フェンスがオンの場合、`next` は利用者に再度尋ねる。ほかのコードが動いても、
+再度尋ねることはない。これはグループの承認済みメンバーにも適用される。最初の承認、ソースの再現性、
+新しい試行の承認、完了ゲートは変わらない。成果物の欠落や不正な形式の contract JSON は、
+実行前に修復しなければならない。`next` が修復内容を示す。
 
-1. While `directive.plan_approval.status` is `plan`, write Code Generation Part 1
-   in the main workspace for each Unit it lists: the plan (with its `## Summary`),
-   the embedded `## Testing Contract`, and the test instructions, acting on each
-   entry's `status`, `note`, and `feedback` as Code Generation Step 3 describes.
-   Then run `next`. Do not write questions files or fingerprints: the engine asks.
-2. When every listed plan is ready, `next` returns ONE `plan-approval` ask for all
-   the Units still waiting (see the construction module's **Grouped Plan Approval**). Show it, end the
-   turn, and run `next` after the person answers. Units the person approved are
-   done; Units they sent back return in `plan_approval.units` with their words.
-   Do not fork worktrees or dispatch implementation workers during planning.
-3. Call `prepare` only when `next` returns this `invoke-swarm` with
-   `plan_approval.status: "approved"`. Before
-   initial protected prepare, the approved parent application source must be
-   committed and reproducible, including an inline
-   skeleton's source before a later parallel batch. This module's
-   **Before initial protected prepare** rule applies to legacy autonomy and new
-   checkpoints alike: preflight the whole batch before creating any child, and
-   never commit automatically. On swarm Code Generation, `prepare` verifies the
-   plan, test instructions, embedded contract, answer, target-bound fingerprint,
-   current stage attempt, planned source, and human-owned receipt before
-   creating any worktree. If memory Testing Posture, scope, test strategy, or
-   project type inputs changed, refresh the current contract and instructions
-   as needed and apply the same after-approval rules: a lowered fence permits
-   continuation without reapproval. Re-running `next` for the same intent,
-   units, and attempt does not reopen approval.
-4. Every worker brief starts with the output of
-   `bun {{HARNESS_DIR}}/tools/aidlc-testing-posture.ts brief --unit <unit>`,
-   verbatim and unedited. That output begins with exactly:
+1. `directive.plan_approval.status` が `plan` の間、それが列挙する各ユニットについて、
+   メインのワークスペースで Code Generation Part 1 を書く。計画（`## Summary` を含む）、
+   埋め込みの `## Testing Contract`、テスト指示であり、Code Generation Step 3 の説明どおり、
+   各エントリの `status`、`note`、`feedback` に従って作業する。
+   その後 `next` を実行する。質問ファイルやフィンガープリントを書いてはならない。エンジンが尋ねる。
+2. 列挙されたすべての計画の準備ができると、`next` は、まだ待機中のすべてのユニットについて 1 つの `plan-approval` の質問を返す
+   （Construction モジュールの **Grouped Plan Approval** を参照）。それを表示してターンを終え、
+   利用者が回答した後に `next` を実行する。利用者が承認したユニットは完了である。
+   差し戻されたユニットは、利用者の言葉とともに `plan_approval.units` に戻ってくる。
+   計画作成中にワークツリーをフォークしたり、実装ワーカーをディスパッチしたりしてはならない。
+3. `next` が `plan_approval.status: "approved"` を持つこの `invoke-swarm` を返した場合にのみ
+   `prepare` を呼び出す。最初の保護された prepare の前に、承認済みの親アプリケーションソースは、
+   以降の並列バッチの前のインラインスケルトンのソースも含めて、コミットされ再現可能でなければならない。
+   このモジュールの **Before initial protected prepare** ルールは、レガシーの自律性にも
+   新しいチェックポイントにも同様に適用される。子を作成する前にバッチ全体を事前チェックし、
+   決して自動的にコミットしない。スウォームの Code Generation では、`prepare` はワークツリーを作成する前に、
+   計画、テスト指示、埋め込みのコントラクト、回答、ターゲットにバインドされたフィンガープリント、
+   現在のステージの試行、計画されたソース、人間が所有するレシートを検証する。
+   メモリの Testing Posture、スコープ、テスト戦略、プロジェクトタイプの入力が変わった場合は、
+   必要に応じて現在のコントラクトと指示を更新し、同じ承認後ルールを適用する。
+   フェンスが下げられていれば、再承認なしで続行できる。同じインテント、ユニット、試行について
+   `next` を再実行しても、承認が再度開かれることはない。
+4. すべてのワーカーブリーフは、
+   `bun {{HARNESS_DIR}}/tools/aidlc-testing-posture.ts brief --unit <unit>` の出力から、
+   一字一句編集せずに始まる。その出力は、正確に次の内容で始まる:
 
    ```text
    AIDLC-UNIT: <unit>
    AIDLC-TESTING-CONTRACT: <contract_sha256 from that unit's current plan>
    ```
 
-   and carries the current plan using the approval-content projection
-   (every line before a terminal `## Review` appendix and none of that appendix,
-   task markers reset to `[ ]`, spacing normalized; a replayed plan may still
-   carry an appendix from a review recorded under the earlier protocol) and the
-   current `unit-test-instructions.md` byte for byte. Do not write either
-   marker line yourself and never read the plan file into a brief: the
-   fingerprint excludes the appendix, so its bytes are not work to execute.
-   With its fence on, the plan-approval guard refuses a handoff that quotes them.
-   Use the tool-produced brief for current approval or permitted postapproval
-   continuation; do not substitute a fabricated approval. Any further context
-   for the worker follows the command's output; the worker reads and ticks its own
-   progress in the plan file inside its worktree. The worker must produce the unit's
-   `source-manifest.json` in the record folder its brief names,
-   listing every application-source path it creates, modifies, or deletes,
-   before the in-Bolt review. Because a Bolt is the single selected repository,
-   these paths are worktree-relative and omit `repo` even when the parent intent
-   records multiple repositories. The Testing Contract in the current brief is
-   authoritative: workers do not re-resolve memory, and retries use the current
-   tool-produced brief. With its fence on, the plan-approval guard rejects a
-   delegated worker whose marker is missing, stale, or different from the plan.
-   Headless worker harnesses that cannot run the hook still remain protected
-   by `prepare` and this mandatory
-   brief contract.
+   そして、承認内容の射影（終端の `## Review` 付録より前のすべての行で、その付録は一切含まない。
+   タスクマーカーは `[ ]` にリセットされ、空白は正規化される。再生された計画には、
+   以前のプロトコルで記録されたレビューの付録がまだ含まれている場合がある）を使った現在の計画と、
+   現在の `unit-test-instructions.md` をバイト単位でそのまま含む。どちらのマーカー行も
+   自分で書いてはならず、計画ファイルを決してブリーフに読み込んではならない。
+   フィンガープリントは付録を除外するため、そのバイト列は実行すべき作業ではない。
+   フェンスがオンの場合、plan-approval ガードはそれらを引用した引き渡しを拒否する。
+   現在の承認または許可された承認後の継続には、ツールが生成したブリーフを使う。
+   でっち上げた承認で代用してはならない。ワーカーへのその他のコンテキストは、コマンドの出力の後に続ける。
+   ワーカーは、自分のワークツリー内の計画ファイルで自分の進捗を読み、チェックを付ける。
+   ワーカーは、Bolt 内のレビューの前に、ブリーフが指定する記録フォルダにユニットの
+   `source-manifest.json` を作成し、作成、変更、削除するすべてのアプリケーションソースのパスを
+   列挙しなければならない。Bolt は選択された単一のリポジトリであるため、親インテントが複数のリポジトリを
+   記録している場合でも、これらのパスはワークツリーからの相対パスであり、`repo` を省略する。
+   現在のブリーフにある Testing Contract が権威を持つ。ワーカーはメモリを再解決せず、
+   再試行には現在のツール生成ブリーフを使う。フェンスがオンの場合、plan-approval ガードは、
+   マーカーが欠けている、古い、または計画と異なる委譲されたワーカーを拒否する。
+   フックを実行できないヘッドレスのワーカーハーネスも、`prepare` とこの必須の
+   ブリーフコントラクトによって引き続き保護される。
 
-Only after all four obligations are satisfied does the ordinary swarm
-prepare/fan-out/check/review/finalize loop run.
+4 つの義務がすべて満たされた後でのみ、通常のスウォームの
+prepare/fan-out/check/review/finalize ループが実行される。
 
 ### Claude Code
 
-The engine selected an eligible Construction batch for swarm execution. Execution is explicit on new workflows and may use gated or autonomous completion approval; a legacy workflow without the execution field retains its autonomy-based route. **You — the live `/aidlc` session — are the conductor: you own the fan-out and the retry loop; `aidlc-swarm.ts` is the deterministic referee you consult, never a loop-owner.** **Before step (1), read and follow §12b "Autonomous Code Generation Plan Contract" above; planning, the engine's Plan Approval question, and the two worker-brief markers are mandatory for every emitted unit.** Apply **Continuing a partially completed batch**, **Before initial protected prepare**, and **Resuming a reviewed batch after Request Changes** above to select continuation or preparation before the steps below; no automatic commit is authorized by an autonomy grant. (1) **`prepare`** the batch: `{{INVOKE}} engine swarm prepare --batch <n> --units <directive.units joined by comma> [--base <branch>] [--repo <name>]` creates the initial isolated worktrees only after the batch preflight (without `--base` they fork from the branch checked out); with `--resume-existing`, use the two resume paths above. Pass `--repo` = the directive's `repo` field when present; for a MULTI-REPO intent where the directive omits `repo`, supply `--repo <name>` for the sibling repo this batch targets (read the recorded set from `/aidlc intent --json`.repos) — `prepare` errors without it on a multi-repo intent. (2) **Fan out per `AIDLC_USE_SWARM`:** unset / not `"1"` → the floor — issue N parallel `Task` calls in one assistant message, one per unit, each implementing its unit in its worktree until the project's convergence check passes; `="1"` → author an inline Dynamic Workflow (`Workflow({script, args})`, batch in `args`) whose JS owns the per-unit `pipeline` and the iteration cap. If `="1"` but the Workflow tool is unavailable, **loud-degrade to the floor** and pass `--degraded-from ultracode` on the next referee call so the tool emits `SWARM_DEGRADED`. (3) Both `check` and `finalize` use the intent's recorded, human-authorized **Construction Verification Command**, with or without checkpoints; omit `--check-cmd` (if supplied, it must match). If authorization is missing, complete the checkpoint module's verification-command procedure and `set-construction-verification-command` before running either: it asks the person once. After each unit's worker turn, consult **`check <unit> [--test-file <protected spec>]`** — exit `0` = genuinely converged (the real check passed and no protected file was tampered; under a relaxed or off Guard Policy a changed protected file is kept and its one line comes back in `change_notices`, so tell the person that line); non-zero = not yet, and you judge retry-vs-escalate (knowledge). (4) When the loop settles, **`finalize --batch <n> --units <all> --claimed <the units you believe converged> [--reasons <unit>=<unsatisfiable|budget-exhausted|cap-exhausted>,…]`** re-verifies every claimed unit before merging (a unit you wrongly claim is refused — the lying-conductor guard) and serialised-merges the genuine passes. For any unit you did NOT claim, attribute *why* it gave up via `--reasons` (your knowledge call — `unsatisfiable` when it is fundamentally unbuildable, `budget-exhausted` when the ultracode token ceiling stopped it; an unlisted declined unit defaults to `cap-exhausted`); the tool records your attribution faithfully but never lets it override a claimed-but-red unit's `error` verdict. **Branch on `finalize`'s exit code:** `0` → this batch's reviewed record evidence and metadata converged; after the required source-landing step above, re-run `next` rather than reporting the stage yet. The engine may first return a `swarm_checkpoint` for the completed batch; resolve it before the next batch. Otherwise it returns the next `invoke-swarm` or the final `run-stage` settle directive; only on that settle directive do you apply the metadata-aware settled-swarm rule above and report its lifecycle outcome. Reporting approved after an intermediate batch would complete the stage with later batches unbuilt. `2` → it returns a failure envelope (a unit unsatisfiable, claimed-but-red, tampered, or a merge failed) — **take the baton back**: halt and re-engage the human via the halt-and-ask seam (`aidlc-common/protocols/stage-protocol-construction.md` § "Halt-and-ask on failure" — failure always halts and asks regardless of autonomy mode). For a `merge_failures` unit (converged but its merge-back failed; no `SWARM_UNIT_CONVERGED` row lands until the merge does), resolve the blocker and re-run `finalize` scoped to that unit: the worktree is preserved and `release-merge` is idempotent, so the retry is a pure re-invocation. The swarm never escapes the conductor — the referee owns the verdict + merge + audit, you own the fan-out + retry decision. *(Optional: a human may type `/goal` at the autonomy grant to run-until-a-condition keyed off the referee's transcript output — never as the convergence judge, which stays `finalize`'s exit code.)*
+エンジンは、対象となる Construction バッチをスウォーム実行に選択した。新しいワークフローでは実行方式が明示されており、gated または autonomous の完了承認を使える。実行フィールドを持たないレガシーのワークフローは、自律性に基づくルートを維持する。**あなた（稼働中の `/aidlc` セッション）がコンダクターである。展開と再試行ループはあなたが所有する。`aidlc-swarm.ts` はあなたが参照する決定論的な審判であり、決してループの所有者ではない。** **ステップ (1) の前に、上記の §12b "Autonomous Code Generation Plan Contract" を読んで従う。計画作成、エンジンの Plan Approval の質問、2 つのワーカーブリーフのマーカーは、出力されたすべてのユニットについて必須である。** 以下のステップの前に、上記の **Continuing a partially completed batch**、**Before initial protected prepare**、**Resuming a reviewed batch after Request Changes** を適用して、継続か準備かを選択する。自律性の付与によって自動コミットが許可されることはない。 (1) バッチを **`prepare`** する: `{{INVOKE}} engine swarm prepare --batch <n> --units <directive.units joined by comma> [--base <branch>] [--repo <name>]` は、バッチの事前チェックの後でのみ、最初の隔離されたワークツリーを作成する（`--base` がない場合は、チェックアウトされているブランチからフォークする）。`--resume-existing` を付ける場合は、上記の 2 つの再開経路を使う。ディレクティブに `repo` フィールドがある場合は、`--repo` にその値を渡す。ディレクティブが `repo` を省略している MULTI-REPO のインテントでは、このバッチが対象とする兄弟リポジトリについて `--repo <name>` を指定する（記録されたセットは `/aidlc intent --json`.repos から読む）。マルチリポジトリのインテントでは、これがないと `prepare` はエラーになる。 (2) **`AIDLC_USE_SWARM` に従って展開する:** 未設定 / `"1"` 以外 → 最低限の方式。1 つのアシスタントメッセージで N 個の並列 `Task` 呼び出しをユニットごとに 1 つずつ発行し、それぞれがプロジェクトの収束チェックに合格するまで、自分のワークツリーでユニットを実装する。`="1"` → インラインの Dynamic Workflow（`Workflow({script, args})`、バッチは `args` に入れる）を作成し、その JS がユニットごとの `pipeline` と反復回数の上限を所有する。`="1"` なのに Workflow ツールが利用できない場合は、**はっきり告知したうえで最低限の方式に降格し**、次の審判呼び出しで `--degraded-from ultracode` を渡して、ツールが `SWARM_DEGRADED` を出力するようにする。 (3) `check` と `finalize` はどちらも、チェックポイントの有無にかかわらず、インテントの記録された、人間が承認した **Construction Verification Command** を使う。`--check-cmd` は省略する（指定する場合は一致しなければならない）。承認がない場合は、どちらかを実行する前に、チェックポイントモジュールの検証コマンドの手順と `set-construction-verification-command` を完了する。これは利用者に 1 回だけ尋ねる。各ユニットのワーカーのターンの後、**`check <unit> [--test-file <protected spec>]`** を参照する。終了コード `0` = 本当に収束した（実際のチェックに合格し、保護されたファイルは改ざんされていない。緩和された、またはオフの Guard Policy のもとでは、変更された保護ファイルは保持され、その 1 行が `change_notices` で返されるので、利用者にその行を伝える）。ゼロ以外 = まだであり、再試行するかエスカレーションするかはあなたが判断する（ナレッジ）。 (4) ループが落ち着いたら、**`finalize --batch <n> --units <all> --claimed <the units you believe converged> [--reasons <unit>=<unsatisfiable|budget-exhausted|cap-exhausted>,…]`** は、マージの前にクレームされたすべてのユニットを再検証し（誤ってクレームしたユニットは拒否される。嘘をつくコンダクターへのガード）、本当に合格したものを直列にマージする。クレームしなかったユニットについては、`--reasons` で *なぜ* 断念したかを帰属させる（あなたのナレッジによる判断。根本的に構築不可能な場合は `unsatisfiable`、ultracode のトークン上限で止まった場合は `budget-exhausted`。列挙されていない断念ユニットはデフォルトで `cap-exhausted` になる）。ツールはあなたの帰属を忠実に記録するが、クレームされたのに失敗したユニットの `error` 判定をそれで上書きさせることは決してない。 **`finalize` の終了コードで分岐する:** `0` → このバッチのレビュー済みの記録エビデンスとメタデータが収束した。上記の必須のソース取り込みステップの後、まだステージを報告せずに `next` を再実行する。エンジンはまず、完了したバッチについて `swarm_checkpoint` を返すことがある。次のバッチの前にそれを解決する。そうでなければ、次の `invoke-swarm` か最終の `run-stage` の決着ディレクティブを返す。その決着ディレクティブの場合にのみ、上記のメタデータを考慮した決着済みスウォームのルールを適用し、そのライフサイクルの結果を報告する。途中のバッチの後に承認済みと報告すると、後続のバッチが構築されないままステージが完了してしまう。 `2` → 失敗のエンベロープを返す（ユニットが充足不能、クレームされたのに失敗、改ざん、またはマージの失敗）。**主導権を取り戻す**: 停止し、halt-and-ask の継ぎ目を通じて人間を再び関与させる（`aidlc-common/protocols/stage-protocol-construction.md` § "Halt-and-ask on failure"。失敗時は自律モードにかかわらず常に停止して尋ねる）。 `merge_failures` のユニット（収束したがマージバックに失敗したもの。マージが成功するまで `SWARM_UNIT_CONVERGED` の行は記録されない）については、阻害要因を解決し、そのユニットに範囲を絞って `finalize` を再実行する。ワークツリーは保持されており、`release-merge` は冪等なので、再試行は純粋な再呼び出しである。スウォームが決してコンダクターの手を離れることはない。審判は判定、マージ、監査を所有し、あなたは展開と再試行の判断を所有する。 *（任意: 人間は自律性の付与時に `/goal` と入力して、審判のトランスクリプト出力をキーとする条件まで実行させることができる。ただし収束の判定者としてではない。判定者は引き続き `finalize` の終了コードである。）*
 
-**Autonomous reviewer boundary.** When an `invoke-swarm` carries `directive.reviewer`, a unit is not claimable at `finalize` merely because `check` passed. In that unit's `prepare`-created worktree, follow the reviewer contract (stage-protocol-reviewer.md §12a): record `REVIEW_REQUESTED` with `{{INVOKE}} engine log review --stage "<directive.stage>" --unit "<unit>" --reviewer "<directive.reviewer>" --iteration <n> --project-dir "<worktree>"`, dispatch the reviewer against `directive.stage_file` plus that worktree's unit artifacts and contracts, then record `REVIEW_COMPLETED` with the same command plus `--verdict <READY|NOT-READY>`. The logger stays in the main workspace while `--project-dir` targets the worktree, which also works when a multi-repo worktree contains only the selected sibling repo. A NOT-READY verdict re-invokes the lead in the same worktree, reruns the convergence check, and repeats the reviewer up to `directive.reviewer_max_iterations`. If the one recovery receipt is invalidated again, do not put the Unit in `--claimed` and do not run `finalize`: halt for a human Retry/Abort decision. On Retry, return to the main workspace, abort and discard the old Bolt, then call `next` and follow **Retry after a native worker discard** above for that Unit with the original batch/repo selection; the fresh `BOLT_STARTED` boundary resets review accounting without claiming convergence. Put a unit in `--claimed` only after its terminal review receipt exists; `finalize` verifies the receipt before merge and then merges it into the main audit. When `next` returns the settle `run-stage` after all units converge, do not dispatch the reviewer again; the per-unit receipts already cover the stage, so apply only the metadata-aware settled-swarm completion procedure above. This is model work inside autonomous Construction, not another human prompt.
+**自律的なレビュアーの境界。** `invoke-swarm` が `directive.reviewer` を持つ場合、`check` に合格したというだけでは、そのユニットを `finalize` でクレームすることはできない。そのユニットの `prepare` で作成されたワークツリーで、レビュアーのコントラクト（stage-protocol-reviewer.md §12a）に従う。`{{INVOKE}} engine log review --stage "<directive.stage>" --unit "<unit>" --reviewer "<directive.reviewer>" --iteration <n> --project-dir "<worktree>"` で `REVIEW_REQUESTED` を記録し、`directive.stage_file` とそのワークツリーのユニットの成果物およびコントラクトに対してレビュアーをディスパッチし、同じコマンドに `--verdict <READY|NOT-READY>` を加えて `REVIEW_COMPLETED` を記録する。`--project-dir` がワークツリーを対象とする間、ロガーはメインのワークスペースにとどまる。これは、マルチリポジトリのワークツリーが選択された兄弟リポジトリだけを含む場合にも機能する。NOT-READY の判定では、同じワークツリーでリードを再度呼び出し、収束チェックを再実行し、`directive.reviewer_max_iterations` までレビュアーを繰り返す。唯一の回復レシートが再び無効になった場合は、そのユニットを `--claimed` に入れず、`finalize` も実行しない。人間による Retry/Abort の判断のために停止する。Retry の場合は、メインのワークスペースに戻り、古い Bolt を中止して破棄してから `next` を呼び出し、元の batch/repo の選択で、そのユニットについて上記の **Retry after a native worker discard** に従う。新しい `BOLT_STARTED` の境界は、収束を主張することなくレビューの集計をリセットする。ユニットを `--claimed` に入れるのは、終端のレビューレシートが存在した後だけにする。`finalize` はマージの前にレシートを検証し、その後それをメインの監査にマージする。すべてのユニットが収束した後に `next` が決着の `run-stage` を返した場合は、レビュアーを再度ディスパッチしてはならない。ユニットごとのレシートがすでにステージをカバーしているので、上記のメタデータを考慮した決着済みスウォームの完了手順だけを適用する。これは自律的な Construction の中でのモデルの作業であり、人間への別のプロンプトではない。
 
-**After a successful retry discard.** After the `--discard` abort succeeds and
-confirms the old attempt was parked, but before rerunning `prepare`, use this
-SAY line. Use `On your go-ahead I` only when the human selected Retry; otherwise
-use `I`, never implying a human remedy choice that did not happen. Do not
-announce a saved snapshot if the abort failed or did not park an attempt.
+**再試行の破棄が成功した後。** `--discard` による中止が成功し、古い試行が退避されたことが
+確認された後、`prepare` を再実行する前に、この SAY 行を使う。`On your go-ahead I` は、
+人間が Retry を選択した場合にのみ使う。それ以外の場合は `I` を使い、行われていない人間による対処の選択を
+ほのめかしてはならない。中止が失敗した場合や試行が退避されなかった場合は、保存されたスナップショットを告知してはならない。
 
-Select `[saved-files text]` from the returned `parked_mode`:
+返された `parked_mode` から `[saved-files text]` を選択する:
 
-- `snapshot`: "I saved a snapshot of its tracked files and non-ignored untracked files. Ignored files are not saved, and the snapshot may normalize line endings."
-- `branch-tip`: "I kept its committed work; there were no uncommitted files to save."
-- `evidence-only`: "Nothing of its working files remained to save; only its review evidence was kept."
-- `null`: omit `[saved-files text]`; the fallback descriptor does not establish what was saved.
+- `snapshot`: "I saved a snapshot of its tracked files and non-ignored untracked files. Ignored files are not saved, and the snapshot may normalize line endings."（訳: 追跡対象ファイルと無視されていない未追跡ファイルのスナップショットを保存しました。無視されたファイルは保存されず、スナップショットでは改行コードが正規化される場合があります。）
+- `branch-tip`: "I kept its committed work; there were no uncommitted files to save."（訳: コミット済みの作業を保持しました。保存すべき未コミットのファイルはありませんでした。）
+- `evidence-only`: "Nothing of its working files remained to save; only its review evidence was kept."（訳: 保存すべき作業ファイルは何も残っていませんでした。レビューのエビデンスだけを保持しました。）
+- `null`: `[saved-files text]` を省略する。フォールバックの記述子は、何が保存されたかを確定しない。
 
-**SAY:** "[On your go-ahead I|I] set aside the previous attempt at [Unit] because the work changed again after its re-check, and I'm starting a new attempt. [saved-files text] If you want the previous attempt back, ask me to restore it."
+**SAY:** "[On your go-ahead I|I] set aside the previous attempt at [Unit] because the work changed again after its re-check, and I'm starting a new attempt. [saved-files text] If you want the previous attempt back, ask me to restore it."（訳: 再チェック後に作業が再び変更されたため、[Unit] の以前の試行は脇に置き、新しい試行を開始します。[saved-files text] 以前の試行を戻したい場合は、復元するよう依頼してください。）
 
-When `restore_operation` is absent, omit the final offer: "If you want the previous attempt back, ask me to restore it." Do not invent a restore operation for an evidence-only attempt.
+`restore_operation` がない場合は、最後の申し出 "If you want the previous attempt back, ask me to restore it." を省略する。エビデンスのみの試行について、復元操作をでっち上げてはならない。
 
-If the human later asks for that attempt back, use the saved abort result's
-`restore_operation`: invoke its `worktree` route through
-`{{INVOKE}} engine worktree <args...>`, passing each listed `args` element exactly
-as a separate argv argument. Never join those arguments into a shell command or
-rebuild a slug-only selection. `restore_hint` is human display text only, never
-an execution input. If safe rendering fails (for example, an invalid harness
-directory), the hint is omitted and `restore_hint_error` explains why; the
-operation remains available and the restoration offer still applies.
-After restoration succeeds, announce the returned restored path plainly:
-**SAY:** "I restored the previous attempt at [returned restored path]."
-Restoration does not resume the old attempt or make its review current.
+人間が後でその試行を戻すよう求めた場合は、保存された中止結果の
+`restore_operation` を使う。その `worktree` ルートを
+`{{INVOKE}} engine worktree <args...>` で呼び出し、列挙された各 `args` 要素を、正確にそのまま
+個別の argv 引数として渡す。それらの引数を連結してシェルコマンドにしたり、
+slug だけの選択を作り直したりしてはならない。`restore_hint` は人間向けの表示テキストにすぎず、
+決して実行の入力ではない。安全なレンダリングに失敗した場合（たとえば、ハーネスの
+ディレクトリが無効な場合）は、ヒントは省略され、`restore_hint_error` がその理由を説明する。
+操作は引き続き利用でき、復元の申し出も引き続き適用される。
+復元が成功した後、返された復元先のパスを平易に告知する:
+**SAY:** "I restored the previous attempt at [returned restored path]."（訳: 以前の試行を [returned restored path] に復元しました。）
+復元によって古い試行が再開されたり、そのレビューが現在のものになったりすることはない。
 
 ---
 
 ### Kiro CLI
 
-The engine selected an eligible Construction batch for swarm execution. Execution is explicit on new workflows and may use gated or autonomous completion approval; a legacy workflow without the execution field retains its autonomy-based route. **You — the live `/aidlc` session — are the conductor: you own the fan-out and the retry loop; `aidlc-swarm.ts` is the deterministic referee you consult, never a loop-owner.** **Before step (1), read and follow §12b "Autonomous Code Generation Plan Contract" above; planning, the engine's Plan Approval question, and the two worker-brief markers are mandatory for every emitted unit.** Apply **Continuing a partially completed batch**, **Before initial protected prepare**, and **Resuming a reviewed batch after Request Changes** above to select continuation or preparation before the steps below; no automatic commit is authorized by an autonomy grant. (1) **`prepare`** the batch: `{{INVOKE}} engine swarm prepare --batch <n> --units <directive.units joined by comma> [--base <branch>] [--repo <name>]` creates the initial isolated worktrees only after the batch preflight (without `--base` they fork from the branch checked out); with `--resume-existing`, use the two resume paths above. Pass `--repo` = the directive's `repo` field when present; for a MULTI-REPO intent where the directive omits `repo`, supply `--repo <name>` for the sibling repo this batch targets (read the recorded set from `/aidlc intent --json`.repos) — `prepare` errors without it on a multi-repo intent. (2) **Fan out via the `subagent` tool**: delegate every unit in the batch in ONE delegation (whole batches are fine — concurrency is the harness's queueing concern), one parallel task per unit targeting `aidlc-developer-agent`, each implementing its unit in its worktree until the project's convergence check passes. On this harness the subagent fan-out is the ONLY swarm mode: `AIDLC_USE_SWARM=1` has no effect here (no Workflow tool exists) — if it is set, say so out loud and proceed with the fan-out, passing `--degraded-from ultracode` on the next referee call so the tool emits `SWARM_DEGRADED`. (3) Both `check` and `finalize` use the intent's recorded, human-authorized **Construction Verification Command**, with or without checkpoints; omit `--check-cmd` (if supplied, it must match). If authorization is missing, complete the checkpoint module's verification-command procedure and `set-construction-verification-command` before running either: it asks the person once. After each unit's worker turn, consult **`check <unit> [--test-file <protected spec>]`** — exit `0` = genuinely converged; non-zero = not yet, and you judge retry-vs-escalate. (4) When the loop settles, **`finalize --batch <n> --units <all> --claimed <the units you believe converged> [--reasons <unit>=<unsatisfiable|budget-exhausted|cap-exhausted>,…]`** re-verifies every claimed unit before merging (the lying-conductor guard) and serialised-merges the genuine passes. **Branch on `finalize`'s exit code:** `0` → this batch's reviewed record evidence and metadata converged; after the required source-landing step above, re-run `next` rather than reporting the stage yet. The engine may first return a `swarm_checkpoint` for the completed batch; resolve it before the next batch. Otherwise it returns the next `invoke-swarm` or the final `run-stage` settle directive; only on that settle directive do you apply the metadata-aware settled-swarm rule above and report its lifecycle outcome. Reporting approved after an intermediate batch would complete the stage with later batches unbuilt. `2` → failure envelope — **take the baton back**: halt and re-engage the human via the halt-and-ask seam (`aidlc-common/protocols/stage-protocol-construction.md` § "Halt-and-ask on failure"). For a `merge_failures` unit (converged but its merge-back failed; no `SWARM_UNIT_CONVERGED` row lands until the merge does), resolve the blocker and re-run `finalize` scoped to that unit: the worktree is preserved and `release-merge` is idempotent, so the retry is a pure re-invocation; do NOT re-run `prepare` for it. The swarm never escapes the conductor.
+エンジンは、対象となる Construction バッチをスウォーム実行に選択した。新しいワークフローでは実行方式が明示されており、gated または autonomous の完了承認を使える。実行フィールドを持たないレガシーのワークフローは、自律性に基づくルートを維持する。**あなた（稼働中の `/aidlc` セッション）がコンダクターである。展開と再試行ループはあなたが所有する。`aidlc-swarm.ts` はあなたが参照する決定論的な審判であり、決してループの所有者ではない。** **ステップ (1) の前に、上記の §12b "Autonomous Code Generation Plan Contract" を読んで従う。計画作成、エンジンの Plan Approval の質問、2 つのワーカーブリーフのマーカーは、出力されたすべてのユニットについて必須である。** 以下のステップの前に、上記の **Continuing a partially completed batch**、**Before initial protected prepare**、**Resuming a reviewed batch after Request Changes** を適用して、継続か準備かを選択する。自律性の付与によって自動コミットが許可されることはない。 (1) バッチを **`prepare`** する: `{{INVOKE}} engine swarm prepare --batch <n> --units <directive.units joined by comma> [--base <branch>] [--repo <name>]` は、バッチの事前チェックの後でのみ、最初の隔離されたワークツリーを作成する（`--base` がない場合は、チェックアウトされているブランチからフォークする）。`--resume-existing` を付ける場合は、上記の 2 つの再開経路を使う。ディレクティブに `repo` フィールドがある場合は、`--repo` にその値を渡す。ディレクティブが `repo` を省略している MULTI-REPO のインテントでは、このバッチが対象とする兄弟リポジトリについて `--repo <name>` を指定する（記録されたセットは `/aidlc intent --json`.repos から読む）。マルチリポジトリのインテントでは、これがないと `prepare` はエラーになる。 (2) **`subagent` ツールで展開する**: バッチ内のすべてのユニットを 1 回の委譲でまとめて委譲する（バッチ全体でかまわない。同時実行数はハーネスのキューイングの関心事である）。ユニットごとに `aidlc-developer-agent` を対象とする並列タスクを 1 つずつ用意し、それぞれがプロジェクトの収束チェックに合格するまで、自分のワークツリーでユニットを実装する。このハーネスでは、サブエージェントによる展開が唯一のスウォームモードである。`AIDLC_USE_SWARM=1` はここでは効果がない（Workflow ツールは存在しない）。設定されている場合は、そのことを声に出して伝えたうえで展開を進め、次の審判呼び出しで `--degraded-from ultracode` を渡して、ツールが `SWARM_DEGRADED` を出力するようにする。 (3) `check` と `finalize` はどちらも、チェックポイントの有無にかかわらず、インテントの記録された、人間が承認した **Construction Verification Command** を使う。`--check-cmd` は省略する（指定する場合は一致しなければならない）。承認がない場合は、どちらかを実行する前に、チェックポイントモジュールの検証コマンドの手順と `set-construction-verification-command` を完了する。これは利用者に 1 回だけ尋ねる。各ユニットのワーカーのターンの後、**`check <unit> [--test-file <protected spec>]`** を参照する。終了コード `0` = 本当に収束した。ゼロ以外 = まだであり、再試行するかエスカレーションするかはあなたが判断する。 (4) ループが落ち着いたら、**`finalize --batch <n> --units <all> --claimed <the units you believe converged> [--reasons <unit>=<unsatisfiable|budget-exhausted|cap-exhausted>,…]`** は、マージの前にクレームされたすべてのユニットを再検証し（嘘をつくコンダクターへのガード）、本当に合格したものを直列にマージする。 **`finalize` の終了コードで分岐する:** `0` → このバッチのレビュー済みの記録エビデンスとメタデータが収束した。上記の必須のソース取り込みステップの後、まだステージを報告せずに `next` を再実行する。エンジンはまず、完了したバッチについて `swarm_checkpoint` を返すことがある。次のバッチの前にそれを解決する。そうでなければ、次の `invoke-swarm` か最終の `run-stage` の決着ディレクティブを返す。その決着ディレクティブの場合にのみ、上記のメタデータを考慮した決着済みスウォームのルールを適用し、そのライフサイクルの結果を報告する。途中のバッチの後に承認済みと報告すると、後続のバッチが構築されないままステージが完了してしまう。 `2` → 失敗のエンベロープ。**主導権を取り戻す**: 停止し、halt-and-ask の継ぎ目を通じて人間を再び関与させる（`aidlc-common/protocols/stage-protocol-construction.md` § "Halt-and-ask on failure"）。 `merge_failures` のユニット（収束したがマージバックに失敗したもの。マージが成功するまで `SWARM_UNIT_CONVERGED` の行は記録されない）については、阻害要因を解決し、そのユニットに範囲を絞って `finalize` を再実行する。ワークツリーは保持されており、`release-merge` は冪等なので、再試行は純粋な再呼び出しである。そのために `prepare` を再実行してはならない。スウォームが決してコンダクターの手を離れることはない。
 
-**Autonomous reviewer boundary.** When an `invoke-swarm` carries `directive.reviewer`, a unit is not claimable at `finalize` merely because `check` passed. In that unit's `prepare`-created worktree, follow stage-protocol-reviewer.md §12a: record `REVIEW_REQUESTED` with `{{INVOKE}} engine log review --stage "<directive.stage>" --unit "<unit>" --reviewer "<directive.reviewer>" --iteration <n> --project-dir "<worktree>"`, delegate to the reviewer agent against `directive.stage_file` plus that worktree's unit artifacts and contracts, then record `REVIEW_COMPLETED` with the same command plus `--verdict <READY|NOT-READY>`. The logger stays in the main workspace while `--project-dir` targets the worktree, which also works when a multi-repo worktree contains only the selected sibling repo. A NOT-READY verdict re-invokes the lead in the same worktree, reruns the convergence check, and repeats the reviewer up to `directive.reviewer_max_iterations`. If the one recovery receipt is invalidated again, do not put the Unit in `--claimed` and do not run `finalize`: halt for a human Retry/Abort decision. On Retry, return to the main workspace, abort and discard the old Bolt, then call `next` and follow **Retry after a native worker discard** above for that Unit with the original batch/repo selection; the fresh `BOLT_STARTED` boundary resets review accounting without claiming convergence. Put a unit in `--claimed` only after its terminal review receipt exists; `finalize` verifies the receipt before merge and then merges it into the main audit. When `next` returns the settle `run-stage` after all units converge, do not delegate to the reviewer again; the per-unit receipts already cover the stage, so apply only the metadata-aware settled-swarm completion procedure above. This is model work inside autonomous Construction, not another human prompt.
+**自律的なレビュアーの境界。** `invoke-swarm` が `directive.reviewer` を持つ場合、`check` に合格したというだけでは、そのユニットを `finalize` でクレームすることはできない。そのユニットの `prepare` で作成されたワークツリーで、stage-protocol-reviewer.md §12a に従う。`{{INVOKE}} engine log review --stage "<directive.stage>" --unit "<unit>" --reviewer "<directive.reviewer>" --iteration <n> --project-dir "<worktree>"` で `REVIEW_REQUESTED` を記録し、`directive.stage_file` とそのワークツリーのユニットの成果物およびコントラクトに対してレビュアーエージェントに委譲し、同じコマンドに `--verdict <READY|NOT-READY>` を加えて `REVIEW_COMPLETED` を記録する。`--project-dir` がワークツリーを対象とする間、ロガーはメインのワークスペースにとどまる。これは、マルチリポジトリのワークツリーが選択された兄弟リポジトリだけを含む場合にも機能する。NOT-READY の判定では、同じワークツリーでリードを再度呼び出し、収束チェックを再実行し、`directive.reviewer_max_iterations` までレビュアーを繰り返す。唯一の回復レシートが再び無効になった場合は、そのユニットを `--claimed` に入れず、`finalize` も実行しない。人間による Retry/Abort の判断のために停止する。Retry の場合は、メインのワークスペースに戻り、古い Bolt を中止して破棄してから `next` を呼び出し、元の batch/repo の選択で、そのユニットについて上記の **Retry after a native worker discard** に従う。新しい `BOLT_STARTED` の境界は、収束を主張することなくレビューの集計をリセットする。ユニットを `--claimed` に入れるのは、終端のレビューレシートが存在した後だけにする。`finalize` はマージの前にレシートを検証し、その後それをメインの監査にマージする。すべてのユニットが収束した後に `next` が決着の `run-stage` を返した場合は、レビュアーに再度委譲してはならない。ユニットごとのレシートがすでにステージをカバーしているので、上記のメタデータを考慮した決着済みスウォームの完了手順だけを適用する。これは自律的な Construction の中でのモデルの作業であり、人間への別のプロンプトではない。
 
-**After a successful retry discard.** After the `--discard` abort succeeds and
-confirms the old attempt was parked, but before rerunning `prepare`, use this
-SAY line. Use `On your go-ahead I` only when the human selected Retry; otherwise
-use `I`, never implying a human remedy choice that did not happen. Do not
-announce a saved snapshot if the abort failed or did not park an attempt.
+**再試行の破棄が成功した後。** `--discard` による中止が成功し、古い試行が退避されたことが
+確認された後、`prepare` を再実行する前に、この SAY 行を使う。`On your go-ahead I` は、
+人間が Retry を選択した場合にのみ使う。それ以外の場合は `I` を使い、行われていない人間による対処の選択を
+ほのめかしてはならない。中止が失敗した場合や試行が退避されなかった場合は、保存されたスナップショットを告知してはならない。
 
-Select `[saved-files text]` from the returned `parked_mode`:
+返された `parked_mode` から `[saved-files text]` を選択する:
 
-- `snapshot`: "I saved a snapshot of its tracked files and non-ignored untracked files. Ignored files are not saved, and the snapshot may normalize line endings."
-- `branch-tip`: "I kept its committed work; there were no uncommitted files to save."
-- `evidence-only`: "Nothing of its working files remained to save; only its review evidence was kept."
-- `null`: omit `[saved-files text]`; the fallback descriptor does not establish what was saved.
+- `snapshot`: "I saved a snapshot of its tracked files and non-ignored untracked files. Ignored files are not saved, and the snapshot may normalize line endings."（訳: 追跡対象ファイルと無視されていない未追跡ファイルのスナップショットを保存しました。無視されたファイルは保存されず、スナップショットでは改行コードが正規化される場合があります。）
+- `branch-tip`: "I kept its committed work; there were no uncommitted files to save."（訳: コミット済みの作業を保持しました。保存すべき未コミットのファイルはありませんでした。）
+- `evidence-only`: "Nothing of its working files remained to save; only its review evidence was kept."（訳: 保存すべき作業ファイルは何も残っていませんでした。レビューのエビデンスだけを保持しました。）
+- `null`: `[saved-files text]` を省略する。フォールバックの記述子は、何が保存されたかを確定しない。
 
-**SAY:** "[On your go-ahead I|I] set aside the previous attempt at [Unit] because the work changed again after its re-check, and I'm starting a new attempt. [saved-files text] If you want the previous attempt back, ask me to restore it."
+**SAY:** "[On your go-ahead I|I] set aside the previous attempt at [Unit] because the work changed again after its re-check, and I'm starting a new attempt. [saved-files text] If you want the previous attempt back, ask me to restore it."（訳: 再チェック後に作業が再び変更されたため、[Unit] の以前の試行は脇に置き、新しい試行を開始します。[saved-files text] 以前の試行を戻したい場合は、復元するよう依頼してください。）
 
-When `restore_operation` is absent, omit the final offer: "If you want the previous attempt back, ask me to restore it." Do not invent a restore operation for an evidence-only attempt.
+`restore_operation` がない場合は、最後の申し出 "If you want the previous attempt back, ask me to restore it." を省略する。エビデンスのみの試行について、復元操作をでっち上げてはならない。
 
-If the human later asks for that attempt back, use the saved abort result's
-`restore_operation`: invoke its `worktree` route through
-`{{INVOKE}} engine worktree <args...>`, passing each listed `args` element exactly
-as a separate argv argument. Never join those arguments into a shell command or
-rebuild a slug-only selection. `restore_hint` is human display text only, never
-an execution input. If safe rendering fails (for example, an invalid harness
-directory), the hint is omitted and `restore_hint_error` explains why; the
-operation remains available and the restoration offer still applies.
-After restoration succeeds, announce the returned restored path plainly:
-**SAY:** "I restored the previous attempt at [returned restored path]."
-Restoration does not resume the old attempt or make its review current.
+人間が後でその試行を戻すよう求めた場合は、保存された中止結果の
+`restore_operation` を使う。その `worktree` ルートを
+`{{INVOKE}} engine worktree <args...>` で呼び出し、列挙された各 `args` 要素を、正確にそのまま
+個別の argv 引数として渡す。それらの引数を連結してシェルコマンドにしたり、
+slug だけの選択を作り直したりしてはならない。`restore_hint` は人間向けの表示テキストにすぎず、
+決して実行の入力ではない。安全なレンダリングに失敗した場合（たとえば、ハーネスの
+ディレクトリが無効な場合）は、ヒントは省略され、`restore_hint_error` がその理由を説明する。
+操作は引き続き利用でき、復元の申し出も引き続き適用される。
+復元が成功した後、返された復元先のパスを平易に告知する:
+**SAY:** "I restored the previous attempt at [returned restored path]."（訳: 以前の試行を [returned restored path] に復元しました。）
+復元によって古い試行が再開されたり、そのレビューが現在のものになったりすることはない。
 
 ---
 
 ### Kiro IDE
 
-The engine selected an eligible Construction batch for swarm execution. Execution is explicit on new workflows and may use gated or autonomous completion approval; a legacy workflow without the execution field retains its autonomy-based route. **You — the live `/aidlc` session — are the conductor: you own the fan-out and the retry loop; `aidlc-swarm.ts` is the deterministic referee you consult, never a loop-owner.** **Before step (1), read and follow §12b "Autonomous Code Generation Plan Contract" above; planning, the engine's Plan Approval question, and the two worker-brief markers are mandatory for every emitted unit.** Apply **Continuing a partially completed batch**, **Before initial protected prepare**, and **Resuming a reviewed batch after Request Changes** above to select continuation or preparation before the steps below; no automatic commit is authorized by an autonomy grant. When `directive.verification_command_authorized` is `false` and `directive.plan_approval.status` is `approved`, the intent has no authorized **Construction Verification Command** yet. When you are about to run the batch's initial `prepare` (not on the continuation or resume paths above), complete the checkpoint module's verification-command procedure (when a current approval receipt for the command already exists, run the setter without asking again) and re-run `next` first, ahead of any worker brief and that `prepare`. Go on with step (1) without asking again when the person approved a command and `next` still returns `false`, or when they asked to choose the command later; step (3) applies when you reach `check`. Ask it here in Kiro IDE and Kiro CLI v3 alike: each worker's brief then names the approved test command, and the answer no longer falls between the workers and their reviewers, where in Kiro CLI v3 it starts a new chat turn and the reviewers ask again for requests the person had approved for all subagents. (1) **`prepare`** the batch: `{{INVOKE}} engine swarm prepare --batch <n> --units <directive.units joined by comma> [--base <branch>] [--repo <name>]` creates the initial isolated worktrees only after the batch preflight (without `--base` they fork from the branch checked out); with `--resume-existing`, use the two resume paths above. Pass `--repo` = the directive's `repo` field when present; for a MULTI-REPO intent where the directive omits `repo`, supply `--repo <name>` for the sibling repo this batch targets (read the recorded set from `/aidlc intent --json`.repos) — `prepare` errors without it on a multi-repo intent. (2) **Fan out via the `subagent` tool**: delegate every unit in the batch in ONE delegation (whole batches are fine — concurrency is the harness's queueing concern), one parallel task per unit targeting `aidlc-developer-agent`, each implementing its unit in its worktree until the project's convergence check passes. On this harness the subagent fan-out is the ONLY swarm mode: `AIDLC_USE_SWARM=1` has no effect here (no Workflow tool exists) — if it is set, say so out loud and proceed with the fan-out, passing `--degraded-from ultracode` on the next referee call so the tool emits `SWARM_DEGRADED`. (3) Both `check` and `finalize` use the intent's recorded, human-authorized **Construction Verification Command**, with or without checkpoints; omit `--check-cmd` (if supplied, it must match). If authorization is missing, complete the checkpoint module's verification-command procedure and `set-construction-verification-command` before running either: it asks the person once. After each unit's worker turn, consult **`check <unit> [--test-file <protected spec>]`** — exit `0` = genuinely converged; non-zero = not yet, and you judge retry-vs-escalate. (4) When the loop settles, **`finalize --batch <n> --units <all> --claimed <the units you believe converged> [--reasons <unit>=<unsatisfiable|budget-exhausted|cap-exhausted>,…]`** re-verifies every claimed unit before merging (the lying-conductor guard) and serialised-merges the genuine passes. **Branch on `finalize`'s exit code:** `0` → this batch's reviewed record evidence and metadata converged; after the required source-landing step above, re-run `next` rather than reporting the stage yet. The engine may first return a `swarm_checkpoint` for the completed batch; resolve it before the next batch. Otherwise it returns the next `invoke-swarm` or the final `run-stage` settle directive; only on that settle directive do you apply the metadata-aware settled-swarm rule above and report its lifecycle outcome. Reporting approved after an intermediate batch would complete the stage with later batches unbuilt. `2` → failure envelope — **take the baton back**: halt and re-engage the human via the halt-and-ask seam (`aidlc-common/protocols/stage-protocol-construction.md` § "Halt-and-ask on failure"). For a `merge_failures` unit (converged but its merge-back failed; no `SWARM_UNIT_CONVERGED` row lands until the merge does), resolve the blocker and re-run `finalize` scoped to that unit: the worktree is preserved and `release-merge` is idempotent, so the retry is a pure re-invocation; do NOT re-run `prepare` for it. The swarm never escapes the conductor.
+エンジンは、対象となる Construction バッチをスウォーム実行に選択した。新しいワークフローでは実行方式が明示されており、gated または autonomous の完了承認を使える。実行フィールドを持たないレガシーのワークフローは、自律性に基づくルートを維持する。**あなた（稼働中の `/aidlc` セッション）がコンダクターである。展開と再試行ループはあなたが所有する。`aidlc-swarm.ts` はあなたが参照する決定論的な審判であり、決してループの所有者ではない。** **ステップ (1) の前に、上記の §12b "Autonomous Code Generation Plan Contract" を読んで従う。計画作成、エンジンの Plan Approval の質問、2 つのワーカーブリーフのマーカーは、出力されたすべてのユニットについて必須である。** 以下のステップの前に、上記の **Continuing a partially completed batch**、**Before initial protected prepare**、**Resuming a reviewed batch after Request Changes** を適用して、継続か準備かを選択する。自律性の付与によって自動コミットが許可されることはない。 `directive.verification_command_authorized` が `false` で `directive.plan_approval.status` が `approved` の場合、インテントにはまだ承認済みの **Construction Verification Command** がない。バッチの最初の `prepare` を実行しようとするとき（上記の継続または再開の経路ではない場合）は、ワーカーブリーフとその `prepare` より前に、チェックポイントモジュールの検証コマンドの手順を完了し（コマンドに対する現在の承認レシートがすでに存在する場合は、再度尋ねずにセッターを実行する）、まず `next` を再実行する。利用者がコマンドを承認したのに `next` がまだ `false` を返す場合、または利用者がコマンドを後で選ぶことを求めた場合は、再度尋ねずにステップ (1) に進む。`check` に到達したときはステップ (3) が適用される。Kiro IDE でも Kiro CLI v3 でも同様に、ここで尋ねる。そうすれば各ワーカーのブリーフが承認済みのテストコマンドを示し、回答がワーカーとそのレビュアーの間に落ちることがなくなる。Kiro CLI v3 では、そこで尋ねると新しいチャットターンが始まり、利用者がすべてのサブエージェントに対して承認済みのリクエストについて、レビュアーが再度尋ねてしまう。 (1) バッチを **`prepare`** する: `{{INVOKE}} engine swarm prepare --batch <n> --units <directive.units joined by comma> [--base <branch>] [--repo <name>]` は、バッチの事前チェックの後でのみ、最初の隔離されたワークツリーを作成する（`--base` がない場合は、チェックアウトされているブランチからフォークする）。`--resume-existing` を付ける場合は、上記の 2 つの再開経路を使う。ディレクティブに `repo` フィールドがある場合は、`--repo` にその値を渡す。ディレクティブが `repo` を省略している MULTI-REPO のインテントでは、このバッチが対象とする兄弟リポジトリについて `--repo <name>` を指定する（記録されたセットは `/aidlc intent --json`.repos から読む）。マルチリポジトリのインテントでは、これがないと `prepare` はエラーになる。 (2) **`subagent` ツールで展開する**: バッチ内のすべてのユニットを 1 回の委譲でまとめて委譲する（バッチ全体でかまわない。同時実行数はハーネスのキューイングの関心事である）。ユニットごとに `aidlc-developer-agent` を対象とする並列タスクを 1 つずつ用意し、それぞれがプロジェクトの収束チェックに合格するまで、自分のワークツリーでユニットを実装する。このハーネスでは、サブエージェントによる展開が唯一のスウォームモードである。`AIDLC_USE_SWARM=1` はここでは効果がない（Workflow ツールは存在しない）。設定されている場合は、そのことを声に出して伝えたうえで展開を進め、次の審判呼び出しで `--degraded-from ultracode` を渡して、ツールが `SWARM_DEGRADED` を出力するようにする。 (3) `check` と `finalize` はどちらも、チェックポイントの有無にかかわらず、インテントの記録された、人間が承認した **Construction Verification Command** を使う。`--check-cmd` は省略する（指定する場合は一致しなければならない）。承認がない場合は、どちらかを実行する前に、チェックポイントモジュールの検証コマンドの手順と `set-construction-verification-command` を完了する。これは利用者に 1 回だけ尋ねる。各ユニットのワーカーのターンの後、**`check <unit> [--test-file <protected spec>]`** を参照する。終了コード `0` = 本当に収束した。ゼロ以外 = まだであり、再試行するかエスカレーションするかはあなたが判断する。 (4) ループが落ち着いたら、**`finalize --batch <n> --units <all> --claimed <the units you believe converged> [--reasons <unit>=<unsatisfiable|budget-exhausted|cap-exhausted>,…]`** は、マージの前にクレームされたすべてのユニットを再検証し（嘘をつくコンダクターへのガード）、本当に合格したものを直列にマージする。 **`finalize` の終了コードで分岐する:** `0` → このバッチのレビュー済みの記録エビデンスとメタデータが収束した。上記の必須のソース取り込みステップの後、まだステージを報告せずに `next` を再実行する。エンジンはまず、完了したバッチについて `swarm_checkpoint` を返すことがある。次のバッチの前にそれを解決する。そうでなければ、次の `invoke-swarm` か最終の `run-stage` の決着ディレクティブを返す。その決着ディレクティブの場合にのみ、上記のメタデータを考慮した決着済みスウォームのルールを適用し、そのライフサイクルの結果を報告する。途中のバッチの後に承認済みと報告すると、後続のバッチが構築されないままステージが完了してしまう。 `2` → 失敗のエンベロープ。**主導権を取り戻す**: 停止し、halt-and-ask の継ぎ目を通じて人間を再び関与させる（`aidlc-common/protocols/stage-protocol-construction.md` § "Halt-and-ask on failure"）。 `merge_failures` のユニット（収束したがマージバックに失敗したもの。マージが成功するまで `SWARM_UNIT_CONVERGED` の行は記録されない）については、阻害要因を解決し、そのユニットに範囲を絞って `finalize` を再実行する。ワークツリーは保持されており、`release-merge` は冪等なので、再試行は純粋な再呼び出しである。そのために `prepare` を再実行してはならない。スウォームが決してコンダクターの手を離れることはない。
 
-**Autonomous reviewer boundary.** When an `invoke-swarm` carries `directive.reviewer`, a unit is not claimable at `finalize` merely because `check` passed. In that unit's `prepare`-created worktree, follow stage-protocol-reviewer.md §12a: record `REVIEW_REQUESTED` with `{{INVOKE}} engine log review --stage "<directive.stage>" --unit "<unit>" --reviewer "<directive.reviewer>" --iteration <n> --project-dir "<worktree>"`, delegate to the reviewer agent against `directive.stage_file` plus that worktree's unit artifacts and contracts, then record `REVIEW_COMPLETED` with the same command plus `--verdict <READY|NOT-READY>`. The logger stays in the main workspace while `--project-dir` targets the worktree, which also works when a multi-repo worktree contains only the selected sibling repo. A NOT-READY verdict re-invokes the lead in the same worktree, reruns the convergence check, and repeats the reviewer up to `directive.reviewer_max_iterations`. If the one recovery receipt is invalidated again, do not put the Unit in `--claimed` and do not run `finalize`: halt for a human Retry/Abort decision. On Retry, return to the main workspace, abort and discard the old Bolt, then call `next` and follow **Retry after a native worker discard** above for that Unit with the original batch/repo selection; the fresh `BOLT_STARTED` boundary resets review accounting without claiming convergence. Put a unit in `--claimed` only after its terminal review receipt exists; `finalize` verifies the receipt before merge and then merges it into the main audit. When `next` returns the settle `run-stage` after all units converge, do not delegate to the reviewer again; the per-unit receipts already cover the stage, so apply only the metadata-aware settled-swarm completion procedure above. This is model work inside autonomous Construction, not another human prompt.
+**自律的なレビュアーの境界。** `invoke-swarm` が `directive.reviewer` を持つ場合、`check` に合格したというだけでは、そのユニットを `finalize` でクレームすることはできない。そのユニットの `prepare` で作成されたワークツリーで、stage-protocol-reviewer.md §12a に従う。`{{INVOKE}} engine log review --stage "<directive.stage>" --unit "<unit>" --reviewer "<directive.reviewer>" --iteration <n> --project-dir "<worktree>"` で `REVIEW_REQUESTED` を記録し、`directive.stage_file` とそのワークツリーのユニットの成果物およびコントラクトに対してレビュアーエージェントに委譲し、同じコマンドに `--verdict <READY|NOT-READY>` を加えて `REVIEW_COMPLETED` を記録する。`--project-dir` がワークツリーを対象とする間、ロガーはメインのワークスペースにとどまる。これは、マルチリポジトリのワークツリーが選択された兄弟リポジトリだけを含む場合にも機能する。NOT-READY の判定では、同じワークツリーでリードを再度呼び出し、収束チェックを再実行し、`directive.reviewer_max_iterations` までレビュアーを繰り返す。唯一の回復レシートが再び無効になった場合は、そのユニットを `--claimed` に入れず、`finalize` も実行しない。人間による Retry/Abort の判断のために停止する。Retry の場合は、メインのワークスペースに戻り、古い Bolt を中止して破棄してから `next` を呼び出し、元の batch/repo の選択で、そのユニットについて上記の **Retry after a native worker discard** に従う。新しい `BOLT_STARTED` の境界は、収束を主張することなくレビューの集計をリセットする。ユニットを `--claimed` に入れるのは、終端のレビューレシートが存在した後だけにする。`finalize` はマージの前にレシートを検証し、その後それをメインの監査にマージする。すべてのユニットが収束した後に `next` が決着の `run-stage` を返した場合は、レビュアーに再度委譲してはならない。ユニットごとのレシートがすでにステージをカバーしているので、上記のメタデータを考慮した決着済みスウォームの完了手順だけを適用する。これは自律的な Construction の中でのモデルの作業であり、人間への別のプロンプトではない。
 
-**After a successful retry discard.** After the `--discard` abort succeeds and
-confirms the old attempt was parked, but before rerunning `prepare`, use this
-SAY line. Use `On your go-ahead I` only when the human selected Retry; otherwise
-use `I`, never implying a human remedy choice that did not happen. Do not
-announce a saved snapshot if the abort failed or did not park an attempt.
+**再試行の破棄が成功した後。** `--discard` による中止が成功し、古い試行が退避されたことが
+確認された後、`prepare` を再実行する前に、この SAY 行を使う。`On your go-ahead I` は、
+人間が Retry を選択した場合にのみ使う。それ以外の場合は `I` を使い、行われていない人間による対処の選択を
+ほのめかしてはならない。中止が失敗した場合や試行が退避されなかった場合は、保存されたスナップショットを告知してはならない。
 
-Select `[saved-files text]` from the returned `parked_mode`:
+返された `parked_mode` から `[saved-files text]` を選択する:
 
-- `snapshot`: "I saved a snapshot of its tracked files and non-ignored untracked files. Ignored files are not saved, and the snapshot may normalize line endings."
-- `branch-tip`: "I kept its committed work; there were no uncommitted files to save."
-- `evidence-only`: "Nothing of its working files remained to save; only its review evidence was kept."
-- `null`: omit `[saved-files text]`; the fallback descriptor does not establish what was saved.
+- `snapshot`: "I saved a snapshot of its tracked files and non-ignored untracked files. Ignored files are not saved, and the snapshot may normalize line endings."（訳: 追跡対象ファイルと無視されていない未追跡ファイルのスナップショットを保存しました。無視されたファイルは保存されず、スナップショットでは改行コードが正規化される場合があります。）
+- `branch-tip`: "I kept its committed work; there were no uncommitted files to save."（訳: コミット済みの作業を保持しました。保存すべき未コミットのファイルはありませんでした。）
+- `evidence-only`: "Nothing of its working files remained to save; only its review evidence was kept."（訳: 保存すべき作業ファイルは何も残っていませんでした。レビューのエビデンスだけを保持しました。）
+- `null`: `[saved-files text]` を省略する。フォールバックの記述子は、何が保存されたかを確定しない。
 
-**SAY:** "[On your go-ahead I|I] set aside the previous attempt at [Unit] because the work changed again after its re-check, and I'm starting a new attempt. [saved-files text] If you want the previous attempt back, ask me to restore it."
+**SAY:** "[On your go-ahead I|I] set aside the previous attempt at [Unit] because the work changed again after its re-check, and I'm starting a new attempt. [saved-files text] If you want the previous attempt back, ask me to restore it."（訳: 再チェック後に作業が再び変更されたため、[Unit] の以前の試行は脇に置き、新しい試行を開始します。[saved-files text] 以前の試行を戻したい場合は、復元するよう依頼してください。）
 
-When `restore_operation` is absent, omit the final offer: "If you want the previous attempt back, ask me to restore it." Do not invent a restore operation for an evidence-only attempt.
+`restore_operation` がない場合は、最後の申し出 "If you want the previous attempt back, ask me to restore it." を省略する。エビデンスのみの試行について、復元操作をでっち上げてはならない。
 
-If the human later asks for that attempt back, use the saved abort result's
-`restore_operation`: invoke its `worktree` route through
-`{{INVOKE}} engine worktree <args...>`, passing each listed `args` element exactly
-as a separate argv argument. Never join those arguments into a shell command or
-rebuild a slug-only selection. `restore_hint` is human display text only, never
-an execution input. If safe rendering fails (for example, an invalid harness
-directory), the hint is omitted and `restore_hint_error` explains why; the
-operation remains available and the restoration offer still applies.
-After restoration succeeds, announce the returned restored path plainly:
-**SAY:** "I restored the previous attempt at [returned restored path]."
-Restoration does not resume the old attempt or make its review current.
+人間が後でその試行を戻すよう求めた場合は、保存された中止結果の
+`restore_operation` を使う。その `worktree` ルートを
+`{{INVOKE}} engine worktree <args...>` で呼び出し、列挙された各 `args` 要素を、正確にそのまま
+個別の argv 引数として渡す。それらの引数を連結してシェルコマンドにしたり、
+slug だけの選択を作り直したりしてはならない。`restore_hint` は人間向けの表示テキストにすぎず、
+決して実行の入力ではない。安全なレンダリングに失敗した場合（たとえば、ハーネスの
+ディレクトリが無効な場合）は、ヒントは省略され、`restore_hint_error` がその理由を説明する。
+操作は引き続き利用でき、復元の申し出も引き続き適用される。
+復元が成功した後、返された復元先のパスを平易に告知する:
+**SAY:** "I restored the previous attempt at [returned restored path]."（訳: 以前の試行を [returned restored path] に復元しました。）
+復元によって古い試行が再開されたり、そのレビューが現在のものになったりすることはない。
 
 ---
 
 ### Codex CLI
 
-The engine selected an eligible Construction batch for swarm execution. Execution is explicit on new workflows and may use gated or autonomous completion approval; a legacy workflow without the execution field retains its autonomy-based route. **You — the live `$aidlc` session — are the conductor: you own the fan-out and the retry loop; `aidlc-swarm.ts` is the deterministic referee you consult, never a loop-owner.** **Before step (1), read and follow §12b "Autonomous Code Generation Plan Contract" above; planning, the engine's Plan Approval question, and the two worker-brief markers are mandatory for every emitted unit.** Apply **Continuing a partially completed batch**, **Before initial protected prepare**, and **Resuming a reviewed batch after Request Changes** above to select continuation or preparation before the steps below; no automatic commit is authorized by an autonomy grant. (1) **`prepare`** the batch: `{{INVOKE}} engine swarm prepare --batch <n> --units <directive.units joined by comma> [--base <branch>] [--repo <name>]` creates the initial isolated worktrees only after the batch preflight (without `--base` they fork from the branch checked out); with `--resume-existing`, use the two resume paths above. Pass `--repo` = the directive's `repo` field when present; for a MULTI-REPO intent where the directive omits `repo`, supply `--repo <name>` for the sibling repo this batch targets (read the recorded set from `$aidlc intent --json`.repos) — `prepare` errors without it on a multi-repo intent. (2) **Fan out via `spawn_agent`**: in ONE turn, spawn one `aidlc-developer-agent` subagent per unit in the batch (they run side by side), each implementing its unit in its prepared worktree until the project's convergence check passes, then `wait_agent` for them. A subagent starts in this session's folder: give each one its unit's worktree path from `prepare` and have it work only under that path (every file it writes, and the working directory of every command it runs). On this harness the subagent fan-out is the ONLY swarm mode: `AIDLC_USE_SWARM=1` has no effect here (no Workflow tool exists); if it is set, **say so out loud** and proceed with the fan-out, passing `--degraded-from ultracode` on the next referee call so the tool emits `SWARM_DEGRADED`. (3) Both `check` and `finalize` use the intent's recorded, human-authorized **Construction Verification Command**, with or without checkpoints; omit `--check-cmd` (if supplied, it must match). If authorization is missing, complete the checkpoint module's verification-command procedure and `set-construction-verification-command` before running either: it asks the person once. After each unit's worker turn, consult **`check <unit> [--test-file <protected spec>]`** — exit `0` = genuinely converged (the real check passed and no protected file was tampered; under a relaxed or off Guard Policy a changed protected file is kept and its one line comes back in `change_notices`, so tell the person that line); non-zero = not yet, and you judge retry-vs-escalate (knowledge; `send_input` to the same worker continues it). (4) When the loop settles, **`finalize --batch <n> --units <all> --claimed <the units you believe converged> [--reasons <unit>=<unsatisfiable|budget-exhausted|cap-exhausted>,…]`** re-verifies every claimed unit before merging (a unit you wrongly claim is refused — the lying-conductor guard) and serialised-merges the genuine passes. For any unit you did NOT claim, attribute *why* it gave up via `--reasons`; the tool records your attribution faithfully but never lets it override a claimed-but-red unit's `error` verdict. **Branch on `finalize`'s exit code:** `0` → this batch's reviewed record evidence and metadata converged; after the required source-landing step above, re-run `next` rather than reporting the stage yet. The engine may first return a `swarm_checkpoint` for the completed batch; resolve it before the next batch. Otherwise it returns the next `invoke-swarm` or the final `run-stage` settle directive; only on that settle directive do you apply the metadata-aware settled-swarm rule above and report its lifecycle outcome. Reporting approved after an intermediate batch would complete the stage with later batches unbuilt. `2` → it returns a failure envelope — **take the baton back**: halt and re-engage the human via the halt-and-ask seam (`aidlc-common/protocols/stage-protocol-construction.md` § "Halt-and-ask on failure" — failure always halts and asks regardless of autonomy mode). For a `merge_failures` unit (converged but its merge-back failed; no `SWARM_UNIT_CONVERGED` row lands until the merge does), resolve the blocker and re-run `finalize` scoped to that unit: the worktree is preserved and `release-merge` is idempotent, so the retry is a pure re-invocation. The swarm never escapes the conductor — the referee owns the verdict + merge + audit, you own the fan-out + retry decision.
+エンジンは、対象となる Construction バッチをスウォーム実行に選択した。新しいワークフローでは実行方式が明示されており、gated または autonomous の完了承認を使える。実行フィールドを持たないレガシーのワークフローは、自律性に基づくルートを維持する。**あなた（稼働中の `$aidlc` セッション）がコンダクターである。展開と再試行ループはあなたが所有する。`aidlc-swarm.ts` はあなたが参照する決定論的な審判であり、決してループの所有者ではない。** **ステップ (1) の前に、上記の §12b "Autonomous Code Generation Plan Contract" を読んで従う。計画作成、エンジンの Plan Approval の質問、2 つのワーカーブリーフのマーカーは、出力されたすべてのユニットについて必須である。** 以下のステップの前に、上記の **Continuing a partially completed batch**、**Before initial protected prepare**、**Resuming a reviewed batch after Request Changes** を適用して、継続か準備かを選択する。自律性の付与によって自動コミットが許可されることはない。 (1) バッチを **`prepare`** する: `{{INVOKE}} engine swarm prepare --batch <n> --units <directive.units joined by comma> [--base <branch>] [--repo <name>]` は、バッチの事前チェックの後でのみ、最初の隔離されたワークツリーを作成する（`--base` がない場合は、チェックアウトされているブランチからフォークする）。`--resume-existing` を付ける場合は、上記の 2 つの再開経路を使う。ディレクティブに `repo` フィールドがある場合は、`--repo` にその値を渡す。ディレクティブが `repo` を省略している MULTI-REPO のインテントでは、このバッチが対象とする兄弟リポジトリについて `--repo <name>` を指定する（記録されたセットは `$aidlc intent --json`.repos から読む）。マルチリポジトリのインテントでは、これがないと `prepare` はエラーになる。 (2) **`spawn_agent` で展開する**: 1 ターンで、バッチ内のユニットごとに `aidlc-developer-agent` サブエージェントを 1 つずつ生成し（それらは並行して動く）、それぞれがプロジェクトの収束チェックに合格するまで、準備されたワークツリーでユニットを実装させ、その後 `wait_agent` でそれらを待つ。サブエージェントはこのセッションのフォルダで起動する。各サブエージェントに `prepare` から得たユニットのワークツリーのパスを渡し、そのパスの下でのみ作業させる（書き込むすべてのファイルと、実行するすべてのコマンドの作業ディレクトリ）。このハーネスでは、サブエージェントによる展開が唯一のスウォームモードである。`AIDLC_USE_SWARM=1` はここでは効果がない（Workflow ツールは存在しない）。設定されている場合は、**そのことを声に出して伝え**、展開を進め、次の審判呼び出しで `--degraded-from ultracode` を渡して、ツールが `SWARM_DEGRADED` を出力するようにする。 (3) `check` と `finalize` はどちらも、チェックポイントの有無にかかわらず、インテントの記録された、人間が承認した **Construction Verification Command** を使う。`--check-cmd` は省略する（指定する場合は一致しなければならない）。承認がない場合は、どちらかを実行する前に、チェックポイントモジュールの検証コマンドの手順と `set-construction-verification-command` を完了する。これは利用者に 1 回だけ尋ねる。各ユニットのワーカーのターンの後、**`check <unit> [--test-file <protected spec>]`** を参照する。終了コード `0` = 本当に収束した（実際のチェックに合格し、保護されたファイルは改ざんされていない。緩和された、またはオフの Guard Policy のもとでは、変更された保護ファイルは保持され、その 1 行が `change_notices` で返されるので、利用者にその行を伝える）。ゼロ以外 = まだであり、再試行するかエスカレーションするかはあなたが判断する（ナレッジ。同じワーカーに `send_input` すると、そのワーカーが継続する）。 (4) ループが落ち着いたら、**`finalize --batch <n> --units <all> --claimed <the units you believe converged> [--reasons <unit>=<unsatisfiable|budget-exhausted|cap-exhausted>,…]`** は、マージの前にクレームされたすべてのユニットを再検証し（誤ってクレームしたユニットは拒否される。嘘をつくコンダクターへのガード）、本当に合格したものを直列にマージする。クレームしなかったユニットについては、`--reasons` で *なぜ* 断念したかを帰属させる。ツールはあなたの帰属を忠実に記録するが、クレームされたのに失敗したユニットの `error` 判定をそれで上書きさせることは決してない。 **`finalize` の終了コードで分岐する:** `0` → このバッチのレビュー済みの記録エビデンスとメタデータが収束した。上記の必須のソース取り込みステップの後、まだステージを報告せずに `next` を再実行する。エンジンはまず、完了したバッチについて `swarm_checkpoint` を返すことがある。次のバッチの前にそれを解決する。そうでなければ、次の `invoke-swarm` か最終の `run-stage` の決着ディレクティブを返す。その決着ディレクティブの場合にのみ、上記のメタデータを考慮した決着済みスウォームのルールを適用し、そのライフサイクルの結果を報告する。途中のバッチの後に承認済みと報告すると、後続のバッチが構築されないままステージが完了してしまう。 `2` → 失敗のエンベロープを返す。**主導権を取り戻す**: 停止し、halt-and-ask の継ぎ目を通じて人間を再び関与させる（`aidlc-common/protocols/stage-protocol-construction.md` § "Halt-and-ask on failure"。失敗時は自律モードにかかわらず常に停止して尋ねる）。 `merge_failures` のユニット（収束したがマージバックに失敗したもの。マージが成功するまで `SWARM_UNIT_CONVERGED` の行は記録されない）については、阻害要因を解決し、そのユニットに範囲を絞って `finalize` を再実行する。ワークツリーは保持されており、`release-merge` は冪等なので、再試行は純粋な再呼び出しである。スウォームが決してコンダクターの手を離れることはない。審判は判定、マージ、監査を所有し、あなたは展開と再試行の判断を所有する。
 
-**Autonomous reviewer boundary.** When an `invoke-swarm` carries `directive.reviewer`, a unit is not claimable at `finalize` merely because `check` passed. In that unit's `prepare`-created worktree, follow stage-protocol-reviewer.md §12a: record `REVIEW_REQUESTED` with `{{INVOKE}} engine log review --stage "<directive.stage>" --unit "<unit>" --reviewer "<directive.reviewer>" --iteration <n> --project-dir "<worktree>"`, spawn the reviewer role against `directive.stage_file` plus that worktree's unit artifacts and contracts, then record `REVIEW_COMPLETED` with the same command plus `--verdict <READY|NOT-READY>`. The logger stays in the main workspace while `--project-dir` targets the worktree, which also works when a multi-repo worktree contains only the selected sibling repo. A NOT-READY verdict re-invokes the lead in the same worktree, reruns the convergence check, and repeats the reviewer up to `directive.reviewer_max_iterations`. If the one recovery receipt is invalidated again, do not put the Unit in `--claimed` and do not run `finalize`: halt for a human Retry/Abort decision. On Retry, return to the main workspace, abort and discard the old Bolt, then call `next` and follow **Retry after a native worker discard** above for that Unit with the original batch/repo selection; the fresh `BOLT_STARTED` boundary resets review accounting without claiming convergence. Put a unit in `--claimed` only after its terminal review receipt exists; `finalize` verifies the receipt before merge and then merges it into the main audit. When `next` returns the settle `run-stage` after all units converge, do not spawn the reviewer again; the per-unit receipts already cover the stage, so apply only the metadata-aware settled-swarm completion procedure above. This is model work inside autonomous Construction, not another human prompt.
+**自律的なレビュアーの境界。** `invoke-swarm` が `directive.reviewer` を持つ場合、`check` に合格したというだけでは、そのユニットを `finalize` でクレームすることはできない。そのユニットの `prepare` で作成されたワークツリーで、stage-protocol-reviewer.md §12a に従う。`{{INVOKE}} engine log review --stage "<directive.stage>" --unit "<unit>" --reviewer "<directive.reviewer>" --iteration <n> --project-dir "<worktree>"` で `REVIEW_REQUESTED` を記録し、`directive.stage_file` とそのワークツリーのユニットの成果物およびコントラクトに対してレビュアーのロールを生成し、同じコマンドに `--verdict <READY|NOT-READY>` を加えて `REVIEW_COMPLETED` を記録する。`--project-dir` がワークツリーを対象とする間、ロガーはメインのワークスペースにとどまる。これは、マルチリポジトリのワークツリーが選択された兄弟リポジトリだけを含む場合にも機能する。NOT-READY の判定では、同じワークツリーでリードを再度呼び出し、収束チェックを再実行し、`directive.reviewer_max_iterations` までレビュアーを繰り返す。唯一の回復レシートが再び無効になった場合は、そのユニットを `--claimed` に入れず、`finalize` も実行しない。人間による Retry/Abort の判断のために停止する。Retry の場合は、メインのワークスペースに戻り、古い Bolt を中止して破棄してから `next` を呼び出し、元の batch/repo の選択で、そのユニットについて上記の **Retry after a native worker discard** に従う。新しい `BOLT_STARTED` の境界は、収束を主張することなくレビューの集計をリセットする。ユニットを `--claimed` に入れるのは、終端のレビューレシートが存在した後だけにする。`finalize` はマージの前にレシートを検証し、その後それをメインの監査にマージする。すべてのユニットが収束した後に `next` が決着の `run-stage` を返した場合は、レビュアーを再度生成してはならない。ユニットごとのレシートがすでにステージをカバーしているので、上記のメタデータを考慮した決着済みスウォームの完了手順だけを適用する。これは自律的な Construction の中でのモデルの作業であり、人間への別のプロンプトではない。
 
-**After a successful retry discard.** After the `--discard` abort succeeds and
-confirms the old attempt was parked, but before rerunning `prepare`, use this
-SAY line. Use `On your go-ahead I` only when the human selected Retry; otherwise
-use `I`, never implying a human remedy choice that did not happen. Do not
-announce a saved snapshot if the abort failed or did not park an attempt.
+**再試行の破棄が成功した後。** `--discard` による中止が成功し、古い試行が退避されたことが
+確認された後、`prepare` を再実行する前に、この SAY 行を使う。`On your go-ahead I` は、
+人間が Retry を選択した場合にのみ使う。それ以外の場合は `I` を使い、行われていない人間による対処の選択を
+ほのめかしてはならない。中止が失敗した場合や試行が退避されなかった場合は、保存されたスナップショットを告知してはならない。
 
-Select `[saved-files text]` from the returned `parked_mode`:
+返された `parked_mode` から `[saved-files text]` を選択する:
 
-- `snapshot`: "I saved a snapshot of its tracked files and non-ignored untracked files. Ignored files are not saved, and the snapshot may normalize line endings."
-- `branch-tip`: "I kept its committed work; there were no uncommitted files to save."
-- `evidence-only`: "Nothing of its working files remained to save; only its review evidence was kept."
-- `null`: omit `[saved-files text]`; the fallback descriptor does not establish what was saved.
+- `snapshot`: "I saved a snapshot of its tracked files and non-ignored untracked files. Ignored files are not saved, and the snapshot may normalize line endings."（訳: 追跡対象ファイルと無視されていない未追跡ファイルのスナップショットを保存しました。無視されたファイルは保存されず、スナップショットでは改行コードが正規化される場合があります。）
+- `branch-tip`: "I kept its committed work; there were no uncommitted files to save."（訳: コミット済みの作業を保持しました。保存すべき未コミットのファイルはありませんでした。）
+- `evidence-only`: "Nothing of its working files remained to save; only its review evidence was kept."（訳: 保存すべき作業ファイルは何も残っていませんでした。レビューのエビデンスだけを保持しました。）
+- `null`: `[saved-files text]` を省略する。フォールバックの記述子は、何が保存されたかを確定しない。
 
-**SAY:** "[On your go-ahead I|I] set aside the previous attempt at [Unit] because the work changed again after its re-check, and I'm starting a new attempt. [saved-files text] If you want the previous attempt back, ask me to restore it."
+**SAY:** "[On your go-ahead I|I] set aside the previous attempt at [Unit] because the work changed again after its re-check, and I'm starting a new attempt. [saved-files text] If you want the previous attempt back, ask me to restore it."（訳: 再チェック後に作業が再び変更されたため、[Unit] の以前の試行は脇に置き、新しい試行を開始します。[saved-files text] 以前の試行を戻したい場合は、復元するよう依頼してください。）
 
-When `restore_operation` is absent, omit the final offer: "If you want the previous attempt back, ask me to restore it." Do not invent a restore operation for an evidence-only attempt.
+`restore_operation` がない場合は、最後の申し出 "If you want the previous attempt back, ask me to restore it." を省略する。エビデンスのみの試行について、復元操作をでっち上げてはならない。
 
-If the human later asks for that attempt back, use the saved abort result's
-`restore_operation`: invoke its `worktree` route through
-`{{INVOKE}} engine worktree <args...>`, passing each listed `args` element exactly
-as a separate argv argument. Never join those arguments into a shell command or
-rebuild a slug-only selection. `restore_hint` is human display text only, never
-an execution input. If safe rendering fails (for example, an invalid harness
-directory), the hint is omitted and `restore_hint_error` explains why; the
-operation remains available and the restoration offer still applies.
-After restoration succeeds, announce the returned restored path plainly:
-**SAY:** "I restored the previous attempt at [returned restored path]."
-Restoration does not resume the old attempt or make its review current.
+人間が後でその試行を戻すよう求めた場合は、保存された中止結果の
+`restore_operation` を使う。その `worktree` ルートを
+`{{INVOKE}} engine worktree <args...>` で呼び出し、列挙された各 `args` 要素を、正確にそのまま
+個別の argv 引数として渡す。それらの引数を連結してシェルコマンドにしたり、
+slug だけの選択を作り直したりしてはならない。`restore_hint` は人間向けの表示テキストにすぎず、
+決して実行の入力ではない。安全なレンダリングに失敗した場合（たとえば、ハーネスの
+ディレクトリが無効な場合）は、ヒントは省略され、`restore_hint_error` がその理由を説明する。
+操作は引き続き利用でき、復元の申し出も引き続き適用される。
+復元が成功した後、返された復元先のパスを平易に告知する:
+**SAY:** "I restored the previous attempt at [returned restored path]."（訳: 以前の試行を [returned restored path] に復元しました。）
+復元によって古い試行が再開されたり、そのレビューが現在のものになったりすることはない。
 
 ---
 
 ### Cursor
 
-The engine selected an eligible Construction batch for swarm execution. Execution is explicit on new workflows and may use gated or autonomous completion approval; a legacy workflow without the execution field retains its autonomy-based route. **You — the live `/aidlc` session — are the conductor: you own the fan-out and the retry loop; `aidlc-swarm.ts` is the deterministic referee you consult, never a loop-owner.** **Before step (1), read and follow §12b "Autonomous Code Generation Plan Contract" above; planning, the engine's Plan Approval question, and the two worker-brief markers are mandatory for every emitted unit.** Apply **Continuing a partially completed batch**, **Before initial protected prepare**, and **Resuming a reviewed batch after Request Changes** above to select continuation or preparation before the steps below; no automatic commit is authorized by an autonomy grant. (1) **`prepare`** the batch: `{{INVOKE}} engine swarm prepare --batch <n> --units <directive.units joined by comma> [--base <branch>] [--repo <name>]` creates the initial isolated worktrees only after the batch preflight (without `--base` they fork from the branch checked out); with `--resume-existing`, use the two resume paths above. Pass `--repo` = the directive's `repo` field when present; for a MULTI-REPO intent where the directive omits `repo`, supply `--repo <name>` for the sibling repo this batch targets (read the recorded set from `/aidlc intent --json`.repos) — `prepare` errors without it on a multi-repo intent. (2) **Fan out via the `task` tool**: delegate every unit in the batch in ONE turn, one parallel task per unit targeting `aidlc-developer-agent`, each implementing its unit in its worktree until the project's convergence check passes. On this harness the subagent fan-out is the ONLY swarm mode: `AIDLC_USE_SWARM=1` has no effect here (no Workflow tool exists) — if it is set, say so out loud and proceed with the fan-out, passing `--degraded-from ultracode` on the next referee call so the tool emits `SWARM_DEGRADED`. (3) Both `check` and `finalize` use the intent's recorded, human-authorized **Construction Verification Command**, with or without checkpoints; omit `--check-cmd` (if supplied, it must match). If authorization is missing, complete the checkpoint module's verification-command procedure and `set-construction-verification-command` before running either: it asks the person once. After each unit's worker turn, consult **`check <unit> [--test-file <protected spec>]`** — exit `0` = genuinely converged; non-zero = not yet, and you judge retry-vs-escalate. (4) When the loop settles, **`finalize --batch <n> --units <all> --claimed <the units you believe converged> [--reasons <unit>=<unsatisfiable|budget-exhausted|cap-exhausted>,…]`** re-verifies every claimed unit before merging (the lying-conductor guard) and serialised-merges the genuine passes. **Branch on `finalize`'s exit code:** `0` → this batch's reviewed record evidence and metadata converged; after the required source-landing step above, re-run `next` rather than reporting the stage yet. The engine may first return a `swarm_checkpoint` for the completed batch; resolve it before the next batch. Otherwise it returns the next `invoke-swarm` or the final `run-stage` settle directive; only on that settle directive do you apply the metadata-aware settled-swarm rule above and report its lifecycle outcome. Reporting approved after an intermediate batch would complete the stage with later batches unbuilt. `2` → failure envelope — **take the baton back**: halt and re-engage the human via the halt-and-ask seam (`aidlc-common/protocols/stage-protocol-construction.md` § "Halt-and-ask on failure"). For a `merge_failures` unit (converged but its merge-back failed; no `SWARM_UNIT_CONVERGED` row lands until the merge does), resolve the blocker and re-run `finalize` scoped to that unit: the worktree is preserved and `release-merge` is idempotent, so the retry is a pure re-invocation; do NOT re-run `prepare` for it. The swarm never escapes the conductor.
+エンジンは、対象となる Construction バッチをスウォーム実行に選択した。新しいワークフローでは実行方式が明示されており、gated または autonomous の完了承認を使える。実行フィールドを持たないレガシーのワークフローは、自律性に基づくルートを維持する。**あなた（稼働中の `/aidlc` セッション）がコンダクターである。展開と再試行ループはあなたが所有する。`aidlc-swarm.ts` はあなたが参照する決定論的な審判であり、決してループの所有者ではない。** **ステップ (1) の前に、上記の §12b "Autonomous Code Generation Plan Contract" を読んで従う。計画作成、エンジンの Plan Approval の質問、2 つのワーカーブリーフのマーカーは、出力されたすべてのユニットについて必須である。** 以下のステップの前に、上記の **Continuing a partially completed batch**、**Before initial protected prepare**、**Resuming a reviewed batch after Request Changes** を適用して、継続か準備かを選択する。自律性の付与によって自動コミットが許可されることはない。 (1) バッチを **`prepare`** する: `{{INVOKE}} engine swarm prepare --batch <n> --units <directive.units joined by comma> [--base <branch>] [--repo <name>]` は、バッチの事前チェックの後でのみ、最初の隔離されたワークツリーを作成する（`--base` がない場合は、チェックアウトされているブランチからフォークする）。`--resume-existing` を付ける場合は、上記の 2 つの再開経路を使う。ディレクティブに `repo` フィールドがある場合は、`--repo` にその値を渡す。ディレクティブが `repo` を省略している MULTI-REPO のインテントでは、このバッチが対象とする兄弟リポジトリについて `--repo <name>` を指定する（記録されたセットは `/aidlc intent --json`.repos から読む）。マルチリポジトリのインテントでは、これがないと `prepare` はエラーになる。 (2) **`task` ツールで展開する**: バッチ内のすべてのユニットを 1 ターンで委譲する。ユニットごとに `aidlc-developer-agent` を対象とする並列タスクを 1 つずつ用意し、それぞれがプロジェクトの収束チェックに合格するまで、自分のワークツリーでユニットを実装する。このハーネスでは、サブエージェントによる展開が唯一のスウォームモードである。`AIDLC_USE_SWARM=1` はここでは効果がない（Workflow ツールは存在しない）。設定されている場合は、そのことを声に出して伝えたうえで展開を進め、次の審判呼び出しで `--degraded-from ultracode` を渡して、ツールが `SWARM_DEGRADED` を出力するようにする。 (3) `check` と `finalize` はどちらも、チェックポイントの有無にかかわらず、インテントの記録された、人間が承認した **Construction Verification Command** を使う。`--check-cmd` は省略する（指定する場合は一致しなければならない）。承認がない場合は、どちらかを実行する前に、チェックポイントモジュールの検証コマンドの手順と `set-construction-verification-command` を完了する。これは利用者に 1 回だけ尋ねる。各ユニットのワーカーのターンの後、**`check <unit> [--test-file <protected spec>]`** を参照する。終了コード `0` = 本当に収束した。ゼロ以外 = まだであり、再試行するかエスカレーションするかはあなたが判断する。 (4) ループが落ち着いたら、**`finalize --batch <n> --units <all> --claimed <the units you believe converged> [--reasons <unit>=<unsatisfiable|budget-exhausted|cap-exhausted>,…]`** は、マージの前にクレームされたすべてのユニットを再検証し（嘘をつくコンダクターへのガード）、本当に合格したものを直列にマージする。 **`finalize` の終了コードで分岐する:** `0` → このバッチのレビュー済みの記録エビデンスとメタデータが収束した。上記の必須のソース取り込みステップの後、まだステージを報告せずに `next` を再実行する。エンジンはまず、完了したバッチについて `swarm_checkpoint` を返すことがある。次のバッチの前にそれを解決する。そうでなければ、次の `invoke-swarm` か最終の `run-stage` の決着ディレクティブを返す。その決着ディレクティブの場合にのみ、上記のメタデータを考慮した決着済みスウォームのルールを適用し、そのライフサイクルの結果を報告する。途中のバッチの後に承認済みと報告すると、後続のバッチが構築されないままステージが完了してしまう。 `2` → 失敗のエンベロープ。**主導権を取り戻す**: 停止し、halt-and-ask の継ぎ目を通じて人間を再び関与させる（`aidlc-common/protocols/stage-protocol-construction.md` § "Halt-and-ask on failure"）。 `merge_failures` のユニット（収束したがマージバックに失敗したもの。マージが成功するまで `SWARM_UNIT_CONVERGED` の行は記録されない）については、阻害要因を解決し、そのユニットに範囲を絞って `finalize` を再実行する。ワークツリーは保持されており、`release-merge` は冪等なので、再試行は純粋な再呼び出しである。そのために `prepare` を再実行してはならない。スウォームが決してコンダクターの手を離れることはない。
 
-**Autonomous reviewer boundary.** When an `invoke-swarm` carries `directive.reviewer`, a unit is not claimable at `finalize` merely because `check` passed. In that unit's `prepare`-created worktree, follow stage-protocol-reviewer.md §12a: record `REVIEW_REQUESTED` with `{{INVOKE}} engine log review --stage "<directive.stage>" --unit "<unit>" --reviewer "<directive.reviewer>" --iteration <n> --project-dir "<worktree>"`, dispatch the reviewer task against `directive.stage_file` plus that worktree's unit artifacts and contracts, then record `REVIEW_COMPLETED` with the same command plus `--verdict <READY|NOT-READY>`. The logger stays in the main workspace while `--project-dir` targets the worktree, which also works when a multi-repo worktree contains only the selected sibling repo. A NOT-READY verdict re-invokes the lead in the same worktree, reruns the convergence check, and repeats the reviewer up to `directive.reviewer_max_iterations`. If the one recovery receipt is invalidated again, do not put the Unit in `--claimed` and do not run `finalize`: halt for a human Retry/Abort decision. On Retry, return to the main workspace, abort and discard the old Bolt, then call `next` and follow **Retry after a native worker discard** above for that Unit with the original batch/repo selection; the fresh `BOLT_STARTED` boundary resets review accounting without claiming convergence. Put a unit in `--claimed` only after its terminal review receipt exists; `finalize` verifies the receipt before merge and then merges it into the main audit. When `next` returns the settle `run-stage` after all units converge, do not dispatch the reviewer again; the per-unit receipts already cover the stage, so apply only the metadata-aware settled-swarm completion procedure above. This is model work inside autonomous Construction, not another human prompt.
+**自律的なレビュアーの境界。** `invoke-swarm` が `directive.reviewer` を持つ場合、`check` に合格したというだけでは、そのユニットを `finalize` でクレームすることはできない。そのユニットの `prepare` で作成されたワークツリーで、stage-protocol-reviewer.md §12a に従う。`{{INVOKE}} engine log review --stage "<directive.stage>" --unit "<unit>" --reviewer "<directive.reviewer>" --iteration <n> --project-dir "<worktree>"` で `REVIEW_REQUESTED` を記録し、`directive.stage_file` とそのワークツリーのユニットの成果物およびコントラクトに対してレビュアーのタスクをディスパッチし、同じコマンドに `--verdict <READY|NOT-READY>` を加えて `REVIEW_COMPLETED` を記録する。`--project-dir` がワークツリーを対象とする間、ロガーはメインのワークスペースにとどまる。これは、マルチリポジトリのワークツリーが選択された兄弟リポジトリだけを含む場合にも機能する。NOT-READY の判定では、同じワークツリーでリードを再度呼び出し、収束チェックを再実行し、`directive.reviewer_max_iterations` までレビュアーを繰り返す。唯一の回復レシートが再び無効になった場合は、そのユニットを `--claimed` に入れず、`finalize` も実行しない。人間による Retry/Abort の判断のために停止する。Retry の場合は、メインのワークスペースに戻り、古い Bolt を中止して破棄してから `next` を呼び出し、元の batch/repo の選択で、そのユニットについて上記の **Retry after a native worker discard** に従う。新しい `BOLT_STARTED` の境界は、収束を主張することなくレビューの集計をリセットする。ユニットを `--claimed` に入れるのは、終端のレビューレシートが存在した後だけにする。`finalize` はマージの前にレシートを検証し、その後それをメインの監査にマージする。すべてのユニットが収束した後に `next` が決着の `run-stage` を返した場合は、レビュアーを再度ディスパッチしてはならない。ユニットごとのレシートがすでにステージをカバーしているので、上記のメタデータを考慮した決着済みスウォームの完了手順だけを適用する。これは自律的な Construction の中でのモデルの作業であり、人間への別のプロンプトではない。
 
-**After a successful retry discard.** After the `--discard` abort succeeds and
-confirms the old attempt was parked, but before rerunning `prepare`, use this
-SAY line. Use `On your go-ahead I` only when the human selected Retry; otherwise
-use `I`, never implying a human remedy choice that did not happen. Do not
-announce a saved snapshot if the abort failed or did not park an attempt.
+**再試行の破棄が成功した後。** `--discard` による中止が成功し、古い試行が退避されたことが
+確認された後、`prepare` を再実行する前に、この SAY 行を使う。`On your go-ahead I` は、
+人間が Retry を選択した場合にのみ使う。それ以外の場合は `I` を使い、行われていない人間による対処の選択を
+ほのめかしてはならない。中止が失敗した場合や試行が退避されなかった場合は、保存されたスナップショットを告知してはならない。
 
-Select `[saved-files text]` from the returned `parked_mode`:
+返された `parked_mode` から `[saved-files text]` を選択する:
 
-- `snapshot`: "I saved a snapshot of its tracked files and non-ignored untracked files. Ignored files are not saved, and the snapshot may normalize line endings."
-- `branch-tip`: "I kept its committed work; there were no uncommitted files to save."
-- `evidence-only`: "Nothing of its working files remained to save; only its review evidence was kept."
-- `null`: omit `[saved-files text]`; the fallback descriptor does not establish what was saved.
+- `snapshot`: "I saved a snapshot of its tracked files and non-ignored untracked files. Ignored files are not saved, and the snapshot may normalize line endings."（訳: 追跡対象ファイルと無視されていない未追跡ファイルのスナップショットを保存しました。無視されたファイルは保存されず、スナップショットでは改行コードが正規化される場合があります。）
+- `branch-tip`: "I kept its committed work; there were no uncommitted files to save."（訳: コミット済みの作業を保持しました。保存すべき未コミットのファイルはありませんでした。）
+- `evidence-only`: "Nothing of its working files remained to save; only its review evidence was kept."（訳: 保存すべき作業ファイルは何も残っていませんでした。レビューのエビデンスだけを保持しました。）
+- `null`: `[saved-files text]` を省略する。フォールバックの記述子は、何が保存されたかを確定しない。
 
-**SAY:** "[On your go-ahead I|I] set aside the previous attempt at [Unit] because the work changed again after its re-check, and I'm starting a new attempt. [saved-files text] If you want the previous attempt back, ask me to restore it."
+**SAY:** "[On your go-ahead I|I] set aside the previous attempt at [Unit] because the work changed again after its re-check, and I'm starting a new attempt. [saved-files text] If you want the previous attempt back, ask me to restore it."（訳: 再チェック後に作業が再び変更されたため、[Unit] の以前の試行は脇に置き、新しい試行を開始します。[saved-files text] 以前の試行を戻したい場合は、復元するよう依頼してください。）
 
-When `restore_operation` is absent, omit the final offer: "If you want the previous attempt back, ask me to restore it." Do not invent a restore operation for an evidence-only attempt.
+`restore_operation` がない場合は、最後の申し出 "If you want the previous attempt back, ask me to restore it." を省略する。エビデンスのみの試行について、復元操作をでっち上げてはならない。
 
-If the human later asks for that attempt back, use the saved abort result's
-`restore_operation`: invoke its `worktree` route through
-`{{INVOKE}} engine worktree <args...>`, passing each listed `args` element exactly
-as a separate argv argument. Never join those arguments into a shell command or
-rebuild a slug-only selection. `restore_hint` is human display text only, never
-an execution input. If safe rendering fails (for example, an invalid harness
-directory), the hint is omitted and `restore_hint_error` explains why; the
-operation remains available and the restoration offer still applies.
-After restoration succeeds, announce the returned restored path plainly:
-**SAY:** "I restored the previous attempt at [returned restored path]."
-Restoration does not resume the old attempt or make its review current.
+人間が後でその試行を戻すよう求めた場合は、保存された中止結果の
+`restore_operation` を使う。その `worktree` ルートを
+`{{INVOKE}} engine worktree <args...>` で呼び出し、列挙された各 `args` 要素を、正確にそのまま
+個別の argv 引数として渡す。それらの引数を連結してシェルコマンドにしたり、
+slug だけの選択を作り直したりしてはならない。`restore_hint` は人間向けの表示テキストにすぎず、
+決して実行の入力ではない。安全なレンダリングに失敗した場合（たとえば、ハーネスの
+ディレクトリが無効な場合）は、ヒントは省略され、`restore_hint_error` がその理由を説明する。
+操作は引き続き利用でき、復元の申し出も引き続き適用される。
+復元が成功した後、返された復元先のパスを平易に告知する:
+**SAY:** "I restored the previous attempt at [returned restored path]."（訳: 以前の試行を [returned restored path] に復元しました。）
+復元によって古い試行が再開されたり、そのレビューが現在のものになったりすることはない。
 
 ---
 
 ### opencode
 
-The engine selected an eligible Construction batch for swarm execution. Execution is explicit on new workflows and may use gated or autonomous completion approval; a legacy workflow without the execution field retains its autonomy-based route. **You — the live `/aidlc` session — are the conductor: you own the fan-out and the retry loop; `aidlc-swarm.ts` is the deterministic referee you consult, never a loop-owner.** **Before step (1), read and follow §12b "Autonomous Code Generation Plan Contract" above; planning, the engine's Plan Approval question, and the two worker-brief markers are mandatory for every emitted unit.** Apply **Continuing a partially completed batch**, **Before initial protected prepare**, and **Resuming a reviewed batch after Request Changes** above to select continuation or preparation before the steps below; no automatic commit is authorized by an autonomy grant. (1) **`prepare`** the batch: `{{INVOKE}} engine swarm prepare --batch <n> --units <directive.units joined by comma> [--base <branch>] [--repo <name>]` creates the initial isolated worktrees only after the batch preflight (without `--base` they fork from the branch checked out); with `--resume-existing`, use the two resume paths above. Pass `--repo` = the directive's `repo` field when present; for a MULTI-REPO intent where the directive omits `repo`, supply `--repo <name>` for the sibling repo this batch targets (read the recorded set from `/aidlc intent --json`.repos) — `prepare` errors without it on a multi-repo intent. (2) **Fan out via the `task` tool**: delegate every unit in the batch in ONE turn, one parallel task per unit targeting `aidlc-developer-agent`, each implementing its unit in its worktree until the project's convergence check passes. On this harness the subagent fan-out is the ONLY swarm mode: `AIDLC_USE_SWARM=1` has no effect here (no Workflow tool exists) — if it is set, say so out loud and proceed with the fan-out, passing `--degraded-from ultracode` on the next referee call so the tool emits `SWARM_DEGRADED`. (3) Both `check` and `finalize` use the intent's recorded, human-authorized **Construction Verification Command**, with or without checkpoints; omit `--check-cmd` (if supplied, it must match). If authorization is missing, complete the checkpoint module's verification-command procedure and `set-construction-verification-command` before running either: it asks the person once. After each unit's worker turn, consult **`check <unit> [--test-file <protected spec>]`** — exit `0` = genuinely converged; non-zero = not yet, and you judge retry-vs-escalate. (4) When the loop settles, **`finalize --batch <n> --units <all> --claimed <the units you believe converged> [--reasons <unit>=<unsatisfiable|budget-exhausted|cap-exhausted>,…]`** re-verifies every claimed unit before merging (the lying-conductor guard) and serialised-merges the genuine passes. **Branch on `finalize`'s exit code:** `0` → this batch's reviewed record evidence and metadata converged; after the required source-landing step above, re-run `next` rather than reporting the stage yet. The engine may first return a `swarm_checkpoint` for the completed batch; resolve it before the next batch. Otherwise it returns the next `invoke-swarm` or the final `run-stage` settle directive; only on that settle directive do you apply the metadata-aware settled-swarm rule above and report its lifecycle outcome. Reporting approved after an intermediate batch would complete the stage with later batches unbuilt. `2` → failure envelope — **take the baton back**: halt and re-engage the human via the halt-and-ask seam (`aidlc-common/protocols/stage-protocol-construction.md` § "Halt-and-ask on failure"). For a `merge_failures` unit (converged but its merge-back failed; no `SWARM_UNIT_CONVERGED` row lands until the merge does), resolve the blocker and re-run `finalize` scoped to that unit: the worktree is preserved and `release-merge` is idempotent, so the retry is a pure re-invocation; do NOT re-run `prepare` for it. The swarm never escapes the conductor.
+エンジンは、対象となる Construction バッチをスウォーム実行に選択した。新しいワークフローでは実行方式が明示されており、gated または autonomous の完了承認を使える。実行フィールドを持たないレガシーのワークフローは、自律性に基づくルートを維持する。**あなた（稼働中の `/aidlc` セッション）がコンダクターである。展開と再試行ループはあなたが所有する。`aidlc-swarm.ts` はあなたが参照する決定論的な審判であり、決してループの所有者ではない。** **ステップ (1) の前に、上記の §12b "Autonomous Code Generation Plan Contract" を読んで従う。計画作成、エンジンの Plan Approval の質問、2 つのワーカーブリーフのマーカーは、出力されたすべてのユニットについて必須である。** 以下のステップの前に、上記の **Continuing a partially completed batch**、**Before initial protected prepare**、**Resuming a reviewed batch after Request Changes** を適用して、継続か準備かを選択する。自律性の付与によって自動コミットが許可されることはない。 (1) バッチを **`prepare`** する: `{{INVOKE}} engine swarm prepare --batch <n> --units <directive.units joined by comma> [--base <branch>] [--repo <name>]` は、バッチの事前チェックの後でのみ、最初の隔離されたワークツリーを作成する（`--base` がない場合は、チェックアウトされているブランチからフォークする）。`--resume-existing` を付ける場合は、上記の 2 つの再開経路を使う。ディレクティブに `repo` フィールドがある場合は、`--repo` にその値を渡す。ディレクティブが `repo` を省略している MULTI-REPO のインテントでは、このバッチが対象とする兄弟リポジトリについて `--repo <name>` を指定する（記録されたセットは `/aidlc intent --json`.repos から読む）。マルチリポジトリのインテントでは、これがないと `prepare` はエラーになる。 (2) **`task` ツールで展開する**: バッチ内のすべてのユニットを 1 ターンで委譲する。ユニットごとに `aidlc-developer-agent` を対象とする並列タスクを 1 つずつ用意し、それぞれがプロジェクトの収束チェックに合格するまで、自分のワークツリーでユニットを実装する。このハーネスでは、サブエージェントによる展開が唯一のスウォームモードである。`AIDLC_USE_SWARM=1` はここでは効果がない（Workflow ツールは存在しない）。設定されている場合は、そのことを声に出して伝えたうえで展開を進め、次の審判呼び出しで `--degraded-from ultracode` を渡して、ツールが `SWARM_DEGRADED` を出力するようにする。 (3) `check` と `finalize` はどちらも、チェックポイントの有無にかかわらず、インテントの記録された、人間が承認した **Construction Verification Command** を使う。`--check-cmd` は省略する（指定する場合は一致しなければならない）。承認がない場合は、どちらかを実行する前に、チェックポイントモジュールの検証コマンドの手順と `set-construction-verification-command` を完了する。これは利用者に 1 回だけ尋ねる。各ユニットのワーカーのターンの後、**`check <unit> [--test-file <protected spec>]`** を参照する。終了コード `0` = 本当に収束した。ゼロ以外 = まだであり、再試行するかエスカレーションするかはあなたが判断する。 (4) ループが落ち着いたら、**`finalize --batch <n> --units <all> --claimed <the units you believe converged> [--reasons <unit>=<unsatisfiable|budget-exhausted|cap-exhausted>,…]`** は、マージの前にクレームされたすべてのユニットを再検証し（嘘をつくコンダクターへのガード）、本当に合格したものを直列にマージする。 **`finalize` の終了コードで分岐する:** `0` → このバッチのレビュー済みの記録エビデンスとメタデータが収束した。上記の必須のソース取り込みステップの後、まだステージを報告せずに `next` を再実行する。エンジンはまず、完了したバッチについて `swarm_checkpoint` を返すことがある。次のバッチの前にそれを解決する。そうでなければ、次の `invoke-swarm` か最終の `run-stage` の決着ディレクティブを返す。その決着ディレクティブの場合にのみ、上記のメタデータを考慮した決着済みスウォームのルールを適用し、そのライフサイクルの結果を報告する。途中のバッチの後に承認済みと報告すると、後続のバッチが構築されないままステージが完了してしまう。 `2` → 失敗のエンベロープ。**主導権を取り戻す**: 停止し、halt-and-ask の継ぎ目を通じて人間を再び関与させる（`aidlc-common/protocols/stage-protocol-construction.md` § "Halt-and-ask on failure"）。 `merge_failures` のユニット（収束したがマージバックに失敗したもの。マージが成功するまで `SWARM_UNIT_CONVERGED` の行は記録されない）については、阻害要因を解決し、そのユニットに範囲を絞って `finalize` を再実行する。ワークツリーは保持されており、`release-merge` は冪等なので、再試行は純粋な再呼び出しである。そのために `prepare` を再実行してはならない。スウォームが決してコンダクターの手を離れることはない。
 
-**Autonomous reviewer boundary.** When an `invoke-swarm` carries `directive.reviewer`, a unit is not claimable at `finalize` merely because `check` passed. In that unit's `prepare`-created worktree, follow stage-protocol-reviewer.md §12a: record `REVIEW_REQUESTED` with `{{INVOKE}} engine log review --stage "<directive.stage>" --unit "<unit>" --reviewer "<directive.reviewer>" --iteration <n> --project-dir "<worktree>"`, dispatch the reviewer task against `directive.stage_file` plus that worktree's unit artifacts and contracts, then record `REVIEW_COMPLETED` with the same command plus `--verdict <READY|NOT-READY>`. The logger stays in the main workspace while `--project-dir` targets the worktree, which also works when a multi-repo worktree contains only the selected sibling repo. A NOT-READY verdict re-invokes the lead in the same worktree, reruns the convergence check, and repeats the reviewer up to `directive.reviewer_max_iterations`. If the one recovery receipt is invalidated again, do not put the Unit in `--claimed` and do not run `finalize`: halt for a human Retry/Abort decision. On Retry, return to the main workspace, abort and discard the old Bolt, then call `next` and follow **Retry after a native worker discard** above for that Unit with the original batch/repo selection; the fresh `BOLT_STARTED` boundary resets review accounting without claiming convergence. Put a unit in `--claimed` only after its terminal review receipt exists; `finalize` verifies the receipt before merge and then merges it into the main audit. When `next` returns the settle `run-stage` after all units converge, do not dispatch the reviewer again; the per-unit receipts already cover the stage, so apply only the metadata-aware settled-swarm completion procedure above. This is model work inside autonomous Construction, not another human prompt.
+**自律的なレビュアーの境界。** `invoke-swarm` が `directive.reviewer` を持つ場合、`check` に合格したというだけでは、そのユニットを `finalize` でクレームすることはできない。そのユニットの `prepare` で作成されたワークツリーで、stage-protocol-reviewer.md §12a に従う。`{{INVOKE}} engine log review --stage "<directive.stage>" --unit "<unit>" --reviewer "<directive.reviewer>" --iteration <n> --project-dir "<worktree>"` で `REVIEW_REQUESTED` を記録し、`directive.stage_file` とそのワークツリーのユニットの成果物およびコントラクトに対してレビュアーのタスクをディスパッチし、同じコマンドに `--verdict <READY|NOT-READY>` を加えて `REVIEW_COMPLETED` を記録する。`--project-dir` がワークツリーを対象とする間、ロガーはメインのワークスペースにとどまる。これは、マルチリポジトリのワークツリーが選択された兄弟リポジトリだけを含む場合にも機能する。NOT-READY の判定では、同じワークツリーでリードを再度呼び出し、収束チェックを再実行し、`directive.reviewer_max_iterations` までレビュアーを繰り返す。唯一の回復レシートが再び無効になった場合は、そのユニットを `--claimed` に入れず、`finalize` も実行しない。人間による Retry/Abort の判断のために停止する。Retry の場合は、メインのワークスペースに戻り、古い Bolt を中止して破棄してから `next` を呼び出し、元の batch/repo の選択で、そのユニットについて上記の **Retry after a native worker discard** に従う。新しい `BOLT_STARTED` の境界は、収束を主張することなくレビューの集計をリセットする。ユニットを `--claimed` に入れるのは、終端のレビューレシートが存在した後だけにする。`finalize` はマージの前にレシートを検証し、その後それをメインの監査にマージする。すべてのユニットが収束した後に `next` が決着の `run-stage` を返した場合は、レビュアーを再度ディスパッチしてはならない。ユニットごとのレシートがすでにステージをカバーしているので、上記のメタデータを考慮した決着済みスウォームの完了手順だけを適用する。これは自律的な Construction の中でのモデルの作業であり、人間への別のプロンプトではない。
 
-**After a successful retry discard.** After the `--discard` abort succeeds and
-confirms the old attempt was parked, but before rerunning `prepare`, use this
-SAY line. Use `On your go-ahead I` only when the human selected Retry; otherwise
-use `I`, never implying a human remedy choice that did not happen. Do not
-announce a saved snapshot if the abort failed or did not park an attempt.
+**再試行の破棄が成功した後。** `--discard` による中止が成功し、古い試行が退避されたことが
+確認された後、`prepare` を再実行する前に、この SAY 行を使う。`On your go-ahead I` は、
+人間が Retry を選択した場合にのみ使う。それ以外の場合は `I` を使い、行われていない人間による対処の選択を
+ほのめかしてはならない。中止が失敗した場合や試行が退避されなかった場合は、保存されたスナップショットを告知してはならない。
 
-Select `[saved-files text]` from the returned `parked_mode`:
+返された `parked_mode` から `[saved-files text]` を選択する:
 
-- `snapshot`: "I saved a snapshot of its tracked files and non-ignored untracked files. Ignored files are not saved, and the snapshot may normalize line endings."
-- `branch-tip`: "I kept its committed work; there were no uncommitted files to save."
-- `evidence-only`: "Nothing of its working files remained to save; only its review evidence was kept."
-- `null`: omit `[saved-files text]`; the fallback descriptor does not establish what was saved.
+- `snapshot`: "I saved a snapshot of its tracked files and non-ignored untracked files. Ignored files are not saved, and the snapshot may normalize line endings."（訳: 追跡対象ファイルと無視されていない未追跡ファイルのスナップショットを保存しました。無視されたファイルは保存されず、スナップショットでは改行コードが正規化される場合があります。）
+- `branch-tip`: "I kept its committed work; there were no uncommitted files to save."（訳: コミット済みの作業を保持しました。保存すべき未コミットのファイルはありませんでした。）
+- `evidence-only`: "Nothing of its working files remained to save; only its review evidence was kept."（訳: 保存すべき作業ファイルは何も残っていませんでした。レビューのエビデンスだけを保持しました。）
+- `null`: `[saved-files text]` を省略する。フォールバックの記述子は、何が保存されたかを確定しない。
 
-**SAY:** "[On your go-ahead I|I] set aside the previous attempt at [Unit] because the work changed again after its re-check, and I'm starting a new attempt. [saved-files text] If you want the previous attempt back, ask me to restore it."
+**SAY:** "[On your go-ahead I|I] set aside the previous attempt at [Unit] because the work changed again after its re-check, and I'm starting a new attempt. [saved-files text] If you want the previous attempt back, ask me to restore it."（訳: 再チェック後に作業が再び変更されたため、[Unit] の以前の試行は脇に置き、新しい試行を開始します。[saved-files text] 以前の試行を戻したい場合は、復元するよう依頼してください。）
 
-When `restore_operation` is absent, omit the final offer: "If you want the previous attempt back, ask me to restore it." Do not invent a restore operation for an evidence-only attempt.
+`restore_operation` がない場合は、最後の申し出 "If you want the previous attempt back, ask me to restore it." を省略する。エビデンスのみの試行について、復元操作をでっち上げてはならない。
 
-If the human later asks for that attempt back, use the saved abort result's
-`restore_operation`: invoke its `worktree` route through
-`{{INVOKE}} engine worktree <args...>`, passing each listed `args` element exactly
-as a separate argv argument. Never join those arguments into a shell command or
-rebuild a slug-only selection. `restore_hint` is human display text only, never
-an execution input. If safe rendering fails (for example, an invalid harness
-directory), the hint is omitted and `restore_hint_error` explains why; the
-operation remains available and the restoration offer still applies.
-After restoration succeeds, announce the returned restored path plainly:
-**SAY:** "I restored the previous attempt at [returned restored path]."
-Restoration does not resume the old attempt or make its review current.
+人間が後でその試行を戻すよう求めた場合は、保存された中止結果の
+`restore_operation` を使う。その `worktree` ルートを
+`{{INVOKE}} engine worktree <args...>` で呼び出し、列挙された各 `args` 要素を、正確にそのまま
+個別の argv 引数として渡す。それらの引数を連結してシェルコマンドにしたり、
+slug だけの選択を作り直したりしてはならない。`restore_hint` は人間向けの表示テキストにすぎず、
+決して実行の入力ではない。安全なレンダリングに失敗した場合（たとえば、ハーネスの
+ディレクトリが無効な場合）は、ヒントは省略され、`restore_hint_error` がその理由を説明する。
+操作は引き続き利用でき、復元の申し出も引き続き適用される。
+復元が成功した後、返された復元先のパスを平易に告知する:
+**SAY:** "I restored the previous attempt at [returned restored path]."（訳: 以前の試行を [returned restored path] に復元しました。）
+復元によって古い試行が再開されたり、そのレビューが現在のものになったりすることはない。
 
 ---
 
 ### GitHub Copilot
 
-The engine selected an eligible Construction batch for swarm execution. Execution is explicit on new workflows and may use gated or autonomous completion approval; a legacy workflow without the execution field retains its autonomy-based route. **You — the live `/aidlc` session — are the conductor: you own the fan-out and the retry loop; `aidlc-swarm.ts` is the deterministic referee you consult, never a loop-owner.** **Before step (1), read and follow §12b "Autonomous Code Generation Plan Contract" above; planning, the engine's Plan Approval question, and the two worker-brief markers are mandatory for every emitted unit.** Apply **Continuing a partially completed batch**, **Before initial protected prepare**, and **Resuming a reviewed batch after Request Changes** above to select continuation or preparation before the steps below; no automatic commit is authorized by an autonomy grant. (1) **`prepare`** the batch: `{{INVOKE}} engine swarm prepare --batch <n> --units <directive.units joined by comma> [--base <branch>] [--repo <name>]` creates the initial isolated worktrees only after the batch preflight (without `--base` they fork from the branch checked out); with `--resume-existing`, use the two resume paths above. Pass `--repo` = the directive's `repo` field when present; for a MULTI-REPO intent where the directive omits `repo`, supply `--repo <name>` for the sibling repo this batch targets (read the recorded set from `/aidlc intent --json`.repos) — `prepare` errors without it on a multi-repo intent. (2) **Fan out via subagent delegation**: delegate every unit in the batch in ONE turn, one parallel delegation per unit targeting `aidlc-developer-agent`, each implementing its unit in its worktree until the project's convergence check passes. On this harness the subagent fan-out is the ONLY swarm mode: `AIDLC_USE_SWARM=1` has no effect here (no Workflow tool exists) — if it is set, say so out loud and proceed with the fan-out, passing `--degraded-from ultracode` on the next referee call so the tool emits `SWARM_DEGRADED`. (3) Both `check` and `finalize` use the intent's recorded, human-authorized **Construction Verification Command**, with or without checkpoints; omit `--check-cmd` (if supplied, it must match). If authorization is missing, complete the checkpoint module's verification-command procedure and `set-construction-verification-command` before running either: it asks the person once. After each unit's worker turn, consult **`check <unit> [--test-file <protected spec>]`** — exit `0` = genuinely converged; non-zero = not yet, and you judge retry-vs-escalate. (4) When the loop settles, **`finalize --batch <n> --units <all> --claimed <the units you believe converged> [--reasons <unit>=<unsatisfiable|budget-exhausted|cap-exhausted>,…]`** re-verifies every claimed unit before merging (the lying-conductor guard) and serialised-merges the genuine passes. **Branch on `finalize`'s exit code:** `0` → this batch's reviewed record evidence and metadata converged; after the required source-landing step above, re-run `next` rather than reporting the stage yet. The engine may first return a `swarm_checkpoint` for the completed batch; resolve it before the next batch. Otherwise it returns the next `invoke-swarm` or the final `run-stage` settle directive; only on that settle directive do you apply the metadata-aware settled-swarm rule above and report its lifecycle outcome. Reporting approved after an intermediate batch would complete the stage with later batches unbuilt. `2` → failure envelope — **take the baton back**: halt and re-engage the human via the halt-and-ask seam (`aidlc-common/protocols/stage-protocol-construction.md` § "Halt-and-ask on failure"). For a `merge_failures` unit (converged but its merge-back failed; no `SWARM_UNIT_CONVERGED` row lands until the merge does), resolve the blocker and re-run `finalize` scoped to that unit: the worktree is preserved and `release-merge` is idempotent, so the retry is a pure re-invocation; do NOT re-run `prepare` for it. The swarm never escapes the conductor.
+エンジンは、対象となる Construction バッチをスウォーム実行に選択した。新しいワークフローでは実行方式が明示されており、gated または autonomous の完了承認を使える。実行フィールドを持たないレガシーのワークフローは、自律性に基づくルートを維持する。**あなた（稼働中の `/aidlc` セッション）がコンダクターである。展開と再試行ループはあなたが所有する。`aidlc-swarm.ts` はあなたが参照する決定論的な審判であり、決してループの所有者ではない。** **ステップ (1) の前に、上記の §12b "Autonomous Code Generation Plan Contract" を読んで従う。計画作成、エンジンの Plan Approval の質問、2 つのワーカーブリーフのマーカーは、出力されたすべてのユニットについて必須である。** 以下のステップの前に、上記の **Continuing a partially completed batch**、**Before initial protected prepare**、**Resuming a reviewed batch after Request Changes** を適用して、継続か準備かを選択する。自律性の付与によって自動コミットが許可されることはない。 (1) バッチを **`prepare`** する: `{{INVOKE}} engine swarm prepare --batch <n> --units <directive.units joined by comma> [--base <branch>] [--repo <name>]` は、バッチの事前チェックの後でのみ、最初の隔離されたワークツリーを作成する（`--base` がない場合は、チェックアウトされているブランチからフォークする）。`--resume-existing` を付ける場合は、上記の 2 つの再開経路を使う。ディレクティブに `repo` フィールドがある場合は、`--repo` にその値を渡す。ディレクティブが `repo` を省略している MULTI-REPO のインテントでは、このバッチが対象とする兄弟リポジトリについて `--repo <name>` を指定する（記録されたセットは `/aidlc intent --json`.repos から読む）。マルチリポジトリのインテントでは、これがないと `prepare` はエラーになる。 (2) **サブエージェントへの委譲で展開する**: バッチ内のすべてのユニットを 1 ターンで委譲する。ユニットごとに `aidlc-developer-agent` を対象とする並列の委譲を 1 つずつ行い、それぞれがプロジェクトの収束チェックに合格するまで、自分のワークツリーでユニットを実装する。このハーネスでは、サブエージェントによる展開が唯一のスウォームモードである。`AIDLC_USE_SWARM=1` はここでは効果がない（Workflow ツールは存在しない）。設定されている場合は、そのことを声に出して伝えたうえで展開を進め、次の審判呼び出しで `--degraded-from ultracode` を渡して、ツールが `SWARM_DEGRADED` を出力するようにする。 (3) `check` と `finalize` はどちらも、チェックポイントの有無にかかわらず、インテントの記録された、人間が承認した **Construction Verification Command** を使う。`--check-cmd` は省略する（指定する場合は一致しなければならない）。承認がない場合は、どちらかを実行する前に、チェックポイントモジュールの検証コマンドの手順と `set-construction-verification-command` を完了する。これは利用者に 1 回だけ尋ねる。各ユニットのワーカーのターンの後、**`check <unit> [--test-file <protected spec>]`** を参照する。終了コード `0` = 本当に収束した。ゼロ以外 = まだであり、再試行するかエスカレーションするかはあなたが判断する。 (4) ループが落ち着いたら、**`finalize --batch <n> --units <all> --claimed <the units you believe converged> [--reasons <unit>=<unsatisfiable|budget-exhausted|cap-exhausted>,…]`** は、マージの前にクレームされたすべてのユニットを再検証し（嘘をつくコンダクターへのガード）、本当に合格したものを直列にマージする。 **`finalize` の終了コードで分岐する:** `0` → このバッチのレビュー済みの記録エビデンスとメタデータが収束した。上記の必須のソース取り込みステップの後、まだステージを報告せずに `next` を再実行する。エンジンはまず、完了したバッチについて `swarm_checkpoint` を返すことがある。次のバッチの前にそれを解決する。そうでなければ、次の `invoke-swarm` か最終の `run-stage` の決着ディレクティブを返す。その決着ディレクティブの場合にのみ、上記のメタデータを考慮した決着済みスウォームのルールを適用し、そのライフサイクルの結果を報告する。途中のバッチの後に承認済みと報告すると、後続のバッチが構築されないままステージが完了してしまう。 `2` → 失敗のエンベロープ。**主導権を取り戻す**: 停止し、halt-and-ask の継ぎ目を通じて人間を再び関与させる（`aidlc-common/protocols/stage-protocol-construction.md` § "Halt-and-ask on failure"）。 `merge_failures` のユニット（収束したがマージバックに失敗したもの。マージが成功するまで `SWARM_UNIT_CONVERGED` の行は記録されない）については、阻害要因を解決し、そのユニットに範囲を絞って `finalize` を再実行する。ワークツリーは保持されており、`release-merge` は冪等なので、再試行は純粋な再呼び出しである。そのために `prepare` を再実行してはならない。スウォームが決してコンダクターの手を離れることはない。
 
-**Autonomous reviewer boundary.** When an `invoke-swarm` carries `directive.reviewer`, a unit is not claimable at `finalize` merely because `check` passed. In that unit's `prepare`-created worktree, follow stage-protocol-reviewer.md §12a: record `REVIEW_REQUESTED` with `{{INVOKE}} engine log review --stage "<directive.stage>" --unit "<unit>" --reviewer "<directive.reviewer>" --iteration <n> --project-dir "<worktree>"`, dispatch the reviewer task against `directive.stage_file` plus that worktree's unit artifacts and contracts, then record `REVIEW_COMPLETED` with the same command plus `--verdict <READY|NOT-READY>`. The logger stays in the main workspace while `--project-dir` targets the worktree, which also works when a multi-repo worktree contains only the selected sibling repo. A NOT-READY verdict re-invokes the lead in the same worktree, reruns the convergence check, and repeats the reviewer up to `directive.reviewer_max_iterations`. If the one recovery receipt is invalidated again, do not put the Unit in `--claimed` and do not run `finalize`: halt for a human Retry/Abort decision. On Retry, return to the main workspace, abort and discard the old Bolt, then call `next` and follow **Retry after a native worker discard** above for that Unit with the original batch/repo selection; the fresh `BOLT_STARTED` boundary resets review accounting without claiming convergence. Put a unit in `--claimed` only after its terminal review receipt exists; `finalize` verifies the receipt before merge and then merges it into the main audit. When `next` returns the settle `run-stage` after all units converge, do not dispatch the reviewer again; the per-unit receipts already cover the stage, so apply only the metadata-aware settled-swarm completion procedure above. This is model work inside autonomous Construction, not another human prompt.
+**自律的なレビュアーの境界。** `invoke-swarm` が `directive.reviewer` を持つ場合、`check` に合格したというだけでは、そのユニットを `finalize` でクレームすることはできない。そのユニットの `prepare` で作成されたワークツリーで、stage-protocol-reviewer.md §12a に従う。`{{INVOKE}} engine log review --stage "<directive.stage>" --unit "<unit>" --reviewer "<directive.reviewer>" --iteration <n> --project-dir "<worktree>"` で `REVIEW_REQUESTED` を記録し、`directive.stage_file` とそのワークツリーのユニットの成果物およびコントラクトに対してレビュアーのタスクをディスパッチし、同じコマンドに `--verdict <READY|NOT-READY>` を加えて `REVIEW_COMPLETED` を記録する。`--project-dir` がワークツリーを対象とする間、ロガーはメインのワークスペースにとどまる。これは、マルチリポジトリのワークツリーが選択された兄弟リポジトリだけを含む場合にも機能する。NOT-READY の判定では、同じワークツリーでリードを再度呼び出し、収束チェックを再実行し、`directive.reviewer_max_iterations` までレビュアーを繰り返す。唯一の回復レシートが再び無効になった場合は、そのユニットを `--claimed` に入れず、`finalize` も実行しない。人間による Retry/Abort の判断のために停止する。Retry の場合は、メインのワークスペースに戻り、古い Bolt を中止して破棄してから `next` を呼び出し、元の batch/repo の選択で、そのユニットについて上記の **Retry after a native worker discard** に従う。新しい `BOLT_STARTED` の境界は、収束を主張することなくレビューの集計をリセットする。ユニットを `--claimed` に入れるのは、終端のレビューレシートが存在した後だけにする。`finalize` はマージの前にレシートを検証し、その後それをメインの監査にマージする。すべてのユニットが収束した後に `next` が決着の `run-stage` を返した場合は、レビュアーを再度ディスパッチしてはならない。ユニットごとのレシートがすでにステージをカバーしているので、上記のメタデータを考慮した決着済みスウォームの完了手順だけを適用する。これは自律的な Construction の中でのモデルの作業であり、人間への別のプロンプトではない。
 
-**After a successful retry discard.** After the `--discard` abort succeeds and
-confirms the old attempt was parked, but before rerunning `prepare`, use this
-SAY line. Use `On your go-ahead I` only when the human selected Retry; otherwise
-use `I`, never implying a human remedy choice that did not happen. Do not
-announce a saved snapshot if the abort failed or did not park an attempt.
+**再試行の破棄が成功した後。** `--discard` による中止が成功し、古い試行が退避されたことが
+確認された後、`prepare` を再実行する前に、この SAY 行を使う。`On your go-ahead I` は、
+人間が Retry を選択した場合にのみ使う。それ以外の場合は `I` を使い、行われていない人間による対処の選択を
+ほのめかしてはならない。中止が失敗した場合や試行が退避されなかった場合は、保存されたスナップショットを告知してはならない。
 
-Select `[saved-files text]` from the returned `parked_mode`:
+返された `parked_mode` から `[saved-files text]` を選択する:
 
-- `snapshot`: "I saved a snapshot of its tracked files and non-ignored untracked files. Ignored files are not saved, and the snapshot may normalize line endings."
-- `branch-tip`: "I kept its committed work; there were no uncommitted files to save."
-- `evidence-only`: "Nothing of its working files remained to save; only its review evidence was kept."
-- `null`: omit `[saved-files text]`; the fallback descriptor does not establish what was saved.
+- `snapshot`: "I saved a snapshot of its tracked files and non-ignored untracked files. Ignored files are not saved, and the snapshot may normalize line endings."（訳: 追跡対象ファイルと無視されていない未追跡ファイルのスナップショットを保存しました。無視されたファイルは保存されず、スナップショットでは改行コードが正規化される場合があります。）
+- `branch-tip`: "I kept its committed work; there were no uncommitted files to save."（訳: コミット済みの作業を保持しました。保存すべき未コミットのファイルはありませんでした。）
+- `evidence-only`: "Nothing of its working files remained to save; only its review evidence was kept."（訳: 保存すべき作業ファイルは何も残っていませんでした。レビューのエビデンスだけを保持しました。）
+- `null`: `[saved-files text]` を省略する。フォールバックの記述子は、何が保存されたかを確定しない。
 
-**SAY:** "[On your go-ahead I|I] set aside the previous attempt at [Unit] because the work changed again after its re-check, and I'm starting a new attempt. [saved-files text] If you want the previous attempt back, ask me to restore it."
+**SAY:** "[On your go-ahead I|I] set aside the previous attempt at [Unit] because the work changed again after its re-check, and I'm starting a new attempt. [saved-files text] If you want the previous attempt back, ask me to restore it."（訳: 再チェック後に作業が再び変更されたため、[Unit] の以前の試行は脇に置き、新しい試行を開始します。[saved-files text] 以前の試行を戻したい場合は、復元するよう依頼してください。）
 
-When `restore_operation` is absent, omit the final offer: "If you want the previous attempt back, ask me to restore it." Do not invent a restore operation for an evidence-only attempt.
+`restore_operation` がない場合は、最後の申し出 "If you want the previous attempt back, ask me to restore it." を省略する。エビデンスのみの試行について、復元操作をでっち上げてはならない。
 
-If the human later asks for that attempt back, use the saved abort result's
-`restore_operation`: invoke its `worktree` route through
-`{{INVOKE}} engine worktree <args...>`, passing each listed `args` element exactly
-as a separate argv argument. Never join those arguments into a shell command or
-rebuild a slug-only selection. `restore_hint` is human display text only, never
-an execution input. If safe rendering fails (for example, an invalid harness
-directory), the hint is omitted and `restore_hint_error` explains why; the
-operation remains available and the restoration offer still applies.
-After restoration succeeds, announce the returned restored path plainly:
-**SAY:** "I restored the previous attempt at [returned restored path]."
-Restoration does not resume the old attempt or make its review current.
+人間が後でその試行を戻すよう求めた場合は、保存された中止結果の
+`restore_operation` を使う。その `worktree` ルートを
+`{{INVOKE}} engine worktree <args...>` で呼び出し、列挙された各 `args` 要素を、正確にそのまま
+個別の argv 引数として渡す。それらの引数を連結してシェルコマンドにしたり、
+slug だけの選択を作り直したりしてはならない。`restore_hint` は人間向けの表示テキストにすぎず、
+決して実行の入力ではない。安全なレンダリングに失敗した場合（たとえば、ハーネスの
+ディレクトリが無効な場合）は、ヒントは省略され、`restore_hint_error` がその理由を説明する。
+操作は引き続き利用でき、復元の申し出も引き続き適用される。
+復元が成功した後、返された復元先のパスを平易に告知する:
+**SAY:** "I restored the previous attempt at [returned restored path]."（訳: 以前の試行を [returned restored path] に復元しました。）
+復元によって古い試行が再開されたり、そのレビューが現在のものになったりすることはない。

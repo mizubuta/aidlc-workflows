@@ -1,40 +1,38 @@
 # Reviewer Unit Protocol Module
 
-Load this module when the engine lists `reviewer-unit` in `directive.protocol_modules`: a review of one Unit (`directive.unit` is present) and every `invoke-swarm`. It adds to the reviewer module's §12a, at the step each part names.
+エンジンが `directive.protocol_modules` に `reviewer-unit` を挙げたとき、このモジュールを読み込む。対象は 1 つのユニットのレビュー（`directive.unit` が存在する場合）と、すべての `invoke-swarm` である。このモジュールは、各パートが指定するステップでレビュアーモジュールの §12a に追加される。
 
-**Step 1, the request.** Per-unit stages also enforce membership when the
-authoritative Unit set resolves; inability to resolve that set does not
-refuse the request, while a resolved set still refuses a Unit that is absent.
-A named Unit's required outputs remain mandatory.
+**ステップ 1、リクエスト。** ユニット単位のステージでは、正式なユニット集合が解決できた場合に
+メンバーシップも強制する。その集合を解決できないことはリクエストを拒否する理由にならないが、
+解決済みの集合に含まれないユニットは引き続き拒否される。
+名前を指定されたユニットの必須出力は引き続き必須である。
 
-**Step 1, what else to pass.**
+**ステップ 1、ほかに渡すもの。**
 
-- For a **per-unit** stage (`directive.unit` present) the resolved `directive.consumes` paths include the shared inception contracts that pin cross-unit boundaries (`components.md`, `contract-summary.md`, `unit-of-work.md`).
-- For a per-unit `workspace_requires` stage, the unit's
-  `source-manifest.json` path and its claimed source paths. Review the
-  implementation differentially at those paths rather than sweeping the
-  whole workspace; treat any claim that looks unrelated to the unit as a
-  finding. Also pass, as the validation tools to run, the exact test
-  command recorded in `unit-test-instructions.md` and the recorded
-  Construction Verification Command when one is recorded. The reviewer runs
-  them and quotes the result in the review. A command it could not run, or a
-  claim about test results or the coverage floor with no run behind it, is a
-  finding for the person to weigh; it is never by itself a reason to withhold
-  READY.
+- **ユニット単位**のステージ（`directive.unit` が存在する）では、解決済みの `directive.consumes` パスに、ユニット間の境界を固定する共有の inception 契約（`components.md`、`contract-summary.md`、`unit-of-work.md`）が含まれる。
+- ユニット単位の `workspace_requires` ステージでは、そのユニットの
+  `source-manifest.json` のパスと、ユニットが主張するソースパスを渡す。実装は
+  ワークスペース全体を走査するのではなく、それらのパスで差分としてレビューする。
+  ユニットと無関係に見える主張は指摘事項として扱う。また、実行する検証ツールとして、
+  `unit-test-instructions.md` に記録された正確なテストコマンドと、記録されている
+  場合は Construction Verification Command も渡す。レビュアーはそれらを実行し、
+  結果をレビューに引用する。実行できなかったコマンドや、実行の裏付けがない
+  テスト結果・カバレッジ下限に関する主張は、利用者が判断すべき指摘事項であり、
+  それだけで READY を保留する理由には決してならない。
 
-**Reviewer read scope.** The reviewer's scope is the current unit's artifacts plus the passed contract paths. On a per-unit stage the reviewer MUST NOT read other units' `construction/<other-unit>/` content through any tool - not by opening files, and not via grep, glob, or shell patterns that span sibling unit paths (a `construction/*/` glob is a sibling read, not a search) - except to spot-check an integration point the current unit's design explicitly names, and only the owning file, resolved via the shared contracts rather than by browsing or searching the sibling's directory. Cross-unit contract verification runs against the shared inception artifacts passed above, not against a sweep of sibling units' design prose.
+**レビュアーの読み取りスコープ。** レビュアーのスコープは、現在のユニットの成果物と、渡された契約パスである。ユニット単位のステージでは、レビュアーは他のユニットの `construction/<other-unit>/` の内容をいかなるツールでも決して読んではならない。ファイルを開くことも、兄弟ユニットのパスにまたがる grep、glob、シェルパターンによる読み取りも禁止である（`construction/*/` の glob は検索ではなく兄弟ユニットの読み取りである）。例外は、現在のユニットの設計が明示的に名指しする統合ポイントをスポットチェックする場合のみであり、その場合も、兄弟ユニットのディレクトリを閲覧・検索するのではなく共有契約を介して解決した、所有元のファイル 1 つだけに限る。ユニット間の契約検証は、兄弟ユニットの設計文書を走査するのではなく、上で渡した共有の inception 成果物に対して行う。
 
-**Dispatch record (per-unit reviews; enforcement-capable harnesses only).** This record is required only when the current harness registers reviewer-scope PreToolUse enforcement (Claude Code, Kiro CLI, Codex CLI, opencode, Cursor, and GitHub Copilot today). Immediately before invoking a per-unit reviewer - `directive.unit` present, or one unit of an `invoke-swarm` reviewed under the swarm module's autonomous reviewer boundary - on one of those harnesses, write `<record>/.aidlc-engine/reviewer-dispatch.json` (the engine removes it when the verdict is recorded at step 3; never delete it yourself):
+**ディスパッチ記録（ユニット単位のレビュー。強制機能を持つハーネスのみ）。** この記録が必要なのは、現在のハーネスがレビュアースコープの PreToolUse 強制を登録している場合だけである（現時点では Claude Code、Kiro CLI、Codex CLI、opencode、Cursor、GitHub Copilot）。それらのハーネスで、ユニット単位のレビュアー（`directive.unit` が存在する場合、またはスウォームモジュールの自律レビュアー境界の下でレビューされる `invoke-swarm` の 1 ユニット）を呼び出す直前に、`<record>/.aidlc-engine/reviewer-dispatch.json` を書き込む（エンジンはステップ 3 で判定が記録されたときにこれを削除する。自分で削除してはならない）。
 
 ```json
 {"reviewer": "<directive.reviewer>", "stage": "<stage slug>", "unit": "<directive.unit, or the swarm unit under review>",
  "exempt": ["<each resolved directive.consumes path>", "<stage file path>", "<Q&A file path>"]}
 ```
 
-When the current unit's design explicitly names an integration point in a sibling unit's file, resolve that single owning file via the shared contracts and append its path to `exempt` - the record is where the spot-check carve-out is granted. The `stage` field appears verbatim in any `REVIEWER_SCOPE_BLOCKED` audit row; use the current stage slug. The reviewer-scope PreToolUse hook reads this record to enforce the read-scope bound deterministically while the review is in flight; on a NOT-READY re-invoke (step 3 back to step 1), write a fresh record. Single-stage and other no-unit reviews write no record; under a swarm the record is per unit - written before that unit's reviewer and deleted at its step 3 before the next unit's review begins. The record always lives in the main workspace's intent record - the path the conductor's reviewer-scope hook resolves - never in the unit's worktree, even though `--project-dir` targets the worktree for the review request and receipt; the reviewer's tool calls run under the conductor's hooks, and the hook judges `construction/<unit>/` tokens in worktree paths the same way. On a harness without reviewer-scope enforcement (Kiro IDE today), do not write the record; the reviewer read-scope bound remains mandatory prose in the delegated task and reviewer persona. When the step 1 request's JSON returns `dispatchAgent` (Kiro), dispatch that agent in place of `directive.reviewer`: it is the same reviewer with this review's read scope in its own permissions, so the brief still names `directive.reviewer` as the reviewer and both `engine log review` commands keep it. That scope opens no file of another unit, so tell the reviewer to note an integration point the design names as a finding instead of opening it. If Kiro answers that it has no agent by that name, dispatch `directive.reviewer` at once (that is not a retry) and tell the person in one line that this review runs without the reviewer read-scope check.
+現在のユニットの設計が兄弟ユニットのファイル内の統合ポイントを明示的に名指ししている場合は、共有契約を介してその所有元ファイル 1 つを解決し、そのパスを `exempt` に追加する。スポットチェックの例外はこの記録で付与される。`stage` フィールドはすべての `REVIEWER_SCOPE_BLOCKED` 監査行にそのまま現れるため、現在のステージ slug を使う。レビュアースコープの PreToolUse フックは、レビュー実行中にこの記録を読み、読み取りスコープの境界を決定論的に強制する。NOT-READY による再呼び出し（ステップ 3 からステップ 1 へ戻る）では、新しい記録を書き込む。単一ステージのレビューやその他のユニットを持たないレビューでは記録を書き込まない。スウォームでは記録はユニットごとであり、そのユニットのレビュアーの前に書き込まれ、次のユニットのレビューが始まる前に、そのユニットのステップ 3 で削除される。レビューのリクエストとレシートでは `--project-dir` がワークツリーを対象にするとしても、記録は常にメインワークスペースのインテント記録（コンダクターのレビュアースコープフックが解決するパス）に置き、ユニットのワークツリーには決して置かない。レビュアーのツール呼び出しはコンダクターのフックの下で実行され、フックはワークツリーのパス内の `construction/<unit>/` トークンも同じように判定する。レビュアースコープの強制機能を持たないハーネス（現時点では Kiro IDE）では記録を書き込まない。その場合も、レビュアーの読み取りスコープの境界は、委譲するタスクとレビュアーペルソナの中の必須の散文として残る。ステップ 1 のリクエストの JSON が `dispatchAgent` を返した場合（Kiro）は、`directive.reviewer` の代わりにそのエージェントをディスパッチする。それはこのレビューの読み取りスコープを自身の権限として持つ同じレビュアーなので、指示文では引き続き `directive.reviewer` をレビュアーとして名指しし、両方の `engine log review` コマンドでもそのまま使う。そのスコープでは他のユニットのファイルを開けないため、設計が名指しする統合ポイントは開かずに指摘事項として記すようレビュアーに伝える。Kiro がその名前のエージェントは存在しないと答えた場合は、直ちに `directive.reviewer` をディスパッチし（これはリトライではない）、このレビューはレビュアーの読み取りスコープチェックなしで実行されることを利用者に 1 行で伝える。
 
-**Step 2, the reviewer sub-agent also:**
+**ステップ 2、レビュアーのサブエージェントはさらに次を行う:**
 
-- Verifies cross-unit contract claims against the passed shared inception contracts, not by sweeping or searching sibling units' design directories (no cross-unit grep or glob patterns); opens another unit's file only when the current unit's design explicitly names it as an integration point, and only that file
+- ユニット間の契約に関する主張は、兄弟ユニットの設計ディレクトリを走査・検索するのではなく（ユニットをまたぐ grep や glob パターンは使わない）、渡された共有の inception 契約に照らして検証する。他のユニットのファイルを開くのは、現在のユニットの設計がそれを統合ポイントとして明示的に名指ししている場合だけであり、そのファイルに限る
 
-**Guard Policy at a Unit.** Construction checkpoints read the same value: under `relaxed` and `off` a change to a Unit's code or documents after their review is accepted there too, with one line, and the Unit's approval stands. Under `strict`, a Unit whose reviewed code or documents changed after their review gets that one recovery review, and its checkpoint directs it (`construction_checkpoint.rereview`); each time the person approves that Unit it gets a fresh one, so a Unit edited again later is re-checked again.
+**ユニットにおけるGuard Policy 。** Construction のチェックポイントも同じ値を読む。`relaxed` と `off` では、レビュー後にユニットのコードや文書を変更しても、そこでも 1 行の通知とともに受け入れられ、そのユニットの承認は維持される。`strict` では、レビュー済みのコードや文書がレビュー後に変更されたユニットは、その 1 回の回復レビューを受け、チェックポイントがそれを指示する（`construction_checkpoint.rereview`）。利用者がそのユニットを承認するたびに新たな回復レビューが付与されるため、後で再び編集されたユニットは再びチェックされる。

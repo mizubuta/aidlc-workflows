@@ -52,34 +52,34 @@ outputs: stories.md, personas.md, user-stories-assessment.md, traceability.json 
 
 ### Step 1: Load the Lead Persona (mob stage)
 
-The step carries the aidlc-product-agent persona (`directive.lead_persona`); work
-this stage as that agent. Read every path in `directive.inline_context_paths` per
-the stage protocol: for this mob it holds the product agent's shared and role
-knowledge only. The product manager owns the inline draft and integration work.
+このステップは aidlc-product-agent のペルソナ（`directive.lead_persona`）を伴う。このステージは
+そのエージェントとして作業する。ステージプロトコルに従い、`directive.inline_context_paths` のすべての
+パスを読み込む。このモブでは、そこにはプロダクトエージェントの共有ナレッジとロール別ナレッジだけが含まれる。
+インラインのドラフトと統合作業はプロダクトマネージャーが担う。
 
-This stage runs `mode: mob` (stage-protocol-ensemble.md §5 "Multi-agent stages"): the support agents (aidlc-design-agent for user experience, aidlc-developer-agent for implementability, aidlc-quality-agent for testability) are NOT voices to adopt — they are dispatched as independent participants during PART 2. Do not load their personas into your own context.
+このステージは `mode: mob`（stage-protocol-ensemble.md §5 "Multi-agent stages"）で実行される。サポートエージェント（ユーザー体験を担う aidlc-design-agent、実装可能性を担う aidlc-developer-agent、テスト容易性を担う aidlc-quality-agent）は、自分が演じる声では決してない。それらは PART 2 の間に独立した参加者としてディスパッチされる。それらのペルソナを自分のコンテキストに読み込んではならない。
 
 ### Step 2: Validate User Stories Are Needed
 
-Assess whether user stories add value for this project. Provide reasoning:
-- **Execute if**: user-facing features, multiple user personas, complex business logic, cross-team coordination needed
-- **Skip if**: pure refactoring, isolated bug fixes, infrastructure-only, developer tooling
+このプロジェクトにとってユーザーストーリーが価値を加えるかどうかを評価し、理由を示す:
+- **実行する場合**: ユーザー向けの機能、複数のユーザーペルソナ、複雑なビジネスロジック、チーム間の調整が必要な場合
+- **スキップする場合**: 純粋なリファクタリング、独立したバグ修正、インフラのみの変更、開発者向けツール
 
-Create `<record>/inception/user-stories/user-stories-assessment.md` documenting the assessment:
-- Decision: Execute or Skip
-- Rationale: Why user stories are or are not needed for this project
-- Factors considered: project type, user-facing scope, complexity signals
-- If executing: key areas where stories will add the most value
-- If skipping: what alternative coverage exists (e.g., requirements alone are sufficient)
+評価を記録する `<record>/inception/user-stories/user-stories-assessment.md` を作成する:
+- 決定: 実行またはスキップ
+- 根拠: このプロジェクトにユーザーストーリーが必要な理由、または不要な理由
+- 考慮した要素: プロジェクトの種類、ユーザー向けのスコープ、複雑さの兆候
+- 実行する場合: ストーリーが最も価値を加える主な領域
+- スキップする場合: 代わりにどのような網羅手段があるか（例: 要件だけで十分）
 
-If skipping, run
-`{{INVOKE}} engine orchestrate report --stage user-stories --result skipped --reason '<reason>'`.
-The engine records the skip and advances to the next in-scope stage.
+スキップする場合は、
+`{{INVOKE}} engine orchestrate report --stage user-stories --result skipped --reason '<reason>'` を実行する。
+エンジンがスキップを記録し、スコープ内の次のステージへ進む。
 
 ### Step 3: Load Prior Context
 
-- Read `<record>/inception/requirements-analysis/requirements.md`
-- If brownfield: Read relevant RE artifacts from `aidlc/spaces/<active-space>/codekb/<repo>/` (the directory `codekb-path --repo <repo>` prints)
+- `<record>/inception/requirements-analysis/requirements.md` を読み込む
+- brownfield の場合: `aidlc/spaces/<active-space>/codekb/<repo>/`（`codekb-path --repo <repo>` が出力するディレクトリ）から関連する RE 成果物を読み込む
 
 ---
 
@@ -87,30 +87,30 @@ The engine records the skip and advances to the next in-scope stage.
 
 ### Step 4: Create Story Plan with Questions
 
-Create a story plan in `<record>/inception/user-stories/user-stories-questions.md` containing:
-- **Persona development approach** — Who are the users? What are their goals?
-- **Story format** — Using INVEST criteria (Independent, Negotiable, Valuable, Estimable, Small, Testable)
-- **Story prioritization** — Assign MoSCoW priority (Must Have / Should Have / Could Have / Won't Have) to each story based on requirements analysis. The MVP boundary will be formally decided during Delivery Planning; story priorities inform that decision.
-- **Breakdown approach options** — By feature, by persona, by workflow, by domain area, by epic
-- **Embedded questions** — Using [Answer]: tag format for user input on personas, story granularity
+`<record>/inception/user-stories/user-stories-questions.md` に、次を含むストーリー計画を作成する:
+- **ペルソナ策定のアプローチ** — ユーザーは誰か。その目標は何か。
+- **ストーリーの形式** — INVEST 基準（Independent、Negotiable、Valuable、Estimable、Small、Testable）を用いる
+- **ストーリーの優先順位付け** — 要件分析に基づき、各ストーリーに MoSCoW の優先度（Must Have / Should Have / Could Have / Won't Have）を割り当てる。MVP の境界は Delivery Planning で正式に決定される。ストーリーの優先度はその決定の材料になる。
+- **分割アプローチの選択肢** — 機能別、ペルソナ別、ワークフロー別、ドメイン領域別、エピック別
+- **埋め込み質問** — ペルソナやストーリーの粒度について利用者の入力を得るため、[Answer]: タグ形式を用いる
 
 ### Step 5: Collect Answers
 
-Collect answers following stage-protocol.md §3 question flow (offer interaction mode choice, collect answers, write back to file).
+stage-protocol.md §3 の質問フロー（対話モードの選択肢を提示し、回答を集め、ファイルに書き戻す）に従って回答を集める。
 
 ### Step 6: Analyze Answers
 
-MANDATORY ambiguity analysis:
-- Scan ALL responses for vague language ("mix of", "not sure", "depends", "probably")
-- Check for contradictions between answers
-- Identify missing details
-- Create follow-up questions if ANY ambiguity found
+必須の曖昧さ分析:
+- すべての回答に曖昧な表現（"mix of"、"not sure"、"depends"、"probably"）がないか確認する
+- 回答間の矛盾を確認する
+- 欠けている詳細を特定する
+- 曖昧さが 1 つでも見つかった場合はフォローアップの質問を作成する
 
 ### Step 7: Present plan and generate
 
-Present the story plan summary (persona count, story count, breakdown approach) inline. Then immediately proceed to PART 2: Generation. The user will review and approve the combined output (plan + generated stories) at the completion gate.
+ストーリー計画の概要（ペルソナ数、ストーリー数、分割アプローチ）をインラインで提示する。その後すぐに PART 2: Generation へ進む。利用者は、完了ゲートで計画と生成されたストーリーを合わせた出力をレビューし、承認する。
 
-If the user interjects with feedback before generation completes, treat it as a revision request — update the plan accordingly before continuing generation.
+生成が完了する前に利用者がフィードバックを差し挟んだ場合は、修正依頼として扱い、生成を続ける前に計画をそれに合わせて更新する。
 
 ---
 
@@ -118,58 +118,57 @@ If the user interjects with feedback before generation completes, treat it as a 
 
 ### Step 8: Execute Plan — Generate Stories and Personas via the Mob
 
-This is the mob-elaboration ritual: the Product Manager (lead) owns the
-draft, Developers and QA (and Design) collaborate as independent
-participants, and the Product Leader reviews afterwards (`stage-protocol-reviewer.md` §12a).
+これはモブ・エラボレーションの儀式である。プロダクトマネージャー（リード）が
+ドラフトを担い、開発者と QA（およびデザイン）が独立した参加者として協働し、
+その後プロダクトリーダーがレビューする（`stage-protocol-reviewer.md` §12a）。
 
-**Round 0 — lead drafts.** As the lead, based on the approved plan, draft:
+**ラウンド 0 — リードがドラフトを作成する。** リードとして、承認された計画に基づき次をドラフトする:
 
 **`<record>/inception/user-stories/personas.md`:**
-- User persona definitions (name, role, goals, pain points, context)
-- Persona relationships and priority ranking
+- ユーザーペルソナの定義（名前、役割、目標、ペインポイント、コンテキスト）
+- ペルソナ間の関係と優先順位
 
 **`<record>/inception/user-stories/stories.md`:**
-- User stories in standard format: "As a [persona], I want [goal], so that [benefit]". Give each story a stable `US{group}.{seq}` ID (for example `US1.1`).
-- Acceptance criteria for each story. Give each criterion a three-segment `AC{story-group}.{story-seq}.{criterion-seq}` ID (for example `AC1.1.1`).
-- Story priority (Must Have / Should Have / Could Have / Won't Have)
-- Story dependencies and relationships
-- INVEST compliance notes
+- 標準形式のユーザーストーリー: "As a [persona], I want [goal], so that [benefit]"。各ストーリーには安定した `US{group}.{seq}` ID（例: `US1.1`）を付ける。
+- 各ストーリーの受け入れ基準。各基準には 3 つのセグメントからなる `AC{story-group}.{story-seq}.{criterion-seq}` ID（例: `AC1.1.1`）を付ける。
+- ストーリーの優先度（Must Have / Should Have / Could Have / Won't Have）
+- ストーリーの依存関係と相互関係
+- INVEST への準拠に関するメモ
 
-**Round 1 — dispatch the mob.** Per stage-protocol-collaborators.md `mode: mob`,
-dispatch exactly the collaborators the directive lists in `support_agents`, in
-parallel against the draft (artifacts by path: the two draft artifacts, the Q&A
-file, requirements.md; rules per `stage-protocol.md` § "For subagent stages" step 2),
-mutually blind. Each WRITES its contribution file at
-`<record>/inception/user-stories/contributions/<agent-slug>.md` (§11 format:
-identity-marker first line, Contribution, Positions): design on UX and
-persona fidelity, developer on implementability and story sizing, quality on
-testability of the acceptance criteria.
+**ラウンド 1 — モブをディスパッチする。** stage-protocol-collaborators.md の `mode: mob` に従い、
+ディレクティブが `support_agents` に挙げるコラボレーターだけを正確にディスパッチする。
+ドラフトに対して並列に、互いの内容を見せずに実行する（成果物はパスで渡す: 2 つのドラフト成果物、Q&A
+ファイル、requirements.md。ルールは `stage-protocol.md` § "For subagent stages" のステップ 2 に従う）。
+各コラボレーターは、自分のコントリビューションファイルを
+`<record>/inception/user-stories/contributions/<agent-slug>.md` に書き込む（§11 の形式:
+1 行目に識別マーカー、Contribution、Positions）。デザインは UX とペルソナの忠実性、
+開発者は実装可能性とストーリーのサイズ、品質は受け入れ基準のテスト容易性を担当する。
 
-**If `directive.support_agents` is empty, skip Round 1 and the triage below** —
-the collaborators switch is off for this scope, so the lead works alone
-(§5): your draft stands as the user stories, with no mob round to dispatch,
-integrate, or triage, and no contribution files.
+**`directive.support_agents` が空の場合は、ラウンド 1 と以下のトリアージをスキップする** —
+このスコープではコラボレーターのスイッチがオフなので、リードが単独で作業する
+（§5）。ドラフトがそのままユーザーストーリーとなり、ディスパッチ・統合・トリアージする
+モブのラウンドも、コントリビューションファイルもない。
 
-**Integrate and triage.** As the lead, fold the contributions into the two
-artifacts, then triage unresolved objections per stage-protocol-collaborators.md: a judgment call (both
-positions legitimate) goes to the user NOW as a structured question (add it
-to the questions file first, blank `[Answer]:` tag); a knowledge dispute
-goes to **round 2** — re-dispatch only the objecting agent(s) with the
-revised draft and the other participants' positions (they update their own
-contribution files). Maintained dissent is quoted verbatim in the Step 10
-completion summary. The dispatched collaborators' contribution files are this
-stage's ensemble evidence — the engine refuses approval while any in the
-directive's effective `support_agents` is missing. A lead working alone has none.
+**統合とトリアージ。** リードとして、コントリビューションを 2 つの成果物に取り込み、
+stage-protocol-collaborators.md に従って未解決の異議をトリアージする。判断の問題（どちらの
+立場も正当）は、構造化された質問として今すぐ利用者に提示する（先に質問ファイルに
+追加し、`[Answer]:` タグは空にしておく）。知識に関する論争は
+**ラウンド 2** に回す — 異議を唱えたエージェントだけに、修正したドラフトと
+他の参加者の立場を渡して再ディスパッチする（各エージェントは自分の
+コントリビューションファイルを更新する）。維持された反対意見は、Step 10 の
+完了サマリーにそのまま引用する。ディスパッチしたコラボレーターのコントリビューションファイルは、
+このステージのアンサンブルの証拠である — ディレクティブの実効的な `support_agents` のいずれかの
+ファイルが欠けている間、エンジンは承認を拒否する。単独で作業するリードにはこのファイルはない。
 
-**Write element-level traceability.** Create
-`<record>/inception/user-stories/traceability.json` by running
-`{{INVOKE}} engine sensor-traceability --stage user-stories --output-path <that path> --write-upstream`:
-it lists every `FR` and `NFR` ID Requirements Analysis recorded in
-`upstream_ids`, each with a `GAP` row (a requirement with sub-requirements is
-traced through its `FR{n}.{m}` IDs and needs no row of its own). Set each
-row's `status` and `target`: `OK` targets must name one or more existing
-`USx.y` IDs. Use `Deferred`
-only with a named downstream stage and `N/A` only with a justification:
+**要素レベルのトレーサビリティを書き込む。**
+`{{INVOKE}} engine sensor-traceability --stage user-stories --output-path <that path> --write-upstream` を実行して
+`<record>/inception/user-stories/traceability.json` を作成する。
+このファイルには、Requirements Analysis が `upstream_ids` に記録したすべての `FR` と `NFR` の ID が、
+それぞれ `GAP` 行とともに列挙される（サブ要件を持つ要件は
+その `FR{n}.{m}` ID を通じて追跡されるため、要件自体の行は不要である）。各
+行の `status` と `target` を設定する。`OK` のターゲットには、既存の
+`USx.y` ID を 1 つ以上指定しなければならない。`Deferred` は
+下流のステージ名を指定する場合に限り、`N/A` は正当な理由がある場合に限り使う:
 
 ```json
 {
@@ -185,46 +184,46 @@ only with a named downstream stage and `N/A` only with a justification:
 
 ### Step 9: Open the Approval Gate
 
-After verifying the three lead artifacts and every dispatched collaborator's
-contribution file (none when the lead works alone), run:
+リードの 3 つの成果物と、ディスパッチしたすべてのコラボレーターの
+コントリビューションファイル（リードが単独で作業する場合はなし）を確認した後、次を実行する:
 
 ```bash
 {{INVOKE}} engine orchestrate report \
   --stage user-stories --result awaiting-approval
 ```
 
-If the engine refuses missing or malformed ensemble evidence, restore that
-evidence before presenting the human gate.
+エンジンがアンサンブルの証拠の欠落や不正な形式を理由に拒否した場合は、
+人間のゲートを提示する前にその証拠を復元する。
 
 ### Step 10: Present Completion & Request Approval
 
-Use stage-protocol.md completion template with completion emoji: :books:
-- Summary of personas and stories produced
-- Review path: `<record>/inception/user-stories/`
-- Structured approval question with options: Approve / Request Changes. On the Approve option's description write `Continue to <next stage name>`, taking that name from the `next_stage` field of the reply that opened the gate, else the run-stage directive's (`Complete workflow` when it is null) - the user sees the real stage name, never a field name.
+完了の絵文字 :books: を使い、stage-protocol.md の完了テンプレートを用いる:
+- 作成したペルソナとストーリーの概要
+- レビューパス: `<record>/inception/user-stories/`
+- 選択肢 Approve / Request Changes を持つ構造化された承認の質問。Approve の選択肢の説明には `Continue to <next stage name>` と書く。その名前は、ゲートを開いた応答の `next_stage` フィールドから取り、なければ run-stage ディレクティブのものから取る（null の場合は `Complete workflow`）。利用者には実際のステージ名を見せ、フィールド名は決して見せない。
 
-STOP for the human response, then read it. Report **Approve** with
-`--result approved --user-input "Approve"`; report
-**Request Changes** with `--result rejected --user-input "Request Changes"`
-(their words are kept with the record; add `--reason` only to say more), run the
-revision loop, and report `--result revised` before re-presenting. The engine
-owns every lifecycle transition and advancement.
+人間の応答を待って必ず停止し、その応答を読む。**Approve** は
+`--result approved --user-input "Approve"` で報告する。
+**Request Changes** は `--result rejected --user-input "Request Changes"` で報告し
+（利用者の言葉は記録とともに保存される。補足したい場合にだけ `--reason` を追加する）、
+修正ループを実行し、再提示する前に `--result revised` を報告する。ライフサイクルの
+遷移と前進はすべてエンジンが担う。
 
 ## Sensors
 
-This stage's outputs are markdown artefacts under `<record>/inception/user-stories/`.
+このステージの出力は `<record>/inception/user-stories/` 配下の markdown 成果物である。
 
-Imports: `required-sections`, `upstream-coverage`, `traceability`.
+インポート: `required-sections`、`upstream-coverage`、`traceability`。
 
-Upstream targets: `requirements`, `business-overview`, `component-inventory`, `team-practices`.
+上流のターゲット: `requirements`、`business-overview`、`component-inventory`、`team-practices`。
 
-`traceability` owns `traceability.json`, verifies every requirement is
-declared and covered, and checks that each `OK` target exists in `stories.md`.
+`traceability` は `traceability.json` を担い、すべての要件が宣言され網羅されていることを検証し、
+各 `OK` ターゲットが `stories.md` に存在することを確認する。
 
 ## Learn
 
-When `directive.protocol_modules` lists `learnings`, follow
-`stage-protocol-learnings.md`: keep the diary at `directive.memory_path` while
-working, and take the learnings step before the approval gate; that module says
-when it asks the person anything. When the module is absent, skip both the diary
-and the step.
+`directive.protocol_modules` に `learnings` が含まれている場合は、
+`stage-protocol-learnings.md` に従う。作業中は `directive.memory_path` に日誌を付け、
+承認ゲートの前に学びのステップを行う。利用者に何かを尋ねるタイミングは
+そのモジュールが定める。モジュールがない場合は、日誌と学びのステップの両方を
+スキップする。

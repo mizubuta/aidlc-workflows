@@ -17,27 +17,27 @@ collaborators: off
 
 # mvp scope
 
-Standard depth, but trims the front and back of the workflow to ship the
-core fast. Ideation runs a reduced ceremony (no market-research, no
-team-formation, no approval-handoff) and the entire operation phase is
-skipped — an MVP proves the product, it does not yet carry production
-operations weight.
+Standard の深度だが、ワークフローの前後を削ってコアを素早く
+リリースする。Ideation は縮小した手順で実行し（market-research、
+team-formation、approval-handoff なし）、operation フェーズ全体を
+スキップする。MVP はプロダクトを実証するものであり、まだ本番運用の
+重みを担うものではない。
 
-Guard Policy defaults to off: changed inputs are recorded and announced, the run continues, and plan approval, review freeze, state transition, and reviewer read scope are lowered for undirected work. Human presence stays up.
+Guard Policy のデフォルトは off である: 変更された入力は記録されて通知され、実行は継続し、指示のない作業についてはプラン承認、レビューフリーズ、状態遷移、レビュアーの読み取り範囲が緩められる。人間の在席確認は維持される。
 
 ## Why these stages, why skip those
 
-The full inception and construction passes stay EXECUTE: an MVP is still
-real software that needs design, code, and tests. What it skips is the
-discovery overhead that only pays off at scale (market-research,
-team-formation) and the operation stages (deployment-pipeline,
-environment-provisioning, deployment-execution, observability-setup,
-incident-response, performance-validation, feedback-optimization), which
-belong to a product past its first proof. Promote to `feature` or
-`enterprise` when the MVP graduates.
+inception と construction の各工程はすべて EXECUTE のままとする: MVP も
+設計、コード、テストを必要とする本物のソフトウェアである。スキップするのは、
+規模が大きくなって初めて元が取れる探索のオーバーヘッド（market-research、
+team-formation）と、最初の実証を終えたプロダクトに属する operation のステージ（deployment-pipeline、
+environment-provisioning、deployment-execution、observability-setup、
+incident-response、performance-validation、feedback-optimization）である。
+MVP を卒業したら `feature` または
+`enterprise` に昇格させる。
 
 ## Membership
 
-Keyword triggers: `mvp`, `minimum viable`. Initialization, the reduced
-ideation set, all of inception, and the build path of construction run;
-operation is skipped wholesale.
+キーワードトリガー: `mvp`、`minimum viable`。Initialization、縮小した
+ideation のセット、inception のすべて、construction のビルド経路を実行し、
+operation はまるごとスキップする。

@@ -1,100 +1,100 @@
 # Threat Modelling with STRIDE
 
-A structured approach to identifying, classifying, and mitigating security threats during the design phase.
+設計フェーズでセキュリティ上の脅威を特定、分類、緩和するための体系的なアプローチ。
 
 ## STRIDE Categories
 
-| Category | Threat | Violated Property | Example |
+| カテゴリ | 脅威 | 侵害される特性 | 例 |
 |----------|--------|-------------------|---------|
-| **S — Spoofing** | Attacker pretends to be another user or system | Authentication | Stolen JWT used to access another user's data |
-| **T — Tampering** | Attacker modifies data in transit or at rest | Integrity | Man-in-the-middle alters API request payload |
-| **R — Repudiation** | Attacker denies performing an action | Non-repudiation | User disputes a financial transaction with no audit trail |
-| **I — Information Disclosure** | Sensitive data exposed to unauthorized parties | Confidentiality | Error message leaks stack trace and database schema |
-| **D — Denial of Service** | System made unavailable to legitimate users | Availability | Unbounded API request floods Lambda concurrency |
-| **E — Elevation of Privilege** | Attacker gains higher access than authorized | Authorization | Regular user exploits IDOR to access admin endpoints |
+| **S — Spoofing（なりすまし）** | 攻撃者が別のユーザーやシステムになりすます | 認証 | 盗まれた JWT を使って別のユーザーのデータにアクセスする |
+| **T — Tampering（改ざん）** | 攻撃者が転送中または保存中のデータを改変する | 完全性 | 中間者攻撃で API リクエストのペイロードを書き換える |
+| **R — Repudiation（否認）** | 攻撃者が操作を行ったことを否認する | 否認防止 | 監査証跡がないため、ユーザーが金融取引に異議を唱える |
+| **I — Information Disclosure（情報漏えい）** | 機密データが権限のない相手に公開される | 機密性 | エラーメッセージからスタックトレースとデータベーススキーマが漏れる |
+| **D — Denial of Service（サービス拒否）** | 正規のユーザーがシステムを利用できなくなる | 可用性 | 上限のない API リクエストが Lambda の同時実行数を使い果たす |
+| **E — Elevation of Privilege（権限昇格）** | 攻撃者が許可された以上のアクセス権を得る | 認可 | 一般ユーザーが IDOR を悪用して管理者用エンドポイントにアクセスする |
 
 ## Threat Modelling Process
 
 ### Step 1: Define Scope
-Identify what you are threat-modelling: a single microservice, a complete feature, or an entire system. Smaller scopes produce more actionable results.
+何を脅威モデリングの対象にするかを特定する: 単一のマイクロサービス、1 つの機能全体、またはシステム全体。対象範囲が小さいほど、実行に移しやすい結果が得られる。
 
 ### Step 2: Create a Data Flow Diagram (DFD)
-Draw the system showing:
-- **External entities**: Users, third-party systems, partner APIs
-- **Processes**: Lambda functions, ECS services, API Gateway
-- **Data stores**: DynamoDB tables, S3 buckets, RDS instances
-- **Data flows**: Arrows showing data movement, labelled with protocol and data type
-- **Trust boundaries**: Lines separating zones of different trust levels (public internet, VPC, private subnet)
+次を示すシステムの図を描く:
+- **外部エンティティ**: ユーザー、サードパーティのシステム、パートナーの API
+- **プロセス**: Lambda 関数、ECS サービス、API Gateway
+- **データストア**: DynamoDB テーブル、S3 バケット、RDS インスタンス
+- **データフロー**: データの移動を示す矢印。プロトコルとデータの種類をラベルとして付ける
+- **信頼境界**: 信頼レベルの異なるゾーン（パブリックインターネット、VPC、プライベートサブネット）を分ける線
 
 ### Step 3: Identify Threats
-Walk through each element and data flow in the DFD. For each, ask the six STRIDE questions:
-- Can an attacker spoof this identity?
-- Can an attacker tamper with this data?
-- Can an attacker deny this action?
-- Can this component leak information?
-- Can this component be denied service?
-- Can an attacker elevate privilege through this component?
+DFD の各要素とデータフローを順に確認する。それぞれについて、STRIDE の 6 つの問いを投げかける:
+- 攻撃者はこの ID になりすませるか？
+- 攻撃者はこのデータを改ざんできるか？
+- 攻撃者はこの操作を否認できるか？
+- このコンポーネントは情報を漏えいさせうるか？
+- このコンポーネントはサービス拒否を受けうるか？
+- 攻撃者はこのコンポーネントを通じて権限を昇格できるか？
 
 ### Step 4: Assess Risk
-For each identified threat, score it using likelihood and impact.
+特定した各脅威を、発生可能性と影響度でスコア付けする。
 
 ### Step 5: Define Mitigations
-Map each threat to a specific countermeasure. Track mitigations as actionable tasks in the backlog.
+各脅威を具体的な対策に対応付ける。緩和策は、実行可能なタスクとしてバックログで追跡する。
 
 ## Risk Scoring: Likelihood x Impact
 
-Use a simple 3x3 or 5x5 matrix:
+シンプルな 3x3 または 5x5 のマトリクスを使う:
 
-| | Low Impact | Medium Impact | High Impact |
+| | 影響度: 低 | 影響度: 中 | 影響度: 高 |
 |---|-----------|---------------|-------------|
-| **High Likelihood** | Medium | High | Critical |
-| **Medium Likelihood** | Low | Medium | High |
-| **Low Likelihood** | Low | Low | Medium |
+| **発生可能性: 高** | 中 | 高 | 重大 |
+| **発生可能性: 中** | 低 | 中 | 高 |
+| **発生可能性: 低** | 低 | 低 | 中 |
 
-- **Likelihood factors**: Attack complexity, required access level, availability of exploits, attacker motivation.
-- **Impact factors**: Data sensitivity, financial loss, regulatory penalties, reputational damage, blast radius.
+- **発生可能性の要因**: 攻撃の複雑さ、必要なアクセスレベル、エクスプロイトの入手しやすさ、攻撃者の動機。
+- **影響度の要因**: データの機密性、金銭的損失、規制上の罰則、評判の毀損、影響範囲。
 
 ## The DREAD Model (Alternative Scoring)
 
-Score each threat 1-10 on five dimensions, then average:
-- **Damage**: How severe is the impact?
-- **Reproducibility**: How reliably can the attack be repeated?
-- **Exploitability**: How much skill/effort is required?
-- **Affected Users**: How many users are impacted?
-- **Discoverability**: How easy is the vulnerability to find?
+各脅威を 5 つの観点で 1〜10 点で評価し、その平均を取る:
+- **Damage（被害）**: 影響はどの程度深刻か？
+- **Reproducibility（再現性）**: 攻撃はどの程度確実に繰り返せるか？
+- **Exploitability（悪用可能性）**: どの程度のスキル／労力が必要か？
+- **Affected Users（影響を受けるユーザー）**: 何人のユーザーが影響を受けるか？
+- **Discoverability（発見可能性）**: 脆弱性はどの程度見つけやすいか？
 
-DREAD is useful when STRIDE identifies many threats and you need to prioritize.
+DREAD は、STRIDE で多数の脅威が特定され、優先順位を付ける必要がある場合に役立つ。
 
 ## Attack Surface Analysis
 
-Enumerate all entry points an attacker could target:
-- Public API endpoints (API Gateway, ALB)
-- Authentication flows (Cognito hosted UI, custom login)
-- File upload endpoints (S3 pre-signed URLs)
-- WebSocket connections
-- Third-party integrations (webhooks, OAuth callbacks)
-- Administrative interfaces (console access, SSH, bastion)
-- CI/CD pipelines (build scripts, deployment credentials)
+攻撃者が狙いうるすべての入口を列挙する:
+- 公開 API エンドポイント（API Gateway、ALB）
+- 認証フロー（Cognito のホスト型 UI、カスタムログイン）
+- ファイルアップロードのエンドポイント（S3 の署名付き URL）
+- WebSocket 接続
+- サードパーティとの統合（Webhook、OAuth コールバック）
+- 管理用インターフェース（コンソールアクセス、SSH、踏み台ホスト）
+- CI/CD パイプライン（ビルドスクリプト、デプロイ用の認証情報）
 
-Minimize attack surface: disable unused endpoints, restrict network access, apply least-privilege IAM.
+攻撃対象領域を最小化する: 使っていないエンドポイントを無効化し、ネットワークアクセスを制限し、最小権限の IAM を適用する。
 
 ## Mitigation Mapping
 
-For each STRIDE category, common AWS mitigations include:
+STRIDE の各カテゴリに対する一般的な AWS での緩和策は次のとおり:
 
-| Category | Mitigations |
+| カテゴリ | 緩和策 |
 |----------|-------------|
-| Spoofing | Cognito + MFA, mutual TLS, API key rotation, IAM roles (no long-lived credentials) |
-| Tampering | HTTPS everywhere, S3 Object Lock, DynamoDB encryption, request signing |
-| Repudiation | CloudTrail logging, application audit logs, DynamoDB Streams for change history |
-| Information Disclosure | Encryption at rest (KMS), VPC endpoints, security groups, suppress verbose errors |
-| Denial of Service | WAF rate limiting, API Gateway throttling, Lambda reserved concurrency, Shield Advanced |
-| Elevation of Privilege | Least-privilege IAM, ABAC policies, input validation, IDOR checks in application logic |
+| なりすまし | Cognito + MFA、相互 TLS、API キーのローテーション、IAM ロール（長期間有効な認証情報を使わない） |
+| 改ざん | あらゆる通信での HTTPS、S3 Object Lock、DynamoDB の暗号化、リクエストの署名 |
+| 否認 | CloudTrail のログ記録、アプリケーションの監査ログ、変更履歴のための DynamoDB Streams |
+| 情報漏えい | 保存時の暗号化（KMS）、VPC エンドポイント、セキュリティグループ、詳細なエラーの抑制 |
+| サービス拒否 | WAF のレート制限、API Gateway のスロットリング、Lambda の予約済み同時実行数、Shield Advanced |
+| 権限昇格 | 最小権限の IAM、ABAC ポリシー、入力検証、アプリケーションロジックでの IDOR チェック |
 
 ## When to Threat Model
 
-- During design (Stage 3 of AI-DLC) before implementation begins.
-- When adding a new external integration or data flow.
-- When changing authentication or authorization mechanisms.
-- After a security incident, to update the model with newly discovered threats.
-- Review and refresh threat models at least annually.
+- 設計時（AI-DLC のステージ 3）、実装を始める前。
+- 新しい外部統合やデータフローを追加するとき。
+- 認証や認可の仕組みを変更するとき。
+- セキュリティインシデントの後、新たに発見された脅威でモデルを更新するため。
+- 脅威モデルは少なくとも年に 1 回レビューして更新する。

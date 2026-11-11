@@ -39,53 +39,52 @@ outputs: scope-document.md, intent-backlog.md, scope-definition-questions.md (un
 
 ### Step 1: Load Prior Context
 
-- Read intent statement from `<record>/ideation/intent-capture/`
-- Read feasibility assessment from `<record>/ideation/feasibility/` (if exists)
-- Read constraint register and RAID log (if exist)
+- `<record>/ideation/intent-capture/` からインテントステートメントを読み込む
+- `<record>/ideation/feasibility/` から実現可能性評価を読み込む（存在する場合）
+- 制約登録簿と RAID ログを読み込む（存在する場合）
 
 ### Step 2: Generate Clarifying Questions
 
-Create `<record>/ideation/scope-definition/scope-definition-questions.md` with questions:
-- What is the minimum viable scope that delivers value?
-- What capabilities are must-have vs. nice-to-have?
-- What are the dependencies between capabilities?
-- What is the sequencing preference (risk-first, value-first, dependency-first)?
-- Are there hard deadlines tied to specific capabilities?
+次の質問を含む `<record>/ideation/scope-definition/scope-definition-questions.md` を作成する:
+- 価値を提供できる最小限のスコープは何か？
+- どの機能が必須で、どの機能があれば望ましい程度か？
+- 機能間の依存関係は何か？
+- 順序付けの方針はどれを優先するか（リスク優先、価値優先、依存関係優先）？
+- 特定の機能に結び付いた厳格な期限はあるか？
 
-Follow stage-protocol.md question flow.
+stage-protocol.md の質問フローに従う。
 
 ### Step 3: Collect and Analyze Answers
 
-Run ambiguity detection, contradiction analysis, and scope-vs-timeline validation.
+曖昧さの検出、矛盾の分析、スコープとタイムラインの整合性の検証を行う。
 
 ### Step 4: Generate Artifacts
 
-Create scope definition document (in/out boundary), prioritized intent backlog (proto-Units using MoSCoW/WSJF/RICE), and value stream map.
+スコープ定義ドキュメント（対象範囲内と対象範囲外の境界）、優先順位付けされたインテントバックログ（MoSCoW/WSJF/RICE を用いたユニットの原型）、およびバリューストリームマップを作成する。
 
 ### Step 5: Completion Handoff
 
-Hand completion to `stage-protocol.md` via
-`{{INVOKE}} engine orchestrate report --stage scope-definition --result <outcome>`.
-That `report` call owns every lifecycle transition and advancement; never perform one in prose, and never narrate this bookkeeping to the user.
+`{{INVOKE}} engine orchestrate report --stage scope-definition --result <outcome>` を通じて、
+完了を `stage-protocol.md` に引き渡す。
+その `report` 呼び出しが、ライフサイクルの遷移と前進をすべて担う。散文の中で遷移を実行してはならず、この記録処理をユーザーに説明してもならない。
 
 ### Step 6: Present Completion & Request Approval
 
-Completion emoji: :dart:
-Review path: `<record>/ideation/scope-definition/`
-Standard approval gate (Approve / Request Changes).
+完了時の絵文字: :dart:
+レビュー対象のパス: `<record>/ideation/scope-definition/`
+標準の承認ゲート（Approve / Request Changes）。
 
 ## Sensors
 
-This stage's outputs are markdown artefacts under `<record>/ideation/scope-definition/`.
+このステージの出力は `<record>/ideation/scope-definition/` 配下の Markdown 成果物である。
 
-Imports: `required-sections`, `upstream-coverage`.
+インポート: `required-sections`, `upstream-coverage`.
 
-Upstream targets: `intent-statement`, `feasibility-assessment`, `constraint-register`.
+上流の対象: `intent-statement`, `feasibility-assessment`, `constraint-register`.
 
 ## Learn
 
-When `directive.protocol_modules` lists `learnings`, follow
-`stage-protocol-learnings.md`: keep the diary at `directive.memory_path` while
-working, and take the learnings step before the approval gate; that module says
-when it asks the person anything. When the module is absent, skip both the diary
-and the step.
+`directive.protocol_modules` に `learnings` が含まれている場合は、
+`stage-protocol-learnings.md` に従う。作業中は `directive.memory_path` に日誌を付け、
+承認ゲートの前に学びのステップを実施する。そのモジュールが、利用者に何かを尋ねるタイミングを定めている。
+モジュールがない場合は、日誌とステップの両方を省略する。

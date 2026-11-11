@@ -1,171 +1,170 @@
 # Corner Checklist
 
-Most defects that survive a careful requirements pass are not missing
-features. They are **corners**: one component meeting one unusual condition
-(an empty list, a path with two spellings, a value containing the format's own
-delimiter, a store that is briefly unreachable). Nobody thinks to ask about
-them, so asking more questions does not find them. Sweeping each component
-against a fixed list of conditions does.
+注意深い要件定義をすり抜ける欠陥の多くは、機能の欠落ではない。それは
+**コーナー** である。つまり、1 つのコンポーネントが 1 つの特殊な条件に出会う場面
+（空のリスト、2 通りの表記を持つパス、そのフォーマット自身の区切り文字を含む値、
+一時的に到達できないストア）である。誰もそれについて尋ねようとは思わないので、
+質問を増やしても見つからない。各コンポーネントを固定された条件の一覧に照らして
+網羅的に調べれば見つかる。
 
-This checklist is that list. It applies wherever requirements, acceptance
-criteria, or functional behaviour are written or reviewed.
+このチェックリストがその一覧である。要件、受け入れ基準、機能上の振る舞いを
+書く場面やレビューする場面のすべてに適用する。
 
 ## How to Use It
 
-1. **Fix the deployment shape first.** Who else can see or change this data?
-   Is it single-user or multi-user, local or networked, one tenant or many? A
-   single-user local tool skips most of the identity, tenant, and
-   personal-data rows; a regulated multi-tenant service keeps all of them.
-2. **List the components.** Use the capabilities, screens, jobs, or
-   integrations the request already names. Do not invent new ones.
-3. **Cross each component with the surfaces it touches** (the headings below).
-   A component that never reads files skips "Files and paths".
-4. **For each condition that applies, settle it one of three ways:**
-   - write the expected behaviour as a requirement or a Given/When/Then
-     acceptance criterion;
-   - record it under **Assumptions** with the reason it needs no requirement;
-   - record it under **Out of scope**.
-5. **Ask the person only what the agent cannot know.** Facts about the
-   person's own world (team, budget, accounts, Regions, existing systems,
-   compliance obligations) are always asked. A corner the agent can settle
-   with a sensible default is written as a requirement or an assumption the
-   person can correct, not turned into a question.
+1. **最初にデプロイの形を確定する。** このデータを見たり変更したりできるのはほかに誰か。
+   シングルユーザーかマルチユーザーか、ローカルかネットワーク越しか、テナントは 1 つか複数か。
+   シングルユーザーのローカルツールなら、アイデンティティ、テナント、個人データの行の
+   大半を省略する。規制対象のマルチテナントサービスなら、それらをすべて残す。
+2. **コンポーネントを列挙する。** リクエストがすでに挙げている機能、画面、ジョブ、
+   統合を使う。新しいものを作り出してはならない。
+3. **各コンポーネントを、それが触れる領域（以下の見出し）と掛け合わせる。**
+   ファイルを一切読まないコンポーネントは "Files and paths" を省略する。
+4. **該当する各条件を、次の 3 つのいずれかの方法で決着させる:**
+   - 期待される振る舞いを、要件または Given/When/Then 形式の
+     受け入れ基準として書く。
+   - 要件が不要な理由を添えて、**Assumptions** に記録する。
+   - **Out of scope** に記録する。
+5. **利用者には、エージェントが知り得ないことだけを尋ねる。** 利用者自身の
+   世界に関する事実（チーム、予算、アカウント、リージョン、既存システム、
+   コンプライアンス上の義務）は常に尋ねる。エージェントが妥当なデフォルトで決着できる
+   コーナーは、質問にするのではなく、利用者が訂正できる要件または前提として書く。
 
-The bar: every applicable condition ends as a requirement, an assumption with
-a reason, or an explicit exclusion. A corner left silent is the one that ships
-broken.
+基準: 該当するすべての条件は、要件、理由付きの前提、明示的な除外の
+いずれかで終わらなければならない。何も書かれずに放置されたコーナーこそが、
+壊れたまま出荷される。
 
 ## Conditions by Surface
 
-Each line is a condition, then what must be true.
+各行は、条件と、そのとき成り立たなければならないことである。
 
 ### Files and paths
-- **Missing path**: names the path, says it is missing, keeps doing the rest.
-- **Permission denied**: reports which path and why; the rest keeps working.
-- **Two spellings of one path** (case, Unicode normalization, trailing slash, symlinked parent): treated as one item, never counted twice.
-- **Odd names** (spaces, quotes, non-ASCII, very long, reserved): handled exactly like plain names.
-- **Escaping the root** (symlink, `..`, archive entry): never reads or writes outside the intended directory; stops on loops.
-- **Half-written file**: never read as complete; own writes are atomic (write then rename).
-- **Disk full or read-only**: the write fails clearly, the previous good data survives, no false success.
-- **Unknown files** (OS metadata, editor swap files, partial downloads): ignored or reported, never parsed as data.
-- **Changed after check**: a file changed since it was indexed is re-read or reported stale.
+- **存在しないパス**: そのパスを示し、存在しないことを伝え、残りの処理は続ける。
+- **権限拒否**: どのパスで、なぜ拒否されたかを報告する。残りは引き続き動作する。
+- **1 つのパスの 2 通りの表記**（大文字小文字、Unicode 正規化、末尾のスラッシュ、シンボリックリンクの親）: 1 つの項目として扱い、決して二重に数えない。
+- **変わった名前**（空白、引用符、非 ASCII、非常に長い名前、予約名）: 普通の名前とまったく同じように扱う。
+- **ルートからの逸脱**（シンボリックリンク、`..`、アーカイブのエントリ）: 意図したディレクトリの外を決して読み書きしない。ループでは停止する。
+- **書きかけのファイル**: 完全なものとして読まない。自身の書き込みはアトミックにする（書き込んでからリネームする）。
+- **ディスクがいっぱい、または読み取り専用**: 書き込みは明確に失敗し、それまでの正常なデータは残り、偽の成功を報告しない。
+- **未知のファイル**（OS のメタデータ、エディタのスワップファイル、ダウンロード途中のファイル）: 無視するか報告し、決してデータとして解析しない。
+- **確認後の変更**: インデックス作成後に変更されたファイルは、読み直すか、古いと報告する。
 
 ### Formats the product parses
-- **One malformed record among good ones**: skipped and counted; every valid record still processed.
-- **Truncated or still-growing input**: the last partial record is "not yet complete", not an error and not data.
-- **Unknown, missing, or renamed fields**: keeps working on what it understands and flags the rest.
-- **Delimiters, quotes, or newlines inside values**: survive parsing and writing unchanged.
-- **Encodings** (BOM, CRLF, invalid bytes): read without corrupting text or failing the whole input.
-- **Empty input**: shown as "no data", distinct from a failed read.
-- **Duplicate keys or repeated records**: one documented rule decides; nothing counted twice.
-- **Hostile input** (entity expansion, unsafe deserialization, archive bombs): parsed with safe settings and limits.
-- **Assumed external structure**: any assumption about how another tool lays out its data (nesting depth, naming, ordering) is written down and checked against real data.
+- **正常なレコードの中に 1 つだけ不正なレコード**: スキップしてカウントする。有効なレコードはすべて引き続き処理する。
+- **途中で切れている、またはまだ増え続けている入力**: 最後の不完全なレコードは「まだ完了していない」ものであり、エラーでもデータでもない。
+- **未知の、欠けている、または名前が変わったフィールド**: 理解できる部分で動作を続け、残りにはフラグを立てる。
+- **値の中の区切り文字、引用符、改行**: 解析と書き出しを経ても変化せずに残る。
+- **エンコーディング**（BOM、CRLF、不正なバイト）: テキストを壊したり入力全体を失敗させたりせずに読む。
+- **空の入力**: 「データなし」として示し、読み取り失敗とは区別する。
+- **重複したキーや繰り返されたレコード**: 文書化された 1 つのルールで決める。何も二重に数えない。
+- **悪意のある入力**（エンティティ展開、安全でないデシリアライゼーション、アーカイブ爆弾）: 安全な設定と制限のもとで解析する。
+- **想定している外部の構造**: 別のツールがデータをどう配置するか（ネストの深さ、命名、順序）についての想定はすべて書き留め、実データと照らして確認する。
 
 ### Text
-- **Empty or whitespace-only**: treated consistently; a placeholder appears where a blank would mislead.
-- **Very long text or one unbroken word**: stored and shown without breaking layout or limits.
-- **Emoji, combining marks, right-to-left, invisible characters**: counted, truncated, and compared by visible character.
-- **Markup or control sequences**: escaped for the destination (HTML, terminal, spreadsheet formulas), never executed.
-- **Looks equal but is not**: one documented rule for case, whitespace, and normalization when comparing.
+- **空、または空白のみ**: 一貫して扱う。空欄だと誤解を招く場所にはプレースホルダを表示する。
+- **非常に長いテキスト、または区切りのない 1 語**: レイアウトや制限を壊さずに保存・表示する。
+- **絵文字、結合文字、右から左に書く文字、不可視文字**: 見た目の文字単位で数え、切り詰め、比較する。
+- **マークアップや制御シーケンス**: 出力先（HTML、ターミナル、スプレッドシートの数式）に合わせてエスケープし、決して実行しない。
+- **同じに見えるが同じではない**: 比較時の大文字小文字、空白、正規化について、文書化された 1 つのルールに従う。
 
 ### Numbers, units, and money
-- **Zero or empty denominator**: a defined value such as "n/a", never NaN or a crash.
-- **Boundaries** (0, 1, negative, maximum, inclusive vs exclusive): correct at and just past each limit.
-- **Rounding**: shown parts add up to the shown total, or the difference is labelled.
-- **Units**: every quantity carries its unit; conversions happen in one place.
-- **Unknown vs zero**: "unknown", "not applicable", and "0" stay distinct end to end.
-- **Money**: integer minor units or fixed-point decimals with a currency; never floating point.
-- **No known price or rate**: shown as unknown and flagged, never treated as free.
-- **Estimates**: labelled as estimates with their basis, never shown as billed amounts.
+- **ゼロまたは空の分母**: "n/a" のような定義済みの値にし、決して NaN やクラッシュにしない。
+- **境界**（0、1、負の値、最大値、境界を含むか含まないか）: 各限界ちょうどと、そのすぐ外側で正しく動く。
+- **丸め**: 表示された内訳の合計が表示された総計と一致するか、差分にラベルを付ける。
+- **単位**: すべての数量が単位を持つ。変換は 1 か所で行う。
+- **不明とゼロ**: 「不明」「該当なし」「0」は、最初から最後まで区別したままにする。
+- **金額**: 通貨付きの整数の最小単位か固定小数点の十進数で扱い、決して浮動小数点を使わない。
+- **価格や料率が不明**: 不明として示してフラグを立て、決して無料として扱わない。
+- **見積もり**: 根拠とともに見積もりであるとラベルを付け、決して請求額として示さない。
 
 ### Time
-- **Time zones and daylight saving**: instants stored with offset; day boundaries in one stated zone.
-- **Clock skew**: durations use a monotonic clock and are never negative.
-- **Period edges**: inclusive or exclusive ends stated; correct across midnight, month end, leap day, year end.
-- **Ties and out-of-order events**: ordered by timestamp, then a stable tiebreaker.
-- **Implausible timestamps** (missing, epoch zero, far future): flagged as suspect, not shown as real events.
-- **Expiry and deadlines**: one trusted clock; defined behaviour exactly at the deadline.
+- **タイムゾーンと夏時間**: 時点はオフセット付きで保存する。日の境界は明示した 1 つのタイムゾーンで決める。
+- **時計のずれ**: 経過時間には単調増加クロックを使い、決して負にしない。
+- **期間の端**: 端を含むか含まないかを明示する。真夜中、月末、うるう日、年末をまたいでも正しく動く。
+- **同時刻や順序の乱れたイベント**: タイムスタンプで並べ、その後に安定したタイブレーカーで並べる。
+- **ありえないタイムスタンプ**（欠落、エポックのゼロ、遠い未来）: 疑わしいものとしてフラグを立て、実際のイベントとして示さない。
+- **有効期限と締め切り**: 信頼できる 1 つの時計を使う。締め切りちょうどの振る舞いを定義する。
 
 ### Identity of things
-- **Two things share a name or key**: kept separate, with enough context to tell them apart.
-- **One thing under several names** (renamed, moved, synced from two sources): merged or linked, never double-counted.
-- **Dangling reference**: shown as broken or archived; dependent data is kept.
-- **Records with no owner**: assigned to an explicit, visible "unattributed" bucket so totals reconcile.
-- **External ids**: treated as opaque strings (leading zeros, case, and length preserved).
+- **2 つのものが名前やキーを共有している**: 別々に保ち、区別できるだけのコンテキストを添える。
+- **1 つのものが複数の名前を持つ**（名前の変更、移動、2 つのソースからの同期）: マージするかリンクし、決して二重に数えない。
+- **宙に浮いた参照**: 壊れている、またはアーカイブ済みとして示す。依存するデータは保持する。
+- **所有者のいないレコード**: 総計が一致するよう、明示的で目に見える「帰属なし」のバケットに割り当てる。
+- **外部 ID**: 不透明な文字列として扱う（先頭のゼロ、大文字小文字、長さを保持する）。
 
 ### Collections and lists
-- **Empty**: says so, says why if known (none exist, filtered out, no access), offers the next action.
-- **Exactly one item**: singular wording; charts and averages still make sense.
-- **Very many items**: stays responsive by paging, virtualizing, or summarizing; any cap is stated.
-- **Some sources failed**: shows what loaded and what did not; partial totals are never shown as complete.
-- **Ordering**: a defined order with a deterministic tiebreaker.
-- **Group totals**: subtotals add up to the grand total; items in several groups or none follow a stated rule.
+- **空**: 空であることを伝え、わかるなら理由（存在しない、フィルタで除外された、アクセス権がない）を伝え、次の操作を提示する。
+- **ちょうど 1 項目**: 単数形の表現にする。グラフや平均も意味をなすようにする。
+- **非常に多くの項目**: ページング、仮想化、要約によって応答性を保つ。上限を設けるならそれを明示する。
+- **一部のソースが失敗した**: 読み込めたものと読み込めなかったものを示す。部分的な総計を決して完全なものとして示さない。
+- **順序**: 決定論的なタイブレーカーを伴う、定義された順序にする。
+- **グループの合計**: 小計の合計が総計と一致する。複数のグループに属する項目やどのグループにも属さない項目は、明示したルールに従う。
 
 ### Network and remote services
-- **Slow or hanging call**: every call has a timeout; only the dependent feature degrades.
-- **Offline or service down**: says so, keeps local work usable, recovers on its own.
-- **Error status or unexpected body**: status and content type checked before use.
-- **Retries**: never repeat a side effect (idempotency keys, capped backoff with jitter).
-- **Rate limited**: honours the limit, slows down, tells the user when results are delayed.
-- **Version skew with the other side**: tolerates added fields; its own API is versioned.
+- **遅い、またはハングする呼び出し**: すべての呼び出しにタイムアウトを設ける。劣化するのは依存する機能だけにする。
+- **オフライン、またはサービスのダウン**: そのことを伝え、ローカルの作業は使える状態に保ち、自動的に回復する。
+- **エラーステータスや予期しないボディ**: 使う前にステータスとコンテンツタイプを確認する。
+- **リトライ**: 副作用を決して繰り返さない（冪等キー、ジッター付きで上限のあるバックオフ）。
+- **レート制限**: 制限を守って速度を落とし、結果が遅れるときはユーザーに伝える。
+- **相手側とのバージョンのずれ**: 追加されたフィールドを許容する。自身の API はバージョン管理する。
 
 ### Storage and state
-- **Store unavailable**: reports the failure, loses no accepted write, recovers without a manual restart.
-- **Multi-step write interrupted**: all or nothing.
-- **Concurrent edits**: no change silently lost; the conflict is detected and merged or put to the user.
-- **Two copies of one fact**: one copy is the declared source of truth; disagreements are detected and repaired.
-- **Cache vs source**: a stated freshness bound; the source wins.
-- **Migration and upgrade**: existing data and settings survive; old and new versions can coexist during rollout; rollback keeps data readable.
+- **ストアが利用できない**: 失敗を報告し、受け付けた書き込みを失わず、手動の再起動なしで回復する。
+- **複数ステップの書き込みが中断された**: すべて成功するか、何も反映されないかのどちらかにする。
+- **同時編集**: 変更が黙って失われることはない。競合を検出し、マージするかユーザーに判断を委ねる。
+- **1 つの事実の 2 つのコピー**: 一方を宣言された信頼できる情報源とする。不一致を検出して修復する。
+- **キャッシュとソース**: 鮮度の上限を明示する。ソースが優先される。
+- **移行とアップグレード**: 既存のデータと設定は残る。ロールアウト中は新旧のバージョンが共存できる。ロールバックしてもデータは読める状態に保つ。
 
 ### Concurrency, jobs, and sessions
-- **Two actors on the same item at once**: same result as running one after the other.
-- **Job runs twice or overlaps itself**: never concurrent with itself; running twice equals running once.
-- **Killed mid-work** (crash, sleep, cancel): restarts cleanly with no half-applied results.
-- **Stuck work**: a timeout or heartbeat detects it and releases it.
-- **Older response arrives last**: only the latest request's result is applied.
-- **Same user in several tabs or devices**: actions in one are reflected or safely rejected in the others.
-- **Feedback loop**: state derived from data never changes the data or view it is derived from in a way that re-triggers itself (flapping status, re-render or remount loops).
+- **2 つのアクターが同時に同じ項目を操作する**: 一方を実行してから他方を実行した場合と同じ結果になる。
+- **ジョブが 2 回実行される、または自身と重なる**: 自身と同時に実行されることはない。2 回実行しても 1 回実行したのと同じ結果になる。
+- **作業途中での強制終了**（クラッシュ、スリープ、キャンセル）: 中途半端に適用された結果を残さず、きれいに再開する。
+- **滞留した作業**: タイムアウトやハートビートで検出し、解放する。
+- **古いレスポンスが最後に届く**: 最新のリクエストの結果だけを適用する。
+- **同じユーザーが複数のタブやデバイスを使う**: 一方での操作は、他方に反映されるか、安全に拒否される。
+- **フィードバックループ**: データから導出された状態が、自身を再トリガーするような形で導出元のデータやビューを変更することは決してない（状態のばたつき、再レンダリングや再マウントのループ）。
 
 ### Screens and user input
-- **Loading, empty, and error** are three different views, each saying what happened and what to do next.
-- **Stale data**: shows when it was last updated and when a refresh failed.
-- **Same fact in two places**: same value, same units, same rounding, updated together.
-- **Destructive action**: confirmation naming what is affected, or undo.
-- **Invalid input**: names the field and the fix, keeps everything the user typed.
-- **Double submit**: never creates duplicates.
-- **Unsaved input on navigation or session expiry**: never silently discarded.
-- **Client-side rules**: also enforced on the trusted side.
-- **Keyboard, screen reader, contrast, zoom**: every function works by keyboard; status is never shown by color alone.
+- **読み込み中、空、エラー** は 3 つの異なるビューであり、それぞれが何が起きたか、次に何をすべきかを伝える。
+- **古いデータ**: 最終更新日時と、更新に失敗したことを示す。
+- **2 か所にある同じ事実**: 同じ値、同じ単位、同じ丸めで、同時に更新される。
+- **破壊的な操作**: 影響を受けるものを示した確認か、元に戻す手段を設ける。
+- **不正な入力**: フィールドと修正方法を示し、ユーザーが入力した内容はすべて保持する。
+- **二重送信**: 決して重複を作らない。
+- **画面遷移やセッション切れの際の未保存の入力**: 決して黙って破棄しない。
+- **クライアント側のルール**: 信頼できる側でも強制する。
+- **キーボード、スクリーンリーダー、コントラスト、ズーム**: すべての機能がキーボードで動作する。状態を色だけで示すことは決してない。
 
 ### Configuration, build, and environment
-- **Missing or invalid setting**: a documented default, or a startup error naming the key and the expected form.
-- **Several sources disagree** (defaults, file, environment, flags, user): one documented precedence; the effective value can be shown.
-- **Works locally, fails in CI or production**: builds and passes from a clean checkout with pinned toolchain versions; the tested artifact is the deployed one.
-- **Supported platforms**: OS, runtime, and browser versions are declared and checked, with a clear message otherwise.
-- **First run**: works with no prior data, cache, or configuration.
-- **Third-party tool missing, changed, or hanging**: says which one and how to fix it; machine-readable output and exit codes only; every subprocess has a timeout.
+- **設定の欠落や不正**: 文書化されたデフォルトを使うか、キーと期待される形式を示す起動時エラーにする。
+- **複数のソースの値が食い違う**（デフォルト、ファイル、環境変数、フラグ、ユーザー）: 文書化された 1 つの優先順位に従う。実際に有効な値を表示できるようにする。
+- **ローカルでは動くが CI や本番で失敗する**: ツールチェーンのバージョンを固定し、クリーンなチェックアウトからビルドしてテストを通す。テストした成果物をそのままデプロイする。
+- **サポート対象のプラットフォーム**: OS、ランタイム、ブラウザのバージョンを宣言して確認し、対象外の場合は明確なメッセージを出す。
+- **初回実行**: 既存のデータ、キャッシュ、設定がなくても動作する。
+- **サードパーティツールの欠落、変更、ハング**: どのツールか、どう直すかを伝える。機械可読な出力と終了コードだけに頼る。すべてのサブプロセスにタイムアウトを設ける。
 
 ### Identity, security, and personal data
-Apply only after the deployment-shape step says they are relevant.
-- **Session expires mid-flow**: work resumes after re-authentication without loss.
-- **Per-object authorization**: every read and write checks the caller's right to that object, including list, search, and export.
-- **Rights revoked while signed in**: enforced within a stated, short window.
-- **Tenant isolation**: no query, cache key, file path, log, or job crosses tenants.
-- **Secrets**: loaded at runtime from a protected store, never logged or shown, rotatable.
-- **Sensitive data in logs, URLs, notifications, or exports**: excluded or masked.
-- **Retention and erasure**: only needed data is kept, for a stated period, and can be exported or erased on request.
+デプロイの形を確定するステップで関係があると判断された場合にのみ適用する。
+- **フローの途中でのセッション切れ**: 再認証後、作業を失わずに再開できる。
+- **オブジェクト単位の認可**: すべての読み書きで、一覧、検索、エクスポートも含めて、呼び出し元がそのオブジェクトに対する権限を持つか確認する。
+- **サインイン中の権限取り消し**: 明示した短い時間内に反映する。
+- **テナントの分離**: クエリ、キャッシュキー、ファイルパス、ログ、ジョブのいずれもテナントをまたがない。
+- **シークレット**: 実行時に保護されたストアから読み込み、決してログに出したり表示したりせず、ローテーション可能にする。
+- **ログ、URL、通知、エクスポートに含まれる機密データ**: 除外するかマスクする。
+- **保持と消去**: 必要なデータだけを明示した期間だけ保持し、要求に応じてエクスポートまたは消去できるようにする。
 
 ### AI and agent output
-- **Malformed output**: validated against the expected structure; failures retried or surfaced.
-- **Ungrounded claims**: tied to identified sources or marked as uncertain.
-- **Untrusted content steering the model**: delimited; it cannot change instructions or permissions.
-- **Context limit exceeded**: chunked or refused explicitly; never silently truncated.
-- **Consequential actions**: permission-scoped, logged, and confirmed by a person.
+- **不正な形式の出力**: 期待される構造に照らして検証する。失敗したらリトライするか表面化する。
+- **根拠のない主張**: 特定された情報源に結び付けるか、不確実であると示す。
+- **信頼できないコンテンツによるモデルの誘導**: 区切りを付けて扱い、それが指示や権限を変更できないようにする。
+- **コンテキストの上限超過**: 分割するか明示的に拒否する。決して黙って切り詰めない。
+- **重大な結果をもたらす操作**: 権限の範囲を限定し、ログに記録し、人間が確認する。
 
 ## Growing the List
 
-When a defect reaches testing or production and no condition here describes
-it, add the condition to the team's own knowledge
-(`aidlc/spaces/<active-space>/knowledge/aidlc-product-agent/`) so the next
-intent sweeps for it. The list improves from real findings, not from more
-questions.
+欠陥がテストや本番に到達し、それを説明する条件がここにない場合は、
+その条件をチーム独自のナレッジ
+（`aidlc/spaces/<active-space>/knowledge/aidlc-product-agent/`）に追加し、次の
+インテントでそれを網羅的に調べられるようにする。この一覧は、質問を増やすことではなく、
+実際の発見によって改善される。

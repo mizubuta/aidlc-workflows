@@ -179,7 +179,7 @@ stage-runner set is in sync with the compiled stage graph (30 runners).
 
 ランナーを再生成せずにグラフにステージを追加した場合や、なくなったステージの孤立したランナーが残っている場合は、差分とともに明確に失敗します。ステージファイルを追加して再生成することが作成手順のすべてです。ランナーはその結果として生まれ、ジェネレーターが保守してくれます。
 
-ステージファイルの書き方については、[カスタマイズ](13-customization.md)と[フェーズとステージ](04-phases-and-stages.md)を参照してください。エンジン、ディレクティブの契約、ランナーの殻が内部で `next`/`report` をどう動かすかについては、リファレンスの [Skill System](../reference/17-skill-system.md) の章を参照してください。
+ステージファイルの書き方については、[カスタマイズ](13-customization.md)と[フェーズとステージ](04-phases-and-stages.md)を参照してください。エンジン、ディレクティブの契約、ランナーの殻が内部で `next`/`report` をどう動かすかについては、リファレンスの [スキルシステム](../reference/17-skill-system.md) の章を参照してください。
 
 ---
 

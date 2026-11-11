@@ -1,50 +1,50 @@
 # Multi-Team Construction and Workshop Mode
 
-Team-owned Construction lets several human teams build different Units from one
-approved intent. Workshop mode is one application of the same mechanism; the
-engine contract is scope-agnostic:
+チーム所有の Construction では、複数の人間のチームが1つの承認済みインテントから
+異なるユニットを構築できます。ワークショップモードは同じ仕組みの応用の1つであり、
+エンジンの契約はスコープに依存しません:
 
 - `Construction Iteration: unit-major`
 - `Unit Ownership: team`
-- a valid Unit dependency DAG
-- a shared git namespace, or sibling worktrees sharing one local ref database
+- 有効なユニットの依存関係 DAG
+- 共有の git 名前空間、または1つのローカル ref データベースを共有する兄弟ワークツリー
 
-Team ownership currently requires the workspace root itself to be the source Git
-repository. Work with a recorded sibling-repo set is not asked who builds its
-Units: when Construction starts, AI-DLC says in one line that this session
-builds them, because teams each owning a Unit is not available yet for work
-across repos, and `set-unit-ownership team` refuses with the same line before
-changing state.
+チームによる所有には、現在のところ、ワークスペースのルート自体がソースの Git
+リポジトリである必要があります。兄弟リポジトリのセットが記録されている作業では、誰がユニットを
+構築するかは尋ねられません。Construction の開始時に、AI-DLC はこのセッションが
+ユニットを構築することを1行で伝えます。複数リポジトリにまたがる作業では、チームがそれぞれ
+ユニットを所有する方式はまだ利用できないためです。`set-unit-ownership team` も、
+状態を変更する前に同じ1行とともに拒否します。
 
-The integration lead works from unscoped main. Each delivery team works from a
-checkout stamped to one claimed Unit. A claimed checkout runs that Unit's exact
-Construction chain, stages 3.1 through 3.5, in graph order. Main never reruns
-those stages after merge because the team's keyed receipts arrive with its
-audit shard.
+統合リードは、スコープなしの main から作業します。各デリバリーチームは、クレームした
+1つのユニットにスタンプされたチェックアウトから作業します。クレーム済みのチェックアウトは、
+そのユニットの Construction チェーン、つまりステージ 3.1 から 3.5 までをそのまま、グラフの順序で実行します。
+チームのキー付きレシートがその監査シャードとともに届くため、main がマージ後に
+これらのステージを再実行することはありません。
 
-For the Workshop scope's stage grid and Minimal test floor, see
-[Scopes and Depth](05-scopes-and-depth.md#workshop).
+Workshop スコープのステージ一覧と Minimal のテスト下限については、
+[スコープと深さ](05-scopes-and-depth.md#workshop) を参照してください。
 
 ---
 
 ## Roles and topologies
 
-| Role | Responsibility |
+| 役割 | 責任 |
 |------|----------------|
-| **Integration lead** | Drives Inception and any required walking skeleton on main, monitors claims, pins completed candidates, presents merge gates, and lands approved Units |
-| **Unit team** | Claims one dependency-ready Unit, runs its scoped 3.1-3.5 chain, commits the artifacts/receipts/source, and publishes the candidate |
-| **Review group** | Answers the Unit's selected team gates and the main-side pinned merge gate |
+| **統合リード** | main で Inception と必要なウォーキングスケルトンを進め、クレームを監視し、完了した候補をピン留めし、マージゲートを提示し、承認されたユニットを取り込みます |
+| **ユニットチーム** | 依存関係の準備ができたユニットを1つクレームし、スコープ付きの 3.1-3.5 チェーンを実行し、成果物／レシート／ソースをコミットし、候補を公開します |
+| **レビューグループ** | ユニットで選択されたチームゲートと、main 側のピン留めされたマージゲートに回答します |
 
-Two topologies use the same commands and evidence:
+2つのトポロジーは、同じコマンドと証拠を使います:
 
-Command examples use the harness-neutral public grammar. Run them through the
-installed harness's `/aidlc` command surface or its packaged `aidlc`
-dispatcher; no example assumes a `.claude/`, `.kiro/`, or `.codex/` tool path.
+コマンドの例は、ハーネスに依存しない公開の文法を使っています。インストールした
+ハーネスの `/aidlc` コマンド、またはパッケージ化された `aidlc`
+ディスパッチャーを通じて実行してください。どの例も `.claude/`、`.kiro/`、`.codex/` のツールパスを前提としていません。
 
 ### Clone per team
 
-Each team clones the shared remote. Claim coordination and candidate publication
-use `refs/heads/claim/<intent-id8>/<unit>`.
+各チームは共有のリモートをクローンします。クレームの調整と候補の公開には
+`refs/heads/claim/<intent-id8>/<unit>` を使います。
 
 ```bash
 git clone <shared-remote> payments-team
@@ -55,20 +55,20 @@ aidlc unit claim payments --team "Payments team"
 
 ### Sibling worktrees
 
-One repository creates sibling worktrees. Claims use the shared local branch
-namespace through atomic `git update-ref` only when no remote is configured. If
-`origin` exists, sibling worktrees use the same remote-backed claims as separate
-clones. This topology is useful for one machine and deterministic tests; remove
-the remote only when the whole exercise is intentionally local/offline.
+1つのリポジトリが兄弟ワークツリーを作成します。リモートが構成されていない場合に限り、クレームは
+アトミックな `git update-ref` を通じて共有のローカルブランチ名前空間を使います。
+`origin` が存在する場合、兄弟ワークツリーは別々のクローンと同じリモートベースのクレームを使います。
+このトポロジーは、1台のマシンでの作業や決定論的なテストに便利です。リモートを削除するのは、
+演習全体を意図的にローカル／オフラインで行う場合だけにしてください。
 
-Bolt directories and branches use `bolt-<id8>_<slug>`, where `<id8>` is the
-selected intent's registry UUID suffix, also used by Unit claims at
-`refs/heads/claim/<id8>/<unit>`. Parallel intents can therefore use the same Unit
-slug in one checkout or across worktrees of one clone without colliding
-([#1252](https://github.com/awslabs/aidlc-workflows/issues/1252)). See
-[Bolt identity](../../core/knowledge/aidlc-shared/worktree-info-schema.md#bolt-identity)
-for naming and legacy compatibility. Use the path returned by `create`; this
-example assumes intent identity `7c31e9a0`.
+Bolt のディレクトリとブランチには `bolt-<id8>_<slug>` を使います。ここで `<id8>` は
+選択したインテントのレジストリ UUID の接尾辞で、ユニットのクレームでも
+`refs/heads/claim/<id8>/<unit>` として使われます。そのため、並行するインテントは、1つのチェックアウト内でも、
+1つのクローンの複数のワークツリー間でも、衝突せずに同じユニットの slug を使えます
+（[#1252](https://github.com/awslabs/aidlc-workflows/issues/1252)）。命名と旧形式との互換性については
+[Bolt の識別](../../core/knowledge/aidlc-shared/worktree-info-schema.md#bolt-identity)
+を参照してください。`create` が返すパスを使ってください。この
+例では、インテントの識別子を `7c31e9a0` と仮定しています。
 
 ```bash
 # From unscoped main:
@@ -78,122 +78,118 @@ cd .aidlc/worktrees/bolt-7c31e9a0_payments
 aidlc unit claim payments --team "Payments team"
 ```
 
-Run the same scoped build and `publish` commands below from that worktree. After
-main lands and pushes the candidate, return to main and discard the completed
-local worktree with `aidlc engine worktree discard --slug payments`. On a Bun-based
-copy install, run `bun .claude/tools/aidlc-worktree.ts create` and `discard` with
-the same flags instead, substituting your harness directory for `.claude`.
-Discard sets aside tracked files, non-ignored untracked files, and reviewed
-source refs before removing the checkout and branch. To inspect that work later,
-run `aidlc engine worktree restore --slug payments`; it creates an isolated
-checkout under `.aidlc/restored/` without touching a new live `bolt-7c31e9a0_payments`.
-Add `--parked <stamp>` for one saved attempt or bare `--raw` to bypass checkout
-conversions. Ignored untracked files are not saved, and `eol/text=auto`
-normalization during saving cannot be reversed by restore.
+以下のスコープ付きの構築コマンドと `publish` コマンドは、そのワークツリーから同じように実行します。
+main が候補を取り込んでプッシュした後は、main に戻り、完了したローカルのワークツリーを
+`aidlc engine worktree discard --slug payments` で破棄します。Bun ベースの
+コピーインストールでは、代わりに同じフラグで `bun .claude/tools/aidlc-worktree.ts create` と `discard` を実行し、
+`.claude` を自分のハーネスディレクトリに置き換えてください。
+破棄は、チェックアウトとブランチを削除する前に、追跡されているファイル、無視されていない未追跡ファイル、
+レビュー済みのソース ref を退避します。後でその作業を確認するには、
+`aidlc engine worktree restore --slug payments` を実行します。これは新しく稼働中の `bolt-7c31e9a0_payments` に触れることなく、
+`.aidlc/restored/` の下に隔離されたチェックアウトを作成します。
+保存された1つの試行を指定するには `--parked <stamp>` を、チェックアウト時の変換を
+回避するには単独の `--raw` を追加します。無視された未追跡ファイルは保存されず、保存時の `eol/text=auto`
+の正規化は復元で元に戻せません。
 
-To remove the recovery refs, use `aidlc engine worktree purge --slug payments`,
-optionally with `--parked <stamp>` for one attempt or `--older-than <days>` for
-attempts strictly older than a nonnegative finite number of days. Age uses the
-stamp's UTC timestamp, ignoring its `-N` collision suffix; the two selectors are
-mutually exclusive. Purge refuses while a matching restored checkout exists,
-including one moved elsewhere. Doctor lists saved attempts informationally with
-typed `restore_operation` and `purge_operation` values for the exact slug, stamp,
-and repository, followed by `--intent <record-dir-name> --space <space>` to keep
-the operation bound to its owning intent even after the active intent changes.
-Conductors invoke their `worktree` engine route with each listed
-arg exactly as argv, never joined into a shell command. Optional
-`restore_command` and `purge_command` are safe human display text; rendering
-failures omit the corresponding command and supply `restore_command_error` or
-`purge_command_error` while keeping the operation. If only reviewed source refs
-remained to save, the attempt is `evidence-only` with `parked_commit: "-"`: no
-files can be restored, abort omits `restore_operation`, `restore_hint`,
-`restore_hint_error`, and `parked_excludes`, and doctor offers only the purge
-operation and its command-or-error fields. See [getting the files back](15-troubleshooting.md#a-bolt-attempt-was-set-aside-getting-the-files-back)
-for the recovery walkthrough and [CLI Commands](12-cli-commands.md#aidlc-engine-worktree-purge-remove-recovery-refs)
-for the flags.
+復旧用の ref を削除するには、`aidlc engine worktree purge --slug payments` を使います。
+必要に応じて、1つの試行には `--parked <stamp>` を、0 以上の有限の日数より厳密に古い試行には
+`--older-than <days>` を指定します。経過日数は
+スタンプの UTC タイムスタンプを使い、`-N` の衝突回避用の接尾辞は無視します。2つのセレクターは
+同時に指定できません。一致する復元済みのチェックアウトが存在する間は、別の場所に移動したものも含め、
+purge は拒否されます。doctor は保存された試行を情報として一覧表示し、正確な slug、スタンプ、
+リポジトリに対する型付きの `restore_operation` と `purge_operation` の値を示し、
+その後に `--intent <record-dir-name> --space <space>` を付けて、アクティブなインテントが変わった後も
+操作が所有元のインテントに結び付いたままになるようにします。
+コンダクターは、列挙された各引数を argv としてそのまま渡して `worktree` エンジンルートを呼び出し、
+決してシェルコマンドとして連結しません。任意の
+`restore_command` と `purge_command` は、人間向けの安全な表示用テキストです。表示の生成に
+失敗した場合は対応するコマンドが省略され、操作は保持したまま `restore_command_error` または
+`purge_command_error` が与えられます。保存すべきものがレビュー済みのソース ref だけだった場合、
+その試行は `parked_commit: "-"` を持つ `evidence-only` になります。復元できる
+ファイルはなく、abort は `restore_operation`、`restore_hint`、
+`restore_hint_error`、`parked_excludes` を省略し、doctor は purge
+操作とそのコマンドまたはエラーのフィールドだけを提示します。復旧の手順については [ファイルを取り戻す](15-troubleshooting.md#a-bolt-attempt-was-set-aside-getting-the-files-back)
+を、フラグについては [CLI コマンド](12-cli-commands.md#aidlc-engine-worktree-purge-remove-recovery-refs)
+を参照してください。
 
-Creation refuses an intent without a registry UUID; adopt or re-create that
-intent before Construction. Cleanup also refuses when the Bolt branch is
-checked out at another worktree path and names that owner instead of deleting
-its branch or retained/parked refs. Pre-upgrade legacy `bolt-<slug>` Bolts can
-merge, discard, and purge to completion only with matching intent provenance;
-new Bolts never use that shape. `doctor` reports both shapes.
+レジストリ UUID を持たないインテントでは作成が拒否されます。Construction の前に、そのインテントを
+採用するか作り直してください。Bolt のブランチが別のワークツリーのパスで
+チェックアウトされている場合もクリーンアップは拒否され、そのブランチや保持／退避された ref を削除する代わりに、
+その所有者を名指しします。アップグレード前の旧形式の `bolt-<slug>` の Bolt は、
+インテントの出所が一致する場合に限り、マージ、破棄、purge を最後まで行えます。
+新しい Bolt がその形式を使うことは決してありません。`doctor` は両方の形式を報告します。
 
-Normal scoped `next`, lifecycle, review, and gate work is offline-first. Network
-access is confined to explicit claim, share, publish, status, pin, and merge-ref
-verification operations, and to the board on a checkout that holds no Unit
-claim: each `/aidlc` there in team mode fetches the teams' claim refs, and only
-those, from the shared remote (best effort, a few seconds at most, no prompt;
-when the remote does not answer, the board says once that it shows what this
-clone last saw).
+通常のスコープ付きの `next`、ライフサイクル、レビュー、ゲートの作業はオフラインファーストです。ネットワーク
+アクセスは、明示的なクレーム、共有、公開、ステータス、ピン留め、マージ ref の
+検証の操作と、ユニットのクレームを持たないチェックアウトでのボードに限られます。
+チームモードでそこで `/aidlc` を実行するたびに、共有のリモートからチームのクレーム ref だけを
+取得します（ベストエフォートで、長くても数秒、プロンプトなし。
+リモートが応答しない場合、ボードはこのクローンが最後に見た状態を表示していることを一度だけ伝えます）。
 
 ---
 
 ## Prepare Construction
 
-The integration lead completes Inception, including:
+統合リードは、次のものを含めて Inception を完了します:
 
-1. the authoritative Unit DAG;
-2. `Construction Iteration: unit-major`;
-3. `Unit Ownership: team`;
-4. the team gate rhythm, `per-stage` or `unit-end`;
-5. the affirmed branching strategy.
+1. 正となるユニットの DAG
+2. `Construction Iteration: unit-major`
+3. `Unit Ownership: team`
+4. チームゲートのリズム（`per-stage` または `unit-end`）
+5. 確認済みのブランチ戦略
 
-When Inception ends with two or more Units, the first step into Construction
-asks who builds them, once, in every scope and in a composed workflow: **Just
-me** records `Unit Ownership: solo` and this session builds the Units;
-**Several teams** records `Unit Ownership: team`, switching a stage-by-stage
-plan to one Unit at a time on the way (the choice says so, and says that each
-team approves its Unit after every stage unless the lead asks for one approval
-at the end of each Unit). A plan with one Unit, no Unit plan, or
-Construction already under way is never asked. A reply that picks neither
-leaves this session building, and the first step says to ask for teams before
-the first Unit is built. Team approvals come after every stage (`per-stage`)
-unless the lead asks for one approval at the end of each Unit
-(`set-unit-gate-rhythm unit-end`) before the first team approval question;
-the first team step offers it. While no team has taken a Unit, that step also
-says once that this session builds the Units here, starting with the first
-DAG Unit (the walking skeleton, when the scope runs one). With a shared remote,
-the step that would start a Unit here asks first whether to share the plan with
-the teams (see below); without one, the line says to share the work through
-git, and each team then runs `/aidlc` in its own clone to take a Unit.
+Inception が2つ以上のユニットで終わると、Construction に入る最初のステップで、
+どのスコープでも、組み立てたワークフローでも、誰がそれらを構築するかが一度尋ねられます。**Just
+me** は `Unit Ownership: solo` を記録し、このセッションがユニットを構築します。
+**Several teams** は `Unit Ownership: team` を記録し、その際にステージごとの
+計画を1度に1つのユニットの計画に切り替えます（選択肢にはその旨と、リードが各ユニットの終わりに
+1回の承認を求めない限り、各チームがステージごとに自分のユニットを承認することが書かれています）。
+ユニットが1つの計画、ユニットの計画がない場合、または
+Construction がすでに進行中の場合は、尋ねられません。どちらも選ばない返信の場合は
+このセッションが構築を続け、最初のステップで、最初のユニットを構築する前にチームを
+求めるよう伝えます。チームの承認は、最初のチームの承認の質問より前にリードが各ユニットの終わりに1回の承認
+（`set-unit-gate-rhythm unit-end`）を求めない限り、すべてのステージの後に行われます（`per-stage`）。
+最初のチームのステップがそれを提案します。どのチームもユニットを引き受けていない間、そのステップは
+ここではこのセッションが最初の DAG のユニット（スコープがウォーキングスケルトンを実行する場合はそれ）から
+ユニットを構築することも一度伝えます。共有のリモートがある場合、
+ここでユニットを開始しようとするステップは、まず計画をチームと共有するかどうかを
+尋ねます（下記参照）。ない場合、その行は git を通じて作業を共有するよう伝え、
+その後、各チームが自分のクローンで `/aidlc` を実行してユニットを引き受けます。
 
-When the scope records `skeleton: on`, the first DAG Unit is the walking
-skeleton. It runs on unscoped main before claims open and needs no merge-back
-gate; claims open once its Unit Progress row on the pushed main is complete.
-With `skeleton: off`, or `Skeleton Stance: off` recorded in the work's state,
-dependency-ready Units open immediately. When the team's practices answer
-whether to build a thin end-to-end slice first, that answer is read at the
-first step after several teams are chosen, before a Unit is handed out and
-before the plan is shared. While your answer is recorded but the plan the teams
-have still holds every Unit behind the first, the board says so once, with the
-share that fixes it.
+スコープが `skeleton: on` を記録している場合、最初の DAG のユニットはウォーキング
+スケルトンです。それはクレームが開く前にスコープなしの main で実行され、マージバックの
+ゲートは必要ありません。プッシュされた main 上でその Unit Progress の行が完了すると、クレームが開きます。
+`skeleton: off` の場合、または作業の状態に `Skeleton Stance: off` が記録されている場合は、
+依存関係の準備ができたユニットがすぐに開きます。まず薄いエンドツーエンドのスライスを構築するかどうかに
+チームのプラクティスが答えている場合、その答えは、複数のチームが選ばれた後の最初のステップで、
+ユニットが割り当てられる前、かつ計画が共有される前に読み取られます。あなたの答えは記録されているのに、
+チームが持つ計画では依然としてすべてのユニットが最初のユニットの後ろで待機している場合、ボードはその旨を、
+それを解消する共有とともに一度伝えます。
 
-Teams take Units from the plan on the shared remote. Once claims are open (at
-once with the skeleton off, once the walking skeleton is approved with it on)
-and the repository has a remote, the step that would start a Unit on main asks
-once whether to share the plan with the teams, before each Unit this session
-would build:
+チームは共有のリモート上の計画からユニットを引き受けます。クレームが開き（スケルトンがオフならすぐに、
+オンならウォーキングスケルトンが承認された時点で）、
+リポジトリにリモートがある場合、main でユニットを開始しようとするステップは、このセッションが
+構築するはずの各ユニットの前に、計画をチームと共有するかどうかを一度尋ねます:
 
-- **Share them with the teams** runs `aidlc unit share`: it commits what git
-  shows changed here (the question names how many files and, by name, up to
-  ten new files outside `aidlc/`, past ten those nearest the project's top, with
-  how many more; `git status` shows the rest before you share; ignored files
-  and AI-DLC's own part of `.gitignore`, `AGENTS.md` and `opencode.json` stay
-  out)
-  and pushes the integration branch with a plain push, never forced. This
-  checkout then shows the board instead of building Units. A push the remote
-  refuses (it has commits this clone lacks, or the branch is protected) keeps
-  the commit, says why, and the question comes back: pull main, then share.
-- **Build them here for now** builds that Unit in this session; the question
-  comes back before the next Unit.
+- **Share them with the teams** は `aidlc unit share` を実行します。これはここで git が
+  変更として示すものをコミットし（質問には、ファイル数と、`aidlc/` の外にある新しいファイルを
+  最大 10 個まで名前で示します。10 個を超える場合はプロジェクトの最上位に近いものを示し、
+  残りの数を添えます。それ以外は共有前に `git status` で確認できます。無視されたファイル
+  と、`.gitignore`、`AGENTS.md`、`opencode.json` のうち AI-DLC 自身の部分は
+  対象外です）、
+  統合ブランチを通常のプッシュでプッシュします。強制プッシュは決して行いません。この
+  チェックアウトは、その後ユニットを構築する代わりにボードを表示します。リモートがプッシュを
+  拒否した場合（このクローンにないコミットがリモートにある、またはブランチが保護されている）、コミットは保持され、
+  理由が伝えられ、質問が再び表示されます。main をプルしてから共有してください。
+- **Build them here for now** はそのユニットをこのセッションで構築します。次のユニットの前に
+  質問が再び表示されます。
 
-Typed, the same step is `/aidlc unit share`, or your own commit and
-`git push origin main`.
+入力する場合、同じステップは `/aidlc unit share`、または自分でのコミットと
+`git push origin main` です。
 
-Claims open by dependency batch. "Delivery planning is complete" does not mean
-every Unit is claimable; a Unit remains blocked until every `depends_on` row is
-merged.
+クレームは依存関係のバッチごとに開きます。「デリバリー計画が完了した」ことは、
+すべてのユニットがクレーム可能であることを意味しません。ユニットは、`depends_on` の行がすべて
+マージされるまでブロックされたままです。
 
 ---
 
@@ -201,42 +197,39 @@ merged.
 
 ### 1. Claim
 
-In a team's own clone of the shared remote, `/aidlc` offers the Units open to
-take, once for each set of open Units: "2 Units are open for a team to take:
+共有のリモートからチームが自分でクローンしたリポジトリでは、`/aidlc` は、開いているユニットのセットごとに一度、
+引き受け可能なユニットを提示します: "2 Units are open for a team to take:
 payments and refunds; billing is with Billing team. Take one for your team? I'd
-label your team "Alice"; say another name to use it instead." Each
-choice says what waits on that Unit ("invoicing waits on it"). Picking one
-claims it for your team under that label, your git user name, or under the name
-you give with your pick; **Not now** shows the board. A clone
-that ran the work itself (the lead's own checkout) is not asked. The
-participant marker still marks a clone for the picker by hand
-(`aidlc unit participate`), and a claim can be typed directly:
+label your team "Alice"; say another name to use it instead."（訳: 2つのユニットがチームによる引き受けを待っています: payments と refunds。billing は Billing team が担当しています。あなたのチームで1つ引き受けますか？ チーム名は "Alice" にします。別の名前を使う場合はその名前を伝えてください。）各
+選択肢には、そのユニットを待っているものが示されます（"invoicing waits on it"）。1つを選ぶと、
+そのラベル、git のユーザー名、または選択時に伝えた名前で、あなたのチームのために
+それがクレームされます。**Not now** はボードを表示します。作業自体を実行したクローン
+（リード自身のチェックアウト）には尋ねられません。参加者マーカーを使えば、
+引き続き手動でクローンを選択対象としてマークでき（`aidlc unit participate`）、クレームを直接入力することもできます:
 
 ```bash
 aidlc unit claim payments --team "Payments team"
 ```
 
-Exactly one concurrent claimant wins. The command stamps the checkout with
-space, intent, Unit, generation, nonce, and gate rhythm. A checkout whose own
-audit shard is already on main (the lead's own checkout, or a copy of it) keeps
-the Unit's evidence in a new shard of the claim's own, so it publishes and pins
-like a fresh clone.
+同時にクレームした中で勝つのは厳密に1者だけです。コマンドはチェックアウトに、
+スペース、インテント、ユニット、世代、ノンス、ゲートのリズムをスタンプします。自身の
+監査シャードがすでに main にあるチェックアウト（リード自身のチェックアウト、またはそのコピー）は、
+ユニットの証拠をクレーム固有の新しいシャードに保持するため、新しいクローンと同じように公開とピン留めができます。
 
-To hand the same attempt to a teammate on another machine, push the claim ref.
-The teammate fetches and checks out the exact local `claim/<intent-id8>/<unit>`
-branch, then runs:
+同じ試行を別のマシンのチームメイトに引き渡すには、クレームの ref をプッシュします。
+チームメイトはフェッチして、正確なローカルの `claim/<intent-id8>/<unit>`
+ブランチをチェックアウトし、次を実行します:
 
 ```bash
 aidlc unit adopt payments
 ```
 
-Adoption verifies the checked-out payload against the live ref and keeps the
-claim's bound audit shard, so the teammate can resume and publish without
-creating a successor attempt.
+採用（adopt）は、チェックアウトした内容を稼働中の ref と照合して検証し、クレームに結び付いた
+監査シャードを保持するため、チームメイトは後継の試行を作成せずに再開して公開できます。
 
 ### 2. Build
 
-Run `/aidlc` in the claimed checkout. The engine routes only the stamped Unit:
+クレーム済みのチェックアウトで `/aidlc` を実行します。エンジンはスタンプされたユニットだけをルーティングします:
 
 1. Functional Design (3.1)
 2. NFR Requirements (3.2)
@@ -244,26 +237,25 @@ Run `/aidlc` in the claimed checkout. The engine routes only the stamped Unit:
 4. Infrastructure Design (3.4)
 5. Code Generation (3.5)
 
-Plan Approval remains mandatory during Code Generation.
+Code Generation の間、Plan Approval は引き続き必須です。
 
-Gate rhythm controls the team review points:
+ゲートのリズムは、チームのレビューのタイミングを制御します:
 
-- `per-stage`: one gate after each settled `(stage, Unit)`;
-- `unit-end`: one team completion gate after 3.5;
-- both rhythms still add one pinned merge gate on main.
+- `per-stage`: 確定した各 `(stage, Unit)` の後に1つのゲート
+- `unit-end`: 3.5 の後に1つのチーム完了ゲート
+- どちらのリズムでも、main 上にピン留めされたマージゲートが1つ追加されます
 
-When the Unit is complete and approved, `/aidlc` asks once whether to commit it
-and publish it for review on main. **Commit and publish** runs
-`aidlc unit publish payments --commit`, which commits the Unit's own work (every
-tracked change, the record under `aidlc/` and the new files its source manifest
-lists; the question names how many files and up to ten new ones, as the share
-question does) and then publishes. Other new files, such as AI-DLC's own install
-or an unignored `node_modules`, stay on disk uncommitted, and the publish says
-once how many it left out; say which you want in and it publishes again with
-them (`--include <path>`). **Not now** leaves it, and the step then says it is
-not published yet, so asking for it later publishes it. Publication requires a clean tracked checkout;
-AI-DLC's own part of `.gitignore`, `AGENTS.md` and `opencode.json`, which it
-writes when a session starts in a fresh clone, does not count. By hand:
+ユニットが完了して承認されると、`/aidlc` はそれをコミットして main でのレビューのために
+公開するかどうかを一度尋ねます。**Commit and publish** は
+`aidlc unit publish payments --commit` を実行します。これはユニット自身の作業（追跡されている
+すべての変更、`aidlc/` 配下の記録、およびソースマニフェストが列挙する新しいファイル。
+質問には、共有の質問と同様にファイル数と最大 10 個の新しいファイルが示されます）をコミットしてから公開します。
+AI-DLC 自身のインストールや無視されていない `node_modules` などのその他の新しいファイルは、
+コミットされないままディスクに残り、公開時に除外した数が一度伝えられます。含めたいものを伝えると、
+それらを含めて再度公開します（`--include <path>`）。**Not now** はそのままにし、ステップはまだ
+公開されていないことを伝えるため、後で依頼すれば公開されます。公開には、追跡ファイルがクリーンなチェックアウトが必要です。
+新しいクローンでセッションが始まるときに AI-DLC が書き込む、`.gitignore`、`AGENTS.md`、`opencode.json`
+のうち AI-DLC 自身の部分は数に入りません。手動で行う場合:
 
 ```bash
 git add -A
@@ -271,93 +263,92 @@ git commit -m "Complete payments Unit"
 aidlc unit publish payments
 ```
 
-`publish` creates a candidate commit whose tree is the team's committed work and
-whose parents bind both the claim history and the implementation history. It
-CAS-updates the claim ref. Publication is not integration. The candidate carries
-the claim's audit shard with the rows pin accepts and the review records its
-receipts name (AI-DLC keeps those out of commits), and every other audit shard
-and the stages' shared diaries as main has them; what is left out stays in the
-checkout's own history, and publish says how many rows. A change to any other
-record outside the Unit's `construction/<unit>/` folder (an Inception artifact
-such as `contract-summary.md`) is published too, but pin will refuse it, so
-publish names the file: take it out of the branch, make the change on main,
-and publish again. Pin and land refuse it too, and say to do that in the
-checkout where the Unit is claimed.
+`publish` は、ツリーがチームのコミット済みの作業で、親がクレームの履歴と実装の履歴の両方を
+結び付ける候補コミットを作成します。そして
+クレームの ref を CAS で更新します。公開は統合ではありません。候補には、
+pin が受け入れる行と、そのレシートが名指しするレビュー記録（AI-DLC はこれらをコミットから除外しています）を含む
+クレームの監査シャードと、main にあるとおりのその他すべての監査シャードとステージの共有の日誌が含まれます。
+除外されたものはチェックアウト自身の履歴に残り、publish はその行数を伝えます。ユニットの
+`construction/<unit>/` フォルダーの外にある他の記録（`contract-summary.md` のような Inception の成果物）
+への変更も公開されますが、pin がそれを拒否するため、
+publish はそのファイルを名指しします。ブランチからそれを取り除き、main で変更を行ってから、
+再度公開してください。pin と land もそれを拒否し、ユニットがクレームされている
+チェックアウトでそれを行うよう伝えます。
 
 ---
 
 ## Pin, gate, and land
 
-All merge commands run from unscoped main, or from any checkout of the project
-that holds no Unit claim.
+すべてのマージコマンドは、スコープなしの main、またはユニットのクレームを持たない
+プロジェクトの任意のチェックアウトから実行します。
 
 ### 1. Pin the candidate
 
-On such a checkout `/aidlc` reads the teams' claims from the shared remote
-(above), so when a team has published its Unit the next `/aidlc` asks, once for
-each published commit: "payments is ready from Payments team: review and merge
-it?" **Review and merge payments** runs `aidlc unit pin payments`, which fetches
-what it needs itself; the merge gate below follows in the same turn. **Not
-now** leaves a line on the board. Typed:
+そのようなチェックアウトでは、`/aidlc` は共有のリモートからチームのクレームを読み取ります
+（上記）。そのため、チームがユニットを公開すると、次の `/aidlc` が公開されたコミットごとに一度
+尋ねます: "payments is ready from Payments team: review and merge
+it?"（訳: Payments team の payments の準備ができました。レビューしてマージしますか？）**Review and merge payments** は `aidlc unit pin payments` を実行し、
+必要なものは自分でフェッチします。下記のマージゲートが同じターンで続きます。**Not
+now** はボードに1行を残します。入力する場合:
 
 ```bash
 aidlc unit pin payments
 ```
 
-Pinning records one exact candidate OID and attempt generation. Evidence is read
-with git object plumbing, not by merging or creating a worktree:
+ピン留めは、1つの正確な候補の OID と試行の世代を記録します。証拠は
+マージやワークツリーの作成ではなく、git のオブジェクト操作の低レベルコマンドで読み取られます:
 
-- required Unit artifacts;
-- `UNIT_COMPLETED` receipts for active stages;
-- team gate approvals at the claim rhythm;
-- each required review's `READY` verdict, or the team's approval of the stage
-  after a review that stayed `NOT-READY`, accepting its open findings (an
-  approval that asked for a finding to be fixed waits for the next review). The
-  evidence's `reviewers_ready` holds only stages approved with nothing open;
-  `reviewers_approved_over_concerns` names every stage approved with a finding
-  open, under either verdict, with each finding's id, severity and what the
-  approval recorded for it;
-- Plan Approval fingerprint and explicit approval;
-- the candidate state row;
-- the transportable team audit shard.
+- 必須のユニットの成果物
+- アクティブなステージの `UNIT_COMPLETED` レシート
+- クレームのリズムに応じたチームゲートの承認
+- 必須の各レビューの `READY` の判定、または `NOT-READY` のままだったレビューの後に、
+  未解決の指摘を受け入れたうえでのチームによるステージの承認（指摘の修正を求めた
+  承認は、次のレビューを待ちます）。
+  証拠の `reviewers_ready` には、未解決のものが何もない状態で承認されたステージだけが含まれます。
+  `reviewers_approved_over_concerns` は、どちらの判定であれ、未解決の指摘がある状態で
+  承認されたすべてのステージを名指しし、各指摘の ID、重大度、およびそれについて承認が
+  記録した内容を示します
+- Plan Approval のフィンガープリントと明示的な承認
+- 候補の状態の行
+- 持ち運び可能なチームの監査シャード
 
-**Trust model.** The claim-bound team shard may carry that team's own
-attempt-keyed `UNIT_COMPLETED`, team-gate, and reviewer receipts. Those rows are
-team assertions: pin re-verifies required artifacts and fingerprints, and the
-human reviews the remaining trust at the pinned merge gate. A team shard may
-never carry `HUMAN_TURN`, `MERGE_DISPATCH_*`, `UNIT_MERGED`, a unit-merge gate,
-another Unit's receipt, or another/new audit shard. A claimed checkout writes
-only the rows pin accepts to the claim's shard; everything else it records
-(sessions, turns, answers) stays in its local record under the intent record's
-`.aidlc-engine/audit/`, out of every commit, so the claimant's pull after the
-landing keeps every row. Pin and land also refuse
-workflow-record changes outside the claimed Unit subtree. Product-source paths
-outside the Unit's record tree remain visible in the gate evidence for human
-overlap judgment, and so does a rule the team kept while working the Unit (the
-space's `memory/project.md` or `memory/team.md`), which lands on main with the
-Unit. Like any shared file, a rules file main changed since the claim (another
-Unit's kept rule landed first) stops the land: rebase onto main, publish again,
-and pin again.
+**信頼モデル。** クレームに結び付いたチームのシャードは、そのチーム自身の
+試行をキーとする `UNIT_COMPLETED`、チームゲート、レビュアーのレシートを含むことができます。これらの行は
+チームによる主張です。pin は必須の成果物とフィンガープリントを再検証し、
+残りの信頼については人間がピン留めされたマージゲートでレビューします。チームのシャードは
+`HUMAN_TURN`、`MERGE_DISPATCH_*`、`UNIT_MERGED`、unit-merge ゲート、
+他のユニットのレシート、他の監査シャードや新しい監査シャードを決して含んではなりません。クレーム済みのチェックアウトは、
+pin が受け入れる行だけをクレームのシャードに書き込みます。それ以外に記録するもの
+（セッション、ターン、回答）はすべて、インテントの記録の
+`.aidlc-engine/audit/` 配下のローカルな記録に残り、どのコミットにも含まれないため、取り込み後に
+クレームした側がプルしてもすべての行が保たれます。pin と land は、
+クレームしたユニットのサブツリー外のワークフロー記録の変更も拒否します。ユニットの記録ツリー外の
+製品ソースのパスは、人間が重複を判断できるようゲートの証拠に表示されたままです。
+チームがユニットの作業中に残したルール（スペースの
+`memory/project.md` または `memory/team.md`）も同様で、これはユニットとともに main に
+取り込まれます。他の共有ファイルと同じく、クレーム以降に main が変更したルールファイル（別の
+ユニットが残したルールが先に取り込まれた場合）は取り込みを止めます。main にリベースし、再度公開して、
+再度ピン留めしてください。
 
-If the claim is released/re-claimed, or the ref moves after pinning, the gate
-and landing commands refuse. Run `pin` again and review the new OID explicitly.
-If the registry cannot be reached, gate and land fail closed because they
-cannot prove the pin was not tombstoned.
+クレームが解放／再クレームされた場合、またはピン留め後に ref が動いた場合、ゲートと
+取り込みのコマンドは拒否します。`pin` を再度実行し、新しい OID を明示的にレビューしてください。
+レジストリに到達できない場合、ピンが墓標化されていないことを証明できないため、
+ゲートと取り込みは安全側に倒れて失敗します。
 
 ### 2. Present the merge gate
 
-Pin's output carries the merge gate (`merge_gate`): the question, its strategy
-and target, and the command that records each answer. The agent asks it in the
-pin's own turn, once. A pinned Unit lands with a regular merge (strategy
-`merge`) into the integration branch pin fetched, so the reviewed OID is a
-direct parent; that is not put to the person as a choice, and the team's merge
-default (squash in the shipped `org.md`) holds for every other merge. The
-person's reply after the pin is the answer the gate records.
+pin の出力にはマージゲート（`merge_gate`）が含まれます。質問、その戦略と
+対象、各回答を記録するコマンドです。エージェントは pin と同じターンで一度それを尋ねます。
+ピン留めされたユニットは、pin がフェッチした統合ブランチに通常のマージ（戦略
+`merge`）で取り込まれるため、レビュー済みの OID が
+直接の親になります。これは利用者に選択肢として提示されず、チームのマージの
+既定値（同梱の `org.md` では squash）はその他すべてのマージに適用されます。
+pin の後の利用者の返信が、ゲートが記録する回答になります。
 
-The integration lead presents the evidence summary and pinned OID to the human,
-then records their answer: their reply goes in the file pin's gate commands name,
-written with the agent's file tool so no shell reads it, and the gate reads it
-from there:
+統合リードは、証拠のサマリーとピン留めされた OID を人間に提示し、
+その回答を記録します。返信は pin のゲートコマンドが名指しするファイルに、
+シェルが読み取らないようエージェントのファイルツールで書き込まれ、ゲートは
+そこからそれを読み取ります:
 
 ```bash
 aidlc unit gate payments \
@@ -365,10 +356,9 @@ aidlc unit gate payments \
   --request-file aidlc/.aidlc-request-text/gate-payments.txt
 ```
 
-An approval's output names the land command, run in the same turn with no
-further question. A rejection keeps the candidate unmerged. A candidate carrying
-`Merge-Held: true` is refused until the team resolves the HOLD-MERGE sequence,
-publishes again, and main re-pins.
+承認の出力は取り込みのコマンドを名指しし、それは同じターンで、追加の質問なしに実行されます。
+却下すると、候補はマージされないまま残ります。`Merge-Held: true` を持つ候補は、
+チームが HOLD-MERGE の手順を解決し、再度公開し、main が再度ピン留めするまで拒否されます。
 
 ### 3. Land
 
@@ -376,30 +366,30 @@ publishes again, and main re-pins.
 aidlc unit land payments --target main
 ```
 
-Landing is ordered and resumable:
+取り込みは順序立てて行われ、再開できます:
 
-1. **Git content first.** Re-fetch the integration branch and verify that the
-   approved Unit's entry in the Unit DAG, its kind, the active stage columns,
-   and the evidence are still current, then merge the pinned OID. Contract
-   drift refuses before mutation and requires rebase, republish, re-pin, and a
-   new merge gate. Main's
-   `aidlc-state.md`, runtime graph, cursors, and engine markers are retained; the team's new
-   audit shard and per-Unit artifacts/source land. Real source conflicts abort
-   back to a clean checkout and list the files. A clean automatic merge of a
-   shared file is also refused when its result differs from the pinned candidate;
-   rebase and republish. No Unit row has been folded. A Unit lands only after
-   every Unit it depends on has landed.
-2. **State fold.** Under the per-intent lock, derive the candidate's transported
-   receipts, write the merged Unit row while preserving main's singletons and
-   other rows, then emit `UNIT_MERGED`.
-3. **Audit/finalize.** Commit the main state and merge lifecycle rows, then mark
-   the local transaction complete.
+1. **まず Git の内容。** 統合ブランチを再フェッチし、承認されたユニットの
+   ユニット DAG 内のエントリ、その種類、アクティブなステージの列、
+   および証拠がまだ最新であることを検証してから、ピン留めされた OID をマージします。契約の
+   ずれがある場合は変更前に拒否され、リベース、再公開、再ピン留め、新しい
+   マージゲートが必要になります。main の
+   `aidlc-state.md`、ランタイムグラフ、カーソル、エンジンのマーカーは保持され、チームの新しい
+   監査シャードとユニットごとの成果物／ソースが取り込まれます。実際のソースの競合がある場合は中止して
+   クリーンなチェックアウトに戻り、ファイルを列挙します。共有ファイルの自動マージがクリーンに
+   成功しても、その結果がピン留めされた候補と異なる場合は拒否されます。
+   リベースして再公開してください。ユニットの行はまだ反映されていません。ユニットが取り込まれるのは、
+   それが依存するすべてのユニットが取り込まれた後だけです。
+2. **状態の反映。** インテントごとのロックの下で、候補が運んできたレシートを導出し、
+   main の単一の項目やその他の行を保ちながらマージされたユニットの行を書き込み、
+   その後 `UNIT_MERGED` を出力します。
+3. **監査／確定。** main の状態とマージのライフサイクルの行をコミットし、
+   ローカルのトランザクションを完了としてマークします。
 
-Once the checkout that claimed the Unit pulls the landed main, it is no longer
-held to that Unit: its record shows the Unit merged and its history holds the
-merged claim, so `/aidlc`, pin and a next claim work there as on main.
+ユニットをクレームしたチェックアウトが取り込み済みの main をプルすると、もうそのユニットに
+縛られることはありません。その記録はユニットがマージされたことを示し、履歴には
+マージされたクレームが含まれるため、そこでは `/aidlc`、pin、次のクレームが main と同じように機能します。
 
-The steps can be driven separately for recovery:
+復旧のために、各ステップを個別に実行することもできます:
 
 ```bash
 aidlc unit land payments --step git
@@ -407,112 +397,112 @@ aidlc unit land payments --step state
 aidlc unit land payments --step audit
 ```
 
-Each step is idempotent. `merge-status` shows the local transaction:
+各ステップは冪等です。`merge-status` はローカルのトランザクションを表示します:
 
 ```bash
 aidlc unit merge-status payments
 ```
 
-Other teams and future claim checks observe the new integration state once the
-landed target branch is pushed. When the remote does not have the landed commit
-yet, the land's output names the next step, and that step asks once: "Push main
-to origin now so the other teams see payments landed?" **Push main** runs
-`aidlc unit share` (a plain push); **Not now** leaves a line on the board. By
-hand:
+他のチームや今後のクレームのチェックは、取り込み済みの対象ブランチがプッシュされた時点で、
+新しい統合の状態を確認します。リモートにまだ取り込み済みのコミットがない場合、
+取り込みの出力は次のステップを名指しし、そのステップが一度尋ねます: "Push main
+to origin now so the other teams see payments landed?"（訳: 他のチームが payments の取り込みを確認できるよう、今 main を origin にプッシュしますか？）**Push main** は
+`aidlc unit share`（通常のプッシュ）を実行します。**Not now** はボードに1行を残します。
+手動で行う場合:
 
 ```bash
 git push origin main
 ```
 
-Dependents become claimable from the merged row. After the last row merges,
-the per-Unit block settles and main routes Build and Test (3.6), then CI
-Pipeline (3.7), exactly as solo Construction does.
+依存するユニットは、マージされた行からクレーム可能になります。最後の行がマージされると、
+ユニットごとのブロックが確定し、main は Build and Test (3.6)、続いて CI
+Pipeline (3.7) へと、単独の Construction とまったく同じようにルーティングします。
 
 ---
 
 ## Dispatcher, status, and health checks
 
-On unscoped main, `/aidlc` is a turn-terminal dispatcher while team fan-out is
-active. It renders one deterministic board verbatim:
+スコープなしの main では、チームへの展開がアクティブな間、`/aidlc` はターンを終える
+ディスパッチャーになります。1つの決定論的なボードをそのまま表示します:
 
-- Unit Progress, including owner, per-stage/gate cells, and merged state;
-- the local claim scan with owner, attempt generation, and **observed ref
-  activity** (git refs carry no push timestamps);
-- pinned candidates awaiting a merge gate or landing recovery;
-- claimable Units and dependency-blocked Units.
+- Unit Progress（担当者、ステージごと／ゲートのセル、マージ状態を含む）
+- 担当者、試行の世代、**観測された ref の
+  動き**を含むローカルのクレームのスキャン（git の ref はプッシュのタイムスタンプを持ちません）
+- マージゲートまたは取り込みの復旧を待っているピン留め済みの候補
+- クレーム可能なユニットと、依存関係でブロックされたユニット
 
-Run `/aidlc --status` from main or any scoped checkout for the same board as a
-read-only snapshot. It performs no fetch and writes no state, cache, or audit
-row. Explicit space/intent selectors keep the status header, Unit DAG, claims,
-and merge journals on one identity. The board names the next claim, gate, or
-`aidlc unit land` recovery command, each Unit a team published that waits for
-review there, and a landing the remote does not have yet. A participant with no currently claimable
-Unit receives this terminal board instead of falling into main's solo walk.
-Released claim history alone does not keep fan-out active: when no live claim
-and no incomplete merge transaction remains, main resumes the normal
-Construction walk.
+`/aidlc --status` を main または任意のスコープ付きチェックアウトから実行すると、同じボードが
+読み取り専用のスナップショットとして表示されます。フェッチは行わず、状態、キャッシュ、監査の
+行も書き込みません。明示的なスペース／インテントのセレクターは、ステータスのヘッダー、ユニット DAG、クレーム、
+マージのジャーナルを1つの識別子に揃えます。ボードは、次のクレーム、ゲート、または
+`aidlc unit land` の復旧コマンド、チームが公開してそこでレビューを待っている各ユニット、
+そしてリモートにまだない取り込みを名指しします。現在クレーム可能な
+ユニットがない参加者は、main の単独の進行に入る代わりにこの終端のボードを受け取ります。
+解放されたクレームの履歴だけでは展開はアクティブのままになりません。稼働中のクレームも
+未完了のマージトランザクションも残っていない場合、main は通常の
+Construction の進行を再開します。
 
-When a fresh clone has several intents and no active-intent cursor, the picker
-annotates a mixed team workspace with statuses such as `team construction, 2
-units claimable` and `parked at code-generation`. Finished intents are left out
-of the picker in every workspace, because they have nothing left to carry on;
-`/aidlc intent list` still shows them. Every other piece of work is listed with
-where it stands (`at Requirements Analysis`). A bare `/aidlc` or `/aidlc --resume` there always asks; it
-never answers that there is no work.
+新しいクローンに複数のインテントがあり、アクティブなインテントのカーソルがない場合、選択画面は
+チームの混在したワークスペースに `team construction, 2
+units claimable` や `parked at code-generation` のようなステータスを注記します。完了したインテントは、
+続ける作業が何も残っていないため、どのワークスペースでも選択画面から除外されます。
+`/aidlc intent list` では引き続き表示されます。それ以外のすべての作業は、
+その状況（`at Requirements Analysis`）とともに一覧表示されます。そこで単独の `/aidlc` や `/aidlc --resume` を実行すると、常に尋ねます。
+作業がないと答えることは決してありません。
 
-`/aidlc --doctor` adds local-only claim reconciliation:
+`/aidlc --doctor` は、ローカルのみのクレームの照合を追加します:
 
-- a released/superseded attempt whose checkout stamp still lingers is a
-  fix-required stale-stamp finding;
-- a live claim with a known observation timestamp but no observed ref movement
-  for 24 hours is an anomaly; release remains an explicit human decision;
-- a pre-upgrade cache with no observation timestamp receives a baseline
-  advisory rather than a false inactivity finding;
-- claim refs whose intent id no longer exists locally are orphan findings.
+- 解放／置き換えられた試行のチェックアウトのスタンプが残っている場合は、
+  修正が必要な古いスタンプの指摘になります
+- 観測のタイムスタンプがわかっている稼働中のクレームで、24 時間 ref の動きが
+  観測されない場合は異常となります。解放は引き続き人間による明示的な判断です
+- 観測のタイムスタンプがないアップグレード前のキャッシュには、誤った非アクティブの指摘ではなく、
+  基準の助言が出されます
+- インテントの ID がローカルにもう存在しないクレームの ref は、孤立の指摘になります
 
-Doctor never fetches or releases a claim.
+doctor がクレームをフェッチしたり解放したりすることは決してありません。
 
 ---
 
 ## Release, salvage, and resume
 
-If a team cannot finish, the integration lead releases the claim from unscoped
-main:
+チームが完了できない場合、統合リードはスコープなしの main からクレームを
+解放します:
 
 ```bash
 aidlc unit release payments
 ```
 
-Release publishes a generation-bumping tombstone. Old receipts remain history
-but cannot authorize a successor or merge. Preserve useful source/artifacts by
-cherry-picking or copying them into the successor's newly claimed checkout.
+解放は、世代を進める墓標を公開します。古いレシートは履歴として残りますが、
+後継やマージを認可することはできません。有用なソース／成果物は、
+後継が新しくクレームしたチェックアウトに cherry-pick またはコピーして保存してください。
 
-One narrow race has an explicit recovery. If the reviewed merge commit already
-landed locally (`land --step git`) and that exact attempt was then released,
-inspect the landed commit and record a human acknowledgment before folding:
+1つの限られた競合状態には、明示的な復旧方法があります。レビュー済みのマージコミットがすでに
+ローカルに取り込まれ（`land --step git`）、その後にその試行そのものが解放された場合は、
+反映の前に取り込み済みのコミットを確認し、人間による確認を記録します:
 
 ```bash
 aidlc unit land payments --accept-released-attempt \
   --user-input "I inspected the landed commit and accept completing this tombstoned attempt"
 ```
 
-This is accepted only for the immediate tombstone whose predecessor is the
-pinned OID, before state folding, and never for a successor claim. The journal
-and main audit record the tombstone and acknowledgment.
+これが受け入れられるのは、直前の墓標でその前身がピン留めされた OID であるものについて、
+状態の反映の前である場合だけで、後継のクレームについては決して受け入れられません。ジャーナル
+と main の監査が、墓標と確認を記録します。
 
-After a prior release/re-claim, an intentional second release binds to the
-current nonce:
+以前に解放／再クレームが行われた後で、意図的に2回目の解放を行う場合は、
+現在のノンスに結び付けます:
 
 ```bash
 aidlc unit status
 aidlc unit release payments --expect-nonce <nonce>
 ```
 
-A claimed checkout resumes from its local stamp and disk evidence without
-network access. A fresh teammate checkout must use `aidlc unit adopt <unit>`
-once on the exact claim branch. Pull/fetch before claiming, adopting,
-publishing, or pinning; ordinary scoped `/aidlc` resume does not need the
-registry.
+クレーム済みのチェックアウトは、ネットワークアクセスなしに、ローカルのスタンプとディスク上の証拠から
+再開します。新しいチームメイトのチェックアウトは、正確なクレームのブランチで一度
+`aidlc unit adopt <unit>` を使う必要があります。クレーム、採用、
+公開、ピン留めの前にはプル／フェッチしてください。通常のスコープ付きの `/aidlc` による再開には
+レジストリは不要です。
 
 ---
 
@@ -520,35 +510,35 @@ registry.
 
 ### Day 1
 
-1. The facilitator runs Inception with the group.
-2. If enabled, the facilitator builds and gates the walking skeleton on main,
-   then shares the plan with the teams when asked.
-3. Alice takes `billing`; Bob takes `notifications`, each from the question in
-   their own clone.
-4. Each team runs its scoped 3.1-3.5 chain and team gates.
-5. Each team publishes its Unit when asked.
+1. ファシリテーターがグループとともに Inception を実行します。
+2. 有効な場合、ファシリテーターは main でウォーキングスケルトンを構築してゲートを通し、
+   尋ねられたら計画をチームと共有します。
+3. Alice が `billing` を、Bob が `notifications` を、それぞれ自分のクローンでの
+   質問から引き受けます。
+4. 各チームが、スコープ付きの 3.1-3.5 チェーンとチームゲートを実行します。
+5. 各チームが、尋ねられたらユニットを公開します。
 
 ### Day 2
 
-1. The facilitator's board offers Alice's Unit for review; the facilitator
-   reviews its evidence, records the merge gate, and lands it.
-2. Main is pushed when asked; any Unit depending on `billing` becomes claimable.
-3. The facilitator repeats pin/gate/land for Bob's pinned candidate.
-4. When the final row is merged, `/aidlc` on main routes Build and Test, then
-   CI Pipeline.
-5. The group reviews `UNIT_MERGED`, gate, and reviewer rows in the combined
-   audit shards.
+1. ファシリテーターのボードが Alice のユニットをレビュー対象として提示します。ファシリテーターは
+   その証拠をレビューし、マージゲートを記録して、取り込みます。
+2. 尋ねられたら main をプッシュします。`billing` に依存するユニットがクレーム可能になります。
+3. ファシリテーターは、Bob のピン留めされた候補について pin／gate／land を繰り返します。
+4. 最後の行がマージされると、main 上の `/aidlc` が Build and Test、続いて
+   CI Pipeline へとルーティングします。
+5. グループは、統合された監査シャード内の `UNIT_MERGED`、ゲート、レビュアーの行を
+   レビューします。
 
-The teams never race to push main. Candidate refs can move only through
-claim-bound CAS publication; main serializes the reviewed pinned OIDs.
+チームが main へのプッシュを競い合うことは決してありません。候補の ref は、
+クレームに結び付いた CAS による公開を通じてのみ動けます。main はレビュー済みのピン留めされた OID を順番に処理します。
 
 ---
 
 ## Related reading
 
-- [Facilitator Guide](facilitator-guide.md) - readiness check, scopes for side tasks, recovery playbook, and how strongly each harness enforces the workflow
-- [CLI Commands](12-cli-commands.md) - claim, publish, pin, gate, and land
-- [State and Audit](10-state-and-audit.md) - per-clone shards and merged receipt floors
-- [Construction](../reference/04-stages/construction.md) - Unit-major routing and gate rhythm
-- [Runtime Graph](../reference/13-runtime-graph.md) - the separate solo/swarm Bolt merge path
-- [Branching Strategies](../../core/knowledge/aidlc-pipeline-deploy-agent/branching-strategies.md) - merge-dispatch strategy selection
+- [ファシリテーターガイド](facilitator-guide.md) - 準備状況の確認、副次的なタスク向けのスコープ、復旧の手引き、各ハーネスがワークフローをどれだけ強く強制するか
+- [CLI コマンド](12-cli-commands.md) - claim、publish、pin、gate、land
+- [状態と監査](10-state-and-audit.md) - クローンごとのシャードとマージされたレシートの下限
+- [Construction](../reference/04-stages/construction.md) - ユニット優先のルーティングとゲートのリズム
+- [ランタイムグラフ](../reference/13-runtime-graph.md) - 単独／スウォームの Bolt の別のマージ経路
+- [ブランチ戦略](../../core/knowledge/aidlc-pipeline-deploy-agent/branching-strategies.md) - マージディスパッチの戦略の選択

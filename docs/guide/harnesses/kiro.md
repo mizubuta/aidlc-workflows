@@ -1,64 +1,64 @@
 # Running AI-DLC on Kiro
 
-This page covers Kiro (`aidlc config --harness kiro`), for Kiro IDE and Kiro CLI
-on its v3 engine (`kiro-cli --v3`). Kiro CLI (V2) (`aidlc config --harness
-kiro-v2`, started with `kiro-cli --v2`) has its own section at the end of the
-page: [Kiro CLI (V2)](#kiro-cli-v2).
+このページでは、Kiro（`aidlc config --harness kiro`）について、Kiro IDE と、v3 エンジン上の
+Kiro CLI（`kiro-cli --v3`）を対象に説明します。Kiro CLI (V2)（`aidlc config --harness
+kiro-v2`、`kiro-cli --v2` で起動）については、ページ末尾に専用のセクションがあります:
+[Kiro CLI (V2)](#kiro-cli-v2)。
 
-One of the framework's harnesses: this Kiro runtime runs the same AI-DLC
-methodology inside [Kiro](https://kiro.dev/) — Kiro IDE 1.x and Kiro CLI v3
-run one agent harness and read the same `.kiro/` tree. One deterministic core —
-the tools, 33 stage files, protocols, knowledge, sensors, scopes, and rules —
-is byte-shared across every harness; only the shell (skills, agent surfaces,
-hook wiring, activation) differs.
+フレームワークのハーネスの 1 つであるこの Kiro ランタイムは、同じ AI-DLC の
+方法論を [Kiro](https://kiro.dev/) の中で実行します。Kiro IDE 1.x と Kiro CLI v3
+は 1 つのエージェントハーネスを実行し、同じ `.kiro/` ツリーを読み込みます。1 つの決定論的なコア
+（ツール、33 個のステージファイル、プロトコル、ナレッジ、センサー、スコープ、ルール）は
+すべてのハーネスでバイト単位で共有されており、異なるのはシェル（スキル、エージェントの提供面、
+フックの配線、有効化）だけです。
 
-Harness-specific onboarding lives in `.kiro/steering/aidlc-onboarding.md`,
-whose `inclusion: always` frontmatter loads it automatically. The root
-`AGENTS.md` block is harness-neutral and shared with other installed harnesses;
-engine directories must still differ (the Kiro CLI (V2) and Kiro distributions cannot share `.kiro/`; in a project with
-Kiro CLI (V2), `aidlc config --harness kiro` switches `.kiro/` to this distribution in place; at a terminal it asks
-first, with `--yes` it switches, and without a terminal, or under `--quiet` or `--json`, it changes nothing and prints the
-command with `--yes`).
-AI-DLC 2.11.3 and earlier, and the 2.11.4 previews of 2026-11-04 and 2026-11-05, read the two Kiro names the other way: Kiro is `--harness kiro-ide` and Kiro CLI (V2) is `--harness kiro`, and they do not know `kiro-v2`. `--harness kiro-ide` names Kiro on those releases and on this one
-([Root Integrations and Ownership](../18-install-and-lifecycle.md#root-integrations-and-ownership)).
+ハーネス固有のオンボーディングは `.kiro/steering/aidlc-onboarding.md` にあり、
+その `inclusion: always` frontmatter によって自動的に読み込まれます。ルートの
+`AGENTS.md` ブロックはハーネスに依存せず、インストール済みの他のハーネスと共有されます。
+ただしエンジンのディレクトリは別々である必要があります（Kiro CLI (V2) と Kiro のディストリビューションは `.kiro/` を共有できません。
+Kiro CLI (V2) を使っているプロジェクトでは、`aidlc config --harness kiro` が `.kiro/` をその場でこのディストリビューションに切り替えます。ターミナルでは
+先に確認を求め、`--yes` を付けると切り替えます。ターミナルがない場合や、`--quiet` または `--json` の指定時は何も変更せず、
+`--yes` を付けたコマンドを表示します）。
+AI-DLC 2.11.3 以前と、2026-11-04 および 2026-11-05 の 2.11.4 プレビューでは、2 つの Kiro の名前の読み方が逆です: Kiro は `--harness kiro-ide`、Kiro CLI (V2) は `--harness kiro` であり、`kiro-v2` は認識されません。`--harness kiro-ide` は、それらのリリースでもこのリリースでも Kiro を指します
+（[ルートの統合と所有権](../18-install-and-lifecycle.md#root-integrations-and-ownership)）。
 
 > [!IMPORTANT]
-> **Run AI-DLC on Kiro with Claude Opus 4.8.** The conductor drives a
-> multi-step ritual per stage — clarifying questions, artifact generation, a
-> reviewer pass, the learnings ritual, then the approval gate. Opus 4.8
-> follows the full ritual and pauses correctly at every gate. Weaker models
-> skip optional steps (the reviewer pass and the learnings ritual) and may
-> rush gates. Set the chat model to **Claude Opus 4.8** before starting a
-> workflow.
+> **Kiro 上の AI-DLC は Claude Opus 4.8 で実行してください。** コンダクターは
+> ステージごとに複数ステップの手順を進めます。明確化のための質問、成果物の生成、
+> レビュアーによる確認、学びの手順、そして承認ゲートです。Opus 4.8 は
+> 手順全体に従い、すべてのゲートで正しく一時停止します。性能の低いモデルは
+> 任意のステップ（レビュアーによる確認と学びの手順）を飛ばし、ゲートを
+> 急いで通過することがあります。ワークフローを開始する前に、チャットモデルを
+> **Claude Opus 4.8** に設定してください。
 
 ## Prerequisites
 
-- **Kiro IDE 1.1.70 or later**, signed in, or **Kiro CLI 2.24.1 or later**
-  (`kiro-cli --version`), signed in. These are the oldest builds this
-  distribution has been checked on. `/aidlc --doctor` warns when the
-  `kiro-cli` on the PATH is older; it cannot read the Kiro IDE version.
-- **Claude Opus 4.8** selected as the chat model (see the note above)
-- **bun** only when generating or running the source/development `dist/`
-  projection. Native installs and versioned release runtimes are
-  self-contained.
+- サインイン済みの **Kiro IDE 1.1.70 以降**、またはサインイン済みの **Kiro CLI 2.24.1 以降**
+  （`kiro-cli --version`）。これらは、このディストリビューションで動作確認済みの最も古いビルドです。
+  `/aidlc --doctor` は、PATH 上の `kiro-cli` がそれより古い場合に警告します。
+  Kiro IDE のバージョンは読み取れません。
+- チャットモデルとして **Claude Opus 4.8** を選択していること（上の注記を参照）
+- **bun** は、ソース／開発用の `dist/` プロジェクションを生成または実行する場合にのみ必要です。
+  ネイティブインストールとバージョン付きのリリースランタイムは
+  自己完結しています。
 
 > [!TIP]
-> For a source-generated `dist/` install, bun must be on the PATH the IDE
-> hands its hooks and tools. Opened from a terminal, the IDE hands them that
-> terminal's PATH, so `bun --version` working there is enough. Opened from the
-> dock or a desktop icon, it may not: if hooks can't find bun, run
-> `bun .kiro/tools/aidlc.ts doctor` in such a terminal. Its `Runtime hook PATH`
-> row names the directory to add and where; restart the IDE afterwards. Until
-> then, open the IDE from that terminal.
+> ソースから生成した `dist/` をインストールする場合、IDE がフックとツールに渡す PATH 上に
+> bun が必要です。ターミナルから開いた IDE はそのターミナルの PATH を渡すので、
+> そこで `bun --version` が動作すれば十分です。Dock やデスクトップアイコンから
+> 開いた場合はそうならないことがあります: フックが bun を見つけられない場合は、そのようなターミナルで
+> `bun .kiro/tools/aidlc.ts doctor` を実行してください。その `Runtime hook PATH`
+> の行に、追加すべきディレクトリと追加先が示されます。その後 IDE を再起動してください。それまでは、
+> そのターミナルから IDE を開いてください。
 
 ## Install
 
 ### Native channel (recommended)
 
-If you run these commands in Kiro IDE's own terminal in a project folder you
-have not trusted yet, Kiro first asks whether you trust it. Choose **Trust
-Folder & Continue** only for your own project or one you have checked;
-otherwise choose **Cancel** (see [First run](#first-run)).
+まだ信頼していないプロジェクトフォルダーで Kiro IDE 自身のターミナルからこれらのコマンドを実行すると、
+Kiro はまずそのフォルダーを信頼するかどうかを尋ねます。**Trust
+Folder & Continue** を選ぶのは、自分のプロジェクトか確認済みのプロジェクトの場合だけにしてください。
+それ以外の場合は **Cancel** を選んでください（[初回の実行](#first-run) を参照）。
 
 ```bash
 tmp="$(mktemp -d)"
@@ -72,46 +72,45 @@ aidlc config --harness kiro
 aidlc doctor
 ```
 
-The installer verifies the release metadata, executable, and all-harness runtime archive against the published SHA-256 checksums. The installed runtime does not require Bun, Node.js, or Git. Harness selection happens in `aidlc config`.
+インストーラーは、リリースのメタデータ、実行ファイル、全ハーネス用ランタイムアーカイブを、公開されている SHA-256 チェックサムと照合して検証します。インストールされたランタイムに Bun、Node.js、Git は不要です。ハーネスの選択は `aidlc config` で行います。
 
-On Windows, download `install.ps1`, allow scripts in that PowerShell window
-with `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force`, and run
-`& $installer`. If Kiro was open while you installed, including when you ran
-the installer in Kiro's own terminal, quit Kiro fully and reopen it before
-your first `/aidlc`: Kiro keeps the PATH it started with, so its hooks, its
-agent and its other terminals cannot find `aidlc` until it restarts, and
-**Developer: Reload Window** is not enough. See [Windows installation](../18-install-and-lifecycle.md#windows-powershell)
-for account scope, automatic User PATH registration, and `-NoModifyPath`.
-For an air-gapped package, use
-`install.sh --from <release-directory> --offline` on Unix or
-`& $installer -From <release-directory> -Offline` on Windows, after the same
-`Set-ExecutionPolicy` line.
+Windows では、`install.ps1` をダウンロードし、その PowerShell ウィンドウで
+`Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force` によってスクリプトを許可してから、
+`& $installer` を実行してください。インストール中に Kiro が開いていた場合（Kiro 自身のターミナルで
+インストーラーを実行した場合を含む）は、最初の `/aidlc` の前に Kiro を完全に終了して
+開き直してください: Kiro は起動時の PATH を保持するため、再起動するまでフック、
+エージェント、他のターミナルは `aidlc` を見つけられません。
+**Developer: Reload Window** では不十分です。アカウントのスコープ、User PATH への自動登録、`-NoModifyPath` については
+[Windows へのインストール](../18-install-and-lifecycle.md#windows-powershell)
+を参照してください。
+エアギャップ環境向けのパッケージでは、同じ
+`Set-ExecutionPolicy` の行の後に、Unix では
+`install.sh --from <release-directory> --offline`、Windows では
+`& $installer -From <release-directory> -Offline` を使います。
 
-`aidlc config` projects the Kiro shell before the project is opened. The native
-`aidlc engine *` trust grant, and the exact read-only and turn-back-on commands
-listed for a copied project below, ship inside the permissions of the conductor
-(`.kiro/agents/aidlc-aidlc.md`); every agent it hands work to is denied those
-commands. Some commands are
-held back from it: `aidlc engine config set *` changes a setting of your piece
-of work, `aidlc engine adapter *` is the entry the IDE's own hooks run, and an AI-DLC
-command holding `$`, a backtick, `>`, `<`, `&`, `@(`, `@{`, or a line break can
-run, expand, or redirect more than the one command. When an agent runs one of these, Kiro IDE
-asks you first. Earlier releases also merged it into
-`.vscode/settings.json` `kiroAgent.trustedCommands`; Kiro IDE 1.x no longer
-reads that key, so the entry can be removed. Before the first workflow, follow
-[First run](#first-run): open `your-project/` in Kiro IDE, trust the folder and
-reload the window, choose **aidlc** in the chat panel's agent picker, and run
-`/aidlc --doctor`. In Kiro CLI, run `kiro-cli --v3` in the project instead; it
-opens on the `aidlc` agent. The first time, Kiro CLI 2.33.0 or later asks
-whether you trust this workspace: if you know what is in this folder, choose
-**Trust, continue**, since Kiro CLI loads the folder's hooks and agents only
-then (**Don't trust** exits).
+`aidlc config` は、プロジェクトを開く前に Kiro のシェルを配置します。ネイティブの
+`aidlc engine *` の信頼許可と、下記のコピーしたプロジェクト向けに挙げている読み取り専用コマンドおよび再有効化コマンドは、
+コンダクター（`.kiro/agents/aidlc-aidlc.md`）の権限に含まれて提供されます。コンダクターが作業を渡すすべてのエージェントでは、
+それらのコマンドは拒否されます。一部のコマンドは
+コンダクターにも許可されていません: `aidlc engine config set *` は作業の設定を変更し、
+`aidlc engine adapter *` は IDE 自身のフックが実行する入口であり、`$`、バッククォート、`>`、`<`、`&`、`@(`、`@{`、改行を含む AI-DLC
+コマンドは、その 1 つのコマンド以上のものを実行、展開、リダイレクトできてしまうためです。エージェントがこれらのいずれかを実行するときは、Kiro IDE
+が先に確認を求めます。以前のリリースでは、これを
+`.vscode/settings.json` の `kiroAgent.trustedCommands` にもマージしていました。Kiro IDE 1.x はこのキーをもう
+読まないため、このエントリは削除してかまいません。最初のワークフローの前に、
+[初回の実行](#first-run) に従ってください: Kiro IDE で `your-project/` を開き、フォルダーを信頼して
+ウィンドウを再読み込みし、チャットパネルのエージェントピッカーで **aidlc** を選び、
+`/aidlc --doctor` を実行します。Kiro CLI では、代わりにプロジェクト内で `kiro-cli --v3` を実行します。
+`aidlc` エージェントで起動します。初回は、Kiro CLI 2.33.0 以降がこのワークスペースを信頼するかどうかを
+尋ねます: このフォルダーの内容を把握している場合は **Trust, continue** を選んでください。
+Kiro CLI はそうしたときにだけフォルダーのフックとエージェントを読み込みます
+（**Don't trust** を選ぶと終了します）。
 
 ### Versioned manual-copy alternative
 
-Download and extract a specific release's `aidlc-copy-runtime-X.Y.Z.tar.gz` as described in
-[Install and Lifecycle: Copy Channel](../18-install-and-lifecycle.md#copy-channel),
-then set `RUNTIME_ROOT` to the extracted `runtime/` directory.
+[インストールとライフサイクル: コピーチャネル](../18-install-and-lifecycle.md#copy-channel)
+の説明に従って、特定のリリースの `aidlc-copy-runtime-X.Y.Z.tar.gz` をダウンロードして展開し、
+`RUNTIME_ROOT` を展開した `runtime/` ディレクトリに設定します。
 
 ```bash
 mkdir -p your-project/.kiro your-project/aidlc
@@ -139,769 +138,753 @@ cp -R "$RUNTIME_ROOT/kiro-ide/aidlc/." your-project/aidlc/     # the workspace s
 cd your-project && bun .kiro/tools/aidlc.ts config --from "$RUNTIME_ROOT" --harness kiro
 ```
 
-The first removal loop is the v2.5.57 hook-name migration. The second removes
-Kiro CLI-format agent JSON shipped by older distributions and the IDE 0.x
-`.kiro.hook` registrations, which Kiro IDE 1.x never executes. An overlay copy
-cannot delete retired files. The copy also replaces `.kiro/settings/cli.json`,
-which asks Kiro CLI for its v3 engine and the `aidlc` agent (see the list below
-for which Kiro CLI releases read the engine there). That file is managed
-by AI-DLC like the rest of `.kiro/`: `aidlc config` stops with a conflict rather
-than overwrite a copy that differs from the shipped one, and `--force` replaces
-it. Keep your own Kiro CLI settings in the user-level `~/.kiro/settings/cli.json`
-instead: Kiro CLI reads that file too, and the project file wins only for the
-keys it sets.
-If the project kept settings in `.kiro/settings/cli.json`, the block above saves
-them as `cli.json.before-aidlc` so you can move them there. Both removals are
-no-ops on a fresh install. After that cleanup, the
-`cp -R <src>/. <dst>/` form copies the tree **contents** whether
-`your-project/.kiro` already exists or not. A plain
-`cp -r "$RUNTIME_ROOT/kiro-ide/.kiro" your-project/.kiro` nests a second `.kiro` inside an
-existing `.kiro/` and the IDE never sees the new files.
+最初の削除ループは、v2.5.57 でのフック名の移行です。2 つ目は、古いディストリビューションが提供していた
+Kiro CLI 形式のエージェント JSON と、IDE 0.x の
+`.kiro.hook` の登録を削除します。これらは Kiro IDE 1.x では決して実行されません。上書きコピーでは
+廃止されたファイルを削除できません。このコピーは `.kiro/settings/cli.json` も置き換えます。
+このファイルは Kiro CLI に v3 エンジンと `aidlc` エージェントを使うよう求めるものです（どの Kiro CLI リリースがそこからエンジンを読むかは
+下のリストを参照）。このファイルは `.kiro/` の他の部分と同様に AI-DLC が
+管理します: 提供されたものと異なるコピーがある場合、`aidlc config` はそれを上書きせずに競合として
+停止し、`--force` を付けると置き換えます。独自の Kiro CLI 設定は、代わりにユーザーレベルの `~/.kiro/settings/cli.json`
+に置いてください: Kiro CLI はそのファイルも読み込み、プロジェクトのファイルが優先されるのは
+そのファイルが設定しているキーだけです。
+プロジェクトが `.kiro/settings/cli.json` に設定を置いていた場合、上のブロックはそれを
+`cli.json.before-aidlc` として保存するので、そちらに移すことができます。新規インストールでは、どちらの削除も
+何もしません。このクリーンアップの後、
+`cp -R <src>/. <dst>/` 形式は、`your-project/.kiro` がすでに存在するかどうかにかかわらず、ツリーの**内容**を
+コピーします。単純な
+`cp -r "$RUNTIME_ROOT/kiro-ide/.kiro" your-project/.kiro` では、既存の `.kiro/` の中に 2 つ目の `.kiro` が
+入れ子になり、IDE は新しいファイルを認識しません。
 
-The `aidlc/` directory is the workspace shell — it ships the pre-built
-`aidlc/spaces/default/memory/` method tree the engine reads. It is a **sibling**
-of `.kiro/`, so copy it separately (or copy the whole
-`$RUNTIME_ROOT/kiro-ide/` tree at once). `/aidlc --doctor` fails its
-"workspace shell ready" check if it is missing.
+`aidlc/` ディレクトリはワークスペースシェルです。エンジンが読み込む、事前にビルドされた
+`aidlc/spaces/default/memory/` メソッドツリーが含まれています。これは `.kiro/` の**兄弟**
+ディレクトリなので、別途コピーしてください（または
+`$RUNTIME_ROOT/kiro-ide/` ツリー全体を一度にコピーしてください）。これがない場合、`/aidlc --doctor` は
+"workspace shell ready" チェックで失敗します。
 
-In a copied project, the `aidlc` agent runs AI-DLC's engine commands
-(`bun .kiro/tools/aidlc.ts engine ...`), its tool scripts, its read-only
-commands (`doctor` and `--doctor`, with or without `--verbose`, `version`,
-`--version`, `status`, `--status`, `config --help`, `config --show` and
-`config <section> --show` with or without `--json`, and
-`config <section> --help`) and turning a check back on
-(`config flags --clear-bypass <switch> --yes`) with no card. A native install
-runs the same commands, as `aidlc ...`, with no card too. Any other
-`config` change (bare `config`, the guided setup, included), the commands that change the machine's AI-DLC install (`use`,
-`update`, `rollback`, `uninstall`, `system`), and an AI-DLC command holding `$`,
-a backtick, `>`, `<`, `&`, `@(`, `@{`, or a line break show Kiro's card first.
-When the work you ask AI-DLC to start, or the change you ask it to make to the
-plan, holds one of them, the agent passes your words through a file it writes in
-`aidlc/.aidlc-request-text/` instead, so those words put no card in front of
-you.
+コピーしたプロジェクトでは、`aidlc` エージェントは AI-DLC のエンジンコマンド
+（`bun .kiro/tools/aidlc.ts engine ...`）、ツールスクリプト、読み取り専用
+コマンド（`doctor` と `--doctor`（`--verbose` の有無を問わない）、`version`、
+`--version`、`status`、`--status`、`config --help`、`config --show` と
+`config <section> --show`（`--json` の有無を問わない）、
+`config <section> --help`）、およびチェックの再有効化
+（`config flags --clear-bypass <switch> --yes`）を、カードなしで実行します。ネイティブインストールでも
+同じコマンドを `aidlc ...` として、やはりカードなしで実行します。それ以外の
+`config` の変更（引数なしの `config` やガイド付きセットアップを含む）、マシンの AI-DLC インストールを変更するコマンド（`use`、
+`update`、`rollback`、`uninstall`、`system`）、および `$`、
+バッククォート、`>`、`<`、`&`、`@(`、`@{`、改行を含む AI-DLC コマンドでは、先に Kiro のカードが表示されます。
+AI-DLC に開始を依頼する作業や、プランに加えるよう依頼する変更に
+これらの文字が含まれる場合、エージェントは代わりに
+`aidlc/.aidlc-request-text/` に書き込むファイルを通じてあなたの言葉を渡すので、それらの言葉によってカードが
+表示されることはありません。
 
-The versioned runtime uses the native `aidlc` command. Framework developers who
-need the Bun-shaped source projection can clone the repository, run
-`bun install --frozen-lockfile` and `bun scripts/package.ts`, then use the
-ignored local `dist/kiro-ide/` output instead.
+バージョン付きのランタイムは、ネイティブの `aidlc` コマンドを使います。Bun 形式のソースプロジェクションが
+必要なフレームワーク開発者は、リポジトリをクローンし、
+`bun install --frozen-lockfile` と `bun scripts/package.ts` を実行してから、
+代わりに Git の無視対象であるローカルの `dist/kiro-ide/` 出力を使ってください。
 
-The shipped `.gitignore` carries the workspace's commit/ignore split: the
-per-user cursors (`aidlc/active-space`, `aidlc/spaces/*/intents/active-intent`)
-and machine-local runtime (`aidlc/.aidlc-clone-id`, `runtime-graph.json`, sensor
-caches, `spaces/*/knowledge/.sources.local.json`) stay untracked, while the
-shared records — method memory, state, audit shards, artifacts — travel with
-git. The last line, the copy's own setup, adds those lines and AI-DLC's part of
-`AGENTS.md` after everything already in your files, or creates the files when
-the project has none, so the AI-DLC rules are in place before your first
-workflow.
+提供される `.gitignore` は、ワークスペースのコミット対象と無視対象の区分を定めています:
+ユーザーごとのカーソル（`aidlc/active-space`、`aidlc/spaces/*/intents/active-intent`）
+とマシンローカルのランタイム（`aidlc/.aidlc-clone-id`、`runtime-graph.json`、センサーの
+キャッシュ、`spaces/*/knowledge/.sources.local.json`）は追跡対象外のままとし、
+共有の記録（メソッドメモリ、状態、監査シャード、成果物）は
+git で共有されます。最後の行であるコピー自身のセットアップは、それらの行と AI-DLC の
+`AGENTS.md` の担当部分を既存のファイルの内容の後に追加するか、プロジェクトにファイルがなければ
+作成します。これにより、最初のワークフローの前に AI-DLC のルールが揃います。
 
-The install ships:
+インストールで提供されるもの:
 
-- `.kiro/skills/aidlc/SKILL.md`: AI-DLC's instructions to the aidlc agent. The
-  agent has them, with `question-rendering.md` and `composer.md` beside them,
-  from the first line of every chat, so it reads no file before acting on your
-  request.
-- `.kiro/agents/aidlc-aidlc.md` — the same conductor exposed in the workspace agent
-  selector (named so it sorts before the `aidlc-*-agent.md` specialists: Kiro
-  lists agents in file-name order, so `aidlc` comes first in the picker and in
-  the `/` menu). It delegates through `invoke_sub_agent` (Kiro IDE) or
-  `orchestrate_subagent` (Kiro CLI), the dispatch tools that run each persona
-  under its own tools and deny rules.
-- `.kiro/agents/aidlc-*-agent.md` — all 14 delegation personas, carrying
-  `tools:` grants and `permissions.rules`. On a delegated call Kiro enforces a
-  persona's deny rules but runs its commands under the conductor's allow, so
-  each persona denies that allow except the AI-DLC commands a delegate may run.
-  A delegate cannot move the workflow, change stage state, or switch or create
-  an intent or space, however it quotes or spaces the command. Only the
-  pipeline-deploy persona creates, merges, discards, and restores Bolt
-  worktrees.
-  No agent-v1 JSON ships. Their shell
-  rules run AI-DLC's own commands and `bun --version` without
-  asking; the project's own test and build commands still ask.
-- `.kiro/settings/cli.json` — sets `"chat.agentEngine": "v3"` and
-  `"chat.defaultAgent": "aidlc"`. Kiro CLI's v2 engine runs none of the
-  `.kiro/hooks/` registrations, and a hook cannot detect that from inside, so
-  start Kiro CLI with `kiro-cli --v3`. Kiro CLI 2.33.0 takes the engine only
-  from the command line or your own Kiro CLI settings: it ignores the project
-  file's engine value and refuses `kiro-cli settings --workspace
-  chat.agentEngine`. Kiro CLI 2.24.1 to 2.32.x read the engine from this file.
-  Kiro IDE does not read this file. `kiro-cli acp` reads its
-  `chat.defaultAgent` but not its engine value, so an ACP client has to start
+- `.kiro/skills/aidlc/SKILL.md`: aidlc エージェントに対する AI-DLC の指示です。
+  エージェントは、隣にある `question-rendering.md` と `composer.md` とともに、
+  すべてのチャットの最初の行からこれらを保持しているため、依頼に対応する前に
+  ファイルを読むことはありません。
+- `.kiro/agents/aidlc-aidlc.md`: ワークスペースのエージェントセレクターに表示される同じコンダクターです
+  （`aidlc-*-agent.md` のスペシャリストより前に並ぶようにこの名前になっています: Kiro は
+  エージェントをファイル名順に並べるため、ピッカーと
+  `/` メニューで `aidlc` が最初に来ます）。`invoke_sub_agent`（Kiro IDE）または
+  `orchestrate_subagent`（Kiro CLI）を通じて委任します。これらは、各ペルソナを
+  それぞれのツールと拒否ルールのもとで実行するディスパッチツールです。
+- `.kiro/agents/aidlc-*-agent.md`: 14 個の委任用ペルソナすべてで、
+  `tools:` の許可と `permissions.rules` を持ちます。委任された呼び出しでは、Kiro は
+  ペルソナの拒否ルールを適用しますが、コマンドはコンダクターの許可のもとで実行します。そのため
+  各ペルソナは、委任先が実行してよい AI-DLC コマンドを除いて、その許可を拒否します。
+  委任先は、コマンドをどのように引用したり空白を入れたりしても、ワークフローを進めること、ステージの状態を変更すること、
+  インテントやスペースを切り替えたり作成したりすることはできません。Bolt の
+  worktree を作成、マージ、破棄、復元するのは pipeline-deploy ペルソナだけです。
+  agent-v1 の JSON は提供されません。これらのシェル
+  ルールは、AI-DLC 自身のコマンドと `bun --version` を確認なしで
+  実行します。プロジェクト独自のテストやビルドのコマンドは引き続き確認を求めます。
+- `.kiro/settings/cli.json`: `"chat.agentEngine": "v3"` と
+  `"chat.defaultAgent": "aidlc"` を設定します。Kiro CLI の v2 エンジンは
+  `.kiro/hooks/` の登録をどれも実行せず、フックはそれを内部から検出できないため、
+  Kiro CLI は `kiro-cli --v3` で起動してください。Kiro CLI 2.33.0 は、エンジンを
+  コマンドラインか独自の Kiro CLI 設定からのみ受け取ります: プロジェクトの
+  ファイルのエンジンの値は無視し、`kiro-cli settings --workspace
+  chat.agentEngine` は拒否します。Kiro CLI 2.24.1 から 2.32.x は、このファイルからエンジンを読みます。
+  Kiro IDE はこのファイルを読みません。`kiro-cli acp` は
+  `chat.defaultAgent` を読みますが、エンジンの値は読まないため、ACP クライアントは
   `kiro-cli acp --agent-engine v3`
-  and declare
-  `clientCapabilities._meta.kiro.hooks` as `{ enabled: true, v2: true }` in its
-  `initialize` request, or the session runs no hooks (see
-  [Kiro CLI hooks not running](../15-troubleshooting.md#kiro-cli-hooks-not-running)).
-- `.kiro/steering/aidlc-active-memory.md`: always-included steering that carries
-  the active space's memory text for the conductor and delegated agents. AI-DLC
-  writes it from `aidlc/spaces/<active-space>/memory/` for each chat and keeps it
-  out of git; edit the memory files, never this one. A chat keeps the copy it
-  started with, so after a memory edit the stage rules arrive with each step
-  until a new chat starts.
-- `.kiro/steering/aidlc-onboarding.md` — always-included harness setup and commands.
-- `.kiro/hooks/aidlc-*.json` — the framework hooks in Kiro's v2 hook format.
-  Both surfaces register them when a session starts; in Kiro IDE they appear
-  in the Agent Hooks panel. Switching one off there writes `"enabled": false`
-  into its file, and a file committed that way is off in Kiro CLI too, which has
-  no such panel; `/aidlc --doctor` reports it, the next AI-DLC step says it once
-  per change, and while `aidlc-record-human-turn` is off an approval tells you,
-  rather than to trust the folder, to turn it back on under Agent Hooks in Kiro
-  IDE, or in Kiro CLI to change `"enabled": false` to `true` in that file, then
-  quit Kiro and start `kiro-cli --v3` again in the folder, since the file is
-  read when a session starts. AI-DLC never turns a hook back on for you. The
-  IDE 0.x `.kiro.hook` format is no longer shipped: Kiro IDE 1.x never executes
-  it.
+  で起動し、
+  `initialize` リクエストで `clientCapabilities._meta.kiro.hooks` を `{ enabled: true, v2: true }` として
+  宣言する必要があります。そうしないとセッションでフックが実行されません（
+  [Kiro CLI のフックが動かない](../15-troubleshooting.md#kiro-cli-hooks-not-running) を参照）。
+- `.kiro/steering/aidlc-active-memory.md`: 常に含まれるステアリングで、
+  コンダクターと委任先エージェントのためにアクティブなスペースのメモリテキストを保持します。AI-DLC
+  はチャットごとに `aidlc/spaces/<active-space>/memory/` からこれを書き出し、
+  git の管理外にします。編集するのはメモリファイルであり、このファイルは決して編集しないでください。チャットは
+  開始時のコピーを保持するため、メモリを編集した後は、新しいチャットを開始するまで
+  ステージのルールが各ステップとともに届きます。
+- `.kiro/steering/aidlc-onboarding.md`: 常に含まれる、ハーネスのセットアップとコマンドの説明です。
+- `.kiro/hooks/aidlc-*.json`: Kiro の v2 フック形式のフレームワークフックです。
+  どちらの環境もセッション開始時にこれらを登録し、Kiro IDE では
+  Agent Hooks パネルに表示されます。そこで 1 つをオフにすると、そのファイルに `"enabled": false` が
+  書き込まれ、その状態でコミットされたファイルは、そのようなパネルを持たない Kiro CLI でも
+  オフになります。`/aidlc --doctor` はそれを報告し、次の AI-DLC のステップは変更ごとに 1 回それを伝えます。
+  また `aidlc-record-human-turn` がオフの間は、承認時に、フォルダーを信頼するよう求めるのではなく、
+  Kiro IDE では Agent Hooks でそれを再度オンにするよう、Kiro CLI ではそのファイルの
+  `"enabled": false` を `true` に変更してから Kiro を終了し、フォルダーで `kiro-cli --v3` を再起動するよう案内します。
+  ファイルはセッション開始時に読み込まれるためです。AI-DLC がフックを代わりに再度オンにすることはありません。
+  IDE 0.x の `.kiro.hook` 形式はもう提供されていません: Kiro IDE 1.x はこれを決して
+  実行しません。
 
 ## First run
 
-Kiro IDE runs a folder's hooks and loads its `aidlc` agent only after you trust
-the folder and reload the window. An untrusted folder opens in Restricted Mode:
-a banner at the top of the window, and "Restricted Mode" in the status bar.
-Until then the AI-DLC hooks do not run, the `aidlc` agent is missing from the
-agent picker, and the first approval question cannot see your reply.
+Kiro IDE は、フォルダーを信頼してウィンドウを再読み込みした後にのみ、フォルダーのフックを実行し、
+`aidlc` エージェントを読み込みます。信頼されていないフォルダーは Restricted Mode で開きます:
+ウィンドウ上部にバナーが表示され、ステータスバーに "Restricted Mode" と表示されます。
+それまでは AI-DLC のフックは実行されず、`aidlc` エージェントは
+エージェントピッカーに表示されず、最初の承認の質問ではあなたの返答を認識できません。
 
-Trust only a folder whose contents you know: your own project, or one you have
-checked. Trusting lets the folder's `.kiro` hooks run commands on your machine,
-so leave a project from someone else in Restricted Mode until you have reviewed
-it.
+信頼するのは内容を把握しているフォルダーだけにしてください: 自分のプロジェクトか、
+確認済みのプロジェクトです。信頼すると、フォルダーの `.kiro` フックがあなたのマシン上でコマンドを実行できるようになるため、
+他人のプロジェクトは確認が済むまで Restricted Mode のままにしてください。
 
-Kiro can ask for this trust earlier. If you open Kiro IDE's terminal in the
-folder before trusting it, for example to run `aidlc config` there, Kiro first
-asks "Do you trust the authors of the files in this folder?". For a folder you
-know, choose **Trust Folder & Continue**, which trusts it the same way step 1
-does, and when `aidlc config` finishes, continue at step 2 to reload the
-window. Otherwise choose **Cancel**.
+Kiro はこの信頼をもっと早い段階で求めることがあります。フォルダーを信頼する前に、たとえばそこで
+`aidlc config` を実行するために Kiro IDE のターミナルを開くと、Kiro はまず
+"Do you trust the authors of the files in this folder?" と尋ねます。内容を把握しているフォルダーであれば、
+**Trust Folder & Continue** を選んでください。これはステップ 1 と同じ方法でフォルダーを信頼します。
+`aidlc config` が終了したら、ステップ 2 から続けてウィンドウを再読み込みしてください。
+それ以外の場合は **Cancel** を選んでください。
 
-1. Open `your-project/` in Kiro IDE. If the Restricted Mode banner shows at the
-   top of the window and you know what is in the folder, select **Manage** on
-   it, then **Trust** on the Workspace Trust page that opens.
-2. Open the Command Palette (Ctrl+Shift+P, or Cmd+Shift+P on macOS) and run
-   **Developer: Reload Window**.
-3. Choose the **aidlc** agent in the chat panel's agent picker (see
-   [Start AI-DLC in a Kiro IDE chat](#start-ai-dlc-in-a-kiro-ide-chat)).
-4. In chat, run `/aidlc --doctor` to verify the setup, then
-   `/aidlc <description>` to start a workflow.
+1. Kiro IDE で `your-project/` を開きます。ウィンドウ上部に Restricted Mode のバナーが表示され、
+   フォルダーの内容を把握している場合は、バナーの **Manage** を選び、
+   開いた Workspace Trust ページで **Trust** を選びます。
+2. コマンドパレット（Ctrl+Shift+P、macOS では Cmd+Shift+P）を開き、
+   **Developer: Reload Window** を実行します。
+3. チャットパネルのエージェントピッカーで **aidlc** エージェントを選びます（
+   [Kiro IDE のチャットで AI-DLC を始める](#start-ai-dlc-in-a-kiro-ide-chat) を参照）。
+4. チャットで `/aidlc --doctor` を実行してセットアップを確認し、
+   `/aidlc <description>` でワークフローを開始します。
 
-On Kiro CLI, start `kiro-cli --v3` in `your-project/`; if Kiro asks whether you
-trust this workspace and you know what is in this folder, choose **Trust,
-continue**. Then go to step 4.
+Kiro CLI では、`your-project/` で `kiro-cli --v3` を起動します。このワークスペースを信頼するかどうかを Kiro が尋ね、
+フォルダーの内容を把握している場合は **Trust,
+continue** を選びます。その後、ステップ 4 に進みます。
 
-When Kiro CLI 2.24.1 or later is on your PATH and setup runs outside Kiro IDE
-(not in its terminal), setup lists this Kiro CLI step first and the Kiro IDE
-steps after it; doctor's fix for "AIDLC hooks have not run in this project yet" does the
-same.
+Kiro CLI 2.24.1 以降が PATH 上にあり、セットアップを Kiro IDE の外（そのターミナル以外）で
+実行した場合、セットアップはこの Kiro CLI のステップを最初に、Kiro IDE の
+ステップをその後に示します。doctor の "AIDLC hooks have not run in this project yet" に対する修正方法も
+同様です。
 
-When `kiro-cli` is on your PATH, setup also offers Kiro CLI's session model,
-saved in your personal Kiro settings (`~/.kiro/settings/cli.json`). It is a
-Kiro CLI setting: Kiro IDE uses the model you choose in its own model picker.
-On this row setup saves the model only, never an effort, and recommends no
-model over Kiro auto: Enter keeps Kiro auto, and in Kiro IDE's own terminal
-the recommended setup does not ask, and under Kiro auto it says where each
-host chooses its model (Customize still asks in its step 2).
-`aidlc config models --session-model <id>` saves one later.
+`kiro-cli` が PATH 上にある場合、セットアップでは Kiro CLI のセッションモデルも提示され、
+個人の Kiro 設定（`~/.kiro/settings/cli.json`）に保存されます。これは
+Kiro CLI の設定です: Kiro IDE は自身のモデルピッカーで選んだモデルを使います。
+この行では、セットアップはモデルだけを保存し、effort は決して保存しません。また Kiro auto より
+推奨するモデルはありません: Enter を押すと Kiro auto のままになり、Kiro IDE 自身のターミナルでは
+推奨セットアップは質問せず、Kiro auto のもとでは各ホストがどこでモデルを選ぶかを
+示します（Customize ではステップ 2 で引き続き質問します）。
+`aidlc config models --session-model <id>` で後から保存できます。
 
-If doctor reports "AIDLC hooks have not run in this project yet" after you have
-sent a chat message, repeat steps 1 to 3. See
-[Troubleshooting: Kiro IDE hooks not running](../15-troubleshooting.md#kiro-ide-hooks-not-running).
+チャットメッセージを送信した後に doctor が "AIDLC hooks have not run in this project yet" と報告する場合は、
+ステップ 1 から 3 を繰り返してください。
+[トラブルシューティング: Kiro IDE のフックが動かない](../15-troubleshooting.md#kiro-ide-hooks-not-running) を参照してください。
 
 ## Usage
 
-Identical to the Claude Code harness: `/aidlc <description>` starts a
-workflow, `/aidlc --status` reports position, `/aidlc --doctor`, `--stage`,
-`--phase`, `--depth`, `--test-strategy`, and `--config [section]` all work, and the
-per-stage (`/aidlc-domain-design`) and per-scope (`/aidlc-feature`) runner
-skills are installed. There is no init command; the shipped shell scaffolds
-the workspace, and AI-DLC automatically creates the first intent on your first `/aidlc`.
+Claude Code ハーネスと同じです: `/aidlc <description>` で
+ワークフローを開始し、`/aidlc --status` で現在位置を確認できます。`/aidlc --doctor`、`--stage`、
+`--phase`、`--depth`、`--test-strategy`、`--config [section]` もすべて動作し、
+ステージごと（`/aidlc-domain-design`）およびスコープごと（`/aidlc-feature`）のランナー
+スキルもインストールされます。init コマンドはありません。提供されたシェルが
+ワークスペースの土台を用意し、最初の `/aidlc` で AI-DLC が自動的に最初のインテントを作成します。
 
 ### Start AI-DLC in a Kiro IDE chat
 
-Kiro IDE starts every new chat on its own **Default** agent, not on `aidlc`.
-The `"chat.defaultAgent": "aidlc"` line in `.kiro/settings/cli.json` is a Kiro
-CLI setting: it makes `aidlc` the default agent for `kiro-cli` sessions only,
-and Kiro IDE does not read that file. So in each new Kiro IDE chat:
+Kiro IDE は、新しいチャットを毎回 `aidlc` ではなく、自身の **Default** エージェントで開始します。
+`.kiro/settings/cli.json` の `"chat.defaultAgent": "aidlc"` の行は Kiro
+CLI の設定です: これは `kiro-cli` のセッションでのみ `aidlc` をデフォルトのエージェントにするもので、
+Kiro IDE はこのファイルを読みません。そのため、Kiro IDE で新しいチャットを開くたびに次のようにします:
 
-1. Open the agent picker in the chat panel and choose **aidlc** (the first of
-   AI-DLC's agents there; its description starts "AI-DLC. Choose this agent in
-   the agent picker"). This
-   agent lets AI-DLC's commands run without asking you, and lets AI-DLC bring
-   in its specialist agents, and it already holds AI-DLC's instructions when
-   a chat starts, so it reads no file before acting on your first line.
-2. Type the whole request, then press Enter: for example `/aidlc --doctor` or
-   `/aidlc build a to-do app`. A bare `/aidlc` works too: while the `/` menu
-   is open, Enter completes the line to its first entry, which is `/aidlc`
-   itself, and the next Enter sends it.
-3. Picking `aidlc` from the `/` menu does not change which agent the chat
-   uses. If the chat is still on **Default**, AI-DLC's first move on your
-   first request is its own command, which Kiro asks you to approve, and then
-   each command it runs asks. To avoid that, choose **aidlc** in the agent picker first (step 1).
-   On **Default** (or **Default v2**), AI-DLC says this once in the chat when you
-   type an `/aidlc` request, unless you already chose **Always allow** for
-   AI-DLC's commands on one of Kiro's approval cards.
-   The `aidlc-...-agent` entries in the `/` menu are the specialists AI-DLC
-   brings in during a workflow; you do not start them yourself.
+1. チャットパネルのエージェントピッカーを開き、**aidlc** を選びます（そこにある
+   AI-DLC のエージェントの最初のもので、説明は "AI-DLC. Choose this agent in
+   the agent picker" で始まります）。この
+   エージェントは、AI-DLC のコマンドを確認なしで実行させ、AI-DLC がスペシャリストのエージェントを
+   呼び出せるようにします。また、チャット開始時点ですでに AI-DLC の指示を保持しているため、
+   最初の行に対応する前にファイルを読むことはありません。
+2. 依頼全体を入力してから Enter を押します。たとえば `/aidlc --doctor` や
+   `/aidlc build a to-do app` です。`/aidlc` だけでも動作します: `/` メニューが
+   開いている間は、Enter で行がメニューの最初の項目、つまり `/aidlc`
+   自体に補完され、次の Enter で送信されます。
+3. `/` メニューから `aidlc` を選んでも、チャットが使うエージェントは変わりません。
+   チャットがまだ **Default** のままの場合、最初の依頼に対して AI-DLC が最初に行うのは
+   自身のコマンドの実行であり、Kiro はその承認を求め、その後も
+   実行するコマンドごとに確認を求めます。これを避けるには、先にエージェントピッカーで **aidlc** を選んでください（ステップ 1）。
+   **Default**（または **Default v2**）の場合、`/aidlc` の依頼を入力すると、AI-DLC はチャットでこのことを 1 回伝えます。
+   ただし、Kiro の承認カードのいずれかで AI-DLC のコマンドに対してすでに **Always allow** を
+   選んでいる場合は伝えません。
+   `/` メニューにある `aidlc-...-agent` の項目は、ワークフロー中に AI-DLC が呼び出す
+   スペシャリストです。自分で開始する必要はありません。
 
-With the `aidlc` agent selected you can also ask in plain words, for example
-"start an AI-DLC workflow for a to-do app" or "continue my AI-DLC workflow".
-Kiro's welcome panel (Spec, Plan, Bug Fix, Quick Spec) lists Kiro's own
-workflows; AI-DLC does not appear there, so start it from the chat as above.
+`aidlc` エージェントを選択していれば、
+"start an AI-DLC workflow for a to-do app" や "continue my AI-DLC workflow" のように、平易な言葉で依頼することもできます。
+Kiro のウェルカムパネル（Spec、Plan、Bug Fix、Quick Spec）に並んでいるのは Kiro 自身の
+ワークフローです。AI-DLC はそこには表示されないので、上記のようにチャットから開始してください。
 
 ### Supervised or Autopilot
 
-The **Autopilot** switch at the bottom right of the chat box (also under
-**Settings > Agent > Agent Autonomy**) sets how often Kiro itself asks you to
-approve what the agent does. You can change it at any time, even in the middle
-of a workflow. It does not change which AI-DLC checkpoints stop for you.
+チャットボックスの右下（**Settings > Agent > Agent Autonomy** にもあります）にある
+**Autopilot** スイッチは、エージェントの操作について Kiro 自身がどのくらいの頻度で
+承認を求めるかを設定します。ワークフローの途中を含め、いつでも変更できます。
+どの AI-DLC チェックポイントで停止するかは変わりません。
 
-- **Supervised** (switch off): after each turn that changes files, Kiro shows a
-  **Review changes** card and waits until you choose **Accept** or **Reject**.
-  AI-DLC keeps its questions, stage documents, and plans in files, so a
-  workflow shows many of these cards on top of AI-DLC's own questions.
-- **Autopilot** (switch on): file changes go through without the card. Select
-  **View changes** in the chat to see what changed.
-- In both modes, Kiro asks you to **Allow** any command that the `aidlc` agent
-  does not already allow, such as your project's test command, a `git push`
-  or a recursive delete. Your own commands meet no AI-DLC rule, so once you
-  choose **Always allow** for one, Kiro remembers it, redirects and chains
-  included. AI-DLC's own commands ask
-  when one holds a redirect, a chain or a substitution (`>`, `&&`, `$(...)`),
-  so an allowed AI-DLC command cannot be stretched into another. Kiro also asks
-  before the two AI-DLC commands held back on purpose (see
-  [Native channel](#native-channel-recommended)).
-- In Kiro CLI (its v3 engine), when a side-by-side build's workers or
-  reviewers ask, Kiro gathers their requests in a "tool approval pending" box;
-  (f) **Approve all pending and auto-approve future subagent requests** lets
-  them run whatever they ask without asking you, reviewers that start later
-  included, though on Kiro CLI 3.1.0 you may see that box again later in the
-  same chat, for example after you answer one of AI-DLC's questions; if it
-  appears again, you can choose (f) again. Requests from the main chat still
-  ask as before, and Kiro writes no setting for (f).
-- In Kiro CLI 3.1.0 (its v3 engine), an approval card from the main chat for
-  one of your own commands has no **Always allow** item: it includes **Allow
-  once** and **Create allow rule to approve future similar actions**. The rule
-  Kiro offers first is **exact match · session** for that command: choosing it
-  lets the same command run again without a card, and a command with different
-  arguments, such as another test file, is not covered by that rule.
+- **Supervised**（スイッチオフ）: ファイルを変更した各ターンの後、Kiro は
+  **Review changes** カードを表示し、**Accept** か **Reject** を選ぶまで待ちます。
+  AI-DLC は質問、ステージのドキュメント、プランをファイルに保存するため、
+  ワークフローでは AI-DLC 自身の質問に加えて、このカードが何度も表示されます。
+- **Autopilot**（スイッチオン）: ファイルの変更はカードなしで反映されます。変更内容を確認するには、
+  チャットで **View changes** を選びます。
+- どちらのモードでも、`aidlc` エージェントがまだ許可していないコマンド（プロジェクトのテストコマンド、`git push`、
+  再帰的な削除など）については、Kiro が **Allow** を求めます。
+  あなた自身のコマンドには AI-DLC のルールが適用されないため、一度
+  **Always allow** を選ぶと、Kiro はリダイレクトや連結を含めてそれを記憶します。
+  AI-DLC 自身のコマンドは、リダイレクト、連結、置換（`>`、`&&`、`$(...)`）を含む場合に確認を求めるため、
+  許可された AI-DLC コマンドを別のコマンドに拡張することはできません。また Kiro は、
+  意図的に保留されている 2 つの AI-DLC コマンドの前にも確認を求めます（
+  [Native channel](#native-channel-recommended) を参照）。
+- Kiro CLI（v3 エンジン）では、並列ビルドのワーカーや
+  レビュアーが確認を求めると、Kiro はそれらの要求を "tool approval pending" ボックスにまとめます。
+  (f) **Approve all pending and auto-approve future subagent requests** を選ぶと、
+  後から開始するレビュアーも含め、それらが求めるものを確認なしで実行できるようになります。
+  ただし Kiro CLI 3.1.0 では、同じチャットの後の時点で、たとえば AI-DLC の質問に答えた後などに、
+  そのボックスが再び表示されることがあります。再び表示された場合は、もう一度 (f) を選べます。
+  メインチャットからの要求は引き続きこれまでどおり確認を求め、Kiro は (f) について設定を書き込みません。
+- Kiro CLI 3.1.0（v3 エンジン）では、あなた自身のコマンドに対するメインチャットの承認カードに
+  **Always allow** の項目がありません: 代わりに **Allow
+  once** と **Create allow rule to approve future similar actions** があります。Kiro が
+  最初に提示するルールは、そのコマンドに対する **exact match · session** です: これを選ぶと
+  同じコマンドはカードなしで再実行できますが、別のテストファイルなど引数が異なるコマンドは
+  そのルールの対象になりません。
 
-In both modes, AI-DLC still stops and waits for your typed reply at each of its
-questions, at every approval gate, and at Code Generation's **Approve Plan**
-when plan approval is on (the default in every shipped scope except express
-and poc, and yours to switch; see
-[Plan approval](../13-customization.md#plan-approval)). Kiro's switch cannot
-skip these. AI-DLC's hooks run in either mode: one refuses code changes
-until the plan is approved or, with plan approval off, until AI-DLC has
-recorded that it builds the plan without asking. AI-DLC also accepts an answer
-or an approval only after you have typed a reply to the question. The AI-DLC
-setting that skips routine approvals is its own Construction choice
-**Continue automatically** (see
-[Your First Workflow](../02-your-first-workflow.md#construction-phase)), not
-Kiro's Autopilot.
+どちらのモードでも、AI-DLC は各質問、すべての承認ゲート、そしてプラン承認がオンの場合の
+Code Generation の **Approve Plan** で停止し、あなたが返答を入力するのを待ちます
+（プラン承認は express と poc 以外のすべての提供スコープでデフォルトでオンであり、切り替えはあなたが決められます。
+[プラン承認](../13-customization.md#plan-approval) を参照）。Kiro のスイッチで
+これらを飛ばすことはできません。AI-DLC のフックはどちらのモードでも実行されます: そのうちの 1 つは、
+プランが承認されるまで、またはプラン承認がオフの場合は AI-DLC がプランを確認なしでビルドすることを
+記録するまで、コードの変更を拒否します。また AI-DLC は、質問に対してあなたが返答を入力した後にのみ、
+回答や承認を受け付けます。定型的な承認を省略する AI-DLC の
+設定は、Kiro の Autopilot ではなく、AI-DLC 自身の Construction での選択肢
+**Continue automatically** です（
+[最初のワークフロー](../02-your-first-workflow.md#construction-phase) を参照）。
 
-Use Supervised when you want to read every file change as it happens, for
-example on your first workflow or in code where every change matters. Use
-Autopilot when you want far fewer clicks: you still answer every AI-DLC
-checkpoint in chat, and can look over the changes afterwards.
+たとえば最初のワークフローや、すべての変更が重要なコードなど、ファイルの変更をその都度すべて読みたい場合は
+Supervised を使ってください。クリック数を大幅に減らしたい場合は
+Autopilot を使ってください: その場合も AI-DLC のすべての
+チェックポイントにはチャットで回答し、変更は後から確認できます。
 
 ### When the chat fills up
 
-Kiro shows you how full the chat is, but gives AI-DLC no figure while it works.
-Kiro IDE and Kiro CLI's v3 engine summarize the chat on their own when it
-reaches 80%, and from then on the agent works from that summary. AI-DLC reads
-Kiro's own record of the chat (`~/.kiro/sessions/`, read only), and at the
-first approval question or Unit checkpoint after Kiro summarized the chat it
-says so in one line, with an offer to pause and carry on in a new chat. If you
-turned Kiro's auto-compaction off, the same offer comes once the chat is 80%
-full. When the chat already reached half full or more in its first turn on the
-work, and still runs on the model that filled it, a new chat on that model
-would start about as full, so the line says that instead of offering one. Your
-answer decides: nothing pauses on its own, and the line is said once in a chat.
+Kiro はチャットがどのくらい埋まっているかをあなたに表示しますが、作業中の AI-DLC にはその数値を渡しません。
+Kiro IDE と Kiro CLI の v3 エンジンは、チャットが 80% に達すると自動的に要約し、
+それ以降エージェントはその要約をもとに作業します。AI-DLC は
+Kiro 自身のチャットの記録（`~/.kiro/sessions/`、読み取り専用）を読み、Kiro がチャットを要約した後の
+最初の承認の質問またはユニットのチェックポイントで、そのことを 1 行で伝え、
+一時停止して新しいチャットで続けることを提案します。
+Kiro の自動コンパクションをオフにしている場合は、チャットが 80% に達した時点で同じ提案が出ます。
+作業での最初のターンですでにチャットが半分以上埋まり、
+それを埋めたモデルのまま実行されている場合、そのモデルで新しいチャットを始めても
+ほぼ同じくらい埋まった状態で始まるため、その行は新しいチャットを提案する代わりにそのことを伝えます。
+判断はあなたの回答次第です: 自動的に一時停止することはなく、その行はチャットごとに 1 回だけ伝えられます。
 
-The line cannot appear in the middle of a stage (it comes only with a question
-you are asked anyway), for a chat with no record on this machine, or if a Kiro
-update changes how Kiro records the chat. On Kiro
-IDE with two AI-DLC chats open in one window, it can describe the chat that
-started last. You can always do the same by hand:
+この行は、ステージの途中（いずれにせよ尋ねられる質問と一緒にのみ表示されます）、
+このマシンに記録のないチャット、または Kiro のアップデートでチャットの記録方法が変わった場合には
+表示されません。Kiro
+IDE で 1 つのウィンドウに 2 つの AI-DLC チャットを開いている場合は、最後に開始したチャットについて
+説明することがあります。同じことはいつでも手動で行えます:
 
-1. Stop at a stage boundary: approve and say you want to stop for now in the
-   same reply, or type `/aidlc park`. `/aidlc --status` now shows
-   `Paused at <stage> (you stopped it); pick it back up with /aidlc --resume`.
-2. Start a new chat: on Kiro IDE, open a new chat and choose **aidlc** in the
-   agent picker (a new chat starts on Kiro's Default agent; see
-   [Start AI-DLC in a Kiro IDE chat](#start-ai-dlc-in-a-kiro-ide-chat)); in Kiro
-   CLI, type `/chat new`.
-3. Type `/aidlc --resume`. `/aidlc --status` no longer says Paused.
+1. ステージの境界で停止します: 承認すると同時に、同じ返答で今は止めたいと伝えるか、
+   `/aidlc park` と入力します。すると `/aidlc --status` に
+   `Paused at <stage> (you stopped it); pick it back up with /aidlc --resume` と表示されます。
+2. 新しいチャットを開始します: Kiro IDE では、新しいチャットを開いてエージェントピッカーで
+   **aidlc** を選びます（新しいチャットは Kiro の Default エージェントで始まります。
+   [Kiro IDE のチャットで AI-DLC を始める](#start-ai-dlc-in-a-kiro-ide-chat) を参照）。Kiro
+   CLI では `/chat new` と入力します。
+3. `/aidlc --resume` と入力します。`/aidlc --status` に Paused と表示されなくなります。
 
-Anything the old chat discussed but did not write to a file does not carry
-over, which is why the end of a stage is the best moment (see
-[Changing Model Mid-Workflow](../11-session-management.md#changing-model-mid-workflow)).
+以前のチャットで話し合ってもファイルに書き込まれなかった内容は引き継がれません。
+そのため、ステージの終わりが最適なタイミングです（
+[ワークフロー途中でのモデル変更](../11-session-management.md#changing-model-mid-workflow) を参照）。
 
 ## How hooks work on Kiro
 
-Kiro IDE and Kiro CLI v3 register hooks through v2 hook JSON files
-(`{"version":"v1","hooks":[{name,trigger,matcher,action}]}`, PascalCase
-triggers) under `.kiro/hooks/` (a different mechanism from the Kiro CLI (V2)
-distribution, which carries a `hooks` block inside the agent JSON). Native hook commands route through
-`aidlc engine adapter kiro-ide`; source/development copies route through the projected
-`aidlc-kiro-adapter.ts` shim. Both normalize the IDE event into the shape the
-shared core hooks expect. Which Kiro tools are writes, shells, delegations, and
-reads is set in one table, `aidlc-kiro-tool-names.ts` beside the adapter. The
-adapter reads it; the hook registrations are hand-written JSON whose matchers
-list the same shell, delegation, and audited write names.
+Kiro IDE と Kiro CLI v3 は、`.kiro/hooks/` 配下の v2 フック JSON ファイル
+（`{"version":"v1","hooks":[{name,trigger,matcher,action}]}`、PascalCase の
+トリガー）を通じてフックを登録します（エージェント JSON の中に `hooks` ブロックを持つ Kiro CLI (V2)
+ディストリビューションとは異なる仕組みです）。ネイティブのフックコマンドは
+`aidlc engine adapter kiro-ide` を経由し、ソース／開発用のコピーは配置された
+`aidlc-kiro-adapter.ts` シムを経由します。どちらも IDE のイベントを、
+共有コアのフックが想定する形に正規化します。どの Kiro ツールが書き込み、シェル、委任、
+読み取りに当たるかは、アダプターの隣にある 1 つの表 `aidlc-kiro-tool-names.ts` で定義されています。
+アダプターはこれを読み、フックの登録は手書きの JSON で、そのマッチャーには
+同じシェル、委任、監査対象の書き込みの名前が並んでいます。
 
-Kiro IDE 1.x and Kiro CLI v3 deliver hook context as **JSON on stdin** (snake_case:
-`{ session_id, tool_name, tool_input, tool_response }`; the older 0.12 builds instead set
-the `USER_PROMPT` environment variable with a camelCase equivalent, and the
-adapter accepts both). Earlier builds left PostToolUse write/shell tool inputs
-empty, so the adapter recovers the written path from the result text when the
-input carries none, and audit-tail hooks (`rebuild-stage-graph`, `sync-workflow-state`) run
-from the audit trail. The graph-rebuild route also retains the shell result and session
-identity so a successful `intent-create` binds to the invoking session: modern
-events carry the exact `session_id`, while the legacy channel derives a stable
-host-instance identity from the measured `VSCODE_IPC_HOOK`/`VSCODE_PID`
-environment and retains it at SessionStart. Modern Stop likewise prefers its
-event-local `session_id`, preventing one concurrent chat from consuming
-another chat's handoff after an intent is created or selected; legacy agentStop falls back to the retained
-identity. Later 1.x builds populate some PreToolUse and delegation inputs; the
-adapter preserves those fields. On Windows, deterministic utilities use those
-seams to avoid the IDE shell-result transport: builds that expose the submitted
-prompt run the utility at UserPromptSubmit, while builds such as 1.0.242 (whose
-prompt field is empty) fall back to the exact `execute_pwsh` PreToolUse command.
-The utility runs once per turn, its UTF-8 text is relayed without terminal
-protocol/control bytes, and the duplicate shell call is refused. Modern chats
-store turn and output state per `session_id`; context without a session identity
-uses one legacy compatibility bucket. Pre-1.0 camelCase payloads take the same
-fallback through `toolArgs.command`; raw prompt text is only a newer-generation
-compatibility shape.
+Kiro IDE 1.x と Kiro CLI v3 は、フックのコンテキストを **stdin 上の JSON** として渡します（snake_case:
+`{ session_id, tool_name, tool_input, tool_response }`。古い 0.12 ビルドでは代わりに
+`USER_PROMPT` 環境変数に camelCase の同等の内容を設定し、
+アダプターはどちらも受け付けます）。以前のビルドでは PostToolUse の書き込み／シェルツールの入力が
+空だったため、入力に何もない場合、アダプターは結果のテキストから書き込まれたパスを復元し、
+監査末尾のフック（`rebuild-stage-graph`、`sync-workflow-state`）は監査証跡から
+実行されます。グラフ再構築の経路はシェルの結果とセッションの識別情報も保持するため、
+成功した `intent-create` は呼び出し元のセッションに結び付きます: 新しい
+イベントは正確な `session_id` を持ち、レガシーのチャネルは計測された
+`VSCODE_IPC_HOOK`/`VSCODE_PID` 環境から安定したホストインスタンスの識別情報を導き、
+SessionStart で保持します。新しい Stop も同様にイベント固有の `session_id` を優先し、
+インテントが作成または選択された後に、同時に開いている別のチャットが
+他のチャットの引き継ぎを消費してしまうのを防ぎます。レガシーの agentStop は保持された
+識別情報にフォールバックします。その後の 1.x ビルドでは一部の PreToolUse と委任の入力が埋められるようになり、
+アダプターはそれらのフィールドを保持します。Windows では、決定論的なユーティリティがこれらの
+接点を使って IDE のシェル結果の転送を回避します: 送信された
+プロンプトを公開するビルドでは UserPromptSubmit でユーティリティを実行し、1.0.242 のようなビルド
+（プロンプトのフィールドが空）では、正確な `execute_pwsh` の PreToolUse コマンドにフォールバックします。
+ユーティリティはターンごとに 1 回実行され、その UTF-8 テキストはターミナルの
+プロトコル／制御バイトを除いて中継され、重複したシェル呼び出しは拒否されます。新しいチャットは
+ターンと出力の状態を `session_id` ごとに保存し、セッションの識別情報がないコンテキストは
+1 つのレガシー互換用バケットを使います。1.0 より前の camelCase のペイロードも
+`toolArgs.command` を通じて同じフォールバックを取ります。生のプロンプトテキストは、より新しい世代向けの
+互換形式にすぎません。
 
-The payload acquisition is **gated to payload-dependent targets**
-(`audit-and-sensors`, `log-subagent`,
-`plan-approval-guard`, `rebuild-stage-graph`, `review-freeze`,
-`state-transition-guard`, and the `guard-tool-call`, `person-message` and
-`after-shell` cards that run them), the terminal-command seams, plus
-`session-start` and `continue-workflow` for their modern `session_id`, and
-`record-human-turn` for the exact approval response. A non-empty `USER_PROMPT`
-is consumed immediately on 0.12 builds (which open stdin without ever writing);
-otherwise the adapter reads the 1.x stdin channel until Kiro closes it, so a
-message handed over late on a busy machine is still recorded whole, with a 60 s
-safety limit for a channel that never closes. When nothing arrives at all, your
-turn is not recorded (nothing says you typed nothing) and the agent is told to
-say that the last message in this chat did not reach AI-DLC's record, so if
-it answered one of its questions, you will be asked that question again. Every other target touches neither channel and keeps
-its zero-latency path.
+ペイロードの取得は、**ペイロードに依存するターゲットに限定**されています
+（`audit-and-sensors`、`log-subagent`、
+`plan-approval-guard`、`rebuild-stage-graph`、`review-freeze`、
+`state-transition-guard`、およびそれらを実行する `guard-tool-call`、`person-message`、
+`after-shell` のカード）、ターミナルコマンドの接点、さらに新しい `session_id` のための
+`session-start` と `continue-workflow`、正確な承認の応答のための
+`record-human-turn` です。空でない `USER_PROMPT`
+は、0.12 ビルド（stdin を開くものの何も書き込まない）では直ちに消費されます。
+それ以外の場合、アダプターは Kiro が閉じるまで 1.x の stdin チャネルを読むため、
+負荷の高いマシンで遅れて渡されたメッセージも完全に記録されます。閉じないチャネルに対しては
+60 秒の安全上の上限があります。何も届かなかった場合、あなたの
+ターンは記録されず（何も入力しなかったとは記録されません）、エージェントには、
+このチャットの最後のメッセージが AI-DLC の記録に届かなかったことを伝えるよう指示されます。そのため、
+そのメッセージが質問への回答だった場合は、同じ質問が再度尋ねられます。それ以外のターゲットはどちらのチャネルにも触れず、
+遅延ゼロの経路を維持します。
 
-| Hook | Trigger (matcher) | Purpose |
+| フック | トリガー（マッチャー） | 目的 |
 |------|-------------------|---------|
-| `aidlc-session-start` | `SessionStart` | Injects workflow resume context when a new session takes its first prompt (both surfaces; resuming an existing session does not fire it). Kiro IDE 1.1.14 runs no SessionStart hook in a new chat, so `aidlc-record-human-turn` does this work instead |
-| `aidlc-record-human-turn` | `UserPromptSubmit` | One card for each message: it first finishes what the last write or command left to do (the two rows "after a write" and "after a command" below), then records a human-turn event on every prompt (human-presence gate), then runs status, doctor, help, navigation, and other terminal utilities before the model when prompt text is available, for the chat that typed the command. A prompt from a chat other than the last one seen, or from a chat not yet started, first starts that chat's session, as `aidlc-session-start` would, so the chat gets its `AIDLC Runtime Session:` line or resume context. A prompt Kiro makes itself (a Workflows step's brief, the notice that a workflow finished) is not counted as your turn: it is recorded as `HOST_TURN`, starts no session and answers no question |
-| `aidlc-continue-workflow` | `Stop` | Forwarding-loop audit (advisory-only; the Stop trigger cannot block on the IDE - enforcement relies on the conductor's own Stop protocol) |
-| `aidlc-guard-tool-call` | `PreToolUse` (every tool but a read) | One card: it first finishes what the last write or command left to do (the rows "after a write" and "after a command" below), then runs the four checks below, in this order, on the same call. Each check runs only for the tools beside it; every check runs even after one refuses, and the call is refused when any check refuses, with each reason once. A read (`read_file`, `list_directory`, a search) runs with no card: it cannot answer an approval or change the workspace. Nor does a helper agent handing its answer back (`subagent_response`): the call that acts on the answer is checked |
-| `plan-approval-guard` | in `aidlc-guard-tool-call` (every tool but a read) | Enforces Code Generation Plan Approval with exact target classification when arguments are present. The shell tool is recognised under all three IDE names, `execute_bash`, `execute_pwsh` (Windows), and `shell`: each is forwarded to the shared guard as `Bash` and routed to legacy recovery identically, and with no active workflow no shell call is denied. `execute_pwsh` is marked as PowerShell, so while a plan waits for approval read-only cmdlets (`Get-Content`, `Select-Object`, `ConvertFrom-Json`, ...), `2>$null`, and `aidlc.cmd` or the full path of the installed engine still run; `Out-File`, `Set-Content`, `Add-Content`, `Tee-Object`, and `>` into a file do not. Legacy argument-less payloads permit only measured `fs_write`/`str_replace` plan-question writes as far as this hook goes; `review-freeze` and `state-transition-guard` refuse such a write, so it does not run. PostToolUse stays silent because 0.12 discards that output; the invoking Code Generation `next`/final `continue` directive carries one protected choice capability. Recovery first requires the person's yes to a plain recovery question, which the agent records; another live window cannot initiate it, while a replacement window can recover after the owner PID exits or an IPC-only endpoint disappears. Takeover clears old response evidence before rotating the challenge. An interrupted pre-write window remains a recovery latch even when PostToolUse never runs; definitive `toolSuccess:false` or recognized failure prose clears it because no mutation occurred, while unknown outcomes remain latched. Adapter-owned recovery preserves the human ask while clearing only violation/window state after successful reissue. `UserPromptSubmit` can submit exact recovery/approval labels but cannot reveal or transfer them. Unknown mutators fail closed and shared files/audit retain no plaintext secret. |
-| `review-freeze` | in `aidlc-guard-tool-call` (writes and shells) | Refuses a write or shell mutation of a stage's reviewed output while a fresh terminal review receipt covers it, before the gate. Write tools reach the shared hook as Write/Edit with their target path and shell tools as Bash, with the chat's session; a delegated agent's own writes are judged the same way. An `execute_pwsh` command is read as PowerShell (backslash paths, `Set-Location`), here and in `state-transition-guard`. A call whose input cannot be read (a build older than Kiro IDE 1.1.70 or Kiro CLI 2.24.1 can send one with no arguments) is refused before the hook runs, inside or outside a workflow and with `AIDLC_DISABLE_REVIEW_FREEZE_HOOK=1`, with a line naming the supported builds. |
-| `state-transition-guard` | in `aidlc-guard-tool-call` (writes and shells) | Refuses tool-call writes to AIDLC hooks, session controls, runtime records, and the audit trail; the state tool refuses a direct `aidlc-state.ts` lifecycle verb itself, pointing to `aidlc-orchestrate.ts report`. Kiro IDE names no delegated agent on its calls, so a delegate's calls get the conductor's rules. A call whose input cannot be read is refused the same way as for `review-freeze`. |
-| `terminal-command-guard` | in `aidlc-guard-tool-call` (`execute_bash\|execute_pwsh\|shell`) | Fallback for empty-prompt IDE versions: runs the classified utility once and refuses the duplicate Windows shell call. After a terminal command has run for a chat's turn, it also refuses that chat's other shell calls in the same turn, whatever they run (for a chat the payload names), so the turn of a `/aidlc --status` does not hand out the next stage. On Windows it also refuses an `aidlc` command with a value that cmd.exe would split (see the Windows quotes row below). On every shell it refuses an AI-DLC engine command whose reply goes to a file (`>`, `>>`, or a pipe into `Out-File`, `Set-Content`, `Add-Content`, `Tee-Object` or `tee`), so the agent runs it on its own and reads the reply from the result, which Kiro returns whole. A step command (`orchestrate next` or `continue`) whose reply the agent pipes or captures away from the result (a pipe into any program, `$(...)`, `$x = ...`, a discarded stream) is not refused: the next card forgets that the chat was handed that step's rules, so the agent's next step carries them again |
-| after a write (`fs_write\|str_replace\|fs_append`) | no card: the next card does it | Logs artifact create/update, then fires applicable sensors. `aidlc-guard-tool-call` notes the file a write it lets through targets; the next card that runs anyway (the next guard, your next message, or the turn's end) records it before anything else, with the write's chat, when the file changed. A write that leaves its file as it was records nothing |
-| `aidlc-log-subagent` | `PostToolUse` (`^(?!subagent_response$)(subagent_.+\|invoke_sub_agent\|orchestrate_subagent)$`) | Records `SUBAGENT_COMPLETED` with the delegate's identity, one row per stage of an `orchestrate_subagent` pipeline. The matcher is broad so any delegate name reaches the adapter; it leaves out the auxiliary `subagent_response` shell, which the adapter also drops on every other entry point. The record that each delegate was sent (`SUBAGENT_DISPATCHED`) is written by the guard card once it lets the call through |
-| after a command (`execute_bash\|execute_pwsh\|shell`) | no card: the next card does it | The two hooks below, in this order, once per command, by the next card that runs anyway and before anything else in it. When the command made a new piece of work, the rebuild gets its name, so the chat that ran it joins it |
-| `rebuild-stage-graph` | after a command | Recompiles the runtime graph (gated on the audit tail) |
-| `sync-workflow-state` | after a command | Forward-only sync of `Current Stage` from the latest `STAGE_STARTED` in the audit (the IDE surfaces no task payload to parse); a Unit reopen after that start leaves `Current Stage` where the reopen put it |
+| `aidlc-session-start` | `SessionStart` | 新しいセッションが最初のプロンプトを受け取ったときに、ワークフロー再開のコンテキストを注入します（両方の環境。既存のセッションの再開では発火しません）。Kiro IDE 1.1.14 は新しいチャットで SessionStart フックを実行しないため、代わりに `aidlc-record-human-turn` がこの処理を行います |
+| `aidlc-record-human-turn` | `UserPromptSubmit` | メッセージごとに 1 枚のカードです: まず直前の書き込みまたはコマンドが残した処理（下の「書き込みの後」と「コマンドの後」の 2 行）を完了し、次にすべてのプロンプトで人間のターンのイベントを記録し（人間の在席ゲート）、プロンプトのテキストが得られる場合は、コマンドを入力したチャットのために、モデルより前に status、doctor、help、ナビゲーション、その他のターミナルユーティリティを実行します。最後に確認したチャット以外のチャット、またはまだ開始していないチャットからのプロンプトは、`aidlc-session-start` と同様にまずそのチャットのセッションを開始し、チャットが `AIDLC Runtime Session:` の行または再開のコンテキストを受け取れるようにします。Kiro 自身が作るプロンプト（Workflows のステップの指示、ワークフロー終了の通知）はあなたのターンとして数えられません: `HOST_TURN` として記録され、セッションを開始せず、質問にも回答しません |
+| `aidlc-continue-workflow` | `Stop` | 転送ループの監査（助言のみ。Stop トリガーは IDE 上でブロックできないため、強制はコンダクター自身の Stop プロトコルに依存します） |
+| `aidlc-guard-tool-call` | `PreToolUse`（読み取り以外のすべてのツール） | 1 枚のカードです: まず直前の書き込みまたはコマンドが残した処理（下の「書き込みの後」と「コマンドの後」の行）を完了し、次に下の 4 つのチェックを、この順序で、同じ呼び出しに対して実行します。各チェックは横に示したツールに対してのみ実行されます。1 つが拒否した後もすべてのチェックが実行され、いずれかのチェックが拒否すると呼び出しは拒否され、それぞれの理由が 1 回ずつ示されます。読み取り（`read_file`、`list_directory`、検索）はカードなしで実行されます: 承認に回答することもワークスペースを変更することもできないためです。ヘルパーエージェントが回答を返す場合（`subagent_response`）も同様です: その回答に基づいて動作する呼び出しがチェックされます |
+| `plan-approval-guard` | `aidlc-guard-tool-call` 内（読み取り以外のすべてのツール） | 引数がある場合は正確なターゲット分類によって、Code Generation のプラン承認を強制します。シェルツールは IDE の 3 つの名前 `execute_bash`、`execute_pwsh`（Windows）、`shell` のすべてで認識されます: それぞれ `Bash` として共有ガードに転送され、同じようにレガシーの復旧へ振り分けられます。アクティブなワークフローがない場合、シェル呼び出しは拒否されません。`execute_pwsh` は PowerShell として扱われるため、プランが承認待ちの間も、読み取り専用のコマンドレット（`Get-Content`、`Select-Object`、`ConvertFrom-Json` など）、`2>$null`、`aidlc.cmd` またはインストールされたエンジンのフルパスは実行できます。`Out-File`、`Set-Content`、`Add-Content`、`Tee-Object`、およびファイルへの `>` は実行できません。引数のないレガシーのペイロードでは、このフックに関する限り、計測された `fs_write`/`str_replace` によるプランの質問への書き込みだけが許可されます。`review-freeze` と `state-transition-guard` はそのような書き込みを拒否するため、実行されません。0.12 はその出力を破棄するため、PostToolUse は何も出力しません。呼び出し元の Code Generation の `next`／最後の `continue` ディレクティブが、保護された選択肢の権限を 1 つ持ちます。復旧にはまず平易な復旧の質問に対する利用者の同意が必要で、エージェントがそれを記録します。他の稼働中のウィンドウは復旧を開始できませんが、置き換えのウィンドウは、所有者の PID が終了するか IPC のみのエンドポイントが消えた後に復旧できます。引き継ぎでは、チャレンジを更新する前に古い応答の証拠を消去します。中断された書き込み前のウィンドウは、PostToolUse が実行されなくても復旧のラッチとして残ります。確定的な `toolSuccess:false` や認識された失敗の文言は、変更が起きなかったためラッチを解除しますが、結果が不明な場合はラッチされたままです。アダプターが所有する復旧は、再発行が成功した後、違反／ウィンドウの状態だけを消去し、人間への確認は保持します。`UserPromptSubmit` は正確な復旧／承認のラベルを送信できますが、それを表示したり転送したりはできません。不明な変更操作はフェイルクローズし、共有ファイルや監査に平文の秘密情報は残りません。 |
+| `review-freeze` | `aidlc-guard-tool-call` 内（書き込みとシェル） | ゲートの前に、新しいターミナルレビューのレシートが対象としている間、ステージのレビュー済み出力に対する書き込みやシェルによる変更を拒否します。書き込みツールはターゲットパスとともに Write/Edit として、シェルツールは Bash として、チャットのセッションとともに共有フックに届きます。委任先エージェント自身の書き込みも同じように判定されます。`execute_pwsh` のコマンドは、ここでも `state-transition-guard` でも PowerShell として読み取られます（バックスラッシュのパス、`Set-Location`）。入力を読み取れない呼び出し（Kiro IDE 1.1.70 または Kiro CLI 2.24.1 より古いビルドは引数なしで送ることがあります）は、ワークフローの内外を問わず、また `AIDLC_DISABLE_REVIEW_FREEZE_HOOK=1` の場合も、フックの実行前に拒否され、サポートされるビルドを示す 1 行が表示されます。 |
+| `state-transition-guard` | `aidlc-guard-tool-call` 内（書き込みとシェル） | AIDLC のフック、セッション制御、ランタイムの記録、監査証跡へのツール呼び出しによる書き込みを拒否します。状態ツール自身は、`aidlc-state.ts` のライフサイクル動詞の直接実行を拒否し、`aidlc-orchestrate.ts report` を案内します。Kiro IDE は呼び出しに委任先エージェントの名前を含めないため、委任先の呼び出しにはコンダクターのルールが適用されます。入力を読み取れない呼び出しは `review-freeze` と同じように拒否されます。 |
+| `terminal-command-guard` | `aidlc-guard-tool-call` 内（`execute_bash\|execute_pwsh\|shell`） | プロンプトが空になる IDE バージョン向けのフォールバックです: 分類されたユーティリティを 1 回実行し、重複した Windows のシェル呼び出しを拒否します。チャットのターンでターミナルコマンドが実行された後は、そのチャットの同じターン内の他のシェル呼び出しも、何を実行するかにかかわらず拒否します（ペイロードが示すチャットについて）。これにより、`/aidlc --status` のターンで次のステージが渡されることはありません。Windows では、cmd.exe が分割してしまう値を持つ `aidlc` コマンドも拒否します（下の Windows の引用符の行を参照）。どのシェルでも、応答がファイルに出力される AI-DLC エンジンコマンド（`>`、`>>`、または `Out-File`、`Set-Content`、`Add-Content`、`Tee-Object`、`tee` へのパイプ）を拒否します。そのためエージェントはそれを単独で実行し、Kiro が完全な形で返す結果から応答を読み取ります。エージェントが応答をパイプしたりキャプチャしたりして結果から外すステップコマンド（`orchestrate next` または `continue`）（任意のプログラムへのパイプ、`$(...)`、`$x = ...`、破棄されるストリーム）は拒否されません: 次のカードは、チャットがそのステップのルールを渡されたことを忘れるため、エージェントの次のステップで再びルールが渡されます |
+| 書き込みの後（`fs_write\|str_replace\|fs_append`） | カードなし: 次のカードが行う | 成果物の作成／更新をログに記録し、該当するセンサーを起動します。`aidlc-guard-tool-call` は、通過させた書き込みの対象ファイルを記録しておき、いずれにせよ実行される次のカード（次のガード、次のメッセージ、またはターンの終わり）が、ファイルが変更されていた場合に、書き込みのチャットとともに何よりも先にそれを記録します。ファイルを元のままにした書き込みは何も記録しません |
+| `aidlc-log-subagent` | `PostToolUse`（`^(?!subagent_response$)(subagent_.+\|invoke_sub_agent\|orchestrate_subagent)$`） | 委任先の識別情報とともに `SUBAGENT_COMPLETED` を記録します。`orchestrate_subagent` のパイプラインでは、ステージごとに 1 行です。どの委任先の名前もアダプターに届くようにマッチャーは広くなっていますが、補助的な `subagent_response` シェルは除外しています。アダプターはこれを他のすべての入口でも除外します。各委任先が送られたという記録（`SUBAGENT_DISPATCHED`）は、ガードのカードが呼び出しを通過させた時点で書き込まれます |
+| コマンドの後（`execute_bash\|execute_pwsh\|shell`） | カードなし: 次のカードが行う | 下の 2 つのフックを、この順序で、コマンドごとに 1 回、いずれにせよ実行される次のカードが、その中で何よりも先に実行します。コマンドが新しい作業を作成した場合は、再構築がその名前を受け取るため、それを実行したチャットがその作業に参加します |
+| `rebuild-stage-graph` | コマンドの後 | ランタイムグラフを再コンパイルします（監査の末尾に基づいて実行を判断） |
+| `sync-workflow-state` | コマンドの後 | 監査内の最新の `STAGE_STARTED` から `Current Stage` を前方向にのみ同期します（IDE は解析できるタスクのペイロードを提供しません）。その開始の後にユニットが再開された場合、`Current Stage` は再開によって設定された位置のままになります |
 
-`aidlc-session-end` has **no registration**: Kiro's `Stop` trigger fires at the
-end of every assistant turn, not at conversation close, on both surfaces, so
-registering it would append a spurious `SESSION_ENDED` between prompts in the
-same session. No `SESSION_ENDED` is recorded until Kiro exposes a genuine
-session-end event.
+`aidlc-session-end` には**登録がありません**: Kiro の `Stop` トリガーは、両方の環境で、
+会話の終了時ではなくアシスタントの各ターンの終わりに発火するため、
+登録すると同じセッションのプロンプトの間に誤った `SESSION_ENDED` が追加されてしまいます。
+Kiro が本当のセッション終了イベントを提供するまで、`SESSION_ENDED` は記録されません。
 
-Kiro shows a "Run Command Hook" card each time one of these registrations runs: one before a file change, a command or a hand-off to another agent, none after it, none for a read or for a helper handing its answer back, one for each message you send, one at the end of each turn (which also finishes the turn's last write or command) and one when a helper finishes. A project whose hook files are older still has an after-write card, an after-command card and a second card for each message until `config` refreshes it, which removes `aidlc-write-audit-log.json`, `aidlc-after-shell.json` and `aidlc-terminal-command.json`.
+これらの登録のいずれかが実行されるたびに、Kiro は "Run Command Hook" カードを表示します: ファイルの変更、コマンド、または別のエージェントへの引き渡しの前に 1 枚、その後には表示されず、読み取りやヘルパーが回答を返す場合にも表示されず、送信するメッセージごとに 1 枚、各ターンの終わりに 1 枚（ターンの最後の書き込みやコマンドの処理も完了します）、ヘルパーが終了したときに 1 枚です。フックファイルが古いプロジェクトでは、`config` で更新されるまで、書き込み後のカード、コマンド後のカード、メッセージごとの 2 枚目のカードが引き続き表示されます。更新により `aidlc-write-audit-log.json`、`aidlc-after-shell.json`、`aidlc-terminal-command.json` が削除されます。
 
 ### Debugging hooks
 
-If a hook isn't behaving as expected, turn on debug logging and each hook
-appends its decision path (which gate it took, the resolved paths, why it
-exited) to `<record>/.aidlc-engine/hooks-health/hook-debug.log`. It is **off by
-default** — no log is written and there is no overhead on a normal run. Two
-ways to enable it, either works:
+フックが想定どおりに動作しない場合は、デバッグログをオンにしてください。各フックは
+判断の経路（どのゲートを通ったか、解決されたパス、終了した理由）を
+`<record>/.aidlc-engine/hooks-health/hook-debug.log` に追記します。これは**デフォルトでは
+オフ**であり、通常の実行ではログは書き込まれず、オーバーヘッドもありません。有効にする方法は
+2 つあり、どちらでも動作します:
 
-- **Filesystem marker (easiest on Kiro IDE):** `touch aidlc/.aidlc-hook-debug`
-  (in PowerShell, `New-Item -ItemType File aidlc/.aidlc-hook-debug`)
-  in your project. It takes effect on the very next hook fire — no IDE restart —
-  and `rm aidlc/.aidlc-hook-debug` turns it back off.
-- **Environment variable:** `export AIDLC_HOOK_DEBUG=1`. Hooks see the
-  environment the IDE started with, so quit the IDE, then open it from a
-  terminal where the variable is exported.
-  On Windows, set it as a user variable in PowerShell instead,
-  `[Environment]::SetEnvironmentVariable("AIDLC_HOOK_DEBUG", "1", "User")`,
-  then quit and reopen the IDE (run it again with `$null` in place of `"1"` to
-  turn it off).
+- **ファイルシステムのマーカー（Kiro IDE で最も簡単）:** プロジェクトで `touch aidlc/.aidlc-hook-debug`
+  （PowerShell では `New-Item -ItemType File aidlc/.aidlc-hook-debug`）
+  を実行します。IDE を再起動しなくても次のフックの発火から有効になり、
+  `rm aidlc/.aidlc-hook-debug` でオフに戻ります。
+- **環境変数:** `export AIDLC_HOOK_DEBUG=1`。フックは IDE の起動時の
+  環境を参照するため、IDE を終了してから、変数をエクスポートした
+  ターミナルから開いてください。
+  Windows では、代わりに PowerShell でユーザー変数として設定します。
+  `[Environment]::SetEnvironmentVariable("AIDLC_HOOK_DEBUG", "1", "User")`
+  を実行してから IDE を終了して開き直してください（オフにするには、`"1"` の代わりに `$null` を指定して
+  もう一度実行します）。
 
 ## What's different on Kiro
 
-| Area | Claude Code | Kiro IDE and Kiro CLI |
+| 領域 | Claude Code | Kiro IDE と Kiro CLI |
 |------|-------------|----------|
-| Hook registration | `settings.json` `hooks` block | `.kiro/hooks/aidlc-*.json` v2 hook files (Kiro IDE 1.x, Kiro CLI v3 engine) |
-| Gates & questions | `AskUserQuestion` widget | Numbered prose options (reply with a number); the questions FILE with `[Answer]:` tags stays the source of truth |
-| Statusline | Current stage + model + context % | Not available: use `/aidlc --status` and the progress line at each gate; for a chat that is filling up, see [When the chat fills up](#when-the-chat-fills-up) |
-| Dispatched stages (2.1 pipeline, 2.2 subagent, 2.4 mob, 3.5 subagent) | `Task` tool | `invoke_sub_agent` (Kiro IDE) or `orchestrate_subagent` (Kiro CLI) → all 14 Markdown personas, each running under the `tools:` and deny rules in its own frontmatter and the conductor's command allow |
-| Construction swarm | Parallel `Task` floor, optional ultracode Workflow | Subagent fan-out only; `AIDLC_USE_SWARM=1` is announced as a no-op |
-| Session audit events | `SESSION_STARTED/RESUMED/ENDED`, `SESSION_COMPACTED` | `SESSION_STARTED` when a new session takes its first prompt, and on Kiro IDE `SESSION_RESUMED` when a prompt returns to an earlier chat (no genuine session-end trigger, so no `SESSION_ENDED`; no pre-compaction event) |
-| MCP servers | Ships 5 (`.mcp.json`: `context7` + four AWS servers) | None shipped; AI-DLC's own chat, its 14 delegated personas and the agents your plugins add get every server in your workspace and user `.kiro/settings/mcp.json`, and each call asks you first (on Kiro CLI from a persona's second step). |
-| Quotes in recorded text on Windows | Recorded as typed | Kiro IDE runs the agent's commands in Windows PowerShell 5.1, which drops empty arguments and removes a double quote inside a value unless it is written as `\"`. The agent writes quotes that way, so answers and feedback are recorded with their quotes. A value that also holds `&`, `<`, `>`, `^`, or a pipe sign is written with single inner quotes instead, because the `aidlc` command runs through cmd.exe, which would act on those characters; the hook refuses a command where one would reach cmd.exe outside its quotes. If a question or answer still arrives split in two, AI-DLC refuses to record it and says how to pass it, so the audit trail never keeps only part of it |
-| Turning a guard, summary confirmation, or plan approval off mid-workflow | Ask in your own words and the agent runs the setter, or type the switch in chat, for example `/aidlc config set summary-confirmation off` | The same, except on Kiro IDE builds that give hooks an empty message (such as 1.0.242), which refuse the setter too. There, for summary confirmation or plan approval, run the terminal command the refusal names to turn it off now for all work, including the work running now (on a native install, `aidlc config flags --bypass AIDLC_DISABLE_SUMMARY_CONFIRMATION --local --yes` or `--bypass AIDLC_DISABLE_PLAN_APPROVAL_GUARD`; `--clear-bypass` turns it back on); for another guard, update Kiro IDE and type the switch |
+| フックの登録 | `settings.json` の `hooks` ブロック | `.kiro/hooks/aidlc-*.json` の v2 フックファイル（Kiro IDE 1.x、Kiro CLI v3 エンジン） |
+| ゲートと質問 | `AskUserQuestion` ウィジェット | 番号付きの散文の選択肢（番号で返答）。`[Answer]:` タグを持つ質問ファイルが引き続き信頼できる情報源です |
+| ステータスライン | 現在のステージ + モデル + コンテキスト % | 利用できません: `/aidlc --status` と各ゲートの進捗表示を使ってください。チャットが埋まってきた場合は [チャットがいっぱいになったとき](#when-the-chat-fills-up) を参照してください |
+| ディスパッチされるステージ（2.1 pipeline、2.2 subagent、2.4 mob、3.5 subagent） | `Task` ツール | `invoke_sub_agent`（Kiro IDE）または `orchestrate_subagent`（Kiro CLI）→ 14 個の Markdown ペルソナすべて。それぞれ自身の frontmatter にある `tools:` と拒否ルール、およびコンダクターのコマンド許可のもとで実行されます |
+| Construction のスウォーム | 並列の `Task` を基本とし、任意で ultracode Workflow | サブエージェントへの展開のみ。`AIDLC_USE_SWARM=1` は何もしないことが通知されます |
+| セッションの監査イベント | `SESSION_STARTED/RESUMED/ENDED`、`SESSION_COMPACTED` | 新しいセッションが最初のプロンプトを受け取ったときに `SESSION_STARTED`、Kiro IDE ではプロンプトが以前のチャットに戻ったときに `SESSION_RESUMED`（本当のセッション終了のトリガーがないため `SESSION_ENDED` はなく、コンパクション前のイベントもありません） |
+| MCP サーバー | 5 つを提供（`.mcp.json`: `context7` + AWS の 4 サーバー） | 提供なし。AI-DLC 自身のチャット、14 個の委任用ペルソナ、プラグインが追加するエージェントは、ワークスペースとユーザーの `.kiro/settings/mcp.json` にあるすべてのサーバーを使え、各呼び出しで先に確認を求めます（Kiro CLI ではペルソナの 2 番目のステップから）。 |
+| Windows での記録テキスト内の引用符 | 入力どおりに記録 | Kiro IDE はエージェントのコマンドを Windows PowerShell 5.1 で実行します。これは空の引数を落とし、値の中の二重引用符は `\"` と書かない限り削除します。エージェントは引用符をそのように書くため、回答やフィードバックは引用符を含めて記録されます。`&`、`<`、`>`、`^`、パイプ記号も含む値は、代わりに内側を単一引用符で書きます。`aidlc` コマンドは cmd.exe を通じて実行され、cmd.exe がこれらの文字を解釈してしまうためです。フックは、これらの文字が引用符の外で cmd.exe に届くコマンドを拒否します。それでも質問や回答が 2 つに分割されて届いた場合、AI-DLC は記録を拒否して渡し方を伝えるため、監査証跡にその一部だけが残ることはありません |
+| ワークフローの途中でガード、要約確認、プラン承認をオフにする | 自分の言葉で依頼するとエージェントが設定コマンドを実行します。または `/aidlc config set summary-confirmation off` のようにチャットでスイッチを入力します | 同じです。ただし、フックに空のメッセージを渡す Kiro IDE のビルド（1.0.242 など）では設定コマンドも拒否されます。その場合、要約確認やプラン承認については、拒否メッセージが示すターミナルコマンドを実行すると、実行中の作業を含むすべての作業で直ちにオフになります（ネイティブインストールでは `aidlc config flags --bypass AIDLC_DISABLE_SUMMARY_CONFIRMATION --local --yes` または `--bypass AIDLC_DISABLE_PLAN_APPROVAL_GUARD`。`--clear-bypass` でオンに戻ります）。その他のガードについては、Kiro IDE をアップデートしてからスイッチを入力してください |
 
-Everything else — state machine, audit trail, artifacts under the per-intent
-record dir (`aidlc/spaces/<space>/intents/<YYMMDD>-<label>/`), the learnings
-ritual, sensors, scopes, depth/test-strategy — behaves identically, because it
-IS identical: native installs dispatch through `aidlc`, while source copies run
-the corresponding tools from `.kiro/tools/`.
+それ以外のすべて（ステートマシン、監査証跡、インテントごとの記録ディレクトリ
+（`aidlc/spaces/<space>/intents/<YYMMDD>-<label>/`）配下の成果物、学びの
+手順、センサー、スコープ、深度／テスト戦略）は同じように動作します。実際に
+同一だからです: ネイティブインストールは `aidlc` を通じてディスパッチし、ソースのコピーは
+`.kiro/tools/` の対応するツールを実行します。
 
-A project's `aidlc/` workspace is harness-neutral. Moving a project between
-harnesses (or running both side by side) is supported-but-untested; `/aidlc
---doctor` will warn if it detects a conflicting harness setup with an active
-workflow.
+プロジェクトの `aidlc/` ワークスペースはハーネスに依存しません。プロジェクトをハーネス間で移動すること
+（または両方を並行して実行すること）はサポートされていますが、テストされていません。`/aidlc
+--doctor` は、アクティブなワークフローがある状態で競合するハーネスのセットアップを検出すると警告します。
 
 ### A Unit's reviewer reads only that Unit
 
-During a Unit's review, the reviewer is meant to read only that Unit's files
-and the shared contracts it is given. On Claude Code and the other harnesses a
-hook holds it to that; on Kiro no hook can tell the reviewer's reads apart, so
-Kiro holds the reviewer to it instead. For each Unit review, AI-DLC writes a
-copy of the reviewer, `.kiro/agents/aidlc-scoped-review-<id>.md`, whose
-permissions deny reads in every other Unit's `construction/` folder (a Unit of
-the same name in another piece of work included), and dispatches that copy.
-Kiro refuses such a read and leaves those files out of search results; a shell
-read such as `cat` is not covered and asks you first. The
-copy opens no other Unit's file, not even one the Unit's design names as an
-integration point: the reviewer notes that point as a finding instead. The
-copy shows in Kiro's agent list and `/` menu while the review runs; AI-DLC
-dispatches it, so there is no need to pick it. It is deleted when its verdict
-is recorded. A copy whose review is over without a verdict (you approved the
-Unit or the stage without it, outside an isolated `--single` run) goes later:
-while that piece of work is the folder's current one, AI-DLC deletes it when a
-chat in it starts or a review in it is asked for or recorded, once it can read
-the work's record. A copy of a review you sent back can stay until you approve
-that Unit or its stage.
-A copy a closed chat left, with nothing done since, stays: AI-DLC cannot tell
-it from a review still running in another chat, and you can delete it.
-AI-DLC's `.gitignore` block keeps a copy out of commits. When AI-DLC cannot write a copy it
-should write, or Kiro has no agent by the copy's name (an older Kiro build may
-not load it), AI-DLC dispatches the reviewer itself, as without the copy,
-and says in one line that this review runs without the check. Doctor then
-counts a hook drop: for a copy AI-DLC could not write, under `reviewer-scope`,
-naming the cause; for one Kiro did not load, under `kiro-adapter`, and that
-file (`<record>/.aidlc-engine/hooks-health/kiro-adapter.drops`) names the
-copy. Measured on Kiro CLI 2.31.0 and Kiro IDE 1.3.0, and in a whole workflow
-on Kiro CLI 2.31.1. There is no copy for Units built in parallel, or while
-the reviewer read-scope check is off: under Guard Policy `off`, the default of
-every plan but enterprise, with `guard.reviewer-scope off`, or with
-`AIDLC_DISABLE_REVIEWER_SCOPE_HOOK=1`; the reviewer is then held to its Unit by
-its instructions only. To have the copy on such a plan, ask in chat to turn the
-reviewer read-scope check on for the work (or type
-`/aidlc config set guard.reviewer-scope on`). A copy keeps the permissions it
-was written with, so turning the check off applies from the next Unit review.
+ユニットのレビュー中、レビュアーはそのユニットのファイルと、
+渡された共有の契約だけを読むことになっています。Claude Code や他のハーネスでは
+フックがそれを守らせますが、Kiro ではレビュアーの読み取りをフックで区別できないため、
+代わりに Kiro がレビュアーにそれを守らせます。ユニットのレビューごとに、AI-DLC は
+レビュアーのコピー `.kiro/agents/aidlc-scoped-review-<id>.md` を書き出します。その
+権限は、他のすべてのユニットの `construction/` フォルダー（別の作業にある
+同名のユニットを含む）での読み取りを拒否し、AI-DLC はそのコピーをディスパッチします。
+Kiro はそのような読み取りを拒否し、それらのファイルを検索結果から除外します。`cat` のような
+シェルによる読み取りは対象外で、先に確認を求めます。この
+コピーは、ユニットの設計が統合ポイントとして名前を挙げているファイルであっても、他のユニットのファイルを開きません:
+レビュアーは代わりにその点を指摘事項として記録します。この
+コピーはレビューの実行中、Kiro のエージェント一覧と `/` メニューに表示されます。AI-DLC が
+ディスパッチするので、選ぶ必要はありません。判定が記録されると削除されます。
+判定がないままレビューが終わったコピー（隔離された `--single` 実行以外で、判定なしにユニットや
+ステージを承認した場合）は後で削除されます:
+その作業がフォルダーの現在の作業である間、AI-DLC はその作業の記録を読める状態になった時点で、
+そこでチャットが開始されたとき、またはそこでレビューが求められたか記録されたときに削除します。
+差し戻したレビューのコピーは、そのユニットまたはステージを承認するまで残ることがあります。
+閉じたチャットが残したコピーで、その後何も行われていないものは残ります: AI-DLC は
+それを別のチャットでまだ実行中のレビューと区別できないため、あなたが削除してかまいません。
+AI-DLC の `.gitignore` ブロックにより、コピーはコミットに含まれません。書き出すべきコピーを AI-DLC が
+書き出せない場合や、Kiro にコピーの名前のエージェントがない場合（古い Kiro のビルドでは
+読み込まれないことがあります）、AI-DLC はコピーがない場合と同様にレビュアー自体をディスパッチし、
+このレビューはチェックなしで実行されることを 1 行で伝えます。その場合 doctor は
+フックの取りこぼしとして数えます: AI-DLC が書き出せなかったコピーは `reviewer-scope` の下で
+原因を示し、Kiro が読み込まなかったコピーは `kiro-adapter` の下で数え、そのファイル
+（`<record>/.aidlc-engine/hooks-health/kiro-adapter.drops`）がコピーの名前を示します。
+Kiro CLI 2.31.0 と Kiro IDE 1.3.0 で計測し、ワークフロー全体については
+Kiro CLI 2.31.1 で計測しました。並列にビルドされるユニットや、
+レビュアーの読み取り範囲チェックがオフの場合はコピーはありません: enterprise 以外の
+すべてのプランのデフォルトである Guard Policy `off` の場合、`guard.reviewer-scope off` の場合、
+`AIDLC_DISABLE_REVIEWER_SCOPE_HOOK=1` の場合です。その場合、レビュアーは
+指示によってのみそのユニットに限定されます。そのようなプランでコピーを使うには、チャットで
+その作業についてレビュアーの読み取り範囲チェックをオンにするよう依頼してください（または
+`/aidlc config set guard.reviewer-scope on` と入力します）。コピーは書き出された時点の
+権限を保持するため、チェックをオフにした場合は次のユニットのレビューから適用されます。
 
 ### One agent on its own model and effort
 
-On Kiro every AI-DLC agent runs on your chat's model and effort (the model you
-pick in Kiro IDE, or Kiro CLI's session model) unless a model or effort is set
-for that agent. Kiro can run a delegated agent on its own model and effort, for
-example a reviewer on another model family:
+Kiro では、エージェントにモデルや effort が設定されていない限り、すべての AI-DLC エージェントは
+チャットのモデルと effort（Kiro IDE で選んだモデル、または Kiro CLI のセッションモデル）で実行されます。
+Kiro は委任先エージェントを独自のモデルと effort で実行できます。
+たとえば、レビュアーを別のモデルファミリーで実行できます:
 
 ```bash
 aidlc config models --agent architecture-reviewer --model gpt-5.6-terra --effort high --project --yes
 ```
 
-AI-DLC records the model and effort in `aidlc.settings.json` and writes
-`model:` (as a quoted string) and `effortLevel:` into that agent's
-`.kiro/agents/aidlc-architecture-reviewer-agent.md`; a Unit's reviewer copy
-keeps them. Kiro reads them when it next dispatches the agent, in a chat that
-is already open too. The model must be one your Kiro offers
-(`kiro-cli chat --list-models`, or Kiro IDE's model picker): one it does not
-offer can fail that agent's dispatch. An effort the model does not take runs
-at the model's own default, and an agent given a model but no effort runs at
-that model's default effort, not your chat's. `--model default` and
-`--effort default` take them out again. A preset or a group effort
-(`--preset`, `--reviewing-effort`) still changes nothing on Kiro, setup records
-no preset there, and the conductor keeps your chat's model.
+AI-DLC はモデルと effort を `aidlc.settings.json` に記録し、そのエージェントの
+`.kiro/agents/aidlc-architecture-reviewer-agent.md` に
+`model:`（引用符付きの文字列として）と `effortLevel:` を書き込みます。ユニットのレビュアーのコピーも
+それらを保持します。Kiro は次にそのエージェントをディスパッチするときにそれらを読み込みます。すでに開いている
+チャットでも同様です。モデルは、使用している Kiro が提供しているものである必要があります
+（`kiro-cli chat --list-models`、または Kiro IDE のモデルピッカー）: 提供されていないモデルを指定すると、
+そのエージェントのディスパッチが失敗することがあります。モデルが対応していない effort は
+モデル自身のデフォルトで実行され、モデルを指定して effort を指定していないエージェントは、
+チャットの effort ではなくそのモデルのデフォルトの effort で実行されます。`--model default` と
+`--effort default` で設定を取り除けます。プリセットやグループの effort
+（`--preset`、`--reviewing-effort`）は Kiro では引き続き何も変更せず、セットアップは
+そこにプリセットを記録せず、コンダクターはチャットのモデルを使い続けます。
 
-AI-DLC owns the model and effort lines (`model:`, `effortLevel:`, and the
-`effort:`, `variant:` and `tier:` keys other tools use) of the agent files it
-ships, as it does on Claude Code: `aidlc config` writes those of the agents
-that have a setting, so change them through `aidlc config models` rather than
-by hand; `aidlc config models --check` reports a `model:` or `effortLevel:`
-line that does not match the setting, one you added by hand included. An agent
-file you added yourself is not touched.
+AI-DLC は、Claude Code の場合と同様に、提供するエージェントファイルのモデルと effort の行（`model:`、`effortLevel:`、および
+他のツールが使う `effort:`、`variant:`、`tier:` のキー）を管理します:
+`aidlc config` は設定を持つエージェントのそれらの行を書き込むため、手で変更するのではなく
+`aidlc config models` で変更してください。`aidlc config models --check` は、手で追加したものも含め、
+設定と一致しない `model:` または `effortLevel:`
+の行を報告します。あなたが自分で追加したエージェント
+ファイルには触れません。
 
-An agent's effort is shared by every tool, while its model is recorded per
-tool, so an effort recorded for one agent for another tool applies on Kiro too.
-An `aidlc config` run that writes a model or effort value into a Kiro agent
-file that differs from what the file had, other than a value that run changes
-itself, says so in one line and names
-`aidlc config models --show --harness kiro`, which shows where each value
-is set; `--effort default` (or `--model default`) for that agent, with
-`--project`, `--local` or `--global` (machine settings) for the file it is in,
-and `--harness kiro` when the project has another harness, takes it out
-(an effort taken out this way is gone for every tool).
-`effortLevel` is not in Kiro's documentation. Measured on Kiro CLI 2.31.1 on
-its v3 engine and Kiro IDE 1.3.0.
+エージェントの effort はすべてのツールで共有されますが、モデルはツールごとに記録されます。
+そのため、別のツール向けにあるエージェントに記録された effort は Kiro にも適用されます。
+`aidlc config` の実行で、Kiro のエージェントファイルにファイルの元の値と異なるモデルや effort の値が書き込まれる場合
+（その実行自身が変更する値を除く）は、そのことを 1 行で伝え、
+各値がどこで設定されているかを示す `aidlc config models --show --harness kiro`
+を案内します。そのエージェントに対して `--effort default`（または `--model default`）を、
+値があるファイルに応じて `--project`、`--local`、`--global`（マシンの設定）とともに、
+プロジェクトに他のハーネスがある場合は `--harness kiro` も付けて指定すると、その値を取り除けます
+（この方法で取り除いた effort は、すべてのツールから取り除かれます）。
+`effortLevel` は Kiro のドキュメントには記載されていません。Kiro CLI 2.31.1 の
+v3 エンジンと Kiro IDE 1.3.0 で計測しました。
 
 ### Kiro's Workflows feature stops AI-DLC's reviews and helpers
 
-Kiro IDE's **Workflows** feature (Settings > **Kiro Agent > Workflows:
-Enabled**, or the **Enable Workflows** command) runs work as background
-workflows. While it is on, a chat loses the sub-agent tool AI-DLC uses for its
-reviews and helpers: on the `aidlc` agent they never run and the main chat does
-their work itself; on the Default agent they run in the background, the chat's
-turn ends before they finish, every command they run asks in an **Approval
-needed in agent-aidlc-...** panel, and Kiro can hand an `/aidlc` request to its
-own workflow instead of AI-DLC. Workflows is off unless you turned it on.
+Kiro IDE の **Workflows** 機能（Settings > **Kiro Agent > Workflows:
+Enabled**、または **Enable Workflows** コマンド）は、作業をバックグラウンドの
+ワークフローとして実行します。これがオンの間、チャットは AI-DLC がレビューとヘルパーに使う
+サブエージェントツールを失います: `aidlc` エージェントではそれらは実行されず、メインチャットが
+その作業を自ら行います。Default エージェントではバックグラウンドで実行されますが、それらが終わる前に
+チャットのターンが終了し、それらが実行するすべてのコマンドが **Approval
+needed in agent-aidlc-...** パネルで確認を求め、Kiro が `/aidlc` の依頼を AI-DLC ではなく
+自身のワークフローに渡してしまうことがあります。Workflows は、自分でオンにしない限りオフです。
 
-The switch is a Kiro setting for all your projects: Kiro reads it only from
-your user settings, so a workspace `.vscode/settings.json` value does nothing.
-When it is on and you have not answered before on this computer, AI-DLC asks
-you once whether to turn it off: during `aidlc config`, or in your first Kiro
-IDE chat. `aidlc config --yes` takes the recommended answer and turns it off.
-Say yes and AI-DLC changes only that one setting; then run **Developer: Reload
-Window** from the Command Palette (Ctrl+Shift+P) so open chats pick it up. Say
-no and it stays on, and AI-DLC does not ask again.
+このスイッチはすべてのプロジェクトに適用される Kiro の設定です: Kiro はこれを
+ユーザー設定からのみ読み込むため、ワークスペースの `.vscode/settings.json` の値は効果がありません。
+これがオンで、このコンピューターでまだ回答していない場合、AI-DLC は
+オフにするかどうかを 1 回だけ尋ねます: `aidlc config` の実行中か、最初の Kiro
+IDE のチャットでです。`aidlc config --yes` は推奨の回答を採用してオフにします。
+はいと答えると、AI-DLC はその 1 つの設定だけを変更します。その後、開いているチャットに反映されるよう、
+コマンドパレット（Ctrl+Shift+P）から **Developer: Reload
+Window** を実行してください。いいえと答えるとオンのままになり、AI-DLC は再度尋ねません。
 
-To change it later, ask the agent to turn Kiro Workflows off or back on, or run:
+後で変更するには、エージェントに Kiro の Workflows をオフまたはオンにするよう依頼するか、次を実行します:
 
 ```bash
 aidlc config trust --kiro-workflows off --yes   # or: on
 ```
 
-Kiro's own **Disable Workflows** and **Enable Workflows** commands do the same.
-`/aidlc --doctor` shows a warning while Workflows is on, and while Kiro's
-settings file has an error AI-DLC cannot read past (Kiro may still read
-Workflows as on from it; the next chat tells you once, and the fix is the
-error in that file).
+Kiro 自身の **Disable Workflows** と **Enable Workflows** コマンドでも同じことができます。
+`/aidlc --doctor` は、Workflows がオンの間、および Kiro の
+設定ファイルに AI-DLC が読み飛ばせないエラーがある間、警告を表示します（Kiro はそのファイルから
+Workflows をオンとして読み取る可能性があります。次のチャットで 1 回それが伝えられ、修正すべきは
+そのファイルのエラーです）。
 
-Kiro CLI has a Workflows switch of its own (`/settings` > Features >
-**Workflows**, `chat.enableWorkflows` in your Kiro CLI settings,
-`~/.kiro/settings/cli.json`). While it is on, Kiro CLI takes both sub-agent
-tools away from the `aidlc` agent, so AI-DLC's reviews and helpers do not run
-in your Kiro CLI chats; its "Workflows: sub-agent tool" setting does not bring
-them back (measured on Kiro CLI 2.31.1 and 2.32.0). Kiro CLI's chat reads the
-switch only from your own Kiro CLI settings, so a project's
-`.kiro/settings/cli.json` value does not turn it off. AI-DLC asks about it the same way, with an answer of its
-own: during `aidlc config`, or once in your first Kiro CLI chat; `aidlc config
---yes` takes the recommended answer and turns it off. AI-DLC changes it through
-Kiro CLI's own `kiro-cli settings` command; quit Kiro CLI and start `kiro-cli
---v3` again afterwards. To change it later, ask the agent, or run:
+Kiro CLI には独自の Workflows スイッチがあります（`/settings` > Features >
+**Workflows**、Kiro CLI 設定 `~/.kiro/settings/cli.json` の
+`chat.enableWorkflows`）。これがオンの間、Kiro CLI は `aidlc` エージェントから両方のサブエージェント
+ツールを取り除くため、Kiro CLI のチャットでは AI-DLC のレビューとヘルパーが実行されません。
+"Workflows: sub-agent tool" 設定でもそれらは戻りません（Kiro CLI 2.31.1 と 2.32.0 で計測）。Kiro CLI のチャットは
+このスイッチを自身の Kiro CLI 設定からのみ読み込むため、プロジェクトの
+`.kiro/settings/cli.json` の値ではオフになりません。AI-DLC は同じ方法で、独自の回答として
+これについて尋ねます: `aidlc config` の実行中か、最初の Kiro CLI のチャットで 1 回です。`aidlc config
+--yes` は推奨の回答を採用してオフにします。AI-DLC は
+Kiro CLI 自身の `kiro-cli settings` コマンドを通じてこれを変更します。その後 Kiro CLI を終了し、`kiro-cli
+--v3` を再起動してください。後で変更するには、エージェントに依頼するか、次を実行します:
 
 ```bash
 aidlc config trust --kiro-cli-workflows off --yes   # or: on
 ```
 
-`/aidlc --doctor` shows a warning while it is on.
+`/aidlc --doctor` は、これがオンの間、警告を表示します。
 
 ### Command Prompt as Kiro's terminal on Windows
 
-Kiro IDE runs its agent's commands in your default terminal profile. When that
-is **Command Prompt**, Kiro hands AI-DLC a command's reply only when the
-command finishes within a second (Command Prompt has no shell integration, so
-Kiro reads the result one second after sending the command and shows exit code
--1 for every run). Most AI-DLC steps take longer. So in Command Prompt every
-AI-DLC command prints one line first, `AI-DLC reply: aidlc/.aidlc-sessions/replies/<id>.txt`,
-and writes its reply to that file as well as to the terminal; when Kiro cuts
-the result off at that line or later in the reply, the agent goes on from the
-file instead of running the command again (the newest twenty replies are kept,
-in a folder git ignores). When a long command has not finished, the agent says
-so, and that it may be waiting for your answer in Kiro's terminal panel; when
-its reply still has not come on the next turn, the agent says so and checks
-what the command was meant to change. A
-value the agent wrote in single quotes, the PowerShell way, arrives from
-Command Prompt as several words with the quotes still on them; AI-DLC joins
-them back into the one value. Steps still take extra turns, so Kiro itself
-recommends PowerShell.
+Kiro IDE は、エージェントのコマンドをデフォルトのターミナルプロファイルで実行します。それが
+**Command Prompt** の場合、Kiro は、コマンドが 1 秒以内に終了したときにだけ
+その応答を AI-DLC に渡します（Command Prompt にはシェル統合がないため、
+Kiro はコマンドを送信してから 1 秒後に結果を読み取り、すべての実行で終了コード
+-1 を表示します）。ほとんどの AI-DLC のステップはそれより時間がかかります。そのため Command Prompt では、すべての
+AI-DLC コマンドがまず `AI-DLC reply: aidlc/.aidlc-sessions/replies/<id>.txt` という 1 行を出力し、
+応答をターミナルだけでなくそのファイルにも書き込みます。Kiro が
+その行または応答の途中で結果を切り捨てた場合、エージェントはコマンドを再実行するのではなく、
+そのファイルから続けます（最新の 20 件の応答が、git が無視するフォルダーに保存されます）。
+長いコマンドが終了していない場合、エージェントはそのことと、
+Kiro のターミナルパネルであなたの回答を待っている可能性があることを伝えます。次のターンになっても
+応答が届かない場合、エージェントはそのことを伝え、そのコマンドが何を変更するはずだったかを確認します。
+エージェントが PowerShell の流儀で単一引用符で囲んだ
+値は、Command Prompt からは引用符が付いたままの複数の単語として届きます。AI-DLC は
+それらを 1 つの値に結合し直します。それでもステップに余分なターンがかかるため、Kiro 自身も
+PowerShell を推奨しています。
 
-When Kiro's terminal is Command Prompt and you have not answered before on this
-computer, AI-DLC asks you once whether to set it to PowerShell: during
-`aidlc config`, or in your first Kiro IDE chat. `aidlc config --yes` takes the
-recommended answer and sets it. Say yes and AI-DLC changes only that one Kiro
-setting (`terminal.integrated.defaultProfile.windows`, for all your projects);
-then restart Kiro so its chats use it. Say no and it stays as it is, and AI-DLC
-does not ask again.
+Kiro のターミナルが Command Prompt で、このコンピューターでまだ回答していない場合、
+AI-DLC は PowerShell に設定するかどうかを 1 回だけ尋ねます: 
+`aidlc config` の実行中か、最初の Kiro IDE のチャットでです。`aidlc config --yes` は
+推奨の回答を採用して設定します。はいと答えると、AI-DLC はその 1 つの Kiro
+設定（`terminal.integrated.defaultProfile.windows`、すべてのプロジェクトが対象）だけを変更します。
+その後、チャットに反映されるよう Kiro を再起動してください。いいえと答えるとそのままになり、AI-DLC は
+再度尋ねません。
 
-To set it later, ask the agent, or run:
+後で設定するには、エージェントに依頼するか、次を実行します:
 
 ```bash
 aidlc config trust --kiro-terminal powershell --yes
 ```
 
-Kiro's own **Terminal: Select Default Profile** command does the same.
-`/aidlc --doctor` shows a warning while Kiro's terminal is Command Prompt.
+Kiro 自身の **Terminal: Select Default Profile** コマンドでも同じことができます。
+`/aidlc --doctor` は、Kiro のターミナルが Command Prompt の間、警告を表示します。
 
-While your terminal is Command Prompt, every Kiro IDE chat is told how that
-terminal behaves and how to set PowerShell when you ask for it, so any chat can
-carry out "set Kiro's terminal to PowerShell". If you kept Command Prompt, the
-first time a step's reply is lost the agent tells you once what happened and
-that PowerShell avoids it; it does not ask again.
+ターミナルが Command Prompt の間、Kiro IDE のすべてのチャットには、そのターミナルの
+動作と、依頼されたときに PowerShell を設定する方法が伝えられるため、どのチャットでも
+"set Kiro's terminal to PowerShell" を実行できます。Command Prompt のままにした場合、
+ステップの応答が初めて失われたときに、エージェントは何が起きたかと
+PowerShell ならそれを避けられることを 1 回だけ伝えます。再度尋ねることはありません。
 
 ### PowerShell without Kiro's shell integration on Windows
 
-Kiro's PowerShell terminal tells Kiro when a command finishes through Kiro's
-shell integration, a script Kiro loads as the terminal starts. When that script
-does not load, the terminal behaves like Command Prompt: every command shows
-exit code -1, even when it worked, and Kiro hands over only what a command
-printed within about a second. PowerShell's execution policy is one cause:
-`Restricted` or `AllSigned` stops Kiro's unsigned script without a message.
-Kiro's setting `terminal.integrated.shellIntegration.enabled` turned off has
-the same effect.
+Kiro の PowerShell ターミナルは、Kiro がターミナルの起動時に読み込むスクリプトである
+Kiro のシェル統合を通じて、コマンドの終了を Kiro に伝えます。そのスクリプトが
+読み込まれないと、ターミナルは Command Prompt と同じように動作します: すべてのコマンドが、成功した場合でも
+終了コード -1 を表示し、Kiro はコマンドが約 1 秒以内に出力した内容だけを渡します。
+PowerShell の実行ポリシーが原因の 1 つです:
+`Restricted` または `AllSigned` は、署名のない Kiro のスクリプトをメッセージなしで停止します。
+Kiro の設定 `terminal.integrated.shellIntegration.enabled` をオフにした場合も
+同じ影響があります。
 
-AI-DLC notices this from its own commands. In such a terminal, in a project
-that has its `aidlc/` folder, every AI-DLC command the agent runs prints the
-`AI-DLC reply:` line first and keeps its reply in that file, as in Command
-Prompt (output sent to a pipe gets no such line), and when the result stops at
-that line or the reply after it is cut off, the agent goes on from that file
-instead of running the command again. The first time in a chat the agent tells
-you in one line that the terminal runs without its shell integration, then goes
-on with your request. `aidlc doctor` run in Kiro's terminal shows a
-`Kiro terminal` warning with what to change; `/aidlc --doctor` typed in the
-chat runs outside the terminal, so it cannot see this.
+AI-DLC は自身のコマンドからこれを検知します。そのようなターミナルで、
+`aidlc/` フォルダーがあるプロジェクトでは、エージェントが実行するすべての AI-DLC コマンドが、Command
+Prompt の場合と同様に、まず `AI-DLC reply:` の行を出力して応答をそのファイルに保存します（パイプに送られる
+出力にはその行は付きません）。結果がその行で止まった場合や、その後の応答が切り捨てられた場合、
+エージェントはコマンドを再実行するのではなく、そのファイルから続けます。チャットで初めてこれが起きたとき、エージェントは
+ターミナルがシェル統合なしで実行されていることを 1 行で伝え、その後依頼の処理を
+続けます。Kiro のターミナルで実行した `aidlc doctor` は、
+変更すべき内容とともに `Kiro terminal` の警告を表示します。チャットで入力した `/aidlc --doctor` は
+ターミナルの外で実行されるため、これを検知できません。
 
-To check, run this in Kiro's PowerShell terminal (Windows PowerShell and
-PowerShell 7 keep separate policies):
+確認するには、Kiro の PowerShell ターミナルで次を実行します（Windows PowerShell と
+PowerShell 7 はそれぞれ別のポリシーを持ちます）:
 
 ```powershell
 Get-ExecutionPolicy -List
 $ExecutionContext.SessionState.LanguageMode
 ```
 
-When `MachinePolicy` or `UserPolicy` is set, or the language mode is not
-`FullLanguage` (an organization's application control), your organization
-manages it; ask your IT team. When `Process` is set, Kiro took it from where it
-was started: start Kiro from the Start menu instead. When the policy in effect comes from `CurrentUser` or
-`LocalMachine` and is `Restricted` or `AllSigned`, you can let Kiro's script
-load for your own account, then restart Kiro:
+`MachinePolicy` または `UserPolicy` が設定されている場合、または言語モードが
+`FullLanguage` でない場合（組織のアプリケーション制御）は、組織が
+管理しています。IT チームに相談してください。`Process` が設定されている場合、Kiro は起動元から
+それを引き継いでいます: 代わりにスタートメニューから Kiro を起動してください。有効なポリシーが `CurrentUser` または
+`LocalMachine` に由来し、`Restricted` または `AllSigned` である場合は、自分のアカウントで Kiro のスクリプトを
+読み込めるようにしてから、Kiro を再起動できます:
 
 ```powershell
 Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
 ```
 
-AI-DLC never changes the policy itself: it is your computer's security setting.
+AI-DLC がポリシーを自ら変更することはありません: それはコンピューターのセキュリティ設定だからです。
 
 ### Command cards end with "dministrator: ...powershell.exe" on Windows
 
-On Windows, a Kiro IDE command card can end with a line such as
-`dministrator: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe`,
-once or twice. That is the terminal window's title, cut short by Kiro when it
-shows the output. It does not change what the command did or what AI-DLC
-records.
+Windows では、Kiro IDE のコマンドカードが
+`dministrator: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe` のような行で
+1 回か 2 回終わることがあります。これはターミナルウィンドウのタイトルで、Kiro が出力を表示する際に
+先頭が切れたものです。コマンドの動作や AI-DLC が記録する内容には
+影響しません。
 
-If you added `"terminal.integrated.windowsUseConptyDll": false` to Kiro's
-settings, remove it and restart Kiro: it makes Kiro wrap command output, which
-can stop Code Generation.
+Kiro の設定に `"terminal.integrated.windowsUseConptyDll": false` を追加している場合は、
+それを削除して Kiro を再起動してください: これにより Kiro がコマンドの出力を折り返すようになり、
+Code Generation が停止することがあります。
 
 ### Kiro memories carry old AI-DLC advice
 
-Kiro IDE keeps memories outside your project, in `.kiro/memories/memories.db`
-under your home folder (`%USERPROFILE%\.kiro\memories\memories.db` on Windows),
-and can load them into every workspace you open. A memory an agent saved during
-an earlier AI-DLC run can hold a diagnosis or workaround that only fit that
-project and version, and is wrong or unsafe anywhere else: running a hook
-command such as `record-human-turn` by hand, setting
-`AIDLC_SKIP_HUMAN_PRESENCE_GUARD=1`, turning summary confirmation off, or
-calling Kiro IDE a "sessionless" harness. AI-DLC tells the agent never to save
-such advice and never to act on it, but memories saved before that still load.
+Kiro IDE は、プロジェクトの外、ホームフォルダー配下の `.kiro/memories/memories.db`
+（Windows では `%USERPROFILE%\.kiro\memories\memories.db`）にメモリを保存し、
+開くすべてのワークスペースにそれを読み込むことがあります。以前の AI-DLC の実行中にエージェントが保存したメモリには、
+そのプロジェクトとバージョンにしか当てはまらず、他の場所では誤っているか安全でない
+診断や回避策が含まれていることがあります: `record-human-turn` のようなフック
+コマンドを手で実行すること、
+`AIDLC_SKIP_HUMAN_PRESENCE_GUARD=1` を設定すること、要約確認をオフにすること、
+Kiro IDE を "sessionless" なハーネスと呼ぶことなどです。AI-DLC はエージェントに、そのような助言を
+決して保存せず、決してそれに従って行動しないよう指示していますが、それ以前に保存されたメモリは引き続き読み込まれます。
 
-If the agent says "per my memory" and suggests one of these, or tells you to
-resume "from Kiro IDE" while you are already in it:
+エージェントが "per my memory" と言ってこれらのいずれかを提案した場合や、すでに Kiro IDE の中にいるのに
+"from Kiro IDE" で再開するよう伝えてきた場合は、次のようにします:
 
-1. Tell it to ignore that memory and follow what `/aidlc` says now. Guards and
-   checkpoints are yours to switch: the agent names the command, you type it.
-2. Delete only the memories that give that kind of advice: running an AI-DLC
-   hook command by hand, setting a variable that skips a guard, turning a
-   checkpoint off, calling Kiro IDE "sessionless", or telling you to resume
-   from Kiro IDE while you are already in it. Keep the rest, including accurate
-   Kiro IDE notes (for example that it has no status line), other AI-DLC notes,
-   and debug tips such as `AIDLC_HOOK_DEBUG` (check Kiro's documentation for
-   managing memories).
-3. Keep a copy of `memories.db` before you delete anything, and close Kiro IDE
-   first if you edit the file directly: it holds all of Kiro's memories, not
-   only the AI-DLC ones.
+1. そのメモリを無視し、`/aidlc` が現在示している内容に従うよう伝えます。ガードと
+   チェックポイントを切り替えるのはあなたです: エージェントがコマンドを示し、あなたがそれを入力します。
+2. そのような助言を与えるメモリだけを削除します: AI-DLC の
+   フックコマンドを手で実行すること、ガードを飛ばす変数を設定すること、
+   チェックポイントをオフにすること、Kiro IDE を "sessionless" と呼ぶこと、すでに Kiro IDE の中にいるのに
+   Kiro IDE から再開するよう伝えることです。それ以外は残してください。正確な
+   Kiro IDE に関するメモ（たとえばステータスラインがないこと）、その他の AI-DLC に関するメモ、
+   `AIDLC_HOOK_DEBUG` のようなデバッグのヒントも含みます（メモリの管理については
+   Kiro のドキュメントを確認してください）。
+3. 何かを削除する前に `memories.db` のコピーを保存し、ファイルを直接編集する場合は先に Kiro IDE を
+   閉じてください: このファイルには AI-DLC のものだけでなく、Kiro のすべてのメモリが
+   含まれています。
 
 ## For framework developers
 
-`dist/kiro-ide` is **generated** from `core/` + `harness/kiro-ide/` by
-`bun scripts/package.ts kiro-ide` (core copy with the `{{HARNESS_DIR}}` token
-substituted to `.kiro` and the `rules/` → `steering/` rename). The output is
-ignored and local. `bun scripts/package.ts --check` builds twice in independent
-temporary roots and byte-compares the results as the CI determinism guard. The
-authored
-Kiro IDE surfaces live in `harness/kiro-ide/`: the orchestrator skill
-(`skills/aidlc/`), always-included active-memory steering (`steering/`),
-the conductor Markdown (`agents/aidlc-aidlc.md`), the hook adapter and v2 hook JSON
-files (`hooks/`), the personas' delegate shell deny (`delegate-shell-deny.ts`),
-and onboarding fills — edit those
-(or `core/`), never hand-edit the generated `dist/kiro-ide`.
+`dist/kiro-ide` は、`core/` + `harness/kiro-ide/` から
+`bun scripts/package.ts kiro-ide` によって**生成**されます（`{{HARNESS_DIR}}` トークンを
+`.kiro` に置き換え、`rules/` → `steering/` に名前を変更した core のコピー）。出力は
+Git の無視対象でローカルのみです。`bun scripts/package.ts --check` は、独立した 2 つの
+一時ルートで 2 回ビルドし、CI の決定論性ガードとして結果をバイト単位で比較します。
+手で作成された
+Kiro IDE の提供面は `harness/kiro-ide/` にあります: オーケストレータースキル
+（`skills/aidlc/`）、常に含まれるアクティブメモリのステアリング（`steering/`）、
+コンダクターの Markdown（`agents/aidlc-aidlc.md`）、フックアダプターと v2 フック JSON
+ファイル（`hooks/`）、ペルソナの委任先シェル拒否（`delegate-shell-deny.ts`）、
+オンボーディングの埋め込み内容です。これら
+（または `core/`）を編集し、生成された `dist/kiro-ide` は決して手で編集しないでください。
 
-This harness differs from the Kiro CLI (V2) harness (`harness/kiro/`) in four ways:
-the `/aidlc` skill and the Markdown `agents/aidlc-aidlc.md` are its conductor surfaces
-(`settings/cli.json` also makes that agent Kiro CLI's default); it ships v2 hook
-JSON files (the Kiro CLI (V2) harness relies on the agent-JSON `hooks` block); it preloads standing rules through
-always-included steering rather than CLI agent resources; the shared Kiro
-projection removes the core persona's Claude-only `disallowedTools` key; and
-its manifest adds `permissions.rules` frontmatter to every persona, beside the
-`tools:` line both harnesses add (each persona a stage reads inline also ships without them, as
-`.kiro/aidlc-common/personas/<agent>.md`, the file the lead reads in its own chat).
-It does not ship the Kiro CLI (V2) harness's agent-v1 JSON.
-See [Porting to a New Harness](../../harness-engineering/09-porting-to-a-new-harness.md).
+このハーネスは、Kiro CLI (V2) ハーネス（`harness/kiro/`）と次の 4 点で異なります:
+`/aidlc` スキルと Markdown の `agents/aidlc-aidlc.md` がコンダクターの提供面であること
+（`settings/cli.json` はそのエージェントを Kiro CLI のデフォルトにもします）。v2 フック
+JSON ファイルを提供すること（Kiro CLI (V2) ハーネスはエージェント JSON の `hooks` ブロックに依存します）。常設のルールを
+CLI エージェントのリソースではなく、常に含まれるステアリングを通じて事前に読み込むこと。共有の Kiro
+プロジェクションがコアのペルソナから Claude 専用の `disallowedTools` キーを取り除くこと。そして
+マニフェストが、両方のハーネスが追加する `tools:` の行に加えて、すべてのペルソナに
+`permissions.rules` frontmatter を追加することです（ステージがインラインで読み込む各ペルソナは、それらを含まない形でも
+`.kiro/aidlc-common/personas/<agent>.md` として提供されます。これはリードが自身のチャットで読むファイルです）。
+Kiro CLI (V2) ハーネスの agent-v1 JSON は提供しません。
+[新しいハーネスへの移植](../../harness-engineering/09-porting-to-a-new-harness.md) を参照してください。
 
 ## Kiro CLI (V2)
 
 > [!NOTE]
-> AI-DLC on Kiro CLI works best with **Claude Opus 4.8**, which requires a
-> **paid Kiro plan**. On weaker models the conductor may skip optional stage
-> steps (reviewer pass, learnings ritual) or rush approval gates. The
-> Kiro distribution is documented in the
-> [first part of this page](#running-ai-dlc-on-kiro).
+> Kiro CLI 上の AI-DLC は **Claude Opus 4.8** で最もよく動作します。これには
+> **有料の Kiro プラン**が必要です。性能の低いモデルでは、コンダクターがステージの任意の
+> ステップ（レビュアーによる確認、学びの手順）を飛ばしたり、承認ゲートを急いで通過したりすることがあります。
+> Kiro のディストリビューションについては
+> [このページの前半](#running-ai-dlc-on-kiro) で説明しています。
 
 > [!IMPORTANT]
-> This section covers the Kiro CLI (V2) harness (`aidlc config --harness
-> kiro-v2`), which pins no Kiro engine; start it with `kiro-cli --v2` (Kiro CLI 2.21.4 or later; for an older one, see
-> [Kiro CLI (V2) prerequisites](#kiro-cli-v2-prerequisites)). The
-> interactive `aidlc config` lists it as Kiro CLI (V2); when it detects Kiro
-> CLI 2.24.1 or later, it makes it the default over Kiro, except in Kiro IDE's
-> own terminal, where Kiro leads. For Kiro's v3 engine on Kiro CLI 2.24.1 or
-> later, use the Kiro harness (`--harness kiro`), listed as Kiro: it runs in
-> Kiro CLI (started with `kiro-cli --v3`) as well as Kiro IDE. In an existing
-> Kiro CLI (V2) project, `aidlc config --harness kiro` switches `.kiro/` to it
-> in place and keeps `aidlc/` (at a terminal it asks first; with `--yes` it
-> switches; without a terminal, or under `--quiet` or `--json`, it changes
-> nothing and prints the command with `--yes`); a plain `aidlc config` refresh, or
-> `--harness kiro-v2`, keeps Kiro CLI (V2).
-> AI-DLC 2.11.3 and earlier, and the 2.11.4 previews of 2026-11-04 and
-> 2026-11-05, read the two Kiro names the other way: Kiro CLI (V2) is
-> `--harness kiro` there and Kiro is `--harness kiro-ide`, and they do not
-> know `kiro-v2`; `--harness kiro-ide` names Kiro on those releases and on this
-> one.
+> このセクションでは、Kiro のエンジンを固定しない Kiro CLI (V2) ハーネス（`aidlc config --harness
+> kiro-v2`）について説明します。`kiro-cli --v2` で起動してください（Kiro CLI 2.21.4 以降。それより古い場合は
+> [Kiro CLI (V2) prerequisites](#kiro-cli-v2-prerequisites) を参照）。
+> 対話式の `aidlc config` では Kiro CLI (V2) として表示されます。Kiro
+> CLI 2.24.1 以降を検出すると、Kiro より優先してこれをデフォルトにしますが、Kiro IDE
+> 自身のターミナルでは Kiro が先頭になります。Kiro CLI 2.24.1 以降で Kiro の v3 エンジンを使う場合は、
+> Kiro として表示される Kiro ハーネス（`--harness kiro`）を使ってください: これは
+> Kiro IDE だけでなく Kiro CLI（`kiro-cli --v3` で起動）でも動作します。既存の
+> Kiro CLI (V2) プロジェクトでは、`aidlc config --harness kiro` が `.kiro/` をその場でそれに切り替え、
+> `aidlc/` は保持します（ターミナルでは先に確認を求め、`--yes` を付けると
+> 切り替えます。ターミナルがない場合や、`--quiet` または `--json` の指定時は
+> 何も変更せず、`--yes` を付けたコマンドを表示します）。単純な `aidlc config` による更新や
+> `--harness kiro-v2` では Kiro CLI (V2) のままです。
+> AI-DLC 2.11.3 以前と、2026-11-04 および
+> 2026-11-05 の 2.11.4 プレビューでは、2 つの Kiro の名前の読み方が逆です: そこでは Kiro CLI (V2) が
+> `--harness kiro`、Kiro が `--harness kiro-ide` であり、
+> `kiro-v2` は認識されません。`--harness kiro-ide` は、それらのリリースでもこのリリースでも
+> Kiro を指します。
 
-One of the framework's harnesses: the Kiro CLI (V2) runtime runs the same AI-DLC
-methodology on [Kiro CLI](https://kiro.dev/docs/cli/). One deterministic core
-— the tools, 33 stage files, protocols, knowledge, sensors, scopes, and rules
-— is byte-shared across every harness; only the shell (skills, agent
-configs, hook wiring, activation) differs.
+フレームワークのハーネスの 1 つである Kiro CLI (V2) ランタイムは、同じ AI-DLC の
+方法論を [Kiro CLI](https://kiro.dev/docs/cli/) 上で実行します。1 つの決定論的なコア
+（ツール、33 個のステージファイル、プロトコル、ナレッジ、センサー、スコープ、ルール）
+はすべてのハーネスでバイト単位で共有されており、異なるのはシェル（スキル、エージェントの
+設定、フックの配線、有効化）だけです。
 
-Harness-specific onboarding lives in `.kiro/steering/aidlc-onboarding.md`,
-loaded through the conductor agent's `resources`. The root `AGENTS.md` block
-is harness-neutral and shared with other installed harnesses; engine directories
-must still differ (the Kiro CLI (V2) and Kiro rows cannot share one `.kiro/`
-install).
+ハーネス固有のオンボーディングは `.kiro/steering/aidlc-onboarding.md` にあり、
+コンダクターエージェントの `resources` を通じて読み込まれます。ルートの `AGENTS.md` ブロック
+はハーネスに依存せず、インストール済みの他のハーネスと共有されます。ただしエンジンのディレクトリは
+別々である必要があります（Kiro CLI (V2) と Kiro の行は 1 つの `.kiro/`
+インストールを共有できません）。
 
 ### Kiro CLI (V2) prerequisites
 
-- **Kiro CLI ≥ 2.6** (`kiro-cli --version`), logged in (`kiro-cli login`). The
-  commands in this section start Kiro CLI on its V2 engine with `--v2`, which
-  needs Kiro CLI 2.21.4 or later. On an older one, see what
-  `kiro-cli chat --help` lists:
-  - with `--agent-engine` (2.19.2 has it), put `chat --agent-engine v2` in
-    place of `--v2`: `kiro-cli --v2 --agent aidlc` becomes
-    `kiro-cli chat --agent-engine v2 --agent aidlc`, and `kiro-cli chat --v2 …`
-    becomes `kiro-cli chat --agent-engine v2 …`;
-  - without it, start with `kiro-cli chat` and no engine flag (for example
-    `kiro-cli chat --agent aidlc`).
-- **bun** only when generating or running the source/development `dist/`
-  projection. Native installs and versioned release runtimes are
-  self-contained.
+- **Kiro CLI ≥ 2.6**（`kiro-cli --version`）、ログイン済み（`kiro-cli login`）。この
+  セクションのコマンドは `--v2` で Kiro CLI を V2 エンジンで起動します。これには
+  Kiro CLI 2.21.4 以降が必要です。それより古い場合は、
+  `kiro-cli chat --help` の表示内容を確認してください:
+  - `--agent-engine` がある場合（2.19.2 にはあります）、`--v2` の代わりに
+    `chat --agent-engine v2` を使います: `kiro-cli --v2 --agent aidlc` は
+    `kiro-cli chat --agent-engine v2 --agent aidlc` に、`kiro-cli chat --v2 …`
+    は `kiro-cli chat --agent-engine v2 …` になります。
+  - ない場合は、エンジンのフラグを付けずに `kiro-cli chat` で起動します（たとえば
+    `kiro-cli chat --agent aidlc`）。
+- **bun** は、ソース／開発用の `dist/` プロジェクションを生成または実行する場合にのみ必要です。
+  ネイティブインストールとバージョン付きのリリースランタイムは
+  自己完結しています。
 
 ### Kiro CLI (V2) install
 
@@ -919,36 +902,35 @@ aidlc config
 aidlc doctor
 ```
 
-The installer verifies the release metadata, executable, and all-harness runtime archive against the published SHA-256 checksums. The installed runtime does not require Bun, Node.js, or Git. Harness selection happens in `aidlc config`.
+インストーラーは、リリースのメタデータ、実行ファイル、全ハーネス用ランタイムアーカイブを、公開されている SHA-256 チェックサムと照合して検証します。インストールされたランタイムに Bun、Node.js、Git は不要です。ハーネスの選択は `aidlc config` で行います。
 
-On Windows, download `install.ps1`, allow scripts in that PowerShell window
-with `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force`, and run
-`& $installer`. See [Windows installation](../18-install-and-lifecycle.md#windows-powershell)
-for account scope, automatic User PATH registration, and `-NoModifyPath`.
-For an air-gapped package, use
-`install.sh --from <release-directory> --offline` on Unix or
-`& $installer -From <release-directory> -Offline` on Windows, after the same
-`Set-ExecutionPolicy` line.
+Windows では、`install.ps1` をダウンロードし、その PowerShell ウィンドウで
+`Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force` によってスクリプトを許可してから、
+`& $installer` を実行してください。アカウントのスコープ、User PATH への自動登録、`-NoModifyPath` については
+[Windows へのインストール](../18-install-and-lifecycle.md#windows-powershell) を参照してください。
+エアギャップ環境向けのパッケージでは、同じ
+`Set-ExecutionPolicy` の行の後に、Unix では
+`install.sh --from <release-directory> --offline`、Windows では
+`& $installer -From <release-directory> -Offline` を使います。
 
-`aidlc config` projects the Kiro shell before the first chat session. Then start
-Kiro from the project root:
+`aidlc config` は、最初のチャットセッションの前に Kiro のシェルを配置します。その後、
+プロジェクトのルートから Kiro を起動します:
 
 ```bash
 kiro-cli --v2
 ```
 
-The native projection allows `aidlc engine *` engine commands and the exact
-read-only and turn-back-on commands (`aidlc doctor`, `aidlc config <section> --show --json`
-and the others listed under the session start below). It also ships
-`.kiro/settings/cli.json` with `chat.defaultAgent: "aidlc"`, so `/aidlc` is
-active without an agent flag. Run `/aidlc --doctor` in chat before the first
-workflow.
+ネイティブのプロジェクションは、`aidlc engine *` のエンジンコマンドと、正確に指定された
+読み取り専用コマンドおよび再有効化コマンド（`aidlc doctor`、`aidlc config <section> --show --json`
+と、下のセッション開始の項に挙げるその他のコマンド）を許可します。また
+`chat.defaultAgent: "aidlc"` を設定した `.kiro/settings/cli.json` も提供するため、エージェントのフラグなしで `/aidlc` が
+有効になります。最初のワークフローの前に、チャットで `/aidlc --doctor` を実行してください。
 
 #### Kiro CLI (V2) versioned manual-copy alternative
 
-Download and extract a specific release's `aidlc-copy-runtime-X.Y.Z.tar.gz` as described in
-[Install and Lifecycle: Copy Channel](../18-install-and-lifecycle.md#copy-channel),
-then set `RUNTIME_ROOT` to the extracted `runtime/` directory.
+[インストールとライフサイクル: コピーチャネル](../18-install-and-lifecycle.md#copy-channel)
+の説明に従って、特定のリリースの `aidlc-copy-runtime-X.Y.Z.tar.gz` をダウンロードして展開し、
+`RUNTIME_ROOT` を展開した `runtime/` ディレクトリに設定します。
 
 ```bash
 mkdir -p your-project/.kiro your-project/aidlc
@@ -957,337 +939,335 @@ cp -R "$RUNTIME_ROOT/kiro/aidlc/." your-project/aidlc/    # the workspace shell 
 cd your-project && bun .kiro/tools/aidlc.ts config --from "$RUNTIME_ROOT" --harness kiro-v2
 ```
 
-The `aidlc/` directory is the workspace shell — it ships the pre-built
-`aidlc/spaces/default/memory/` method tree the engine reads. It is a **sibling**
-of `.kiro/`, so copy it separately (or copy the whole
-`$RUNTIME_ROOT/kiro/` tree at once).
-`/aidlc --doctor` fails its "workspace shell ready" check if it is missing.
+`aidlc/` ディレクトリはワークスペースシェルです。エンジンが読み込む、事前にビルドされた
+`aidlc/spaces/default/memory/` メソッドツリーが含まれています。これは `.kiro/` の**兄弟**
+ディレクトリなので、別途コピーしてください（または
+`$RUNTIME_ROOT/kiro/` ツリー全体を一度にコピーしてください）。
+これがない場合、`/aidlc --doctor` は "workspace shell ready" チェックで失敗します。
 
-The versioned runtime uses the native `aidlc` command. Framework developers who
-need the Bun-shaped source projection can clone the repository, run
-`bun install --frozen-lockfile` and `bun scripts/package.ts`, then use the
-ignored local `dist/kiro/` output instead.
+バージョン付きのランタイムは、ネイティブの `aidlc` コマンドを使います。Bun 形式のソースプロジェクションが
+必要なフレームワーク開発者は、リポジトリをクローンし、
+`bun install --frozen-lockfile` と `bun scripts/package.ts` を実行してから、
+代わりに Git の無視対象であるローカルの `dist/kiro/` 出力を使ってください。
 
-The shipped `.gitignore` carries the workspace's commit/ignore split: the
-per-user cursors (`aidlc/active-space`, `aidlc/spaces/*/intents/active-intent`)
-and machine-local runtime (`aidlc/.aidlc-clone-id`, `runtime-graph.json`, sensor
-caches, `spaces/*/knowledge/.sources.local.json`) stay untracked, while the
-shared records — method memory, state, audit shards, artifacts — travel with
-git. The last line, the copy's own setup, adds those lines and AI-DLC's part of
-`AGENTS.md` after everything already in your files, or creates the files when
-the project has none, so the AI-DLC rules are in place before your first
-workflow.
+提供される `.gitignore` は、ワークスペースのコミット対象と無視対象の区分を定めています:
+ユーザーごとのカーソル（`aidlc/active-space`、`aidlc/spaces/*/intents/active-intent`）
+とマシンローカルのランタイム（`aidlc/.aidlc-clone-id`、`runtime-graph.json`、センサーの
+キャッシュ、`spaces/*/knowledge/.sources.local.json`）は追跡対象外のままとし、
+共有の記録（メソッドメモリ、状態、監査シャード、成果物）は
+git で共有されます。最後の行であるコピー自身のセットアップは、それらの行と AI-DLC の
+`AGENTS.md` の担当部分を既存のファイルの内容の後に追加するか、プロジェクトにファイルがなければ
+作成します。これにより、最初のワークフローの前に AI-DLC のルールが揃います。
 
-Then start a session in your project:
+その後、プロジェクトでセッションを開始します:
 
 ```bash
 cd your-project && kiro-cli --v2
 ```
 
-The install ships `.kiro/settings/cli.json` with `chat.defaultAgent: "aidlc"`,
-so the AI-DLC conductor agent is active by default — `/aidlc` just works.
-**This workspace setting takes precedence over a global default agent you may
-have configured**; if you prefer your own default, remove that setting and use
-`kiro-cli --v2 --agent aidlc` instead.
+インストールでは `chat.defaultAgent: "aidlc"` を設定した `.kiro/settings/cli.json` が提供されるため、
+AI-DLC のコンダクターエージェントがデフォルトで有効になり、`/aidlc` がそのまま動作します。
+**このワークスペースの設定は、あなたが設定しているかもしれないグローバルのデフォルトエージェントより
+優先されます**。自分のデフォルトを使いたい場合は、その設定を削除し、代わりに
+`kiro-cli --v2 --agent aidlc` を使ってください。
 
-Kiro CLI cancels a helper (a reviewer, a persona, a Unit builder) that shows
-no progress for `api.subagentTimeout` seconds; its default is 3600, and AI-DLC
-does not set it. If a helper that never starts holds a stage for an hour, you
-can lower it in your own Kiro CLI settings (`~/.kiro/settings/cli.json`; `900`
-is 15 minutes). Output counts as progress, silence does not: a helper whose
-command prints nothing for longer than that is cancelled too, and the command
-keeps running on its own, so keep the deadline above your longest quiet command
-(a deploy, a test run that prints only at the end).
+Kiro CLI は、`api.subagentTimeout` 秒の間進捗を示さないヘルパー（レビュアー、ペルソナ、ユニットのビルダー）を
+キャンセルします。デフォルトは 3600 で、AI-DLC は
+これを設定しません。開始しないヘルパーがステージを 1 時間止めてしまう場合は、
+自身の Kiro CLI 設定（`~/.kiro/settings/cli.json`。`900`
+は 15 分）で値を下げられます。出力は進捗として数えられますが、無音は数えられません: それより長い間
+何も出力しないコマンドを実行しているヘルパーもキャンセルされ、そのコマンドは
+単独で実行され続けます。そのため、期限は最も長く無音になるコマンド
+（デプロイや、最後にしか出力しないテスト実行など）より長くしてください。
 
-No shipped agent pins a model: a pinned ID resolves only when that
-model is enabled on the user's Kiro install. A chat, and each of the 14
-personas the conductor dispatches, starts on your session model: the one
-saved in your Kiro settings (Kiro auto when you have saved none). `/model`
-changes only the chat you are in, so the conductor follows it and the
-personas still start on the saved model. To move them too, save the switch
-with `/model set-current-as-default`, or choose the model with
-`aidlc config models --session-model <id>`.
+提供されるエージェントはどれもモデルを固定していません: 固定された ID は、
+利用者の Kiro インストールでそのモデルが有効な場合にしか解決されないためです。チャットと、コンダクターが
+ディスパッチする 14 個のペルソナのそれぞれは、セッションモデル、つまり
+Kiro 設定に保存されたモデル（何も保存していない場合は Kiro auto）で開始します。`/model`
+は現在のチャットだけを変更するため、コンダクターはそれに従いますが、
+ペルソナは引き続き保存されたモデルで開始します。ペルソナも切り替えるには、
+`/model set-current-as-default` で切り替えを保存するか、
+`aidlc config models --session-model <id>` でモデルを選んでください。
 
 #### Kiro CLI (V2) session model and effort
 
-Kiro CLI runs each AI-DLC session on one model and has no per-agent effort
-surface, so AI-DLC keeps the session's model and effort in your **personal**
-Kiro settings (`~/.kiro/settings/cli.json`, the file Kiro's own
-`/model set-current-as-default` writes), never in the project. Model lists
-differ per Kiro account, and a project model a teammate's account lacks fails
-every prompt they send. A project `chat.modelDefaults` would also replace your
-whole personal map inside the project, so the shipped `cli.json` carries none.
+Kiro CLI は各 AI-DLC セッションを 1 つのモデルで実行し、エージェントごとの effort を設定する
+仕組みを持たないため、AI-DLC はセッションのモデルと effort を、プロジェクトではなく**個人の**
+Kiro 設定（`~/.kiro/settings/cli.json`。Kiro 自身の
+`/model set-current-as-default` が書き込むファイル）に保存します。モデルの一覧は
+Kiro のアカウントごとに異なり、チームメイトのアカウントにないモデルをプロジェクトで指定すると、
+そのメンバーが送るすべてのプロンプトが失敗します。またプロジェクトの `chat.modelDefaults` は、
+プロジェクト内では個人のマップ全体を置き換えてしまうため、提供される `cli.json` には含まれていません。
 
-First-run setup's step 2, "Session model", lists the models your Kiro account
-offers, in Kiro's order, with each model's credit multiplier and a `preview` or
-`internal` tag. Under Kiro auto (Kiro's own default, where Kiro picks the model
-for each task), AI-DLC recommends choosing a model, so your effort preset
-applies to it. The preset then sets one effort for the whole interactive
-session (Kiro CLI 2.28.0 does not apply the saved effort to a
-`kiro-cli chat --v2 --no-interactive` run; pass `--effort` there):
+初回セットアップのステップ 2 "Session model" では、Kiro のアカウントで利用できるモデルが
+Kiro の順序で、各モデルのクレジット倍率と `preview` または
+`internal` のタグとともに一覧表示されます。Kiro auto（Kiro 自身のデフォルトで、Kiro がタスクごとに
+モデルを選ぶ）のもとでは、AI-DLC はモデルを選ぶことを推奨します。そうすることで effort のプリセットが
+そのモデルに適用されます。プリセットは、対話式セッション全体に 1 つの effort を設定します
+（Kiro CLI 2.28.0 は、保存された effort を
+`kiro-cli chat --v2 --no-interactive` の実行には適用しません。その場合は `--effort` を渡してください）:
 
-| Preset | Session effort |
+| プリセット | セッションの effort |
 |--------|----------------|
 | `minimal` | `low` |
 | `balanced` | `medium` |
-| `thorough` | `xhigh` (extra-high) |
+| `thorough` | `xhigh`（extra-high） |
 
-A model without that level gets its next level down, and a model with no
-effort setting keeps only the model. The recommended defaults fill the effort
-only where you have not saved one for your model: an effort you already saved
-stays, and setup says so in one line when it differs from the preset. Choosing
-a preset yourself (in step 3 or with `aidlc config models`) or a session model
-with `aidlc config models` sets the preset's effort; an agent or group setting
-leaves it alone. `aidlc config models` offers the same
-choice later ("1 session model, 2 preset"), and
-`aidlc config models --session-model <id>` saves a model from your account's
-list without prompts. A saved model your account no longer offers fails every
-prompt, so setup asks for another instead of keeping it. `--dry-run` shows the
-personal Kiro settings change too and writes nothing. When Kiro refuses a write,
-AI-DLC says exactly what was saved and `config models` exits 5 (action needed).
-`aidlc doctor` checks the live setting: the model is still offered, its saved
-effort is one the model offers (when a preset is recorded and Kiro lists the
-model's effort levels), and no project file overrides it. An effort you saved
-that differs from the preset is yours: doctor names the preset's level and the
-command that applies it, without a warning. Refreshing a project set
-up by an earlier release removes AI-DLC's old effort map (`claude-opus-4.8` at
-extra-high) from `.kiro/settings/cli.json` and says so; run
-`aidlc config models` to choose the session model.
-Override one session with `/effort <level>` in chat or `kiro-cli chat --v2
---effort <level>` (low|medium|high|xhigh|max; for older Kiro CLI, see [Kiro CLI (V2) prerequisites](#kiro-cli-v2-prerequisites)). The Kiro IDE does not read `cli.json`.
+そのレベルを持たないモデルには 1 つ下のレベルが適用され、effort の設定を持たない
+モデルではモデルだけが保持されます。推奨のデフォルトは、そのモデルについて effort をまだ保存していない場合にのみ
+effort を設定します: すでに保存した effort は
+そのまま残り、プリセットと異なる場合はセットアップがそのことを 1 行で伝えます。自分で
+プリセットを選ぶ（ステップ 3 または `aidlc config models` で）か、
+`aidlc config models` でセッションモデルを選ぶと、プリセットの effort が設定されます。エージェントやグループの設定では
+変更されません。`aidlc config models` では後から同じ
+選択肢（"1 session model, 2 preset"）が提示され、
+`aidlc config models --session-model <id>` はアカウントの一覧にあるモデルを
+確認なしで保存します。保存したモデルがアカウントで提供されなくなると、すべての
+プロンプトが失敗するため、セットアップはそれを保持せずに別のモデルを尋ねます。`--dry-run` は
+個人の Kiro 設定の変更も表示し、何も書き込みません。Kiro が書き込みを拒否した場合、
+AI-DLC は何が保存されたかを正確に伝え、`config models` は終了コード 5（対応が必要）で終了します。
+`aidlc doctor` は現在の設定を確認します: モデルが引き続き提供されていること、保存された
+effort がそのモデルで利用できるものであること（プリセットが記録され、Kiro がモデルの
+effort レベルを一覧表示する場合）、プロジェクトのファイルがそれを上書きしていないことです。保存した
+effort がプリセットと異なる場合、それはあなたの選択です: doctor はプリセットのレベルと
+それを適用するコマンドを示しますが、警告は出しません。以前のリリースでセットアップした
+プロジェクトを更新すると、AI-DLC の古い effort のマップ（extra-high の `claude-opus-4.8`）が
+`.kiro/settings/cli.json` から削除され、そのことが伝えられます。セッションモデルを選ぶには
+`aidlc config models` を実行してください。
+1 つのセッションだけ上書きするには、チャットで `/effort <level>` を使うか、`kiro-cli chat --v2
+--effort <level>` を使います（low|medium|high|xhigh|max。古い Kiro CLI については [Kiro CLI (V2) prerequisites](#kiro-cli-v2-prerequisites) を参照）。Kiro IDE は `cli.json` を読みません。
 
 ### Kiro CLI (V2) refresh and version skew
 
-`aidlc update` updates the machine runtime but leaves project files unchanged.
-`aidlc doctor` reports a project stamp that differs from the selected engine.
-Between workflows, preview and apply the refresh with:
+`aidlc update` はマシンのランタイムを更新しますが、プロジェクトのファイルは変更しません。
+`aidlc doctor` は、プロジェクトのスタンプが選択されたエンジンと異なる場合に報告します。
+ワークフローの合間に、次のコマンドで更新内容をプレビューしてから適用します:
 
 ```bash
 aidlc config --dry-run
 aidlc config
 ```
 
-Config preserves user-owned content and reports local framework edits as
-conflicts. A refresh while a workflow is open is done and says your open work
-carries on. Upgrade and rollback remain safe during a workflow because they do
-not modify the project.
+config はユーザーが所有する内容を保持し、フレームワークのファイルへのローカルの編集を
+競合として報告します。ワークフローが開いている間の更新も実行され、開いている作業はそのまま続くことが
+伝えられます。アップグレードとロールバックはプロジェクトを変更しないため、ワークフロー中でも
+安全です。
 
 ### Kiro CLI (V2) usage
 
-Start `kiro-cli --v2` in the project, then invoke the conductor with
-`/aidlc <description>`. `/aidlc --status` reports position;
-`/aidlc --config [section]` gathers project configuration changes in-session;
-`/aidlc --doctor`, `--stage`, `--phase`, `--depth`, and `--test-strategy` all work. Workspace
-navigation uses `/aidlc intent [name]`, `/aidlc space [name]`, and
-`/aidlc space-create <name>`. The per-stage (`/aidlc-domain-design`) and
-per-scope (`/aidlc-feature`) runner skills are installed too.
+プロジェクトで `kiro-cli --v2` を起動し、
+`/aidlc <description>` でコンダクターを呼び出します。`/aidlc --status` で現在位置を確認でき、
+`/aidlc --config [section]` でセッション内でプロジェクトの設定変更をまとめて行えます。
+`/aidlc --doctor`、`--stage`、`--phase`、`--depth`、`--test-strategy` もすべて動作します。ワークスペースの
+移動には `/aidlc intent [name]`、`/aidlc space [name]`、
+`/aidlc space-create <name>` を使います。ステージごと（`/aidlc-domain-design`）および
+スコープごと（`/aidlc-feature`）のランナースキルもインストールされます。
 
-Status, doctor, help, version, and workspace-navigation commands are dispatched
-by the Kiro hook before the model can turn them into workflow work. Their child
-output is decoded as UTF-8 and terminal protocol/control bytes are removed only
-at that plain-text relay boundary; ordinary Unicode, paths, tabs, newlines, and
-literal escape-looking text remain unchanged.
+status、doctor、help、version、ワークスペース移動のコマンドは、モデルがそれらをワークフローの作業に
+変えてしまう前に、Kiro のフックによってディスパッチされます。その子プロセスの
+出力は UTF-8 としてデコードされ、ターミナルのプロトコル／制御バイトはその
+プレーンテキストの中継境界でのみ除去されます。通常の Unicode、パス、タブ、改行、
+エスケープのように見えるリテラルのテキストは変更されません。
 
-**Start the session from the project root.** Native installs pre-approve the
-installed `aidlc engine ...` commands and, exactly as written, the same
-read-only and turn-back-on commands listed next, run as `aidlc ...`.
-Source/development copies pre-approve only
-AI-DLC's own workflow commands, run project-relative: the engine commands
-(`bun .kiro/tools/aidlc.ts engine ...`), the read-only `doctor`, `version`,
-`--version`, `--doctor` (doctor with or without `--verbose`), `status`,
-`--status`, `config --help`, `config --show` and
-`config <section> --show` with or without `--json`, and
-`config <section> --help`, turning a check back on with
-`config flags --clear-bypass <switch> --yes`, and the AI-DLC tool scripts
-(`bun .kiro/tools/aidlc-<tool>.ts`). Any other `config` change (turning a check
-off included), the commands that change
-the machine's AI-DLC install (`use`, `update`, `rollback`, `uninstall`,
-`system`) with the tool scripts behind them (`aidlc-doctor.ts`, `aidlc-init.ts`,
-`aidlc-lifecycle.ts`, `aidlc-machine-config.ts`), absolute paths,
-`KIRO_PROJECT_DIR` expansion, and a line that adds a command that is not
-pre-approved (a `cd` before it, or a pipe or `&&` into another command) still
-ask.
+**セッションはプロジェクトのルートから開始してください。** ネイティブインストールでは、
+インストールされた `aidlc engine ...` コマンドと、次に挙げる読み取り専用コマンドおよび再有効化コマンドを、
+記載どおりの形の `aidlc ...` として事前承認します。
+ソース／開発用のコピーが事前承認するのは、
+プロジェクト相対で実行される AI-DLC 自身のワークフローコマンドだけです: エンジンコマンド
+（`bun .kiro/tools/aidlc.ts engine ...`）、読み取り専用の `doctor`、`version`、
+`--version`、`--doctor`（`--verbose` の有無を問わない doctor）、`status`、
+`--status`、`config --help`、`config --show` と
+`config <section> --show`（`--json` の有無を問わない）、
+`config <section> --help`、
+`config flags --clear-bypass <switch> --yes` によるチェックの再有効化、そして AI-DLC のツールスクリプト
+（`bun .kiro/tools/aidlc-<tool>.ts`）です。それ以外の `config` の変更（チェックを
+オフにすることを含む）、マシンの AI-DLC インストールを変更するコマンド（`use`、`update`、`rollback`、`uninstall`、
+`system`）とその背後にあるツールスクリプト（`aidlc-doctor.ts`、`aidlc-init.ts`、
+`aidlc-lifecycle.ts`、`aidlc-machine-config.ts`）、絶対パス、
+`KIRO_PROJECT_DIR` の展開、そして事前承認されていないコマンドを追加する行
+（前に置いた `cd`、または別のコマンドへのパイプや `&&`）では、引き続き確認を
+求めます。
 
-**What still asks you.** The developer agent and the `aidlc` agent write
-project files without asking: any path inside the project whose top-level name
-does not start with a dot. In a side-by-side build a worker writes in a Unit's
-checkout (`.aidlc/worktrees/<unit>/`) the same way: its code and records
-there go through without asking, and the checkout's own `.git`, `.gitignore`
-and other dot entries ask. On Kiro CLI's v2 engine the checkout's dot
-folders (its `.kiro/`, `.github/`) go through too, and stay in that checkout
-until the Unit lands. Their writes into `.kiro/` (apart from the `aidlc` agent's own
-`.kiro/sensors/` files), `.git/`, or any other
-top-level dot entry, and anything outside the project, still ask. Your
-project's own test and build commands (`bun test`, `npm test`, `pytest`, and so
-on), a `git push` and a recursive delete still ask, so you see each one before
-it runs. In a side-by-side build the workers and reviewers run the test command
-you approved through AI-DLC's own `swarm check`, which does not ask. When a
-side-by-side build's workers or reviewers ask, Kiro gathers their requests in a
-"tool approval pending" box; choosing (f) **Approve all pending and
-auto-approve future subagent requests** there lets them run whatever they ask
-without asking you, reviewers that start later included, though on Kiro CLI
-3.1.0 you may see that box again later in the same chat, for example after you
-answer one of AI-DLC's questions; if it appears again, you can choose (f)
-again. Requests from the main chat still ask as before, and Kiro writes no
-setting for (f).
+**引き続き確認を求めるもの。** developer エージェントと `aidlc` エージェントは、
+プロジェクトのファイル、つまりプロジェクト内でトップレベルの名前がドットで始まらないパスに、
+確認なしで書き込みます。並列ビルドでは、ワーカーはユニットの
+チェックアウト（`.aidlc/worktrees/<unit>/`）に同じように書き込みます: そこでのコードと記録は
+確認なしで反映され、チェックアウト自身の `.git`、`.gitignore`
+などのドットで始まる項目では確認を求めます。Kiro CLI の v2 エンジンでは、チェックアウトのドット
+フォルダー（その `.kiro/`、`.github/`）も確認なしで反映され、ユニットが取り込まれるまで
+そのチェックアウト内にとどまります。`.kiro/`（`aidlc` エージェント自身の
+`.kiro/sensors/` ファイルを除く）、`.git/`、その他の
+トップレベルのドット項目への書き込みや、プロジェクト外へのあらゆる書き込みでは、引き続き確認を求めます。
+プロジェクト独自のテストやビルドのコマンド（`bun test`、`npm test`、`pytest` など）、
+`git push`、再帰的な削除も引き続き確認を求めるため、実行前に 1 つずつ
+確認できます。並列ビルドでは、ワーカーとレビュアーは、あなたが承認したテストコマンドを
+AI-DLC 自身の `swarm check` を通じて実行するため、確認は求められません。
+並列ビルドのワーカーやレビュアーが確認を求めると、Kiro はそれらの要求を
+"tool approval pending" ボックスにまとめます。そこで (f) **Approve all pending and
+auto-approve future subagent requests** を選ぶと、後から開始するレビュアーも含め、
+それらが求めるものを確認なしで実行できるようになります。ただし Kiro CLI
+3.1.0 では、同じチャットの後の時点で、たとえば AI-DLC の質問に答えた後などに、
+そのボックスが再び表示されることがあります。再び表示された場合は、もう一度 (f) を
+選べます。メインチャットからの要求は引き続きこれまでどおり確認を求め、Kiro は (f) について
+設定を書き込みません。
 
-**Sessions with no approver stall rather than prompt.** Anything outside the
-pre-approved set needs an interactive answer. Under `kiro-cli chat
---v2 --no-interactive` there is nobody to ask, so Kiro refuses the command outright
-with `non-interactive mode (no user to approve)`. Over ACP, your client must
-answer `session/request_permission`; a client that ignores those requests looks
-exactly like a permission failure. `--trust-all-tools` runs every command
-without asking, a `git push` and a recursive delete included. Use it only
-inside a disposable sandbox where blanket shell access is acceptable.
+**承認者のいないセッションは、確認を求めずに停止します。** 事前承認されたもの以外は、
+対話式の回答が必要です。`kiro-cli chat
+--v2 --no-interactive` では尋ねる相手がいないため、Kiro はコマンドを
+`non-interactive mode (no user to approve)` として即座に拒否します。ACP 経由では、クライアントが
+`session/request_permission` に応答する必要があります。これらの要求を無視するクライアントは、
+権限エラーとまったく同じように見えます。`--trust-all-tools` は、`git push` や再帰的な削除も含め、
+すべてのコマンドを確認なしで実行します。シェルへの全面的なアクセスが許容される
+使い捨てのサンドボックス内でのみ使ってください。
 
-**Which Kiro CLI engine runs the hooks.** This distribution registers its
-hooks in `.kiro/agents/aidlc.json`. Kiro CLI runs that block on its v2 engine
-while the `aidlc` agent is active, including over ACP: `kiro-cli acp` picks the
-agent from `chat.defaultAgent`, the same way `kiro-cli --v2` does. Kiro CLI's
-v3 engine does not run the file as AI-DLC ships it. It runs the file once Kiro
-has upgraded it for v3, and the v2 engine still runs an upgraded file.
+**どの Kiro CLI エンジンがフックを実行するか。** このディストリビューションは、
+`.kiro/agents/aidlc.json` にフックを登録します。Kiro CLI は、`aidlc` エージェントが有効な間、
+ACP 経由を含め、v2 エンジンでそのブロックを実行します: `kiro-cli acp` は
+`kiro-cli --v2` と同じように `chat.defaultAgent` からエージェントを選びます。Kiro CLI の
+v3 エンジンは、AI-DLC が提供したままのファイルを実行しません。Kiro が
+v3 向けにアップグレードした後はそのファイルを実行し、v2 エンジンもアップグレードされたファイルを引き続き実行します。
 
-From Kiro CLI 2.37, Kiro makes that upgrade by itself when it starts on v3
-(`kiro-cli --v3`, or a plain `kiro-cli` once you have chosen V3), unless
-`chat.enableAutoAgentUpgrade` is `false` in your own Kiro CLI settings. It
-rewrites every agent JSON file in `.kiro/agents/` (the `.md` prompts beside them
-stay as they are) and keeps each original beside it
-as `<name>.json.bak` (`.json.bak.1` and on when one is already there), so
-`git status` shows each agent JSON file there changed and a new backup beside it,
-files AI-DLC did not write. On
-Kiro CLI 3.1.0 the files had changed while Kiro was still asking whether to
-trust the folder, and they stayed changed when the answer was not to trust it;
-Kiro said nothing about it on screen. After that, the hooks run on v3 too.
-`aidlc doctor --verbose` counts those agent JSON files as upgraded by Kiro, not as
-your changes, and a refresh keeps them as Kiro left them except where
-[Refresh Safety](../18-install-and-lifecycle.md#refresh-safety) says
-otherwise. To undo the upgrade, first run `kiro-cli settings
-chat.enableAutoAgentUpgrade false`, or Kiro upgrades the files again at its
-next start on v3, then rename each agent JSON file's newest backup (the highest
-`.json.bak.N`, or `.json.bak` when there is no other) back to `.json`, and
-start Kiro CLI with `kiro-cli --v2`: v3 runs none of the hooks of files it has
-not upgraded.
+Kiro CLI 2.37 以降、Kiro は v3 で起動したとき（`kiro-cli --v3`、または V3 を選択済みであれば
+単純な `kiro-cli`）に、自動的にそのアップグレードを行います。ただし、自身の Kiro CLI 設定で
+`chat.enableAutoAgentUpgrade` が `false` の場合は行いません。
+Kiro は `.kiro/agents/` 内のすべてのエージェント JSON ファイルを書き換え（隣にある `.md` のプロンプトは
+そのまま）、それぞれの元のファイルを隣に
+`<name>.json.bak` として保存します（すでにある場合は `.json.bak.1` 以降）。そのため
+`git status` には、そこにある各エージェント JSON ファイルが変更され、隣に新しいバックアップがあると表示されます。
+これらは AI-DLC が書き込んだファイルではありません。
+Kiro CLI 3.1.0 では、Kiro がフォルダーを信頼するかどうかをまだ尋ねている間にファイルが変更されており、
+信頼しないと回答してもファイルは変更されたままでした。
+Kiro は画面上でそのことについて何も伝えませんでした。その後は、v3 でもフックが実行されます。
+`aidlc doctor --verbose` は、それらのエージェント JSON ファイルをあなたの変更ではなく Kiro によるアップグレードとして数え、
+更新は、
+[更新時の安全性](../18-install-and-lifecycle.md#refresh-safety) に別の記載がある場合を除き、
+それらを Kiro が残したままの状態に保ちます。アップグレードを元に戻すには、まず `kiro-cli settings
+chat.enableAutoAgentUpgrade false` を実行してください。そうしないと、Kiro は次に v3 で
+起動したときに再びファイルをアップグレードします。次に、各エージェント JSON ファイルの最新のバックアップ（最も大きい
+`.json.bak.N`、他にない場合は `.json.bak`）の名前を `.json` に戻し、
+`kiro-cli --v2` で Kiro CLI を起動します: v3 は、アップグレードしていないファイルのフックを
+一切実行しません。
 
-Kiro does not upgrade the files while that setting is `false`, and
-`kiro-cli acp --agent-engine v3` upgraded nothing on Kiro CLI 3.1.0. A session
-on v3 with the files not upgraded runs none of these hooks, and neither does a
-session that switches to another agent. With no hooks, no `HUMAN_TURN` receipts
-are recorded, so every approval and confirmation is refused. No write events
-are recorded either, so reviews are refused.
+その設定が `false` の間、Kiro はファイルをアップグレードしません。また
+Kiro CLI 3.1.0 では、`kiro-cli acp --agent-engine v3` は何もアップグレードしませんでした。
+ファイルがアップグレードされていない状態の v3 のセッションでは、これらのフックは一切実行されず、
+別のエージェントに切り替えたセッションでも同様です。フックがないと `HUMAN_TURN` のレシートが
+記録されないため、すべての承認と確認が拒否されます。書き込みイベントも
+記録されないため、レビューも拒否されます。
 
-A prompt Kiro makes itself (for example the `[SYSTEM] Sub-agent synthesis:` message a newer
-kiro-cli sends after a sub-agent returns) is not counted as your turn: it is recorded as
-`HOST_TURN` and answers no question. Your own messages count whatever their words; Kiro's
-chat record says which is which, and anything unknown is yours.
-After the first workflow stage, `/aidlc --doctor` reports this as "Hooks have
-never executed". Before that, doctor warns that AI-DLC's hooks have not run in
-this project yet and names the same step. With another agent picked, type
-`/agent` and pick `aidlc`, then carry on in the same chat. When `aidlc` is not
-in that list, Kiro is on v3 with the files not upgraded (Kiro says `agent
-"aidlc" needs upgrading for this agent engine` on its start screen), and
-restarting on v3 alone does not fix it. AI-DLC's line then names these ways;
-take one:
+Kiro 自身が作るプロンプト（たとえば、新しい
+kiro-cli がサブエージェントの終了後に送る `[SYSTEM] Sub-agent synthesis:` メッセージ）は、あなたのターンとして数えられません: 
+`HOST_TURN` として記録され、質問には回答しません。あなた自身のメッセージは、その文言にかかわらず数えられます。Kiro の
+チャットの記録がどちらなのかを示しており、不明なものはあなたのメッセージとして扱われます。
+最初のワークフローステージの後、`/aidlc --doctor` はこれを "Hooks have
+never executed" と報告します。それより前は、doctor は AI-DLC のフックが
+このプロジェクトでまだ実行されていないことを警告し、同じ手順を示します。別のエージェントを選んでいる場合は、
+`/agent` と入力して `aidlc` を選び、同じチャットで続けてください。`aidlc` が
+その一覧にない場合、Kiro はファイルがアップグレードされていない状態で v3 で動作しています（Kiro は起動画面に `agent
+"aidlc" needs upgrading for this agent engine` と表示します）。この場合、
+v3 で再起動するだけでは解決しません。AI-DLC の案内には次の方法が示されるので、
+いずれかを選んでください:
 
-- Type `/upgrade-agent`, choose the workspace agents, then quit Kiro and start
-  `kiro-cli --v3` again in this folder. The chat you typed it in stays on Kiro's
-  default agent.
-- Switch to the [Kiro](#running-ai-dlc-on-kiro) distribution, made for Kiro CLI's v3
-  engine: `aidlc config --harness kiro` switches `.kiro/` to it in place and
-  keeps `aidlc/` (at a terminal it asks first; with `--yes` it switches; without
-  a terminal, or under `--quiet` or `--json`, it changes nothing and prints the
-  command with `--yes`); then start `kiro-cli --v3` (when it asks to trust the
-  folder and you know what is in it, choose **Trust, continue**).
-- Quit and start `kiro-cli --v2 --agent aidlc` in this folder.
+- `/upgrade-agent` と入力してワークスペースのエージェントを選び、Kiro を終了して、
+  このフォルダーで `kiro-cli --v3` を再起動します。入力したチャット自体は Kiro の
+  デフォルトのエージェントのままです。
+- Kiro CLI の v3 エンジン向けに作られた [Kiro](#running-ai-dlc-on-kiro) ディストリビューションに
+  切り替えます: `aidlc config --harness kiro` は `.kiro/` をその場でそれに切り替え、
+  `aidlc/` は保持します（ターミナルでは先に確認を求め、`--yes` を付けると切り替えます。
+  ターミナルがない場合や、`--quiet` または `--json` の指定時は何も変更せず、
+  `--yes` を付けたコマンドを表示します）。その後 `kiro-cli --v3` を起動します（フォルダーを信頼するかどうかを
+  尋ねられ、内容を把握している場合は **Trust, continue** を選びます）。
+- Kiro を終了し、このフォルダーで `kiro-cli --v2 --agent aidlc` を起動します。
 
-An ACP client starts `kiro-cli acp --agent-engine v2`, or, after the switch to
-Kiro, what [Kiro's install](#install) names in its `.kiro/settings/cli.json`
-item. See
-[Kiro CLI hooks not running](../15-troubleshooting.md#kiro-cli-hooks-not-running).
+ACP クライアントは `kiro-cli acp --agent-engine v2` で起動します。Kiro に切り替えた後は、
+[Kiro's install](#install) の `.kiro/settings/cli.json` の項目に示されている方法で起動します。
+[Kiro CLI のフックが動かない](../15-troubleshooting.md#kiro-cli-hooks-not-running)
+を参照してください。
 
 #### When a Kiro CLI (V2) chat fills up
 
-Kiro shows you how full the chat is, but gives AI-DLC no figure while it works.
-So AI-DLC reads the figure Kiro saves for the chat at the end of each turn
-(`~/.kiro/sessions/cli/<chat id>.json`, read only). Once it is 80% or more, the
-next approval question or Unit checkpoint carries one line saying how full the
-chat is, with an offer to pause and carry on in a new chat. When the chat
-already reached half full or more in its first turn on the work, and still runs
-on the model that filled it, a new chat on that model would start about as
-full, so the line says that instead of offering one. Your answer decides:
-nothing pauses on its own, and the line is said once in a chat.
+Kiro はチャットがどのくらい埋まっているかをあなたに表示しますが、作業中の AI-DLC にはその数値を渡しません。
+そのため AI-DLC は、Kiro が各ターンの終わりにチャットについて保存する数値
+（`~/.kiro/sessions/cli/<chat id>.json`、読み取り専用）を読みます。それが 80% 以上になると、
+次の承認の質問またはユニットのチェックポイントに、チャットがどのくらい埋まっているかを伝える 1 行が付き、
+一時停止して新しいチャットで続けることが提案されます。
+作業での最初のターンですでにチャットが半分以上埋まり、
+それを埋めたモデルのまま実行されている場合、そのモデルで新しいチャットを始めても
+ほぼ同じくらい埋まった状態で始まるため、その行は新しいチャットを提案する代わりにそのことを伝えます。判断はあなたの回答次第です:
+自動的に一時停止することはなく、その行はチャットごとに 1 回だけ伝えられます。
 
-The line cannot appear in the middle of a stage (it comes only with a question
-you are asked anyway), before Kiro has saved the chat's first turn, for a chat
-with no record on this machine, or if a Kiro update changes how Kiro saves the
-figure. When you see Kiro's own figure climb, you can do the same by hand:
+この行は、ステージの途中（いずれにせよ尋ねられる質問と一緒にのみ表示されます）、
+Kiro がチャットの最初のターンを保存する前、このマシンに記録のないチャット、
+または Kiro のアップデートで数値の保存方法が変わった場合には表示されません。
+Kiro 自身の数値が上がってきたら、同じことを手動で行えます:
 
-1. Stop at a stage boundary: approve and say you want to stop for now in the
-   same reply, or type `/aidlc park`. `/aidlc --status` now shows
-   `Paused at <stage> (you stopped it); pick it back up with /aidlc --resume`.
-2. Type `/chat new` for a new chat. Kiro keeps the old one, and `/chat resume`
-   brings it back. Use it rather than `/clear`, which resets the chat you are in.
-3. Type `/aidlc --resume`. `/aidlc --status` no longer says Paused.
+1. ステージの境界で停止します: 承認すると同時に、同じ返答で今は止めたいと伝えるか、
+   `/aidlc park` と入力します。すると `/aidlc --status` に
+   `Paused at <stage> (you stopped it); pick it back up with /aidlc --resume` と表示されます。
+2. `/chat new` と入力して新しいチャットを開きます。Kiro は以前のチャットを保持しており、`/chat resume`
+   で戻れます。現在のチャットをリセットしてしまう `/clear` ではなく、こちらを使ってください。
+3. `/aidlc --resume` と入力します。`/aidlc --status` に Paused と表示されなくなります。
 
-Anything the old chat discussed but did not write to a file does not carry
-over, which is why the end of a stage is the best moment (see
-[Changing Model Mid-Workflow](../11-session-management.md#changing-model-mid-workflow)).
+以前のチャットで話し合ってもファイルに書き込まれなかった内容は引き継がれません。
+そのため、ステージの終わりが最適なタイミングです（
+[ワークフロー途中でのモデル変更](../11-session-management.md#changing-model-mid-workflow) を参照）。
 
 ### What's different on Kiro CLI (V2)
 
-| Area | Claude Code | Kiro CLI (V2) |
+| 領域 | Claude Code | Kiro CLI (V2) |
 |------|-------------|----------|
-| Gates & questions | `AskUserQuestion` widget | Numbered prose options (reply with a number); the questions FILE with `[Answer]:` tags stays the source of truth |
-| Statusline | Current stage + model + context % | Not available: use `/aidlc --status` and the progress line at each gate; for a chat that is filling up, see [When a Kiro CLI (V2) chat fills up](#when-a-kiro-cli-v2-chat-fills-up) |
-| Dispatched stages (2.1 pipeline, 2.2 subagent, 2.4 mob, 3.5 subagent) | `Task` tool | Kiro `subagent` tool → the agent configs (all 14 personas ship configs) |
-| Construction swarm | Parallel `Task` floor, optional ultracode Workflow | Subagent fan-out only; `AIDLC_USE_SWARM=1` is announced as a no-op |
-| Session audit events | `SESSION_STARTED/RESUMED/ENDED`, `SESSION_COMPACTED` | `SESSION_STARTED` only (Kiro has no session-end / pre-compaction hooks) |
-| Forwarding-loop enforcement (Stop hook) | Interactive + headless | Interactive sessions only — `--no-interactive` runs do not honor the stop-hook block |
-| Permissions | `settings.json` allowlist | Source-generated projection: AI-DLC's own project-relative workflow commands (engine, read-only dispatcher commands, AI-DLC tool scripts); native and versioned release runtimes: `aidlc engine *`. Other shell commands prompt. |
-| Welcome message | Rendered at session start from `settings.json` `companyAnnouncements` | None — Kiro has no welcome-render equivalent; the session-start hook injects resume context only |
-| MCP servers | Ships 5 (`.mcp.json`: `context7` + four AWS servers) | Ships the same 5 in `.kiro/settings/mcp.json`, all disabled by default; flip `"disabled": false` per server to enable it. Context7 is keyless on Kiro because Kiro sends configured HTTP header values verbatim instead of expanding environment placeholders. AI-DLC's own chat and its 14 delegated personas get every server in this file and in your `~/.kiro/settings/mcp.json` as of the last time config ran, and each call asks you first; a server you add later reaches them after you run config again. On Kiro CLI's v3 engine a persona gets every server in those files without a config run, from its second step. |
+| ゲートと質問 | `AskUserQuestion` ウィジェット | 番号付きの散文の選択肢（番号で返答）。`[Answer]:` タグを持つ質問ファイルが引き続き信頼できる情報源です |
+| ステータスライン | 現在のステージ + モデル + コンテキスト % | 利用できません: `/aidlc --status` と各ゲートの進捗表示を使ってください。チャットが埋まってきた場合は [When a Kiro CLI (V2) chat fills up](#when-a-kiro-cli-v2-chat-fills-up) を参照してください |
+| ディスパッチされるステージ（2.1 pipeline、2.2 subagent、2.4 mob、3.5 subagent） | `Task` ツール | Kiro の `subagent` ツール → エージェントの設定（14 個のペルソナすべてに設定が提供されます） |
+| Construction のスウォーム | 並列の `Task` を基本とし、任意で ultracode Workflow | サブエージェントへの展開のみ。`AIDLC_USE_SWARM=1` は何もしないことが通知されます |
+| セッションの監査イベント | `SESSION_STARTED/RESUMED/ENDED`、`SESSION_COMPACTED` | `SESSION_STARTED` のみ（Kiro にはセッション終了／コンパクション前のフックがありません） |
+| 転送ループの強制（Stop フック） | 対話式 + ヘッドレス | 対話式セッションのみ。`--no-interactive` の実行では Stop フックによるブロックが守られません |
+| 権限 | `settings.json` の許可リスト | ソースから生成したプロジェクション: AI-DLC 自身のプロジェクト相対のワークフローコマンド（エンジン、読み取り専用のディスパッチャーコマンド、AI-DLC のツールスクリプト）。ネイティブおよびバージョン付きのリリースランタイム: `aidlc engine *`。その他のシェルコマンドは確認を求めます。 |
+| ウェルカムメッセージ | セッション開始時に `settings.json` の `companyAnnouncements` から表示 | なし。Kiro にはウェルカム表示に相当する機能がなく、セッション開始フックは再開のコンテキストだけを注入します |
+| MCP サーバー | 5 つを提供（`.mcp.json`: `context7` + AWS の 4 サーバー） | 同じ 5 つを `.kiro/settings/mcp.json` で提供し、すべてデフォルトで無効です。有効にするには、サーバーごとに `"disabled": false` に切り替えます。Kiro は設定された HTTP ヘッダーの値を、環境変数のプレースホルダーを展開せずにそのまま送るため、Kiro では Context7 はキーなしで使います。AI-DLC 自身のチャットと 14 個の委任用ペルソナは、最後に config を実行した時点でこのファイルと `~/.kiro/settings/mcp.json` にあるすべてのサーバーを使え、各呼び出しで先に確認を求めます。後から追加したサーバーは、config を再実行した後に使えるようになります。Kiro CLI の v3 エンジンでは、ペルソナは config を実行しなくても、2 番目のステップからそれらのファイルにあるすべてのサーバーを使えます。 |
 
-Everything else — state machine, audit trail, artifacts under the intent
-record dirs (`aidlc/spaces/<space>/intents/<YYMMDD>-<label>/`), the learnings
-ritual, sensors, scopes, depth/test-strategy — behaves identically, because it
-IS identical: native installs dispatch through `aidlc`, while source copies run
-the corresponding tools from `.kiro/tools/`.
+それ以外のすべて（ステートマシン、監査証跡、インテントの記録ディレクトリ
+（`aidlc/spaces/<space>/intents/<YYMMDD>-<label>/`）配下の成果物、学びの
+手順、センサー、スコープ、深度／テスト戦略）は同じように動作します。実際に
+同一だからです: ネイティブインストールは `aidlc` を通じてディスパッチし、ソースのコピーは
+`.kiro/tools/` の対応するツールを実行します。
 
-A project's `aidlc/` workspace is harness-neutral. Moving a project between
-harnesses (or running both side by side) is supported-but-untested; `/aidlc
---doctor` will warn if it detects a conflicting harness setup with an active workflow.
+プロジェクトの `aidlc/` ワークスペースはハーネスに依存しません。プロジェクトをハーネス間で移動すること
+（または両方を並行して実行すること）はサポートされていますが、テストされていません。`/aidlc
+--doctor` は、アクティブなワークフローがある状態で競合するハーネスのセットアップを検出すると警告します。
 
 ### Kiro CLI (V2) for framework developers
 
-`dist/kiro` is **generated** from `core/` + `harness/kiro/` by
-`bun scripts/package.ts kiro` (core copy with the `{{HARNESS_DIR}}` token
-substituted to `.kiro` and the `rules/` → `steering/` rename). The output is
-ignored and local. `bun scripts/package.ts --check` builds twice in independent
-temporary roots and byte-compares the results as the CI determinism guard. The
-authored Kiro surfaces live in `harness/kiro/`: the orchestrator skill
-(`skills/aidlc/`), the agent JSONs (`agents/`), the hook adapter
-(`hooks/aidlc-kiro-adapter.ts`), `settings/cli.json`, `settings/mcp.json`, and `onboarding.fills.ts` — edit
-those (or `core/`), never hand-edit the generated `dist/kiro`. See
-[Porting to a New Harness](../../harness-engineering/09-porting-to-a-new-harness.md).
-The build appends `; exit $LASTEXITCODE` to every hook command of those agent
-JSONs (the manifest's `hookCommandSuffix`): Kiro CLI starts a hook in
-PowerShell on Windows and in bash elsewhere, and that shape hands a hook's exit
-2 back to Kiro in both, so a refusal stops the tool call on Windows too.
+`dist/kiro` は、`core/` + `harness/kiro/` から
+`bun scripts/package.ts kiro` によって**生成**されます（`{{HARNESS_DIR}}` トークンを
+`.kiro` に置き換え、`rules/` → `steering/` に名前を変更した core のコピー）。出力は
+Git の無視対象でローカルのみです。`bun scripts/package.ts --check` は、独立した 2 つの
+一時ルートで 2 回ビルドし、CI の決定論性ガードとして結果をバイト単位で比較します。
+手で作成された Kiro の提供面は `harness/kiro/` にあります: オーケストレータースキル
+（`skills/aidlc/`）、エージェントの JSON（`agents/`）、フックアダプター
+（`hooks/aidlc-kiro-adapter.ts`）、`settings/cli.json`、`settings/mcp.json`、`onboarding.fills.ts` です。
+これら（または `core/`）を編集し、生成された `dist/kiro` は決して手で編集しないでください。
+[新しいハーネスへの移植](../../harness-engineering/09-porting-to-a-new-harness.md) を参照してください。
+ビルドは、それらのエージェント JSON のすべてのフックコマンドに `; exit $LASTEXITCODE` を付加します
+（マニフェストの `hookCommandSuffix`）: Kiro CLI は Windows では
+PowerShell で、それ以外では bash でフックを起動し、この形にするとどちらでもフックの終了コード
+2 が Kiro に返されるため、Windows でも拒否によってツール呼び出しが停止します。
 
-A live TUI journey test exists alongside the Claude twins:
-`tests/e2e/t-tui-kiro-intent-capture.serial.test.ts` drives `kiro-cli chat`
-by keystroke against the shipped tree (numbered-prose gates answered with
-"1" = the recommended option, terminating on disk state). Opt in with
-`AIDLC_KIRO_TUI_LIVE=1`; it skips with a reason when tmux, `kiro-cli`, or a
-logged-in Kiro session is absent.
+Claude 向けの対応するテストと並んで、ライブの TUI ジャーニーテストがあります:
+`tests/e2e/t-tui-kiro-intent-capture.serial.test.ts` は、提供されたツリーに対して
+キー入力で `kiro-cli chat` を操作します（番号付きの散文のゲートには
+"1" = 推奨の選択肢で回答し、ディスク上の状態で終了を判定します）。
+`AIDLC_KIRO_TUI_LIVE=1` で有効にします。tmux、`kiro-cli`、または
+ログイン済みの Kiro セッションがない場合は、理由を示してスキップします。
 
 ## Next steps
 
-Installed and activated? The methodology is the same on every harness — keep
-going with the neutral chapters:
+インストールと有効化は済みましたか？ 方法論はどのハーネスでも同じです。
+ハーネスに依存しない各章に進んでください:
 
-- [Your First Workflow](../02-your-first-workflow.md) — an annotated end-to-end run.
-- [Phases and Stages](../04-phases-and-stages.md) — the 5 phases and 33 stages.
-- [Scopes, Depth, and Test Strategy](../05-scopes-and-depth.md) — right-sizing a run.
-- [Glossary](../glossary.md) — every term defined.
+- [最初のワークフロー](../02-your-first-workflow.md): 注釈付きのエンドツーエンドの実行例です。
+- [フェーズとステージ](../04-phases-and-stages.md): 5 つのフェーズと 33 のステージです。
+- [スコープ、深さ、テスト戦略](../05-scopes-and-depth.md): 実行の規模を適切に決める方法です。
+- [用語集](../glossary.md): すべての用語の定義です。
 
-Other harnesses: [AI-DLC on Codex CLI](codex-cli.md) · [AI-DLC on Cursor](cursor.md) · [the harness family index](README.md).
+その他のハーネス: [Codex CLI での AI-DLC](codex-cli.md) · [Cursor での AI-DLC](cursor.md) · [ハーネスファミリーの索引](README.md)。

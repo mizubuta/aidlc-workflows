@@ -50,52 +50,51 @@ outputs: slo-report.md, cost-analysis.md, drift-report.md, feedback-loop.md, fee
 
 ### Step 1: Load Prior Context
 
-- Read observability setup from `<record>/operation/observability-setup/`
-- Read performance validation results from `<record>/operation/performance-validation/`
-- Read SLO/SLI configuration
-- Read infrastructure design for drift comparison
+- `<record>/operation/observability-setup/` からオブザーバビリティの設定を読み込む
+- `<record>/operation/performance-validation/` からパフォーマンス検証の結果を読み込む
+- SLO/SLI の設定を読み込む
+- ドリフト比較のためにインフラストラクチャ設計を読み込む
 
 ### Step 2: Generate Questions
 
-Create questions file covering:
-- Are SLOs being met? What is the error budget burn rate?
-- Are there cost optimization opportunities?
-- Is there configuration or infrastructure drift?
-- What user behavior patterns suggest new features or issues?
-- What operational toil can be automated?
+次の内容を網羅する質問ファイルを作成する:
+- SLO は達成されているか。エラーバジェットの消費率（バーンレート）はどうか。
+- コスト最適化の機会はあるか。
+- 構成やインフラストラクチャのドリフトはあるか。
+- 新機能や問題を示唆するユーザー行動パターンはあるか。
+- 自動化できる運用上の負荷（トイル）は何か。
 
-Follow stage-protocol.md question flow.
+stage-protocol.md の質問フローに従う。
 
 ### Step 3: Generate Artifacts
 
-Create SLO compliance report, AWS Cost Explorer analysis & optimization recommendations, AWS Config drift detection report, Trusted Advisor recommendations review, operational insights & improvement proposals, and feedback loop document (inputs to next Ideation cycle).
+SLO 準拠レポート、AWS Cost Explorer による分析と最適化の推奨事項、AWS Config によるドリフト検出レポート、Trusted Advisor の推奨事項のレビュー、運用上の知見と改善提案、およびフィードバックループ文書（次の Ideation サイクルへの入力）を作成する。
 
 ### Step 4: Completion Handoff
 
-Hand completion to `stage-protocol.md` via
-`{{INVOKE}} engine orchestrate report --stage feedback-optimization --result <outcome>`.
-That `report` call owns every lifecycle transition and advancement; never perform one in prose, and never narrate this bookkeeping to the user.
+`{{INVOKE}} engine orchestrate report --stage feedback-optimization --result <outcome>` を通じて、
+完了を `stage-protocol.md` に引き渡す。
+その `report` 呼び出しが、ライフサイクルの遷移と前進をすべて担う。散文の中で遷移を実行してはならず、この記録処理をユーザーに説明してもならない。
 
 ### Step 5: Present Completion & Request Approval
 
-Completion emoji: :recycle:
-Review path: `<record>/operation/feedback-optimization/`
-Approval gate: Approve (workflow complete) / Request Changes.
+完了時の絵文字: :recycle:
+レビュー対象のパス: `<record>/operation/feedback-optimization/`
+承認ゲート: Approve（ワークフロー完了）/ Request Changes。
 
-This is the final stage. Upon approval, the full AI-DLC workflow is complete. The feedback loop document feeds insights back into the next Ideation cycle if the user chooses to continue iterating.
+これは最終ステージである。承認されると、AI-DLC ワークフロー全体が完了する。ユーザーが反復を続けることを選んだ場合、フィードバックループ文書が知見を次の Ideation サイクルへ還流させる。
 
 ## Sensors
 
-This stage's outputs are markdown artefacts under `<record>/operation/feedback-optimization/`.
+このステージの出力は `<record>/operation/feedback-optimization/` 配下の Markdown 成果物である。
 
-Imports: `required-sections`, `upstream-coverage`.
+インポート: `required-sections`, `upstream-coverage`.
 
-Upstream targets: `dashboards`, `alarms`, `slo-config`, `deployment-log`, `load-test-results`, `incident-plan`.
+上流の対象: `dashboards`, `alarms`, `slo-config`, `deployment-log`, `load-test-results`, `incident-plan`.
 
 ## Learn
 
-When `directive.protocol_modules` lists `learnings`, follow
-`stage-protocol-learnings.md`: keep the diary at `directive.memory_path` while
-working, and take the learnings step before the approval gate; that module says
-when it asks the person anything. When the module is absent, skip both the diary
-and the step.
+`directive.protocol_modules` に `learnings` が含まれている場合は、
+`stage-protocol-learnings.md` に従う。作業中は `directive.memory_path` に日誌を付け、
+承認ゲートの前に学びのステップを実施する。そのモジュールが、利用者に何かを尋ねるタイミングを定めている。
+モジュールがない場合は、日誌とステップの両方を省略する。

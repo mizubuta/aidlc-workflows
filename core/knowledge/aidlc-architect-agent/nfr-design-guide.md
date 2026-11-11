@@ -2,91 +2,91 @@
 
 ## Resilience Patterns
 
-Apply these patterns based on failure mode analysis:
+障害モードの分析に基づいて、次のパターンを適用する:
 
-| Pattern | When to Use | Key Configuration |
+| パターン | 使う場面 | 主な設定 |
 |---------|-------------|-------------------|
-| **Circuit Breaker** | External service calls, database connections | Failure threshold (5), timeout (30s), half-open retry interval (60s) |
-| **Bulkhead** | Isolating failures between subsystems | Thread pool per dependency, max concurrent requests, queue depth |
-| **Retry with Backoff** | Transient failures (network blips, rate limits) | Max retries (3), exponential backoff (100ms, 200ms, 400ms), jitter |
-| **Timeout** | Every external call without exception | Connect timeout (5s), read timeout (30s), total timeout (60s) |
-| **Fallback** | Degraded mode is acceptable over total failure | Static fallback, cached response, default value, feature flag |
-| **Rate Limiter** | Protecting downstream from upstream bursts | Token bucket or sliding window, per-user and global limits |
+| **Circuit Breaker** | 外部サービスの呼び出し、データベース接続 | 失敗のしきい値（5）、タイムアウト（30s）、half-open での再試行間隔（60s） |
+| **Bulkhead** | サブシステム間の障害の分離 | 依存先ごとのスレッドプール、最大同時リクエスト数、キューの深さ |
+| **Retry with Backoff** | 一時的な障害（ネットワークの瞬断、レート制限） | 最大再試行回数（3）、指数バックオフ（100ms、200ms、400ms）、ジッター |
+| **Timeout** | 例外なくすべての外部呼び出し | 接続タイムアウト（5s）、読み取りタイムアウト（30s）、全体のタイムアウト（60s） |
+| **Fallback** | 全面的な障害よりも縮退モードの方が許容できる場合 | 静的なフォールバック、キャッシュされた応答、既定値、フィーチャーフラグ |
+| **Rate Limiter** | 上流のバーストから下流を保護する | トークンバケットまたはスライディングウィンドウ、ユーザーごとおよび全体の制限 |
 
 ### Circuit Breaker State Machine
-- **Closed** (normal): Requests pass through. Count failures. Open when threshold reached.
-- **Open** (tripped): All requests fail fast without calling downstream. Wait for reset timeout.
-- **Half-Open** (probing): Allow one request through. If it succeeds, close. If it fails, re-open.
+- **Closed**（通常）: リクエストを通す。失敗を数える。しきい値に達したら Open にする。
+- **Open**（遮断）: 下流を呼び出さずに、すべてのリクエストを即座に失敗させる。リセットのタイムアウトを待つ。
+- **Half-Open**（探査）: リクエストを1つだけ通す。成功すれば Closed にし、失敗すれば再び Open にする。
 
 ## Caching Architecture
 
 ### Cache Placement Decision Matrix
 
-| Scenario | Cache Location | TTL Strategy | Invalidation |
+| シナリオ | キャッシュの場所 | TTL の戦略 | 無効化 |
 |----------|---------------|--------------|--------------|
-| Static assets | CDN edge | Long (24h+) | Version hash in URL |
-| API responses (read-heavy) | Reverse proxy / API gateway | Medium (5-15 min) | Event-driven purge |
-| Database query results | Application-level (Redis/Memcached) | Short (1-5 min) | Write-through or write-behind |
-| Session data | Distributed cache | Session lifetime | Explicit delete on logout |
-| Computed aggregations | Materialized view / pre-computed cache | Scheduled refresh | Rebuild on source change |
+| 静的アセット | CDN エッジ | 長い（24h 以上） | URL 内のバージョンハッシュ |
+| API の応答（読み取り中心） | リバースプロキシ / API ゲートウェイ | 中程度（5〜15 分） | イベント駆動のパージ |
+| データベースのクエリ結果 | アプリケーションレベル（Redis/Memcached） | 短い（1〜5 分） | ライトスルーまたはライトビハインド |
+| セッションデータ | 分散キャッシュ | セッションの存続期間 | ログアウト時の明示的な削除 |
+| 計算済みの集計 | マテリアライズドビュー / 事前計算キャッシュ | スケジュールされた更新 | ソースの変更時に再構築 |
 
 ### Cache Consistency Rules
-- Never cache data that must be strongly consistent across requests
-- Use cache-aside (lazy loading) as the default pattern
-- Write-through only when write latency tolerance allows it
-- Always set a TTL -- unbounded caches become stale data stores
-- Monitor cache hit ratio (target >90% for read-heavy paths)
+- リクエスト間で強い一貫性が必要なデータは決してキャッシュしない
+- 既定のパターンとしてキャッシュアサイド（遅延読み込み）を使う
+- ライトスルーは、書き込みのレイテンシーの許容度が許す場合にだけ使う
+- 必ず TTL を設定する -- 期限のないキャッシュは古いデータのストアになる
+- キャッシュヒット率を監視する（読み取り中心の経路では 90% 超を目標とする）
 
 ## Scalability Patterns
 
 ### Horizontal Scaling Strategies
 
-| Strategy | Best For | Considerations |
+| 戦略 | 最適な用途 | 考慮事項 |
 |----------|----------|----------------|
-| **Stateless services** | API servers, web frontends | No session affinity needed; scale by adding instances behind load balancer |
-| **Sharding** | Large datasets, multi-tenant systems | Choose shard key carefully (tenant ID, region); avoid cross-shard queries |
-| **Read replicas** | Read-heavy workloads (>10:1 read:write) | Accept replication lag; route writes to primary, reads to replicas |
-| **Event-driven decoupling** | Bursty workloads, async processing | Use message queues; consumers scale independently of producers |
-| **CQRS** | Different read/write scaling needs | Separate read and write models; accept eventual consistency |
+| **ステートレスなサービス** | API サーバー、Web フロントエンド | セッションアフィニティは不要。ロードバランサーの背後にインスタンスを追加してスケールする |
+| **シャーディング** | 大規模なデータセット、マルチテナントのシステム | シャードキーは慎重に選ぶ（テナント ID、リージョン）。シャードをまたぐクエリを避ける |
+| **リードレプリカ** | 読み取り中心のワークロード（読み取り:書き込みが 10:1 超） | レプリケーションの遅延を受け入れる。書き込みはプライマリへ、読み取りはレプリカへルーティングする |
+| **イベント駆動の疎結合化** | バースト的なワークロード、非同期処理 | メッセージキューを使う。コンシューマーはプロデューサーとは独立してスケールする |
+| **CQRS** | 読み取りと書き込みでスケーリングの要件が異なる場合 | 読み取りモデルと書き込みモデルを分ける。結果整合性を受け入れる |
 
 ### Shard Key Selection Criteria
-- High cardinality (many distinct values)
-- Even distribution (no hot partitions)
-- Query locality (most queries target a single shard)
-- Immutable (changing shard keys requires data migration)
+- 高いカーディナリティ（異なる値が多い）
+- 均等な分散（ホットパーティションがない）
+- クエリの局所性（ほとんどのクエリが単一のシャードを対象とする）
+- 不変であること（シャードキーの変更にはデータの移行が必要になる）
 
 ## Reliability Engineering
 
 ### SLI/SLO Definition Template
 
-For each critical user journey, define:
-- **SLI** (Service Level Indicator): The metric being measured
-  - Availability: `successful_requests / total_requests`
-  - Latency: `requests_below_threshold / total_requests` (e.g., p99 < 500ms)
-  - Correctness: `correct_responses / total_responses`
-- **SLO** (Service Level Objective): The target for the SLI
-  - Format: "99.9% of requests return successfully over a 30-day window"
-- **Error Budget**: `1 - SLO` = allowable failure rate
-  - 99.9% SLO = 43.2 minutes of downtime per 30 days
+重要なユーザージャーニーごとに、次を定義する:
+- **SLI**（Service Level Indicator）: 計測するメトリクス
+  - 可用性: `successful_requests / total_requests`
+  - レイテンシー: `requests_below_threshold / total_requests`（例: p99 < 500ms）
+  - 正確性: `correct_responses / total_responses`
+- **SLO**（Service Level Objective）: SLI の目標
+  - 形式: 「30 日間のウィンドウで、リクエストの 99.9% が正常に返る」
+- **エラーバジェット**: `1 - SLO` = 許容できる失敗率
+  - 99.9% の SLO = 30 日あたり 43.2 分のダウンタイム
 
 ### Failure Mode Checklist
 
-For each component, assess:
-- [ ] What happens when this component is unavailable?
-- [ ] What happens when response time doubles?
-- [ ] What happens when throughput exceeds capacity?
-- [ ] What happens when a dependency returns corrupted data?
-- [ ] Is there a graceful degradation path?
-- [ ] What is the blast radius of a failure? (single user, tenant, region, global)
-- [ ] What is the recovery procedure? (automatic, manual, requires restart)
+各コンポーネントについて、次を評価する:
+- [ ] このコンポーネントが利用できないとき、何が起きるか？
+- [ ] 応答時間が2倍になったとき、何が起きるか？
+- [ ] スループットが容量を超えたとき、何が起きるか？
+- [ ] 依存先が壊れたデータを返したとき、何が起きるか？
+- [ ] 段階的に縮退する経路はあるか？
+- [ ] 障害の影響範囲はどこまでか？（単一のユーザー、テナント、リージョン、全体）
+- [ ] 復旧の手順は何か？（自動、手動、再起動が必要）
 
 ## NFR-to-Architecture Mapping
 
-| NFR Category | Architectural Implication |
+| NFR のカテゴリー | アーキテクチャへの影響 |
 |-------------|--------------------------|
-| Latency < 100ms | In-memory cache, CDN, connection pooling, async non-blocking I/O |
-| Availability > 99.9% | Multi-AZ deployment, health checks, auto-restart, circuit breakers |
-| Throughput > 10K rps | Horizontal scaling, load balancing, connection pooling, async processing |
-| Data durability | Replicated storage, point-in-time recovery, write-ahead logging |
-| Disaster recovery RTO < 1h | Multi-region active-passive, automated failover, tested runbooks |
-| Zero-downtime deployments | Blue-green or canary deploys, backward-compatible migrations, feature flags |
+| レイテンシー < 100ms | インメモリキャッシュ、CDN、コネクションプーリング、非同期のノンブロッキング I/O |
+| 可用性 > 99.9% | マルチ AZ のデプロイ、ヘルスチェック、自動再起動、サーキットブレーカー |
+| スループット > 10K rps | 水平スケーリング、ロードバランシング、コネクションプーリング、非同期処理 |
+| データの耐久性 | レプリケートされたストレージ、ポイントインタイムリカバリ、ログ先行書き込み |
+| ディザスタリカバリの RTO < 1h | マルチリージョンのアクティブ-パッシブ、自動フェイルオーバー、テスト済みのランブック |
+| ゼロダウンタイムのデプロイ | ブルーグリーンまたはカナリアデプロイ、後方互換性のあるマイグレーション、フィーチャーフラグ |

@@ -56,7 +56,7 @@ Initialization の 3 つのセットアップステージを除いた後のス�
 Classic は Standard の成果物とテストを使います。ウォーキングスケルトンの
 手続きとサマリー確認はオフです。センサーは実行され、学びの儀式も実行されます。
 レビューは助言的です（ステージごとに 1 回のパスで、指摘は承認ゲートで示されます）。
-明示的な自律モードでは、マージ前の 1 回のレビューが維持されます。ガードポリシーの既定値は off です。
+明示的な自律モードでは、マージ前の 1 回のレビューが維持されます。Guard Policy の既定値は off です。
 計画の再承認、レビューの凍結、状態遷移、レビュアーの読み取り範囲は、
 指示のない作業では適用を見送り、そのたびに `GUARD_STOOD_ASIDE` 行を記録します。Plan Approval は
 引き続きエンジンによって求められます。人間のターンの権限と監査は引き続き有効です。
@@ -87,7 +87,7 @@ Express は、センサー、学び、サマリー確認もオフにします。
 [`/aidlc --learnings on|off`](12-cli-commands.md#aidlc-sensors-learnings-summary-confirmation-ceremony-controls)、
 または [`/aidlc --summary-confirmation on|off`](12-cli-commands.md#aidlc-sensors-learnings-summary-confirmation-ceremony-controls) で上書きできます。
 
-Express の [ガードポリシー](13-customization.md#guard-policy) の既定値は off です。計画の
+Express の [Guard Policy](13-customization.md#guard-policy) の既定値は off です。計画の
 承認、レビューの凍結、状態遷移、レビュアーの読み取り範囲は、
 指示のない作業では適用を見送り、そのたびに `GUARD_STOOD_ASIDE` 行を記録します。人間の在席確認は
 オンのままです。1 つのインテントについて引き上げるには、`/aidlc --guard-policy strict` または `relaxed` と入力します。

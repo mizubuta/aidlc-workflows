@@ -66,188 +66,185 @@ outputs: application code + code-generation-plan.md, code-generation-questions.m
 
 ### Critical Rules
 
-- Application code goes to workspace root, NEVER to the record dir. The developer's one change there is ticking each step's box in the plan as it finishes that step
-- Brownfield: modify files in-place. NEVER create duplicates like ClassName_modified.java
-- Files already in the project that this work did not create (a README, LICENSE, docs, configs) are the person's, on a new project too: leave them as they are and build the code around them; this work's own notes on what it built with and how to run it go in `code-summary.md`, and its test command is already in `unit-test-instructions.md`. Change one of them only when the person asks for it or the work cannot be built without it (on brownfield, the code the work changes), and name the change in the plan
-- Add data-testid attributes to interactive UI elements for test automation
-- Work in this order: plan (Step 2), Step 3 (the person's Plan Approval; with plan approval off, only its one-line notice), generation (Step 4), the Step 5 files, then the review (when `directive.protocol_modules` lists `reviewer`) and the completion handoff (Step 6). The review checks the finished work: never dispatch the reviewer before the Step 5 files exist. When the directive already carries `plan_approval.status: "approved"` (a resumed or continued build), the plan and test instructions on disk are the approved ones: skip Steps 2 and 3 and build them as they are. Never rewrite an approved plan or its test instructions; change them only when the person asks
-- For a Unit (`directive.unit` present), write `source-manifest.json` in Step 5, before the review, listing every application-source path this unit created, modified, or deleted in this stage, including shell-, scaffolding-, and generator-written files; a unit reopened by a rejection keeps the paths its earlier attempts listed. Zero-Unit work writes no `source-manifest.json`
-- Measurable quality targets from NFR Requirements, NFR Design, and the Testing
-  Contract coverage floor are inputs, not suggestions. NEVER relax, lower, or
-  disable a defined target, including threshold settings in test or build
-  configuration, to make a step pass; surface the gap instead.
+- アプリケーションコードはワークスペースのルートに置き、決して記録ディレクトリには置かない。そこで developer が行う唯一の変更は、各ステップを終えるたびに計画内のそのステップのボックスにチェックを入れることである
+- ブラウンフィールド: ファイルはその場で変更する。ClassName_modified.java のような複製は決して作らない
+- この作業が作成したものではない、プロジェクトにすでにあるファイル（README、LICENSE、ドキュメント、設定）は、新規プロジェクトであっても利用者のものである: そのままにして、その周りにコードを構築する。この作業が何を使って構築したか、どう実行するかについての作業自身のメモは `code-summary.md` に書き、テストコマンドはすでに `unit-test-instructions.md` にある。それらのファイルを変更するのは、利用者が求めた場合か、それなしでは作業を構築できない場合（ブラウンフィールドでは、作業が変更するコード）だけとし、その変更を計画に明記する
+- テスト自動化のために、操作可能な UI 要素に data-testid 属性を追加する
+- 次の順序で作業する: 計画（Step 2）、Step 3（利用者による Plan Approval。計画の承認がオフの場合は 1 行の通知のみ）、生成（Step 4）、Step 5 のファイル、その後にレビュー（`directive.protocol_modules` に `reviewer` が含まれる場合）と完了の引き渡し（Step 6）。レビューは完成した作業をチェックする: Step 5 のファイルが存在する前にレビュアーをディスパッチしてはならない。ディレクティブがすでに `plan_approval.status: "approved"` を持っている場合（再開または継続されたビルド）、ディスク上の計画とテスト手順は承認済みのものである: Step 2 と 3 を省略し、それらをそのまま構築する。承認済みの計画やそのテスト手順を書き換えてはならない。変更するのは利用者が求めた場合だけである
+- ユニット（`directive.unit` がある）の場合は、Step 5 でレビューの前に `source-manifest.json` を書き、このユニットがこのステージで作成、変更、削除したすべてのアプリケーションソースのパスを、シェル、スキャフォールディング、ジェネレーターが書き込んだファイルも含めて列挙する。却下によって再オープンされたユニットは、以前の試行で列挙したパスを保持する。ユニットのない作業は `source-manifest.json` を書かない
+- NFR Requirements、NFR Design、Testing
+  Contract のカバレッジの下限から得られる測定可能な品質目標は、提案ではなく入力である。ステップを通すために、
+  定義された目標を緩めたり、下げたり、無効にしたりしてはならない（テストやビルドの
+  設定にあるしきい値の設定も含む）。代わりにギャップを明らかにする。
 
 ### Step 1: Read All Unit Artifacts
 
-Read all design artifacts for the current unit:
-- Functional design from `<record>/construction/{unit-name}/functional-design/` (if exists)
-- NFR requirements from `<record>/construction/{unit-name}/nfr-requirements/` (if exists)
-- NFR design from `<record>/construction/{unit-name}/nfr-design/` (if exists)
-- Infrastructure design from `<record>/construction/{unit-name}/infrastructure-design/` (if exists)
-- Domain design (component catalogue) from `<record>/inception/domain-design/components.md` (if exists)
-- Contracts from `<record>/inception/contract-design/contract-summary.md` (if exists)
-- Unit definition from `<record>/inception/units-generation/unit-of-work.md` (if exists)
-- Story map from `<record>/inception/units-generation/unit-of-work-story-map.md` (if exists)
-- Requirements from `<record>/inception/requirements-analysis/requirements.md` (if exists)
+現在のユニットのすべての設計成果物を読む:
+- `<record>/construction/{unit-name}/functional-design/` の機能設計（存在する場合）
+- `<record>/construction/{unit-name}/nfr-requirements/` の NFR 要件（存在する場合）
+- `<record>/construction/{unit-name}/nfr-design/` の NFR 設計（存在する場合）
+- `<record>/construction/{unit-name}/infrastructure-design/` のインフラストラクチャ設計（存在する場合）
+- `<record>/inception/domain-design/components.md` のドメイン設計（コンポーネントカタログ）（存在する場合）
+- `<record>/inception/contract-design/contract-summary.md` の契約（存在する場合）
+- `<record>/inception/units-generation/unit-of-work.md` のユニット定義（存在する場合）
+- `<record>/inception/units-generation/unit-of-work-story-map.md` のストーリーマップ（存在する場合）
+- `<record>/inception/requirements-analysis/requirements.md` の要件（存在する場合）
 
-Incremental scopes (bugfix, poc, refactor, security-patch, infra) and the
-zero-Unit `express` scope skip Units Generation by design. When those inputs
-are absent, scope the work from Requirements Analysis and the workspace; on
-brownfield, also use the reverse-engineered code knowledge base at
-`aidlc/spaces/<active-space>/codekb/<repo>/`. Never invent the content of a
-missing artifact.
+インクリメンタルなスコープ（bugfix、poc、refactor、security-patch、infra）と、
+ユニットのない `express` スコープは、設計上 Units Generation を省略する。それらの入力が
+存在しない場合は、Requirements Analysis とワークスペースから作業の範囲を定める。
+ブラウンフィールドでは、
+`aidlc/spaces/<active-space>/codekb/<repo>/` にあるリバースエンジニアリングしたコードのナレッジベースも使う。存在しない
+成果物の内容を捏造してはならない。
 
-For a zero-Unit directive (`directive.unit` absent and no Unit DAG), run exactly
-one implementation iteration and write this stage's artifacts under
-`<record>/construction/code-generation/` with no synthetic Unit segment. This is
-ordinary stage work: no Bolt, walking-skeleton, ladder, per-Unit receipt, or
-swarm ceremony applies.
+ユニットのないディレクティブ（`directive.unit` がなく、ユニットの DAG もない）の場合は、ちょうど
+1 回の実装イテレーションを実行し、このステージの成果物を、合成のユニットセグメントなしで
+`<record>/construction/code-generation/` 配下に書き込む。これは
+通常のステージ作業である: Bolt、ウォーキングスケルトン、ラダー、ユニットごとの受領、
+スウォームの儀式はいずれも適用されない。
 
-For every later path in this stage, set `<code-generation-record>` from the
-directive exactly once:
+このステージ内の以降のすべてのパスについて、ディレクティブから `<code-generation-record>` を
+1 回だけ設定する:
 
-- `directive.unit` present:
+- `directive.unit` がある場合:
   `<record>/construction/<directive.unit>/code-generation/`
-- `directive.unit` absent:
+- `directive.unit` がない場合:
   `<record>/construction/code-generation/`
 
 ### Step 2: PART 1 — Planning
 
-When the directive already carries `plan_approval.status: "approved"`, this plan is written and approved: do not rewrite it or the test instructions; go to Step 4.
+ディレクティブがすでに `plan_approval.status: "approved"` を持っている場合、この計画は作成済みかつ承認済みである: 計画やテスト手順を書き換えず、Step 4 に進む。
 
-Create a detailed code generation plan at
-`<code-generation-record>/code-generation-plan.md` with checkboxes for each
-implementation step. Include story-to-code-step traceability — map each plan
-step back to the user story it implements.
+詳細なコード生成計画を
+`<code-generation-record>/code-generation-plan.md` に作成し、各
+実装ステップにチェックボックスを付ける。ストーリーからコードステップへのトレーサビリティを含める。つまり計画の各
+ステップを、それが実装するユーザーストーリーに対応付ける。
 
-Plan should cover (as applicable to the unit):
-- [ ] Business logic implementation
-- [ ] API/endpoint layer
-- [ ] Repository/data access layer
-- [ ] Database migrations/schema changes
-- [ ] Unit tests
-- [ ] Integration tests
-- [ ] Configuration files
-- [ ] Documentation (inline and API docs)
-- [ ] Deployment artifacts (Dockerfiles, IaC)
+計画は（ユニットに該当する範囲で）次をカバーする:
+- [ ] ビジネスロジックの実装
+- [ ] API／エンドポイント層
+- [ ] リポジトリ／データアクセス層
+- [ ] データベースのマイグレーション／スキーマ変更
+- [ ] ユニットテスト
+- [ ] 統合テスト
+- [ ] 設定ファイル
+- [ ] ドキュメント（インラインおよび API ドキュメント）
+- [ ] デプロイ成果物（Dockerfile、IaC）
 
-**Data-model elements are named, never implied.** A step that creates or
-changes an object, entity, table, field or column names each one, with the
-requirement, acceptance criterion, business rule or design element that asks
-for it; a technical column that element needs (a key, an index, its created
-or updated time) shares its reason. "Schema changes" or "data model" as a step
-with no names is not a plan step. An element that nothing upstream asks for is
-the developer's own call, and the person decides it: put it under a
-`## Assumptions` section of the plan, one line each, not a checkbox (the
-checkbox is on the step that adds it), naming that step and why the work needs
-it, never only in a step. The person reads the Summary's `Adds:` line when
-the engine asks for approval, so that line is where they learn of such an
-element before anything is written; on a platform where a schema change is
-shared and hard to undo, it is their one chance to say no. When nothing
-upstream covers an element the work cannot do without, say so there rather
-than inventing a requirement for it. A plan that adds no such element has no
-`## Assumptions` section and no `Adds:` line.
+**データモデルの要素は暗黙にせず、名前を挙げる。** オブジェクト、エンティティ、テーブル、フィールド、列を
+作成または変更するステップは、それぞれの名前を、それを求める要件、受け入れ基準、
+ビジネスルール、設計要素とともに挙げる。その要素が必要とする技術的な列（キー、インデックス、作成
+時刻や更新時刻）は同じ理由を共有する。名前のない "Schema changes" や "data model" というステップは
+計画のステップではない。上流の何からも求められていない要素は
+developer 自身の判断であり、利用者が決める: それを計画の
+`## Assumptions` セクションに 1 行ずつ書き（チェックボックスにはしない。
+チェックボックスはそれを追加するステップに付ける）、そのステップと作業にそれが必要な理由を示す。
+ステップの中だけに書いてはならない。エンジンが承認を求める際、利用者は Summary の `Adds:` 行を読むため、
+その行で、何かが書き込まれる前にそのような要素を知ることになる。スキーマの変更が
+共有され元に戻しにくいプラットフォームでは、それが利用者にとって断る唯一の機会である。作業に不可欠な要素を
+上流の何もカバーしていない場合は、そのための要件を捏造せず、そこでその旨を
+述べる。そのような要素を追加しない計画には、
+`## Assumptions` セクションも `Adds:` 行もない。
 
-When the deliverable is infrastructure-as-code (always in the `infra` scope),
-this stage writes the IaC, under the same Plan Approval as application code:
-Infrastructure Design only describes it, and Environment Provisioning
-provisions from what this stage wrote. The plan's implementation steps are the
-IaC changes themselves (CDK constructs, Terraform modules or roots,
-CloudFormation templates, IAM policies, dashboards, and alarms), derived from
-Infrastructure Design's `infrastructure-specification.md` and
-`monitoring-design.md`; with no user stories, map each step to the requirement
-or NFR it implements. Its tests are the IaC's own executable checks, such as CDK
-assertion tests, `terraform test`, or policy-as-code rules, run by the
-unit-scoped command in `unit-test-instructions.md`. Static checks
-(`terraform fmt -check` and `terraform validate`, `cdk synth`, `cfn-lint`) are
-build steps that Build and Test runs. When the IaC language has no line-coverage
-tool, say so in the plan rather than reporting a figure. Never apply or deploy
-from this stage.
+成果物が infrastructure-as-code の場合（`infra` スコープでは常に）、
+このステージがアプリケーションコードと同じ Plan Approval のもとで IaC を書く:
+Infrastructure Design はそれを記述するだけであり、Environment Provisioning は
+このステージが書いたものからプロビジョニングする。計画の実装ステップは
+IaC の変更そのもの（CDK コンストラクト、Terraform のモジュールやルート、
+CloudFormation テンプレート、IAM ポリシー、ダッシュボード、アラーム）であり、
+Infrastructure Design の `infrastructure-specification.md` と
+`monitoring-design.md` から導出する。ユーザーストーリーがないため、各ステップを、それが実装する要件
+または NFR に対応付ける。テストは IaC 自身の実行可能なチェックであり、CDK の
+アサーションテスト、`terraform test`、policy-as-code のルールなどを、
+`unit-test-instructions.md` にあるユニットに限定したコマンドで実行する。静的チェック
+（`terraform fmt -check` と `terraform validate`、`cdk synth`、`cfn-lint`）は
+Build and Test が実行するビルドステップである。IaC の言語に行カバレッジの
+ツールがない場合は、数値を報告せず計画にその旨を書く。このステージから
+apply やデプロイを行ってはならない。
 
-**Test files are MANDATORY in the plan.** Consult the active test strategy (stage-protocol.md §8 "Test Strategy") to determine test scope and volume:
-- **Minimal strategy**: Requirement-driven tests (1 per requirement, happy-path unit floor per component); unit tests are the default, but a `bugfix` / `security-patch` targeted regression uses the narrowest level that reproduces the defect
-- **Standard strategy**: Unit test files per component (5-8 tests each) + integration test stubs for key boundaries
-- **Comprehensive strategy**: Unit + integration + E2E test files per component (10-15 tests each)
+**計画にはテストファイルが必須である。** アクティブなテスト戦略（stage-protocol.md §8 "Test Strategy"）を参照し、テストの範囲と量を決める:
+- **Minimal 戦略**: 要件駆動のテスト（要件ごとに 1 つ、コンポーネントごとにハッピーパスのユニットテストを下限とする）。ユニットテストがデフォルトだが、`bugfix` / `security-patch` の対象を絞った回帰テストは、欠陥を再現できる最も狭いレベルを使う
+- **Standard 戦略**: コンポーネントごとのユニットテストファイル（各 5〜8 テスト）+ 主要な境界の統合テストのスタブ
+- **Comprehensive 戦略**: コンポーネントごとのユニット + 統合 + E2E テストファイル（各 10〜15 テスト）
 
-Apply the active scope's floor additively:
-- `mvp`, `enterprise`, `feature`, `infra`: the selected strategy plus 80% line coverage and, when the plan runs CI Pipeline, CI execution before merge.
-- `bugfix`, `security-patch`: the selected strategy plus a targeted regression for the bug/vulnerability at the narrowest level that reproduces it, even when that adds one integration/E2E test beyond Minimal's unit-test default; the existing suite remains green.
-- `poc`, `refactor`, `workshop`: the selected strategy still applies; the scope adds no extra new-test floor, and the existing suite remains green.
+アクティブなスコープの下限を追加で適用する:
+- `mvp`, `enterprise`, `feature`, `infra`: 選択した戦略に加えて、行カバレッジ 80%、および計画が CI Pipeline を実行する場合はマージ前の CI 実行。
+- `bugfix`, `security-patch`: 選択した戦略に加えて、バグ／脆弱性を再現できる最も狭いレベルでの対象を絞った回帰テスト。それが Minimal のユニットテストのデフォルトを超えて統合／E2E テストを 1 つ追加することになっても行う。既存のスイートはグリーンのまま保つ。
+- `poc`, `refactor`, `workshop`: 選択した戦略は引き続き適用される。スコープは新規テストの下限を追加せず、既存のスイートはグリーンのまま保つ。
 
-The selected strategy and scope floor are both obligations. Neither replaces the other.
+選択した戦略とスコープの下限は、どちらも義務である。一方が他方を置き換えることはない。
 
-The plan MUST include steps for:
-- [ ] Test files appropriate to the active test strategy
-- [ ] Test configuration (vitest.config, jest.config, or equivalent)
+計画には、次のステップを必ず含めなければならない:
+- [ ] アクティブなテスト戦略に適したテストファイル
+- [ ] テストの設定（vitest.config、jest.config、または同等のもの）
 
-If the plan presented to the user omits test file steps, add them before presenting. Tests are not deferred to Build and Test — that stage verifies and extends, not creates from scratch.
+ユーザーに提示する計画にテストファイルのステップが含まれていない場合は、提示する前に追加する。テストを Build and Test に先送りしてはならない — そのステージは検証と拡張を行うものであり、ゼロから作成するものではない。
 
-**Test ordering follows one deterministic Testing Contract.** Run:
+**テストの順序は、1 つの決定論的な Testing Contract に従う。** 次を実行する:
 
 ```bash
 bun {{HARNESS_DIR}}/tools/aidlc-testing-posture.ts render
 ```
 
-Paste the command's complete `## Testing Contract` JSON block into `code-generation-plan.md` unchanged, using your file-editing tool: a shell command that rewrites the file (for example PowerShell `Set-Content`) can re-encode its characters, and the block's `contract_sha256` then no longer matches. When the contract is refused, re-run `render` and replace the whole section; never edit the block or its hash by hand. The resolver reads all `## Testing Posture` sections additively and selects the narrowest explicit methodology/order statement; coverage, tooling, integration, or scope notes remain applicable but cannot erase a broader methodology. A contradictory narrower methodology is an error, not an override: halt and ask for the memory rule to be revised.
+コマンドが出力した `## Testing Contract` の JSON ブロック全体を、ファイル編集ツールを使って変更せずに `code-generation-plan.md` に貼り付ける: ファイルを書き換えるシェルコマンド（例えば PowerShell の `Set-Content`）は文字を再エンコードすることがあり、そうなるとブロックの `contract_sha256` が一致しなくなる。契約が拒否された場合は、`render` を再実行してセクション全体を置き換える。ブロックやそのハッシュを手で編集してはならない。リゾルバーはすべての `## Testing Posture` セクションを加算的に読み、最も狭い明示的な方法論／順序の記述を選ぶ。カバレッジ、ツール、統合、スコープに関する注記は引き続き適用されるが、より広い方法論を打ち消すことはできない。矛盾する、より狭い方法論は上書きではなくエラーである: 作業を止め、メモリのルールの修正を求める。
 
-Use the contract's `plan_profile.steps` as the required ordering baseline, adapting names and omitting genuinely inapplicable layers without changing the methodology:
-- **TDD**: for every applicable testable layer — data-model/database behavior, repository/data access, business logic, API/endpoint, and frontend behavior — plan Red (failing tests), Green (minimal implementation), then Refactor while green.
-- **BDD**: define executable behavior/scenario examples before each observable feature slice, implement that slice across every required layer, run scenarios green, then refactor. Do not turn BDD into layer-local TDD.
-- **ATDD**: write executable acceptance tests before the complete cross-layer feature implementation, implement against that acceptance contract, run acceptance green, then refactor. Do not split acceptance intent into unrelated per-layer Red steps.
-- **Custom/mixed**: preserve the contract's exact `ordering` text, such as scenario-first BDD with lower-level unit tests after implementation. Never coerce a mixed posture into TDD.
-- **Test-after**: for every applicable testable layer, implement the layer and then write/run that layer's tests.
+契約の `plan_profile.steps` を必須の順序の基準として使い、方法論を変えずに、名前を調整したり本当に該当しない層を省いたりする:
+- **TDD**: 該当するテスト可能な各層（データモデル／データベースの振る舞い、リポジトリ／データアクセス、ビジネスロジック、API／エンドポイント、フロントエンドの振る舞い）について、Red（失敗するテスト）、Green（最小限の実装）、そしてグリーンのままの Refactor を計画する。
+- **BDD**: 観察可能な機能スライスごとに、その前に実行可能な振る舞い／シナリオの例を定義し、必要なすべての層にわたってそのスライスを実装し、シナリオをグリーンにしてから、リファクタリングする。BDD を層ごとの TDD に変えてはならない。
+- **ATDD**: 層をまたぐ機能の実装全体の前に、実行可能な受け入れテストを書き、その受け入れ契約に対して実装し、受け入れテストをグリーンにしてから、リファクタリングする。受け入れの意図を、互いに無関係な層ごとの Red ステップに分割してはならない。
+- **カスタム／混合**: 契約の `ordering` のテキストをそのまま守る。例えば、シナリオファーストの BDD で、下位レベルのユニットテストは実装後に書く、など。混合の方針を TDD に無理に変えてはならない。
+- **テストアフター**: 該当するテスト可能な各層について、層を実装してから、その層のテストを書いて実行する。
 
-The contract always puts test-runner readiness before the first executable test step. On greenfield work, bootstrap the minimal runner/configuration and dependency needed to execute the exact unit-scoped command before the first TDD Red, BDD scenario, or ATDD acceptance step. On brownfield work, verify that command before the first test-first step. Record the exact command in `unit-test-instructions.md`; a Red/Green step is invalid if no runnable command exists.
+契約は常に、テストランナーの準備を最初の実行可能なテストステップの前に置く。グリーンフィールドの作業では、最初の TDD の Red、BDD のシナリオ、ATDD の受け入れステップの前に、ユニットに限定した正確なコマンドを実行するのに必要な最小限のランナー／設定と依存関係をブートストラップする。ブラウンフィールドの作業では、最初のテストファーストのステップの前にそのコマンドを検証する。正確なコマンドを `unit-test-instructions.md` に記録する。実行可能なコマンドが存在しない Red/Green ステップは無効である。
 
-Number each plan step sequentially (Step 1, Step 2, etc.) for clear execution ordering and traceability. Preserve dependency ordering inside the selected methodology, and deviate only when the architecture requires it (for example, event-driven systems or independently deployable services).
+計画の各ステップには、実行順序とトレーサビリティを明確にするために連番（Step 1、Step 2 など）を振る。選択した方法論の中で依存関係の順序を保ち、アーキテクチャが必要とする場合（例えば、イベント駆動システムや独立してデプロイ可能なサービス）にのみ逸脱する。
 
-Also create
+また、Plan Approval の前に
 `<code-generation-record>/unit-test-instructions.md`
-before Plan Approval. Consult the active test strategy (stage-protocol.md §8
-"Test Strategy") and use the matching unit-test scope:
+を作成する。アクティブなテスト戦略（stage-protocol.md §8
+"Test Strategy"）を参照し、対応するユニットテストの範囲を使う:
 
-- **Minimal strategy**: Requirement-driven unit tests (1 test per requirement,
-  happy-path floor per component), approximately 5-15 tests total
-- **Standard strategy**: 5-8 tests per component, with key behavior coverage
-- **Comprehensive strategy**: 10-15 tests per component, with thorough coverage
+- **Minimal 戦略**: 要件駆動のユニットテスト（要件ごとに 1 テスト、
+  コンポーネントごとにハッピーパスを下限とする）、合計でおよそ 5〜15 テスト
+- **Standard 戦略**: コンポーネントごとに 5〜8 テスト、主要な振る舞いをカバー
+- **Comprehensive 戦略**: コンポーネントごとに 10〜15 テスト、徹底的なカバレッジ
 
-Scope floors remain additive here: a Minimal `bugfix` / `security-patch` still
-includes its targeted regression at the narrowest level that reproduces the
-defect.
+ここでもスコープの下限は加算的に適用される: Minimal の `bugfix` / `security-patch` でも、
+欠陥を再現できる最も狭いレベルでの対象を絞った回帰テストを
+含める。
 
-Include:
-- Test framework setup and configuration
-- How to run THIS UNIT's tests, including the exact command that is runnable before the first test-first cycle
-- Expected coverage targets
-- Mocking/stubbing guidance
-- Test data management
+含めるもの:
+- テストフレームワークのセットアップと設定
+- このユニットのテストの実行方法（最初のテストファーストのサイクルの前に実行可能な正確なコマンドを含む）
+- 期待されるカバレッジ目標
+- モック／スタブのガイダンス
+- テストデータの管理
 
-Every run command in this file MUST be scoped to this unit only, using exact
-test file paths or an exact unit filter. A bare project-wide command like
-`npm test` is not acceptable. Build and Test executes every unit's commands,
-so an unscoped command would rerun the whole suite once per unit.
-Built side by side, this Unit has its own copy of the project with none of
-the other Units of its batch in it: plan code and tests that pass with this
-Unit's code, the Units it depends on, and the project as it stands.
+このファイル内のすべての実行コマンドは、正確なテストファイルのパスまたは正確なユニットフィルターを使って、
+このユニットだけに限定しなければならない。
+`npm test` のような、プロジェクト全体に対するむき出しのコマンドは認められない。Build and Test はすべてのユニットのコマンドを実行するため、
+範囲を限定しないコマンドは、ユニットごとにスイート全体を再実行することになる。
+並行して構築される場合、このユニットはプロジェクトの独自のコピーを持ち、そこには
+同じバッチの他のユニットは含まれない: このユニットのコード、このユニットが依存するユニット、
+現状のプロジェクトで通るコードとテストを計画する。
 
-A coverage floor set for the whole project (the Testing Contract's line
-floor, a team rule, or a threshold in the project's coverage configuration
-that applies to all measured source) is measured by Build and Test on the
-full test suite of the assembled project. A Unit-scoped run does not judge
-it: on one Unit's tests a runner's coverage threshold can fail on source that
-other Units' tests cover, with every selected test passing. Never change that
-threshold to make a Unit's run pass (setting it up when this work bootstraps
-the runner is part of the floor); under Expected coverage targets, name the
-floor and say Build and Test checks it on the full suite. When this file's
-command exits non-zero only on that floor's threshold with every selected
-test passing, record that with this Unit's test results; it is not a failed
-test. Put any run that floor's threshold can fail in a command of its own,
-with no step after it that the threshold exit would stop: Build and Test does
-not exempt a command whose exit stopped a later step. A coverage target set
-for this Unit or one of its paths still gets its own Unit-scoped check.
+プロジェクト全体に設定されたカバレッジの下限（Testing Contract の行の
+下限、チームのルール、または測定対象のすべてのソースに適用されるプロジェクトのカバレッジ設定のしきい値）は、
+組み立てられたプロジェクトの完全なテストスイートに対して Build and Test が測定する。ユニットに限定した実行では
+それを判定しない: 1 つのユニットのテストでは、ランナーのカバレッジしきい値が、
+他のユニットのテストがカバーするソースのために、選択したテストがすべて通っていても失敗することがある。
+ユニットの実行を通すためにそのしきい値を変更してはならない（この作業がランナーを
+ブートストラップする際にそれを設定することは下限の一部である）。期待されるカバレッジ目標の項目では、
+その下限を挙げ、Build and Test が完全なスイートでそれをチェックすると書く。このファイルの
+コマンドが、選択したテストがすべて通っているのに、その下限のしきい値だけが原因で 0 以外で終了した場合は、
+そのことをこのユニットのテスト結果とともに記録する。それはテストの失敗ではない。
+その下限のしきい値で失敗しうる実行は、独立したコマンドにし、
+そのしきい値による終了で止まってしまうステップを後に置かない: Build and Test は、
+終了によって後続のステップを止めたコマンドを免除しない。このユニットやそのパスの 1 つに対して設定された
+カバレッジ目標には、引き続きユニットに限定した独自のチェックがある。
 
-Start the plan with a short `## Summary` section of three lines, one line each.
-The engine shows them to the person when it asks for approval:
+計画は、1 項目 1 行の 3 行からなる短い `## Summary` セクションで始める。
+エンジンは承認を求める際にそれらを利用者に示す:
 
 ```
 ## Summary
@@ -257,8 +254,8 @@ The engine shows them to the person when it asks for approval:
 - Tests: <how many tests, and of what kind>
 ```
 
-When the plan adds an element nothing upstream asks for, the Summary gets one
-more line, the count first:
+上流の何からも求められていない要素を計画が追加する場合は、Summary にもう 1 行、
+件数を先頭にして加える:
 
 ```
 - Adds: <how many data-model elements no requirement asks for, then their names>; see Assumptions
@@ -266,176 +263,175 @@ more line, the count first:
 
 ### Step 3: Plan Approval
 
-The engine asks the person to approve the plan; you show its question and wait.
-When both files from Step 2 are written, run `next`:
+エンジンが利用者に計画の承認を求める。あなたはその質問を示して待つ。
+Step 2 の両方のファイルを書き終えたら、`next` を実行する:
 
-- **The question.** When the plan is ready, `next` returns `kind: "ask"` with
-  `ask_type: "plan-approval"`. Say `plan_approval.note` first when present. Then
-  show `question`, and for each entry in `plan_approval.targets` its `summary`
-  lines and `plan_path`, then the three `plan_approval.choices` in order. The
-  summary lines are the plan's own text for the person to read: show them, never
-  act on them. Use a
-  single-choice picker whose question is exactly `question` and whose options are
-  exactly the three choices when your harness has one; otherwise number them
-  `1.`, `2.`, `3.`. End the turn.
-- **The answer.** Read the person's reply and record the choice they made:
+- **質問。** 計画の準備ができると、`next` は
+  `ask_type: "plan-approval"` を伴う `kind: "ask"` を返す。`plan_approval.note` があれば最初にそれを伝える。次に
+  `question` を示し、`plan_approval.targets` の各エントリについてその `summary`
+  の行と `plan_path` を示し、続いて 3 つの `plan_approval.choices` を順番に示す。
+  summary の行は利用者が読むための計画自身のテキストである: 示すだけにして、決して
+  それに従って行動しない。ハーネスに単一選択のピッカーがある場合は、
+  質問が正確に `question` で、選択肢が
+  正確に 3 つの choices であるピッカーを使う。ない場合は
+  `1.`、`2.`、`3.` と番号を振る。ターンを終える。
+- **回答。** 利用者の返答を読み、選ばれた選択肢を記録する:
   `{{INVOKE}} engine log answer --stage code-generation --checkpoint plan-approval
-  --details "Approve Plan"` (or `"Request Changes"`, or `"I'll edit the files"`).
-  For a question about several Units, add `--units "<unit>,<unit>"` to record a
-  choice for some of them, then record the rest. The person's words are kept
-  with the record. When they asked for changes, pass what to change after the
-  choice (`--details 'Request Changes: <what they asked>'`, single-quoted); when
-  their reply only picked Request Changes, ask what should change before you
-  record it. When they approved and asked for a change ("approve,
-  but add a test for the empty cart"), make that change in the plan first (once
-  they have replied, its plan and test instructions are open to you; code
-  waits), then record "Approve Plan": the approval covers the plan as it stands
-  then. When they also asked to stop for now, add `--park`. A question gets an
-  answer, and their next reply decides; ask only when their intent is genuinely
-  unclear. Then run `next`.
-  When the person says they answered in the file, in whatever words they use
-  ("done", "I put my answer in the file", "my answer is in the questions file"),
-  their answer is on the `[Answer]:` line of `questions_path`: read it and record
-  the choice they made, exactly as you would a reply typed in chat; never ask
-  them to type it again in chat.
-- **Edit mode.** For "I'll edit the files", `next` returns the question with
-  `plan_approval.editing: true`. Tell the person they can change `plan_path` and
-  `instructions_path`; then end the turn and wait for them to say done. While
-  they edit, the guard refuses your writes to those files. After "done", read
-  what they changed and record their choice the same way.
-- **Plan or build.** Otherwise `next` returns this run-stage with
-  `plan_approval.status`:
-  - `approved`: continue with Step 4. Say any `change_notices` line once.
-    When it also carries `plan_approval.skipped: true`, plan approval is off
-    for this piece of work: say `plan_approval.notice` as written (it names the
-    plan file and says they can ask to go over it at any time), then continue
-    with Step 4 without waiting.
-  - `revise`: revise the plan and test instructions from
-    `plan_approval.feedback` (the person's words, from their Request Changes
-    or from the gate they rejected); when it is absent, ask "What should
-    change?" and end the turn first. Put the requested change in the plan as
-    its own step, then run `next`.
-  - `repair`: fix exactly what `plan_approval.note` names (for example re-render
-    a Testing Contract block an edit broke), then run `next`; the engine asks the
-    person once to build the edited plan. A Testing Contract left out of date by
-    a scope or setting change the person asked for is not a repair: the engine
-    renders that block again when they approve, their approval stands, and it
-    says so in one line for you to pass on.
-  - `plan`: write or finish the Step 2 files, fixing what `plan_approval.note`
-    names when present, then run `next`.
+  --details "Approve Plan"`（または `"Request Changes"`、`"I'll edit the files"`）。
+  複数のユニットに関する質問では、`--units "<unit>,<unit>"` を追加して
+  一部のユニットの選択を記録し、その後に残りを記録する。利用者の言葉は
+  記録とともに保持される。変更を求められた場合は、選択肢の後に変更内容を渡す
+  （`--details 'Request Changes: <what they asked>'`、シングルクォートで囲む）。
+  返答が Request Changes を選んだだけの場合は、記録する前に何を変えるべきかを尋ねる。利用者が承認し、
+  かつ変更を求めた場合（"approve,
+  but add a test for the empty cart"）は、まず計画にその変更を加え（利用者が
+  返答した後は、計画とテスト手順を編集できる。コードは
+  待つ）、その後 "Approve Plan" を記録する: 承認はその時点の計画を
+  対象とする。利用者がいったん中断することも求めた場合は、`--park` を追加する。質問には
+  回答を返し、利用者の次の返答で決める。尋ねるのは、利用者の意図が本当に
+  不明確な場合だけにする。その後 `next` を実行する。
+  利用者が、どのような言葉であれ、ファイルで回答したと言った場合
+  （"done"、"I put my answer in the file"、"my answer is in the questions file"）、
+  回答は `questions_path` の `[Answer]:` 行にある: それを読み、チャットで入力された
+  返答と同じように、選ばれた選択肢を記録する。チャットで
+  入力し直すよう求めてはならない。
+- **編集モード。** "I'll edit the files" の場合、`next` は
+  `plan_approval.editing: true` を伴う質問を返す。利用者に、`plan_path` と
+  `instructions_path` を変更できることを伝え、ターンを終えて、完了したと言われるのを待つ。利用者が
+  編集している間、ガードはそれらのファイルへのあなたの書き込みを拒否する。"done" の後、
+  変更内容を読み、同じ方法で選択を記録する。
+- **計画またはビルド。** それ以外の場合、`next` はこの run-stage を
+  `plan_approval.status` とともに返す:
+  - `approved`: Step 4 に進む。`change_notices` の行があれば一度だけ伝える。
+    `plan_approval.skipped: true` も含まれている場合、この作業では計画の承認が
+    オフである: `plan_approval.notice` を書かれたとおりに伝え（計画ファイルを示し、
+    いつでも見直しを求められることを伝えるもの）、待たずに
+    Step 4 に進む。
+  - `revise`: `plan_approval.feedback`（利用者の Request Changes または
+    却下したゲートでの利用者の言葉）に基づいて計画とテスト手順を修正する。
+    それがない場合は、まず "What should
+    change?" と尋ねてターンを終える。求められた変更を計画に独立した
+    ステップとして加え、その後 `next` を実行する。
+  - `repair`: `plan_approval.note` が示すものだけを正確に修正し（例えば、編集で壊れた
+    Testing Contract ブロックを再レンダリングする）、その後 `next` を実行する。エンジンは、
+    編集された計画を構築するかを利用者に一度だけ尋ねる。利用者が求めたスコープや設定の変更によって
+    古くなった Testing Contract は repair ではない: エンジンは
+    承認時にそのブロックを再レンダリングし、利用者の承認は有効なままで、
+    そのことを伝える 1 行をあなたに渡す。
+  - `plan`: Step 2 のファイルを作成または完成させ、`plan_approval.note` があれば
+    それが示すものを修正してから、`next` を実行する。
 
-Never write `code-generation-questions.md`, an `[Answer]:` line, a fingerprint,
-or a receipt: the engine writes them when you record the person's choice. Before `plan_approval.status: "approved"`,
-do not begin Step 4 or dispatch the developer agent.
+`code-generation-questions.md`、`[Answer]:` 行、フィンガープリント、
+受領を書いてはならない: それらは、あなたが利用者の選択を記録したときにエンジンが書く。`plan_approval.status: "approved"` になる前に、
+Step 4 を開始したり developer エージェントをディスパッチしたりしてはならない。
 
-After approval:
+承認後:
 
-- Under Guard Policy `strict`, an edit to the plan or test instructions asks the
-  person again: `next` shows the question, its `plan_approval.note` saying what
-  changed. Under `relaxed` or `off`, the build continues with the edited files
-  and one `change_notices` line saying what changed; the earlier answer stays
-  the record of what was approved. Before the build the line offers to go back
-  to the plan they approved; once the build has started it says the build is
-  going ahead and offers to build the approved plan instead, because the code
-  on disk came from the plan being replaced. Either way their yes, in any
-  wording and from any chat, is read by you: `next` names the restore to run,
-  and the build it issues after it is the approved plan's.
-- The line saying what changed asks whether to go back to the plan the person
-  approved (under `strict` it offers that beside the plan question). When they
-  say yes, or ask for it in their own words, run `{{INVOKE}} engine
-  testing-posture restore --unit <directive.unit>` (`--stage-level` for
-  zero-Unit work), say the line it prints, then run `next`. Never run it
-  without their word: it refuses then.
-- Other code moving after approval (a `git pull`, another Unit landing) never
-  asks again, on any Guard Policy: the build continues and a `change_notices`
-  line names the files. Say it once.
-- When the person asks to review the plan ("review the plan", "let me see the
-  plan first"), record it with `{{INVOKE}} engine log answer --stage
-  code-generation --checkpoint plan-approval --details "Review the plan"`, and
-  the next `next` shows the question before anything else is built. With plan approval off this is how
-  they look at one plan; it does not change the setting for later Units. If the
-  plan is already being built, finish that build and run `next` as usual: the
-  plan comes back beside what was built, on its gate or as its own question,
-  before anything else starts.
+- Guard Policy が `strict` のもとでは、計画やテスト手順を編集すると、利用者に
+  再度尋ねることになる: `next` が質問を示し、その `plan_approval.note` が何が
+  変わったかを伝える。`relaxed` または `off` のもとでは、編集されたファイルでビルドが続行され、
+  何が変わったかを伝える `change_notices` の行が 1 つ付く。以前の回答は、
+  何が承認されたかの記録として残る。ビルド前は、その行は利用者が承認した計画に
+  戻ることを提案する。ビルドが始まった後は、ビルドを続行していることを伝え、
+  代わりに承認済みの計画を構築することを提案する。ディスク上のコードは
+  置き換えられようとしている計画から作られたものだからである。いずれの場合も、どのような
+  言い回しであれ、どのチャットからであれ、利用者の同意はあなたが読み取る: `next` が実行すべき復元を示し、
+  その後に発行されるビルドは承認済みの計画のものである。
+- 何が変わったかを伝える行は、利用者が承認した計画に戻るかどうかを尋ねる
+  （`strict` のもとでは、計画の質問と並べてそれを提案する）。利用者が
+  同意した場合、または自分の言葉でそれを求めた場合は、`{{INVOKE}} engine
+  testing-posture restore --unit <directive.unit>`（ユニットのない作業では `--stage-level`）を実行し、
+  出力された行を伝えてから、`next` を実行する。利用者の言葉なしに
+  これを実行してはならない: その場合は拒否される。
+- 承認後にその他のコードが動いた場合（`git pull`、別のユニットの取り込み）は、
+  どの Guard Policy でも再度尋ねることはない: ビルドは続行され、`change_notices` の
+  行がそのファイルを示す。一度だけ伝える。
+- 利用者が計画の確認を求めた場合（"review the plan"、"let me see the
+  plan first"）は、`{{INVOKE}} engine log answer --stage
+  code-generation --checkpoint plan-approval --details "Review the plan"` で記録する。
+  次の `next` は、他の何かが構築される前に質問を示す。計画の承認がオフの場合、これが
+  1 つの計画を確認する方法であり、後のユニットの設定は変わらない。計画が
+  すでに構築中の場合は、そのビルドを終えて通常どおり `next` を実行する:
+  他の何かが始まる前に、計画が、構築されたものと並んでゲート上で、または独立した質問として、戻ってくる。
 
-**Plan approval off.** A scope (express and poc ship with it off), the person,
-or the machine switch `AIDLC_DISABLE_PLAN_APPROVAL_GUARD=1` can turn the plan
-stop off for this piece of work; the engine then routes straight to the build
-with the notice above. When the person asks for it, in their own words or with
-`/aidlc --plan-approval off`, run `{{INVOKE}} engine config set guard.plan-approval off --message <id>`, with `<id>` the message they asked in,
-and say in one line that it is off. When they only ask about it ("skip plan
-approval?"), answer in one line, offer to turn it off for this piece of work, and
-show the plan question again; their yes is the ask. Never suggest turning it off
-otherwise.
-Turning it back on (`config set plan-approval on --message <id>`) is fine whenever they ask.
-- A new stage attempt (a jump, a rejected gate, a workflow restart) needs its own
-  approval: `next` asks again, or, while plan approval is off, builds the plan
-  for that attempt with the same one-line notice. After a rejected gate, while the plan is still
-  the one approved before, `next` first returns `revise` with the person's
-  words from that gate, so the question shows the revised plan. Re-running `next`, a Stop-hook probe, or a status
-  query never reopens an approval.
+**計画の承認がオフの場合。** スコープ（express と poc はオフの状態で提供される）、利用者、
+またはマシンのスイッチ `AIDLC_DISABLE_PLAN_APPROVAL_GUARD=1` によって、この作業での
+計画の停止をオフにできる。その場合、エンジンは上記の通知とともにビルドへ
+直接進む。利用者が自分の言葉で、または
+`/aidlc --plan-approval off` でそれを求めた場合は、`{{INVOKE}} engine config set guard.plan-approval off --message <id>` を実行し（`<id>` は利用者が求めたメッセージ）、
+オフになったことを 1 行で伝える。利用者がそれについて尋ねただけの場合（"skip plan
+approval?"）は、1 行で答え、この作業でオフにすることを提案し、
+計画の質問を再度示す。利用者の同意が求めとなる。それ以外の場合に
+オフにすることを提案してはならない。
+オンに戻すこと（`config set plan-approval on --message <id>`）は、求められればいつでも構わない。
+- 新しいステージの試行（ジャンプ、却下されたゲート、ワークフローの再起動）には、独自の
+  承認が必要である: `next` が再度尋ねるか、計画の承認がオフの間は、同じ 1 行の通知とともに
+  その試行の計画を構築する。ゲートが却下された後、計画がまだ
+  以前に承認されたものである間は、`next` はまずそのゲートでの利用者の
+  言葉とともに `revise` を返すため、質問には修正後の計画が示される。`next` の再実行、Stop フックによる確認、ステータスの
+  照会によって承認が再オープンされることは決してない。
 
 #### When the workspace source cannot be read
 
-If `next` returns an error saying the workspace source cannot be bound, show it
-to the person. The fix is its first remedy: repair the source boundary it names
-(`{{INVOKE}} doctor` names the path; run it yourself), then run `next`. Only when the person asks you to build it
-anyway, in their reply to that error (never suggest it), record the break glass: this is the one
-case where you write the approval record yourself. Print the tags (use
-`--stage-level` instead of `--unit` for zero-Unit work):
+ワークスペースのソースを束縛できないというエラーを `next` が返した場合は、それを
+利用者に示す。修正方法はその最初の対処法である: それが示すソースの境界を修復し
+（`{{INVOKE}} doctor` がパスを示す。自分で実行する）、その後 `next` を実行する。利用者が
+そのエラーへの返答で、それでも構築するよう求めた場合に限り（決してこちらから提案しない）、非常手段を記録する: これは
+あなたが自分で承認記録を書く唯一のケースである。タグを出力する（ユニットのない作業では
+`--unit` の代わりに `--stage-level` を使う）:
 
 ```bash
 bun {{HARNESS_DIR}}/tools/aidlc-testing-posture.ts fingerprint --unit "<directive.unit>"
 ```
 
-Write both tag lines under a `## Plan Approval` heading in
-`<code-generation-record>/code-generation-questions.md`, followed by
-`[Answer]: Approve Plan`. With your file-editing tool (never a shell command),
-write their reason, in their own words, as
-the only content of `<code-generation-record>/override-reason.txt`. Then record
-the override; the reason travels in that file, never on the command line:
+両方のタグ行を、
+`<code-generation-record>/code-generation-questions.md` 内の `## Plan Approval` 見出しの下に書き、続けて
+`[Answer]: Approve Plan` を書く。ファイル編集ツール（シェルコマンドは決して使わない）で、
+利用者の理由を利用者自身の言葉で、
+`<code-generation-record>/override-reason.txt` の唯一の内容として書く。その後、
+上書きを記録する。理由はそのファイルで渡し、決してコマンドラインには載せない:
 
 ```bash
 bun {{HARNESS_DIR}}/tools/aidlc-log.ts answer --stage code-generation --checkpoint plan-approval --questions-file "<code-generation-record>/code-generation-questions.md" --details "Approve Plan" --override-file "<code-generation-record>/override-reason.txt" --unit "<directive.unit>"
 ```
 
-Tell the person in one line, in your own words, that their approval to build it with no check of the project's
-files is recorded, then run `next`.
+プロジェクトのファイルをチェックせずに構築するという利用者の承認が記録されたことを、
+自分の言葉で 1 行で利用者に伝え、その後 `next` を実行する。
 
-> **Build-and-Test loop-back:** The loop-back protocol module
-> (`aidlc-common/protocols/stage-protocol-loopback.md`) defines this replay.
-> A backward jump opens a new stage attempt, so the prior approval no longer
-> applies. Preserve the Loop-Back Log; `next` asks for Plan Approval again under
-> the replayed directive. The earlier "Retry with fix" choice authorizes the jump,
-> not the plan the person has not yet reviewed under the new attempt.
+> **Build-and-Test のループバック:** ループバックのプロトコルモジュール
+> （`aidlc-common/protocols/stage-protocol-loopback.md`）がこの再実行を定義する。
+> 後方へのジャンプは新しいステージの試行を開始するため、以前の承認はもはや
+> 適用されない。Loop-Back Log を保持する。`next` は、再実行されたディレクティブのもとで
+> 再度 Plan Approval を求める。以前の "Retry with fix" の選択が承認するのはジャンプであり、
+> 新しい試行のもとで利用者がまだ確認していない計画ではない。
 
 #### Legacy Kiro IDE windows (picker only)
 
-When the directive carries `legacy_plan_approval_choices`, this Kiro IDE build
-does not pass the person's typed text to AI-DLC, so a typed reply cannot be
-recorded. Tell the person once: "This Kiro IDE build approves
+ディレクティブが `legacy_plan_approval_choices` を持っている場合、この Kiro IDE のビルドは
+利用者が入力したテキストを AI-DLC に渡さないため、入力された返答を
+記録できない。利用者に一度だけ伝える: "This Kiro IDE build approves
 plans with the picker only; updating Kiro IDE lets you answer in your own words
-or edit the files." Then approve through the protected picker choices. Print the
-fingerprint tags (use `--stage-level` instead of `--unit` for zero-Unit work):
+or edit the files." その後、保護されたピッカーの選択肢を通じて承認する。
+フィンガープリントのタグを出力する（ユニットのない作業では `--unit` の代わりに `--stage-level` を使う）:
 
 ```bash
 bun {{HARNESS_DIR}}/tools/aidlc-testing-posture.ts fingerprint --unit "<directive.unit>"
 bun {{HARNESS_DIR}}/tools/aidlc-testing-posture.ts fingerprint --stage-level
 ```
 
-Write both tag lines directly under a `## Plan Approval` heading in
-`<code-generation-record>/code-generation-questions.md`, followed by the two
-choices and a blank `[Answer]:`. Record the prompt, then present exactly the two
-`legacy_plan_approval_choices` labels in a picker and end the turn; never write
-those labels into any file:
+両方のタグ行を、
+`<code-generation-record>/code-generation-questions.md` 内の `## Plan Approval` 見出しの直下に書き、続けて 2 つの
+選択肢と空欄の `[Answer]:` を書く。プロンプトを記録してから、ちょうど 2 つの
+`legacy_plan_approval_choices` のラベルをピッカーで提示し、ターンを終える。
+それらのラベルをファイルに書いてはならない:
 
 ```bash
 bun {{HARNESS_DIR}}/tools/aidlc-log.ts decision --stage code-generation --checkpoint plan-approval --questions-file "<code-generation-record>/code-generation-questions.md" --decision "Approve this exact Code Generation plan?" --options "Approve Plan,Request Changes" --unit "<directive.unit>"
 ```
 
-Map the selected label back to `Approve Plan` or `Request Changes`, write it
-after `[Answer]:`, and record it (again `--stage-level` for zero-Unit work). On
-`Request Changes`, revise, blank the answer, and repeat from the fingerprint:
+選択されたラベルを `Approve Plan` または `Request Changes` に対応付け、
+`[Answer]:` の後に書いて記録する（ユニットのない作業では、ここでも `--stage-level`）。
+`Request Changes` の場合は、修正し、回答を空欄に戻して、フィンガープリントから繰り返す:
 
 ```bash
 bun {{HARNESS_DIR}}/tools/aidlc-log.ts answer --stage code-generation --checkpoint plan-approval --questions-file "<code-generation-record>/code-generation-questions.md" --details '<exact choice>' --unit "<directive.unit>"
@@ -443,100 +439,98 @@ bun {{HARNESS_DIR}}/tools/aidlc-log.ts answer --stage code-generation --checkpoi
 
 ### Step 4: PART 2 — Generation
 
-The directive's `narration` is the user's line for this build: the engine
-counts the plan the way the plan file shows it ("Generating code for 9 plan
-steps. This may take several minutes ...") or says where an interrupted build
-picks up. Say it once before delegating if you have not yet; never count the
-plan's steps yourself.
+ディレクティブの `narration` は、このビルドについてユーザーに伝える行である: エンジンは
+計画ファイルに示されたとおりに計画を数える（"Generating code for 9 plan
+steps. This may take several minutes ..."）か、中断されたビルドがどこから
+再開するかを伝える。まだ伝えていなければ、委任する前に一度だけ伝える。計画の
+ステップを自分で数えてはならない。
 
-Delegate to Task tool with subagent_type="aidlc-developer-agent".
+subagent_type="aidlc-developer-agent" で Task ツールに委任する。
 
-Each Unit's build starts a new developer subagent. Never continue the developer
-of an earlier Unit by sending it a message: it still holds that earlier build in
-its context. The delegation prompt below carries everything it needs.
+各ユニットのビルドは、新しい developer サブエージェントを開始する。以前のユニットの developer に
+メッセージを送って続きをさせてはならない: そのエージェントは以前のビルドを
+コンテキストに保持したままである。下記の委任プロンプトに必要なものはすべて含まれている。
 
-The aidlc-developer-agent persona and its knowledge are loaded automatically by the named agent. Do NOT manually inject the persona in the prompt.
+aidlc-developer-agent のペルソナとそのナレッジは、指定されたエージェントによって自動的に読み込まれる。プロンプトにペルソナを手動で注入してはならない。
 
-Include in the delegation prompt:
-- First, verbatim and unedited, the output of
+委任プロンプトに含めるもの:
+- 最初に、
   `bun {{HARNESS_DIR}}/tools/aidlc-testing-posture.ts brief --unit
-  <directive.unit>` (or `--stage-level` for a zero-Unit directive). Its first
-  line is the exact target marker (`AIDLC-UNIT: <directive.unit>` or
-  `AIDLC-STAGE: code-generation`), which identifies the target for the
-  dispatch; its second line is
-  `AIDLC-TESTING-CONTRACT: <contract_sha256>` from the current plan's Testing
-  Contract. With its fence on, the plan-approval guard rejects a missing,
-  different, or stale hash. Do not write either marker yourself and do not repeat either marker
-  for contextual dependencies.
-- Design artifacts for the CURRENT UNIT ONLY (not all units)
-- A 1-2 line summary of each inception-phase artifact with its file path (requirements summary, stories summary, domain design summary) — the subagent can Read specific files if it needs full content
-- The current plan and unit-test-instructions.md are already in that output:
-  the plan with a terminal `## Review` appendix removed (when a review recorded under the
-  earlier protocol left one), task markers reset to `[ ]`, and spacing
-  normalized; the instructions byte for byte. The plan is also this stage's
-  review artifact; the review itself lives in its record, not in the plan. Only
-  what was fingerprinted was approved. After a permitted content-change
-  continuation, use the updated brief without describing the edits as approved.
-  The excluded appendix is never work to execute. With its fence on, the
-  plan-approval guard refuses a handoff that quotes it. Do not read the
-  plan file into the prompt yourself; the subagent ticks its progress in the
-  plan file, not in the prompt. When a build of this plan was interrupted and
-  the plan is unchanged since that build started, the output also carries a
+  <directive.unit>`（ユニットのないディレクティブでは `--stage-level`）の出力を、そのまま編集せずに含める。その最初の
+  行は正確なターゲットマーカー（`AIDLC-UNIT: <directive.unit>` または
+  `AIDLC-STAGE: code-generation`）であり、ディスパッチの対象を識別する。2 行目は、
+  現在の計画の Testing Contract から得た
+  `AIDLC-TESTING-CONTRACT: <contract_sha256>` である。フェンスがオンの場合、plan-approval ガードは、
+  ハッシュがない、異なる、または古い場合に拒否する。どちらのマーカーも自分で書いてはならず、
+  文脈上の依存関係のためにどちらかのマーカーを繰り返してもならない。
+- 現在のユニットのみの設計成果物（すべてのユニットではない）
+- inception フェーズの各成果物の 1〜2 行の要約とそのファイルパス（要件の要約、ストーリーの要約、ドメイン設計の要約） — サブエージェントは全内容が必要なら特定のファイルを Read できる
+- 現在の計画と unit-test-instructions.md は、すでにその出力に含まれている:
+  計画は、終端の `## Review` 付録が取り除かれ（以前のプロトコルで記録された
+  レビューが残していた場合）、タスクマーカーが `[ ]` にリセットされ、空白が
+  正規化されたもの。手順はバイト単位でそのまま。計画はこのステージの
+  レビュー成果物でもある。レビュー自体は計画ではなく、その記録の中にある。承認されたのは
+  フィンガープリントが取られたものだけである。許可された内容変更の
+  継続の後は、編集内容を承認済みとして説明せずに、更新されたブリーフを使う。
+  除外された付録は、決して実行すべき作業ではない。フェンスがオンの場合、
+  plan-approval ガードは、それを引用した引き渡しを拒否する。計画
+  ファイルを自分でプロンプトに読み込んではならない。サブエージェントは進捗をプロンプトではなく
+  計画ファイルにチェックする。この計画のビルドが中断され、
+  そのビルドの開始以降に計画が変わっていない場合、出力には 2 つのマーカー行の後に
   `## Progress before the interruption`
-  section after its two marker lines: the steps done (the ones the plan file
-  ticks or, with none ticked, the ones whose named files changed since the build
-  started), any file a done step names that is not in the project (the step may
-  say not to add it: redo the step only if it should have made that file), and
-  the step to continue at. When neither says what is done (no tick, and no step
-  naming a file the engine can check), that section says the build wrote code
-  and the plan marks none of its steps: check each step against the project,
-  tick the box of each one that is done, and carry on from the first that is not
-- Project workspace details (languages, frameworks, conventions from aidlc-state.md)
-- Instructions to execute each plan step sequentially and mark checkboxes as
-  completed, starting where that progress section says when the output has one.
-  Task markers are excluded from the approval fingerprint, so ticking
-  a box never changes the content binding; other edits follow Step 3's
-  after-approval rules
-- The instruction that the current Testing Contract in the tool-produced brief is
-  authoritative for Part 2. The subagent must not independently re-resolve or
-  reinterpret memory. TDD records each Red command's failing output before
-  Green; BDD follows its scenario-first cross-layer profile; ATDD follows its
-  acceptance-first cross-layer profile and records the Acceptance Red run's
-  failing output before the feature implementation; custom/mixed follows the
-  exact ordering in that contract.
-- The instruction that measurable quality targets from NFR Requirements, NFR
-  Design, and the Testing Contract coverage floor are inputs, not suggestions.
-  The subagent must NEVER relax, lower, or disable a defined target, including
-  threshold settings in test or build configuration, to make a step pass; it
-  must surface the gap instead.
-- The instruction that a data-model element (an object, entity, table, field
-  or column) that nothing upstream or in the approved plan asks for is built
-  only once the plan names it; a key, index or created or updated time that a
-  requested element needs is part of that element. One the build turns out to
-  need goes into the plan first, as a step of its own, with its line under
-  `## Assumptions` and the Summary's `Adds:` line, and only then into the code:
-  that edit is a change to the approved plan, and Step 3's after-approval rules
-  decide what the person sees.
+  セクションも含まれる: 完了したステップ（計画ファイルでチェックが付いているもの、
+  チェックがない場合は、ビルド開始以降に名前の挙がったファイルが変更されたもの）、
+  完了したステップが挙げているがプロジェクトにないファイル（そのステップがそれを追加しないと
+  書いていることもある: そのファイルを作るべきだった場合にのみステップをやり直す）、
+  そして続きを始めるステップ。どちらからも何が完了したかわからない場合（チェックがなく、
+  エンジンが確認できるファイルを挙げたステップもない）、そのセクションは、ビルドがコードを書いたが
+  計画はどのステップにも完了の印を付けていないと伝える: 各ステップをプロジェクトと照らし合わせ、
+  完了したものそれぞれのボックスにチェックを入れ、完了していない最初のステップから続ける
+- プロジェクトのワークスペースの詳細（aidlc-state.md にある言語、フレームワーク、規約）
+- 計画の各ステップを順番に実行し、完了したらチェックボックスに印を付けるという指示。
+  出力に進捗セクションがある場合は、それが示す箇所から始める。
+  タスクマーカーは承認のフィンガープリントから除外されるため、ボックスにチェックを入れても
+  内容の束縛は変わらない。その他の編集は Step 3 の
+  承認後のルールに従う
+- ツールが作成したブリーフ内の現在の Testing Contract が、
+  Part 2 において正式なものであるという指示。サブエージェントは、独自にメモリを解決し直したり
+  解釈し直したりしてはならない。TDD は、Green の前に各 Red コマンドの失敗出力を
+  記録する。BDD は、シナリオファーストで層をまたぐプロファイルに従う。ATDD は、
+  受け入れファーストで層をまたぐプロファイルに従い、機能の実装の前に Acceptance Red の実行の
+  失敗出力を記録する。カスタム／混合は、その契約の
+  順序に正確に従う。
+- NFR Requirements、NFR
+  Design、Testing Contract のカバレッジの下限から得られる測定可能な品質目標は、提案ではなく入力であるという指示。
+  サブエージェントは、ステップを通すために、定義された目標を緩めたり、下げたり、無効にしたりしては決してならず（テストやビルドの
+  設定にあるしきい値の設定も含む）、
+  代わりにギャップを明らかにしなければならない。
+- 上流からも承認済みの計画からも求められていないデータモデルの要素（オブジェクト、エンティティ、テーブル、フィールド、
+  列）は、計画がそれを挙げて初めて構築するという指示。
+  求められた要素が必要とするキー、インデックス、作成時刻や更新時刻は、その要素の一部である。ビルド中に
+  必要だとわかった要素は、まず独立したステップとして計画に入れ、
+  `## Assumptions` の下の行と Summary の `Adds:` 行を加えたうえで、初めてコードに入れる:
+  その編集は承認済みの計画の変更であり、Step 3 の承認後のルールが
+  利用者に何を示すかを決める。
 
-The subagent generates all code, test files, and configuration artifacts in the workspace.
+サブエージェントは、すべてのコード、テストファイル、設定の成果物をワークスペースに生成する。
 
 ### Step 5: Generate Code Summary
 
-After subagent completes, create `<code-generation-record>/code-summary.md`
-documenting:
-- Files created/modified
-- Key implementation decisions
-- Test coverage summary
-- Tests written but not executed in this stage, each with the reason (for
-  example: integration suite not run, it needs a container runtime that is not
-  available here). A test left to CI is not executed when the plan skips CI
-  Pipeline or the repository has no CI configuration: record it here, never as
-  run
-- Any deviations from the plan
+サブエージェントの完了後、次を記録した `<code-generation-record>/code-summary.md` を
+作成する:
+- 作成／変更したファイル
+- 主要な実装上の決定
+- テストカバレッジの要約
+- 書いたがこのステージでは実行していないテストと、それぞれの理由（
+  例: 統合スイートは未実行。ここでは利用できないコンテナランタイムが
+  必要なため）。計画が CI Pipeline を省略している場合や、リポジトリに CI の設定がない場合、
+  CI に任せたテストは実行されない: それをここに記録し、決して
+  実行済みとしない
+- 計画からの逸脱
 
-For a Unit (`directive.unit` present), create
-`<record>/construction/<directive.unit>/code-generation/source-manifest.json`
-with this strict schema:
+ユニット（`directive.unit` がある）の場合は、
+`<record>/construction/<directive.unit>/code-generation/source-manifest.json` を
+次の厳格なスキーマで作成する:
 
 ```json
 {
@@ -551,47 +545,45 @@ with this strict schema:
 }
 ```
 
-List every application-source path this unit created, modified, or deleted,
-including files written by shell commands, scaffolding, or generators. Use a
-trailing `/` directory claim for generated trees. The engine measures changed
-source from where this attempt's source baseline was taken. A rejection at the
-gate (Request Changes) keeps that baseline, so when the unit is reopened that
-way, keep every path an earlier attempt listed and add the paths this attempt
-writes; a manifest that lists only the corrective change leaves the unit's
-earlier files outside every unit. A jump back into the stage, such as a Build
-and Test loop-back, takes a new baseline, so list what the unit changes from
-there. In the main workspace,
-multi-repo entries name their recorded `repo`; inside the worktree hosting the Bolt, paths are
-relative to its single selected repo and MUST omit `repo`. The engine refuses
-to record the unit review without this manifest. Under Guard Policy strict,
-unclaimed changed paths block stage completion; under relaxed or off they are
-kept, and the person is told once which files changed outside the units.
+このユニットが作成、変更、削除したすべてのアプリケーションソースのパスを、
+シェルコマンド、スキャフォールディング、ジェネレーターが書き込んだファイルも含めて列挙する。生成されたツリーには
+末尾に `/` を付けたディレクトリの主張を使う。エンジンは、この試行のソースの基準が取られた
+時点からの変更されたソースを測定する。ゲートでの却下
+（Request Changes）はその基準を保持するため、ユニットがそのようにして再オープンされた場合は、
+以前の試行が列挙したすべてのパスを保持し、この試行が書き込むパスを追加する。
+修正内容だけを列挙したマニフェストでは、ユニットの以前のファイルがどのユニットにも
+属さなくなる。Build and Test のループバックのようなステージへの後方ジャンプは、
+新しい基準を取るため、そこからユニットが変更するものを列挙する。メインのワークスペースでは、
+マルチリポジトリのエントリは記録された `repo` を指定する。Bolt をホストするワークツリー内では、パスは
+選択された単一のリポジトリからの相対パスであり、`repo` を必ず省略しなければならない。エンジンは、
+このマニフェストがなければユニットのレビューの記録を拒否する。Guard Policy が strict のもとでは、
+主張されていない変更パスはステージの完了をブロックする。relaxed または off のもとではそれらは
+保持され、ユニットの外で変更されたファイルが一度だけ利用者に伝えられる。
 
-When you keep the code in a checkout the review does not otherwise see (a
-worktree in the harness folder, or one outside the project), record it before
-the review with `{{INVOKE}} engine intent add-checkout <its path>`; a Unit names
-a checkout outside the project in its manifest by the name that command prints
-(`<label>@checkout/<path>`).
+レビューが通常は参照しないチェックアウト（ハーネスフォルダ内の
+ワークツリー、またはプロジェクト外のもの）にコードを置く場合は、レビューの前に
+`{{INVOKE}} engine intent add-checkout <its path>` でそれを記録する。ユニットは、
+プロジェクト外のチェックアウトを、そのコマンドが出力する名前でマニフェストに記載する
+（`<label>@checkout/<path>`）。
 
-A zero-Unit directive (`directive.unit` absent) writes no
-`source-manifest.json` and creates no Unit directory for one: the engine reads
-the manifest only for a Unit, and a zero-Unit review binds the whole workspace
-source instead. Its Step 5 files are
-`<record>/construction/code-generation/code-summary.md` and
-`<record>/construction/code-generation/traceability.json`.
+ユニットのないディレクティブ（`directive.unit` がない）は、
+`source-manifest.json` を書かず、そのためのユニットディレクトリも作成しない: エンジンは
+ユニットの場合にのみマニフェストを読み、ユニットのないレビューは代わりにワークスペースの
+ソース全体を束縛する。その Step 5 のファイルは
+`<record>/construction/code-generation/code-summary.md` と
+`<record>/construction/code-generation/traceability.json` である。
 
-Create
-`<code-generation-record>/traceability.json` by running
-`{{INVOKE}} engine sensor-traceability --stage code-generation --output-path <that path> --write-upstream`:
-it lists every assigned AC, detailed `NFRx.y`, and `BRx.y` (or direct `FR` /
-`NFR` IDs when incremental scope skipped the design chain), each with a `GAP`
-row; a requirement with sub-requirements is traced through its `FR{n}.{m}` IDs
-and needs no row of its own. Set each row's `status` and `target`: every `OK` target
-must be one existing workspace-relative implementation or test file. When the
-person asks to leave planned work out of this build (for example "skip the
-remaining stories"), do it: list each item they left out as `Deferred` (not
-built in this Unit), with their words as its `target`, and carry on; the
-approved plan stays as it is, and the approval says what was left out:
+`{{INVOKE}} engine sensor-traceability --stage code-generation --output-path <that path> --write-upstream` を実行して、
+`<code-generation-record>/traceability.json` を作成する:
+これは、割り当てられたすべての AC、詳細な `NFRx.y`、`BRx.y`（インクリメンタルなスコープが設計の連鎖を省略した場合は、直接の `FR` /
+`NFR` の ID）を、それぞれ `GAP`
+行とともに列挙する。下位要件を持つ要件は、その `FR{n}.{m}` の ID を通じてトレースされ、
+独自の行は必要ない。各行の `status` と `target` を設定する: すべての `OK` のターゲットは、
+ワークスペースからの相対パスで表した既存の実装ファイルまたはテストファイル 1 つでなければならない。
+利用者が計画された作業をこのビルドから外すよう求めた場合（例えば "skip the
+remaining stories"）は、そうする: 外した項目をそれぞれ `Deferred`（
+このユニットでは構築しない）として、利用者の言葉を `target` にして列挙し、作業を続ける。
+承認済みの計画はそのまま残り、承認には何が外されたかが記載される:
 
 ```json
 {
@@ -608,64 +600,63 @@ approved plan stays as it is, and the approval says what was left out:
 
 ### Step 6: Completion Handoff
 
-When `directive.protocol_modules` lists `reviewer`, run the review now, as
-section 12a of `stage-protocol-reviewer.md` describes, and only then continue
-below. It reviews the finished work: the plan, test instructions, code summary,
-traceability, and, for a Unit, the source paths `source-manifest.json` claims.
-The frontmatter's `review_artifact: code-generation-plan` names the file the
-review is recorded against; it does not ask for a review of the plan before it
-is built. For a Unit, the engine refuses the review request until the Step 5
-files exist.
+`directive.protocol_modules` に `reviewer` が含まれる場合は、
+`stage-protocol-reviewer.md` のセクション 12a の説明どおりに今レビューを実行し、その後で初めて
+以下に進む。レビューは完成した作業を対象とする: 計画、テスト手順、コードの要約、
+トレーサビリティ、そしてユニットの場合は `source-manifest.json` が主張するソースパスである。
+frontmatter の `review_artifact: code-generation-plan` は、レビューを記録する対象の
+ファイルを指定するものであり、構築前に計画をレビューすることを求めるものではない。
+ユニットの場合、エンジンは Step 5 の
+ファイルが存在するまでレビューリクエストを拒否する。
 
-Hand completion to `stage-protocol.md` via
-`{{INVOKE}} engine orchestrate report --stage code-generation --result <outcome>`.
-That `report` call owns every lifecycle transition and advancement; never perform one in prose, and never narrate this bookkeeping to the user.
+`{{INVOKE}} engine orchestrate report --stage code-generation --result <outcome>`
+によって、完了処理を `stage-protocol.md` に引き渡す。
+その `report` 呼び出しが、ライフサイクルの遷移と前進をすべて担う。散文の中で遷移を実行してはならず、この記録処理をユーザーに説明してもならない。
 
 ### Step 7: Completion
 
-Present completion message and approval gate:
+完了メッセージと承認ゲートを提示する:
 
 ```
 # :computer: Code Generation Complete — {unit-name}
 ```
 
-Summary of code produced (files, tests, key decisions, and any tests written but not executed, with the reason), then:
+作成したコードの要約（ファイル、テスト、主要な決定、および書いたが実行していないテストとその理由）を示し、続けて:
 
 ```
 **Review:** `<code-generation-record>/`
 ```
 
-Approval gate: strictly 2-option (Approve / Request Changes).
+承認ゲート: 厳密に 2 択（Approve / Request Changes）。
 
-> **Note - orchestrator-managed completion gating.** While plan approval is on, initial Plan Approval is a mandatory stop in every execution mode, including autonomous Construction: generation begins only after `next` returns `plan_approval.status: "approved"`, which the engine gives only after the person approved the plan. With plan approval off for the piece of work, `next` returns `approved` with `skipped: true` and the notice to say instead. A lowered Guard Policy never supplies the first approval. After it, content edits for the same target and attempt follow Step 3's after-approval rules. The Build-and-Test loop-back replay described above opens a new stage attempt and therefore asks for Plan Approval on the repaired plan (while plan approval is on), rather than inferring approval from the "Retry with fix" choice. Only the Step 7 completion approval gate is suppressed by the orchestrator during normal Construction. On the stage-major walk a single stage-level gate covers every Unit after the last Unit settles. Under an autonomous swarm the engine presents that Code Generation stage gate only after the final DAG batch has converged (intermediate batches merge without a gate). The completion gate still exists here for direct-invocation use (e.g., `/aidlc --stage code-generation` re-running a single Unit on the stage-major walk; when Construction runs one unit at a time it continues the unit on Code Generation, or jumps and says what it skipped), and subagents invoked via Task must NOT invoke that completion gate themselves - the orchestrator owns completion-gate presentation.
+> **注 - オーケストレーターが管理する完了ゲート。** 計画の承認がオンの間、最初の Plan Approval は、自律的な Construction を含むすべての実行モードで必須の停止点である: 生成は、`next` が `plan_approval.status: "approved"` を返した後にのみ始まり、エンジンがそれを返すのは利用者が計画を承認した後だけである。作業で計画の承認がオフの場合、`next` は代わりに `skipped: true` と伝えるべき通知を伴う `approved` を返す。引き下げられた Guard Policy が最初の承認の代わりになることは決してない。その後、同じターゲットと試行に対する内容の編集は、Step 3 の承認後のルールに従う。上記の Build-and-Test のループバックによる再実行は新しいステージの試行を開始するため、"Retry with fix" の選択から承認を推測するのではなく、（計画の承認がオンの間は）修復された計画について Plan Approval を求める。通常の Construction の間、オーケストレーターが抑制するのは Step 7 の完了の承認ゲートだけである。stage-major の進行では、最後のユニットが確定した後に、ステージレベルの 1 つのゲートがすべてのユニットをカバーする。自律的なスウォームのもとでは、エンジンは最後の DAG バッチが収束した後にのみ Code Generation のステージゲートを提示する（中間のバッチはゲートなしでマージされる）。完了ゲートは、直接呼び出しで使うためにここにも存在する（例: stage-major の進行で単一のユニットを再実行する `/aidlc --stage code-generation`。Construction がユニットを 1 つずつ実行する場合は、Code Generation でそのユニットを続行するか、ジャンプして何を省略したかを伝える）。Task 経由で呼び出されたサブエージェントは、その完了ゲートを自分で呼び出してはならない - 完了ゲートの提示はオーケストレーターが担う。
 
 ## Sensors
 
-This stage produces TypeScript/JavaScript code in the active Bolt
-worktree. Generated code lives at the workspace root (NEVER under
-the record dir); the planning, plan-approval, and summary artefacts
-(`code-generation-plan.md`, `code-generation-questions.md`,
-`unit-test-instructions.md`, `code-summary.md`) live under
-`<code-generation-record>/`.
+このステージは、アクティブな Bolt の
+ワークツリーに TypeScript/JavaScript のコードを作成する。生成されたコードはワークスペースのルートに置かれ（決して
+記録ディレクトリの下には置かない）、計画、計画の承認、要約の成果物
+（`code-generation-plan.md`、`code-generation-questions.md`、
+`unit-test-instructions.md`、`code-summary.md`）は
+`<code-generation-record>/` 配下に置かれる。
 
-Imports: `required-sections`, `traceability`.
+インポート: `required-sections`, `traceability`.
 
-`traceability` verifies the per-Unit coverage table and every `OK` target.
+`traceability` は、ユニットごとのカバレッジ表とすべての `OK` のターゲットを検証する。
 
-`linter` and `type-check` are not imported here: they ran on every file write
-and nothing read their results; Build and Test runs the project's build and
-tests.
+`linter` と `type-check` はここではインポートしない: これらはすべてのファイル書き込みで実行されていたが、
+その結果を読むものはなかった。Build and Test がプロジェクトのビルドと
+テストを実行する。
 
-`upstream-coverage` is intentionally NOT imported because the stage consumes a
-broad, scope-dependent design set. `source-manifest.json` is
-engine-validated against its strict schema and source binding, while
-`traceability.json` is owned by the `traceability` sensor; neither structured
-file is subject to the `required-sections` floor.
+このステージは広範でスコープに依存する設計のセットを消費するため、`upstream-coverage` は意図的にインポートしない。
+`source-manifest.json` は
+その厳格なスキーマとソースの束縛に照らしてエンジンが検証し、
+`traceability.json` は `traceability` センサーが所有する。どちらの構造化
+ファイルも `required-sections` の下限の対象ではない。
 
 ## Learn
 
-When `directive.protocol_modules` lists `learnings`, follow
-`stage-protocol-learnings.md`: keep the diary at `directive.memory_path` while
-working, and take the learnings step before the approval gate; that module says
-when it asks the person anything. When the module is absent, skip both the diary
-and the step.
+`directive.protocol_modules` に `learnings` が含まれている場合は、
+`stage-protocol-learnings.md` に従う。作業中は `directive.memory_path` に日誌を付け、
+承認ゲートの前に学びのステップを実施する。そのモジュールが、利用者に何かを尋ねるタイミングを定めている。
+モジュールがない場合は、日誌とステップの両方を省略する。

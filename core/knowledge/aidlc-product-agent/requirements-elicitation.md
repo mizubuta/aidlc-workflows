@@ -1,86 +1,86 @@
 # Requirements Elicitation Techniques
 
 ## Purpose
-Systematic methods for discovering, capturing, and validating what stakeholders truly need — not just what they initially say they want.
+ステークホルダーが当初「欲しい」と言うものだけでなく、本当に必要としているものを発見し、捉え、検証するための体系的な手法。
 
 ## Technique Selection Guide
 
-| Technique | Best For | Effort | Fidelity |
+| 手法 | 最適な用途 | 労力 | 忠実度 |
 |-----------|----------|--------|----------|
-| Stakeholder Interviews | Deep understanding of individual needs | Medium | High |
-| Workshops | Consensus building, conflict resolution | High | High |
-| Observation | Understanding actual vs stated workflows | Medium | Very High |
-| Document Analysis | Existing system understanding, compliance | Low | Medium |
-| Prototyping | Validating assumptions, UI-heavy features | High | Very High |
+| ステークホルダーインタビュー | 個々のニーズの深い理解 | 中 | 高 |
+| ワークショップ | 合意形成、対立の解消 | 高 | 高 |
+| 観察 | 実際のワークフローと申告されたワークフローの違いの理解 | 中 | 非常に高 |
+| ドキュメント分析 | 既存システムの理解、コンプライアンス | 低 | 中 |
+| プロトタイピング | 前提の検証、UI 中心の機能 | 高 | 非常に高 |
 
 ## Stakeholder Interviews
 
 ### Preparation
-- Research the stakeholder's role, responsibilities, and known pain points
-- Prepare 8-12 open-ended questions; plan for 45-60 minutes
-- Share agenda in advance so they can prepare examples
+- ステークホルダーの役割、責任、既知の課題を調べる
+- 8〜12 個のオープンエンドの質問を用意する。時間は 45〜60 分を見込む
+- 相手が事例を用意できるよう、事前にアジェンダを共有する
 
 ### Interview Question Templates
-- "Walk me through a typical day when you [process]. What frustrates you most?"
-- "If you could change one thing about the current system, what would it be and why?"
-- "When [process] goes wrong, what happens? Who gets impacted?"
-- "How do you measure success in [area]? What metrics matter?"
-- "Show me how you currently do [task] — what workarounds have you developed?"
-- "Who else should I talk to about this?"
+- 「[プロセス] を行う典型的な 1 日を順に説明してください。最も不満に感じるのは何ですか？」
+- 「現在のシステムについて 1 つだけ変えられるとしたら、何をなぜ変えますか？」
+- 「[プロセス] がうまくいかないと、何が起こりますか？ 誰が影響を受けますか？」
+- 「[領域] での成功をどう測っていますか？ どの指標が重要ですか？」
+- 「現在 [タスク] をどのように行っているか見せてください — どのような回避策を編み出しましたか？」
+- 「この件について、ほかに誰と話すべきですか？」
 
 ### Common Pitfalls
-- **Leading questions**: "Don't you think X would be better?" forces agreement
-- **Assumption bias**: Projecting your solution onto their problem
-- **HiPPO effect**: Letting the Highest-Paid Person's Opinion dominate
-- **Survivorship bias**: Only talking to current users, ignoring churned users
-- **Premature solutioning**: Jumping to "we could build X" before understanding the problem
+- **誘導質問**: 「X のほうが良いと思いませんか？」は同意を強いる
+- **思い込みバイアス**: 自分の解決策を相手の問題に投影する
+- **HiPPO 効果**: 最も給料の高い人の意見（Highest-Paid Person's Opinion）に支配させてしまう
+- **生存者バイアス**: 現在のユーザーとだけ話し、離脱したユーザーを無視する
+- **早すぎる解決策の提示**: 問題を理解する前に「X を作れる」に飛びつく
 
 ## Workshops
 
 ### When to Use
-- Multiple stakeholders with conflicting priorities
-- Cross-functional alignment needed (e.g., sales vs engineering vs support)
-- Time-boxed discovery needed (compressed timeline)
+- 優先順位が対立する複数のステークホルダーがいる
+- 部門横断での合意形成が必要（例: 営業 vs エンジニアリング vs サポート）
+- 時間を区切った発見が必要（短縮されたタイムライン）
 
 ### Workshop Format
-1. **Context setting** (10 min) — Problem statement, goals, ground rules
-2. **Individual ideation** (10 min) — Silent sticky-note brainstorming prevents groupthink
-3. **Share and cluster** (15 min) — Group similar ideas, identify themes
-4. **Dot voting** (5 min) — Each participant gets 3 votes to prioritize
-5. **Deep dive** (30 min) — Discuss top-voted items, capture acceptance criteria
-6. **Wrap-up** (5 min) — Summarize decisions, assign follow-ups
+1. **コンテキストの設定**（10 分） — 問題ステートメント、目標、基本ルール
+2. **個人でのアイデア出し**（10 分） — 付箋を使った無言のブレインストーミングで集団浅慮を防ぐ
+3. **共有とクラスタリング**（15 分） — 似たアイデアをまとめ、テーマを特定する
+4. **ドット投票**（5 分） — 参加者はそれぞれ 3 票を持ち、優先順位を付ける
+5. **深掘り**（30 分） — 得票の多い項目を議論し、受け入れ基準を記録する
+6. **まとめ**（5 分） — 決定事項を要約し、フォローアップの担当を割り当てる
 
 ## Observation (Contextual Inquiry)
 
 ### Method
-- Watch users perform real tasks in their actual environment
-- Ask "why" when you see unexpected behavior — workarounds reveal unmet needs
-- Note environmental factors: interruptions, tool switching, manual data entry
+- ユーザーが実際の環境で実際のタスクを行う様子を観察する
+- 予想外の行動を見たら「なぜ」と尋ねる — 回避策は満たされていないニーズを明らかにする
+- 環境要因に注目する: 中断、ツールの切り替え、手作業のデータ入力
 
 ### Key Insight
-Users often cannot articulate their workflow because it is habitual. Observation reveals the gap between "what they say they do" and "what they actually do."
+ユーザーは習慣化しているために、自分のワークフローを言葉にできないことが多い。観察によって「本人が行っていると言うこと」と「実際に行っていること」のギャップが明らかになる。
 
 ## Document Analysis
 
 ### Sources to Review
-- Existing system documentation, help desk tickets, bug reports
-- Regulatory requirements, compliance standards, audit findings
-- Competitor product documentation and reviews
-- Current process flowcharts, SOPs, training materials
+- 既存システムのドキュメント、ヘルプデスクのチケット、バグレポート
+- 規制要件、コンプライアンス基準、監査での指摘事項
+- 競合製品のドキュメントとレビュー
+- 現行プロセスのフローチャート、SOP、トレーニング資料
 
 ## Prototyping for Requirements
 
 ### Progression
-1. **Paper sketches** — Validate concepts in minutes, discard freely
-2. **Clickable wireframes** — Test navigation and flow logic
-3. **Functional prototypes** — Validate complex interactions, data-dependent UIs
+1. **紙のスケッチ** — 数分でコンセプトを検証し、気軽に捨てる
+2. **クリック可能なワイヤーフレーム** — ナビゲーションとフローのロジックをテストする
+3. **機能するプロトタイプ** — 複雑なインタラクションやデータに依存する UI を検証する
 
 ### Rule of Thumb
-Prototype the riskiest assumption first. If users struggle with the core concept in a paper sketch, building a functional prototype wastes effort.
+最もリスクの高い前提から先にプロトタイプを作る。紙のスケッチの段階でユーザーが中核となるコンセプトに苦戦しているなら、機能するプロトタイプを作るのは労力の無駄になる。
 
 ## Validation Checklist
-- [ ] Each requirement traces to at least one stakeholder need
-- [ ] Requirements are testable (clear pass/fail criteria exist)
-- [ ] No orphan requirements (requirements with no user or business justification)
-- [ ] Conflicts between stakeholders are explicitly resolved and documented
-- [ ] Non-functional requirements (performance, security, scale) are captured alongside functional ones
+- [ ] 各要件が、少なくとも 1 つのステークホルダーのニーズに遡れる
+- [ ] 要件がテスト可能である（明確な合否基準がある）
+- [ ] 孤立した要件がない（ユーザーやビジネス上の正当性がない要件）
+- [ ] ステークホルダー間の対立が明示的に解決され、文書化されている
+- [ ] 非機能要件（パフォーマンス、セキュリティ、スケール）が機能要件と併せて捉えられている

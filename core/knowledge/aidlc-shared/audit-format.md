@@ -352,221 +352,215 @@ Unit レシートのフロアからは無視されたままである。したが
 
 ### Documents (3 events)
 
-The DocumentKB is a **space-level** store, so all three events land in the space-level audit shard (`spaces/<space>/intents/audit/`) even for an intent-scoped document — the intent UUID is recorded as a field rather than selecting the shard. This keeps one document's history in one place across an `associate`/`dissociate` scope change. These events are provenance, **not a backup**: deleting the whole `documentkb/` tree destroys the per-document records, so document ids, tombstones, and intent links do NOT survive it — the next `sync` re-indexes the surviving originals as brand-new rows. Only a lost `index.json` alone is recoverable (`sync` rebuilds it from the per-document `metadata.json` files).
+DocumentKB は**スペースレベル**のストアであるため、インテントスコープのドキュメントであっても、3 つのイベントはすべてスペースレベルの監査シャード（`spaces/<space>/intents/audit/`）に記録される。インテントの UUID はシャードの選択には使われず、フィールドとして記録される。これにより、`associate`/`dissociate` によるスコープ変更をまたいでも、1 つのドキュメントの履歴が 1 か所にまとまる。これらのイベントは来歴であり、**バックアップではない**。`documentkb/` ツリー全体を削除するとドキュメントごとの記録が失われるため、ドキュメント ID、トゥームストーン、インテントへのリンクは残らない。次の `sync` は、残っている原本をまったく新しい行として再インデックスする。復旧できるのは `index.json` だけが失われた場合のみである（`sync` がドキュメントごとの `metadata.json` ファイルから再構築する）。
 
 | Event | When | Required Fields | Emitter |
 |-------|------|-----------------|---------|
-| `DOCUMENT_INDEXED` | A customer document was indexed into the DocumentKB for the first time (from `onboard`, and from `sync`'s fresh-document branch) | Timestamp, Space, Document, Source, Digest, optional Intent | `tools/aidlc-knowledge.ts` |
-| `DOCUMENT_UPDATED` | An indexed document's record changed — a new revision, a re-extraction, a move, a summary, or an intent association change (from `associate`, `dissociate`, `rebind`, `summarize`, `onboard`'s edited-row branch, `sync`'s moved/changed/retried branches, and the idempotent audit-repair pass) | Timestamp, Space, Document, Change, optional Intent | `tools/aidlc-knowledge.ts` |
-| `DOCUMENT_REMOVED` | The original is gone; the row became a metadata-only tombstone and extracted content was deleted (from `sync`) | Timestamp, Space, Document, Last Path, Last Digest | `tools/aidlc-knowledge.ts` |
+| `DOCUMENT_INDEXED` | 顧客ドキュメントが初めて DocumentKB にインデックスされた（`onboard` から、および `sync` の新規ドキュメントの分岐から） | Timestamp, Space, Document, Source, Digest, 任意で Intent | `tools/aidlc-knowledge.ts` |
+| `DOCUMENT_UPDATED` | インデックス済みドキュメントの記録が変わった。新しいリビジョン、再抽出、移動、サマリー、またはインテントとの関連付けの変更（`associate`、`dissociate`、`rebind`、`summarize`、`onboard` の編集済み行の分岐、`sync` の移動/変更/再試行の分岐、および冪等な監査修復パスから） | Timestamp, Space, Document, Change, 任意で Intent | `tools/aidlc-knowledge.ts` |
+| `DOCUMENT_REMOVED` | 原本がなくなった。行はメタデータのみのトゥームストーンになり、抽出された内容は削除された（`sync` から） | Timestamp, Space, Document, Last Path, Last Digest | `tools/aidlc-knowledge.ts` |
 
-All three are written to the **space-level** shard (`intents/audit/`), not an intent's,
-even when the document carries `related_intent_ids`. A document outlives any single
-intent and `associate`/`dissociate` can move its scope, so filing its provenance under
-the active intent would split one document's history across shards. An
-`associate`/`dissociate` that changes nothing emits **no** event: a per-call event
-would fill the ledger with non-changes and break reconstruction-from-the-ledger.
+ドキュメントが `related_intent_ids` を持つ場合でも、3 つともインテントのシャードではなく
+**スペースレベル**のシャード（`intents/audit/`）に書き込まれる。ドキュメントはどの単一の
+インテントよりも長く存続し、`associate`/`dissociate` によってスコープが移りうるため、来歴を
+アクティブなインテントの下に記録すると、1 つのドキュメントの履歴がシャードをまたいで分割されてしまう。
+何も変えない `associate`/`dissociate` はイベントを**発行しない**。呼び出しごとにイベントを出すと、
+台帳が変更でないもので埋まり、台帳からの再構築が壊れるためである。
 
 ### Utility Events (1 event)
 
 | Event | When | Required Fields | Emitter |
 |-------|------|-----------------|---------|
-| `HEALTH_CHECKED` | `--doctor` completed | Timestamp, Request, Details | `tools/aidlc-doctor.ts` via the shared utility collector |
+| `HEALTH_CHECKED` | `--doctor` が完了した | Timestamp, Request, Details | `tools/aidlc-doctor.ts`（共有のユーティリティコレクター経由） |
 
 ### Error/Recovery Events (3 events)
 
 | Event | When | Required Fields | Emitter |
 |-------|------|-----------------|---------|
-| `ERROR_LOGGED` | Tool CLI exited non-zero via `error()`, or the Stop hook first delivered a distinct engine error directive | Timestamp, Tool, Command, Error; optional Source, Exit Code, Observed By, Error Fingerprint | `tools/aidlc-lib.ts emitError` (called by every tool's `error()` helper) and `hooks/aidlc-continue-workflow.ts` |
-| `RECOVERY_COMPLETED` | User answered the compaction-awareness prompt | Timestamp, Choice, Current Stage | `tools/aidlc-state.ts acknowledge-compaction` |
-| `COORDINATION_STOOD_ASIDE` | Advisory: the Copilot adapter could not find or trust its coordination record for an AI-DLC command (no record for this project and intent, a record it could not read, or a workflow state that moved after the record was written), so it let the command reach the engine, which answered from disk, instead of refusing it | Timestamp, optional Session, Command (`next`, `continue`, `report`, or `park`), Reason | `tools/aidlc-audit.ts appendCoordinationStoodAside` (Copilot adapter `guard-tool-call`) |
+| `ERROR_LOGGED` | ツールの CLI が `error()` によって非ゼロで終了した、または Stop フックが固有のエンジンエラーのディレクティブを初めて届けた | Timestamp, Tool, Command, Error。任意で Source, Exit Code, Observed By, Error Fingerprint | `tools/aidlc-lib.ts emitError`（各ツールの `error()` ヘルパーから呼ばれる）および `hooks/aidlc-continue-workflow.ts` |
+| `RECOVERY_COMPLETED` | ユーザーがコンテキスト圧縮の確認プロンプトに回答した | Timestamp, Choice, Current Stage | `tools/aidlc-state.ts acknowledge-compaction` |
+| `COORDINATION_STOOD_ASIDE` | 助言のみ: Copilot アダプターが AI-DLC コマンドの調整記録を見つけられなかった、または信頼できなかった（このプロジェクトとインテントの記録がない、読めない記録である、または記録が書かれた後にワークフローの状態が動いた）ため、コマンドを拒否せずにエンジンへ通し、エンジンがディスクから応答した | Timestamp, 任意で Session, Command（`next`、`continue`、`report`、または `park`）, Reason | `tools/aidlc-audit.ts appendCoordinationStoodAside`（Copilot アダプターの `guard-tool-call`） |
 
-Stop-hook delivery deduplicates the most recent 32 fingerprints in FIFO order,
-including intent, session, state, stage, and the diagnostic bounded to 2,000 UTF-8
-bytes. Repeats do not refresh retention; a diagnostic evicted by 32 newer errors
-can produce another `ERROR_LOGGED` on delivery.
+Stop フックによる配信は、直近 32 件のフィンガープリントを FIFO 順で重複排除する。
+フィンガープリントには、インテント、セッション、状態、ステージ、および 2,000 UTF-8 バイトに
+制限された診断内容が含まれる。繰り返しは保持期間を更新しない。32 件の新しいエラーによって
+追い出された診断は、配信時に再び `ERROR_LOGGED` を生成しうる。
 
 ### Construction Bolt Events (4 events)
 
-Emitted only during Phase 3 (Construction). See `stage-protocol.md` Terminology for Bolt as a sprint-like iteration whose intended Unit grouping is recorded during Delivery Planning (2.9), while runtime batching comes from the Unit dependency graph. `BOLT_STARTED` / `BOLT_COMPLETED` (and swarm-path `BOLT_FAILED`) are emitted from `aidlc-bolt.ts` on the swarm / worktree path; a default gated run does not record them. `AUTONOMY_MODE_SET` is emitted by `aidlc-bolt.ts set-autonomy` after the ladder on any walk, including a default gated run.
+Phase 3（Construction）の間にのみ発行される。Bolt については `stage-protocol.md` の Terminology を参照。Bolt はスプリントのようなイテレーションであり、意図されたユニットのグループ分けは Delivery Planning（2.9）で記録され、実行時のバッチ分けはユニットの依存グラフから決まる。`BOLT_STARTED` / `BOLT_COMPLETED`（およびスウォーム経路の `BOLT_FAILED`）は、スウォーム / ワークツリー経路で `aidlc-bolt.ts` から発行される。既定のゲート付き実行ではこれらは記録されない。`AUTONOMY_MODE_SET` は、既定のゲート付き実行を含むどの走査でも、ラダーの後に `aidlc-bolt.ts set-autonomy` によって発行される。
 
 | Event | When | Required Fields | Emitter |
 |-------|------|-----------------|---------|
-| `BOLT_STARTED` | Swarm / worktree path only: `aidlc-bolt.ts start` for one Unit and its worktree. Not emitted on a default gated stage-major run. | Timestamp, Bolt names, Batch number, Walking skeleton (true/false), optional Bolt slug, Base commit, Base Source Listing (when `--worktree`; the listing is the content-addressed raw-aware source baseline propagated from worktree creation), and Attempt Generation (team Unit claim) | `tools/aidlc-bolt.ts start` |
-| `BOLT_COMPLETED` | Swarm / worktree path only: `aidlc-bolt.ts complete` for that same Unit/worktree. Does **not** close the batch — `SWARM_COMPLETED` does. | Timestamp, Bolt names, Batch number, optional Bolt slug (when --merge), optional Attempt Generation (team Unit claim) | `tools/aidlc-bolt.ts complete` |
-| `BOLT_FAILED` | A Bolt failed during code-generation, or was explicitly aborted by the user | Timestamp, Failed Bolt, Error summary, optional Bolt slug (halt-and-ask correlation surface read by `aidlc-worktree info --slug`), optional Reason (`aborted` for explicit abort), optional Succeeded siblings, optional Attempt Generation (team Unit claim) | `tools/aidlc-bolt.ts fail` and `tools/aidlc-bolt.ts abort`; `tools/aidlc-state.ts set-construction-execution serial` closes the Bolts a side-by-side build prepared and never landed the way `abort` does (worktrees kept) |
-| `AUTONOMY_MODE_SET` | User answered the ladder prompt after the walking skeleton | Timestamp, Mode (`autonomous` or `gated`); optional Message Id (the person's message that granted `autonomous`, named with `--message`; a grant uses it up) | `tools/aidlc-bolt.ts set-autonomy` |
+| `BOLT_STARTED` | スウォーム / ワークツリー経路のみ: 1 つのユニットとそのワークツリーに対する `aidlc-bolt.ts start`。既定のゲート付き stage-major 実行では発行されない。 | Timestamp, Bolt names, Batch number, Walking skeleton (true/false), 任意で Bolt slug, Base commit, Base Source Listing（`--worktree` の場合。この一覧は、ワークツリーの作成時から引き継がれる、内容アドレス型で raw を考慮したソースベースラインである）, Attempt Generation（チームのユニットクレーム） | `tools/aidlc-bolt.ts start` |
+| `BOLT_COMPLETED` | スウォーム / ワークツリー経路のみ: 同じユニット/ワークツリーに対する `aidlc-bolt.ts complete`。バッチを閉じる**ことはない**。閉じるのは `SWARM_COMPLETED` である。 | Timestamp, Bolt names, Batch number, 任意で Bolt slug（--merge の場合）, 任意で Attempt Generation（チームのユニットクレーム） | `tools/aidlc-bolt.ts complete` |
+| `BOLT_FAILED` | code-generation 中に Bolt が失敗した、またはユーザーによって明示的に中止された | Timestamp, Failed Bolt, Error summary, 任意で Bolt slug（`aidlc-worktree info --slug` が読む、停止して尋ねるための相関の接点）, 任意で Reason（明示的な中止では `aborted`）, 任意で Succeeded siblings, 任意で Attempt Generation（チームのユニットクレーム） | `tools/aidlc-bolt.ts fail` および `tools/aidlc-bolt.ts abort`。`tools/aidlc-state.ts set-construction-execution serial` は、並行ビルドが準備したまま着地させなかった Bolt を `abort` と同じ方法で閉じる（ワークツリーは保持される） |
+| `AUTONOMY_MODE_SET` | ウォーキングスケルトンの後のラダーのプロンプトにユーザーが回答した | Timestamp, Mode（`autonomous` または `gated`）。任意で Message Id（`autonomous` を許可した利用者のメッセージ。`--message` で指定され、許可によって消費される） | `tools/aidlc-bolt.ts set-autonomy` |
 
 ### Worktree (7 events)
 
-Emitted during Phase 3 (Construction) when Bolts run inside per-Bolt git worktrees. Worktree primitive emits `WORKTREE_*`; state fork/merge subcommands emit `STATE_*`; audit fork/merge subcommands emit `AUDIT_*`.
+Bolt が Bolt ごとの git ワークツリー内で実行されるときに、Phase 3（Construction）の間に発行される。ワークツリーのプリミティブが `WORKTREE_*` を、state の fork/merge サブコマンドが `STATE_*` を、audit の fork/merge サブコマンドが `AUDIT_*` を発行する。
 
-New `Worktree path` values are project-relative
-(`.aidlc/worktrees/bolt-<id8>_<slug>`); `Branch name` records
-`bolt-<id8>_<slug>` verbatim. Readers resolve paths against the project root and
-remain compatible with legacy absolute values and provenance-matched legacy
-Bolts. `Bolt slug` stays the bare human/audit identifier. `<id8>` is the same
-intent registry UUID suffix used by Unit claims; retained source refs use
-`refs/aidlc/reviewed-source/<id8>/<slug>/<commit>`. See
-[Bolt identity](worktree-info-schema.md#bolt-identity) for naming and legacy policy.
+新しい `Worktree path` の値はプロジェクト相対
+（`.aidlc/worktrees/bolt-<id8>_<slug>`）であり、`Branch name` には
+`bolt-<id8>_<slug>` がそのまま記録される。読み取り側はパスをプロジェクトルート基準で解決し、
+レガシーの絶対パスの値や、来歴が一致するレガシーの Bolt とも互換性を保つ。
+`Bolt slug` は人間/監査向けの素の識別子のままである。`<id8>` は、ユニットのクレームが使うものと同じ
+インテントレジストリ UUID の接尾辞であり、保持されるソース参照は
+`refs/aidlc/reviewed-source/<id8>/<slug>/<commit>` を使う。命名とレガシーの方針については
+[Bolt の識別](worktree-info-schema.md#bolt-identity) を参照。
 
 | Event | When | Required Fields | Emitter |
 |-------|------|-----------------|---------|
-| `WORKTREE_CREATED` | Per-Bolt git worktree created from main on Bolt start | Timestamp, Bolt slug, project-relative Worktree path, Branch name, Base branch, Base commit, Base Source Listing (`sha256:<hash>` over the raw-aware source listing computed from the immutable base before the audit-first create), Repo (recorded selector or `-` for the workspace root), optional Intent record and Swarm Unit/Batch/Stage/Run floor provenance | `tools/aidlc-worktree.ts` (`create`) |
-| `WORKTREE_MERGED` | Bolt's worktree merged back to main on gate approval | Timestamp, Bolt slug, Worktree path, Target branch, Strategy | `tools/aidlc-worktree.ts` (`merge`) |
-| `WORKTREE_DISCARDED` | Bolt's recoverable working-tree snapshot (or remaining branch tip) and reviewed source refs parked under `refs/aidlc/parked/<id8>/<slug>/<stamp>/` before audit emission, then live checkout and branch removed | Timestamp, Bolt slug, Worktree path, Repo (recorded selector or `-` for the workspace root), Reason, Parked ref (namespace prefix), Parked commit (snapshot commit marked by `<parked ref>/snapshot`, remaining branch tip marked by `<parked ref>/branch-tip`, or `-` when no commit could be parked; legacy unmarked heads are snapshots only when the commit author is `AI-DLC <aidlc@localhost>` and its subject starts with `aidlc: parked bolt-<slug> at `) | `tools/aidlc-worktree.ts` (`discard`) |
-| `STATE_FORKED` | State file forked to worktree on Bolt start | Timestamp, Bolt slug, Worktree path, Source state hash, Target state hash, optional Attempt Generation (team Unit claim) | `tools/aidlc-state.ts` (`fork`) |
-| `STATE_MERGED` | Worktree's state merged back to main state on gate approval | Timestamp, Bolt slug, Worktree path, Source state hash, Target state hash, Conflict resolution | `tools/aidlc-state.ts` (`merge`) |
-| `AUDIT_FORKED` | Audit log forked to worktree on Bolt start (audit-of-intent — emit precedes the byte-copy) | Timestamp, Bolt slug, Source Audit Hash, Fork Boundary, optional Attempt Generation (team Unit claim) | `tools/aidlc-audit.ts` (`audit-fork`) |
-| `AUDIT_MERGED` | Worktree's audit entries appended to main audit on gate approval; per-Bolt entry order preserved, cross-Bolt order reflects merge-completion order. The review records named by the delta's paired `REVIEW_COMPLETED` rows are carried into the main intent record first, digest-verified, or the merge refuses | Timestamp, Bolt slug, Entries Merged, Source Audit Hash, Fork Boundary, Fork Timestamp | `tools/aidlc-audit.ts` (`audit-merge`) |
+| `WORKTREE_CREATED` | Bolt の開始時に、main から Bolt ごとの git ワークツリーが作成された | Timestamp, Bolt slug, プロジェクト相対の Worktree path, Branch name, Base branch, Base commit, Base Source Listing（監査を先に書く作成処理の前に、不変のベースから計算された raw を考慮したソース一覧に対する `sha256:<hash>`）, Repo（記録されたセレクター、またはワークスペースルートの場合は `-`）, 任意で Intent record と、スウォームの Unit/Batch/Stage/Run floor の来歴 | `tools/aidlc-worktree.ts` (`create`) |
+| `WORKTREE_MERGED` | ゲートの承認時に、Bolt のワークツリーが main へマージされた | Timestamp, Bolt slug, Worktree path, Target branch, Strategy | `tools/aidlc-worktree.ts` (`merge`) |
+| `WORKTREE_DISCARDED` | Bolt の復旧可能な作業ツリーのスナップショット（または残っているブランチの先端）とレビュー済みのソース参照が、監査の発行前に `refs/aidlc/parked/<id8>/<slug>/<stamp>/` の下に退避され、その後ライブのチェックアウトとブランチが削除された | Timestamp, Bolt slug, Worktree path, Repo（記録されたセレクター、またはワークスペースルートの場合は `-`）, Reason, Parked ref（名前空間の接頭辞）, Parked commit（`<parked ref>/snapshot` でマークされたスナップショットのコミット、`<parked ref>/branch-tip` でマークされた残りのブランチの先端、またはコミットを退避できなかった場合は `-`。マークのないレガシーの head は、コミットの author が `AI-DLC <aidlc@localhost>` で、件名が `aidlc: parked bolt-<slug> at ` で始まる場合にのみスナップショットとみなす） | `tools/aidlc-worktree.ts` (`discard`) |
+| `STATE_FORKED` | Bolt の開始時に、状態ファイルがワークツリーへフォークされた | Timestamp, Bolt slug, Worktree path, Source state hash, Target state hash, 任意で Attempt Generation（チームのユニットクレーム） | `tools/aidlc-state.ts` (`fork`) |
+| `STATE_MERGED` | ゲートの承認時に、ワークツリーの状態が main の状態へマージされた | Timestamp, Bolt slug, Worktree path, Source state hash, Target state hash, Conflict resolution | `tools/aidlc-state.ts` (`merge`) |
+| `AUDIT_FORKED` | Bolt の開始時に、監査ログがワークツリーへフォークされた（意図の監査: 発行がバイトコピーより先に行われる） | Timestamp, Bolt slug, Source Audit Hash, Fork Boundary, 任意で Attempt Generation（チームのユニットクレーム） | `tools/aidlc-audit.ts` (`audit-fork`) |
+| `AUDIT_MERGED` | ゲートの承認時に、ワークツリーの監査エントリが main の監査に追記された。Bolt ごとのエントリ順は保たれ、Bolt をまたぐ順序はマージ完了の順序を反映する。差分内で対になる `REVIEW_COMPLETED` 行が指すレビュー記録は、ダイジェストを検証したうえで先に main のインテント記録へ運ばれ、それができなければマージは拒否される | Timestamp, Bolt slug, Entries Merged, Source Audit Hash, Fork Boundary, Fork Timestamp | `tools/aidlc-audit.ts` (`audit-merge`) |
 
 ### Practices (4 events)
 
-Emitted by the Inception stage `practices-discovery` and by the Construction orchestrator at runtime. The stage emits at the affirmation gate; the orchestrator emits at runtime via `--type empty` (fallback advisory) and `--type override` (discriminator-field for the bolt-plan-marker-conflict path).
+Inception ステージ `practices-discovery` と、実行時の Construction オーケストレーターによって発行される。ステージは確認ゲートで発行し、オーケストレーターは実行時に `--type empty`（フォールバックの助言）と `--type override`（bolt-plan-marker-conflict 経路の識別フィールド）を通じて発行する。
 
 | Event | When | Required Fields | Emitter |
 |-------|------|-----------------|---------|
-| `PRACTICES_DISCOVERED` | Greenfield or brownfield lead draft, three support contributions, human interview, and lead integration completed; drafts await affirmation | Timestamp, sources scanned, drafts produced | `tools/aidlc-state.ts` `practices-event --type discovered` |
-| `PRACTICES_AFFIRMED` | Team approved practices at the practices-discovery affirmation gate; content promoted to `aidlc/spaces/<active-space>/memory/team.md` and `project.md` | Timestamp, affirming user, sections written, mandated/forbidden rules appended | `tools/aidlc-state.ts` `practices-promote` |
-| `PRACTICES_OVERRIDE` | Cross-row promotion failed during practices-discovery affirmation, OR walking-skeleton stance from active-space `team.md` overrode bolt-plan's marker for the current Bolt | Timestamp, Reason (discriminator); per-path field set: write-failure path emits Reason + Failure detail only (no Bolt fields); bolt-plan-marker-conflict path emits Reason + Bolt slug + Practices Stance + Bolt-Plan Marker. The two field sets do not overlap, so doctor filters by `Reason` and routes by either name family — `write-failure-*` for the affirmation promotion path, `bolt-plan-marker-conflict` for the orchestrator runtime path | `tools/aidlc-state.ts` `practices-promote` (write-failure path); `tools/aidlc-state.ts` `practices-event --type override` (bolt-plan-marker-conflict path — discriminator-field disambiguation, no separate event) |
-| `PRACTICES_SECTION_EMPTY` | Orchestrator read a practices section that returned empty; falling back to org defaults (advisory-only) | Timestamp, Section name, Fallback source | `tools/aidlc-state.ts` `practices-event --type empty` |
+| `PRACTICES_DISCOVERED` | グリーンフィールドまたはブラウンフィールドのリードの草案、3 つのサポートからの寄稿、人へのインタビュー、リードによる統合が完了した。草案は確認待ち | Timestamp, sources scanned, drafts produced | `tools/aidlc-state.ts` `practices-event --type discovered` |
+| `PRACTICES_AFFIRMED` | チームが practices-discovery の確認ゲートでプラクティスを承認した。内容は `aidlc/spaces/<active-space>/memory/team.md` と `project.md` へ昇格された | Timestamp, affirming user, sections written, mandated/forbidden rules appended | `tools/aidlc-state.ts` `practices-promote` |
+| `PRACTICES_OVERRIDE` | practices-discovery の確認中に行をまたぐ昇格が失敗した、またはアクティブスペースの `team.md` にあるウォーキングスケルトンの方針が、現在の Bolt についての bolt-plan のマーカーより優先された | Timestamp, Reason（識別子）。経路ごとのフィールドセット: write-failure 経路は Reason + Failure detail のみを発行する（Bolt のフィールドはない）。bolt-plan-marker-conflict 経路は Reason + Bolt slug + Practices Stance + Bolt-Plan Marker を発行する。2 つのフィールドセットは重ならないため、doctor は `Reason` で絞り込み、どちらかの名前の系統で振り分ける。確認の昇格経路には `write-failure-*`、オーケストレーターの実行時経路には `bolt-plan-marker-conflict` | `tools/aidlc-state.ts` `practices-promote`（write-failure 経路）; `tools/aidlc-state.ts` `practices-event --type override`（bolt-plan-marker-conflict 経路。識別フィールドによる区別で、別のイベントはない） |
+| `PRACTICES_SECTION_EMPTY` | オーケストレーターが読んだプラクティスのセクションが空だったため、org の既定値にフォールバックする（助言のみ） | Timestamp, Section name, Fallback source | `tools/aidlc-state.ts` `practices-event --type empty` |
 
 ### Merge Dispatch (3 events)
 
-Emitted when Construction's Bolt-merge step calls aidlc-pipeline-deploy-agent via Task to determine the merge strategy from team practices prose. Emitted via the `aidlc-bolt dispatch-event` subcommand. The orchestrator brackets each aidlc-pipeline-deploy-agent dispatch — pre-call INVOKED, post-call RETURNED on successful parse, FALLBACK on timeout/malformed-YAML. Audit-of-intent semantic: INVOKED emits before the LLM Task call (no disk side-effect for the dispatch itself; reconciliation by slug + timestamp window). Doctor reconciles orphan INVOKED rows.
+Construction の Bolt マージのステップが、チームのプラクティスの散文からマージ戦略を決めるために、Task を介して aidlc-pipeline-deploy-agent を呼び出すときに発行される。`aidlc-bolt dispatch-event` サブコマンドを通じて発行される。オーケストレーターは aidlc-pipeline-deploy-agent の各派遣を前後で囲む。呼び出し前に INVOKED、解析に成功した場合は呼び出し後に RETURNED、タイムアウトまたは不正な YAML の場合は FALLBACK を発行する。意図の監査の意味論: INVOKED は LLM の Task 呼び出しの前に発行される（派遣自体にはディスクへの副作用がなく、照合は slug + タイムスタンプの時間枠で行う）。doctor は孤立した INVOKED 行を照合する。
 
 | Event | When | Required Fields | Emitter |
 |-------|------|-----------------|---------|
-| `MERGE_DISPATCH_INVOKED` | Orchestrator dispatched aidlc-pipeline-deploy-agent with current practices section + Bolt context | Timestamp, Bolt slug, Practices section excerpt; optional Pinned OID + Attempt Generation + Pin Transaction | `tools/aidlc-bolt.ts` `dispatch-event --event MERGE_DISPATCH_INVOKED` |
-| `MERGE_DISPATCH_RETURNED` | Agent returned parsed YAML with strategy, target branch, confidence, notes | Timestamp, Bolt slug, Strategy, Target branch, Confidence, Notes; optional Pinned OID + Attempt Generation + Pin Transaction | `tools/aidlc-bolt.ts` `dispatch-event --event MERGE_DISPATCH_RETURNED` |
-| `MERGE_DISPATCH_FALLBACK` | Agent timed out or returned malformed YAML; orchestrator fell back to org defaults — critical observability hook | Timestamp, Bolt slug, Fallback reason, Defaults applied; optional Pinned OID + Attempt Generation + Pin Transaction | `tools/aidlc-bolt.ts` `dispatch-event --event MERGE_DISPATCH_FALLBACK` |
+| `MERGE_DISPATCH_INVOKED` | オーケストレーターが、現在のプラクティスのセクション + Bolt のコンテキストとともに aidlc-pipeline-deploy-agent を派遣した | Timestamp, Bolt slug, Practices section excerpt。任意で Pinned OID + Attempt Generation + Pin Transaction | `tools/aidlc-bolt.ts` `dispatch-event --event MERGE_DISPATCH_INVOKED` |
+| `MERGE_DISPATCH_RETURNED` | エージェントが、strategy、target branch、confidence、notes を含む解析済みの YAML を返した | Timestamp, Bolt slug, Strategy, Target branch, Confidence, Notes。任意で Pinned OID + Attempt Generation + Pin Transaction | `tools/aidlc-bolt.ts` `dispatch-event --event MERGE_DISPATCH_RETURNED` |
+| `MERGE_DISPATCH_FALLBACK` | エージェントがタイムアウトした、または不正な YAML を返したため、オーケストレーターが org の既定値にフォールバックした。可観測性にとって重要なフック | Timestamp, Bolt slug, Fallback reason, Defaults applied。任意で Pinned OID + Attempt Generation + Pin Transaction | `tools/aidlc-bolt.ts` `dispatch-event --event MERGE_DISPATCH_FALLBACK` |
 
 ### Sensor Events (6 events)
 
-Emitted by the deterministic-sensor system. The sensor dispatcher emits the five `SENSOR_*` events. When a gate fire gives no verdict and has no result row, the gate closes it with `SENSOR_COULD_NOT_RUN`, after a `SENSOR_FIRED` of its own if the dispatcher wrote none (`recordUnfinishedFire` in `tools/aidlc-sensor-record.ts`); the paired-coverage doctor row emits `GUARDRAIL_LOADED` with `Scope: all`, because doctor reads the full resolved guardrail set without an active stage (the per-workflow org → project → phase → stage scoping in the When-clause below describes the steady-state loader, not doctor's unscoped read). `fire_on: write` sensors run from the PostToolUse hook on matching writes; `fire_on: gate` sensors run once per existing declared deliverable (`upstream-coverage` and `claim-sources` once per output folder) before `gate-start` opens the first gate, `revise` re-enters it, or the approve-time revision backstop attempts recovered re-entry. Their advisory ones also fire once earlier in an attempt, at the review request or (when no review was asked for) the report that opens the gate, on the scope's outputs, with `Unit` on the rows for a Unit's request. A gate the engine approves itself under Construction autonomy runs only blocking gate sensors (advisory evidence has no reader there). Blocking severity is enforced only for gate-fired sensors in this release; write-fired failures remain advisory.
+決定論的センサーのシステムによって発行される。センサーディスパッチャーは 5 つの `SENSOR_*` イベントを発行する。ゲートでの発火が判定を返さず結果行もない場合、ゲートはそれを `SENSOR_COULD_NOT_RUN` で閉じる。ディスパッチャーがそれを書いていなければ、その前にゲート自身の `SENSOR_FIRED` を書く（`tools/aidlc-sensor-record.ts` の `recordUnfinishedFire`）。対になるカバレッジを確認する doctor の行は `Scope: all` とともに `GUARDRAIL_LOADED` を発行する。doctor はアクティブなステージなしで解決済みのガードレール全体を読むためである（下の When 句にあるワークフローごとの org → project → phase → stage のスコープ設定は定常状態のローダーを説明するものであり、doctor のスコープなしの読み取りではない）。`fire_on: write` のセンサーは、一致する書き込みに対して PostToolUse フックから実行される。`fire_on: gate` のセンサーは、`gate-start` が最初のゲートを開く前、`revise` がゲートに再入する前、または承認時の修正バックストップが補完による再入を試みる前に、宣言された既存の成果物ごとに 1 回実行される（`upstream-coverage` と `claim-sources` は出力フォルダーごとに 1 回）。そのうち助言のセンサーは、試行のより早い時点でも 1 回、レビュー要求時、または（レビューが求められなかった場合は）ゲートを開く報告時に、スコープの出力に対して発火する。ユニットの要求についての行には `Unit` が付く。Construction の自律性の下でエンジン自身が承認するゲートでは、ブロッキングのゲートセンサーのみが実行される（そこでは助言の証拠を読む者がいない）。このリリースでは、ブロッキングの重大度はゲートで発火したセンサーにのみ適用され、書き込みで発火した失敗は助言のままである。
 
 | Event | When | Required Fields | Emitter |
 |-------|------|-----------------|---------|
-| `SENSOR_FIRED` | Dispatcher invoked a sensor against a stage output, from either a matching PostToolUse Write/Edit or gate-boundary deliverable dispatch; for a gate fire whose dispatcher wrote no row and gave no verdict, the gate writes it with the paired `SENSOR_COULD_NOT_RUN` | Timestamp, Fire id, Sensor ID, Stage slug, optional Unit (the Unit the per-Unit stage was working, from the active directive; echoed on the terminal row), Output path | `tools/aidlc-sensor.ts` `fire`; for a gate fire with no verdict, the gate through `recordUnfinishedFire` in `tools/aidlc-sensor-record.ts` |
-| `SENSOR_PASSED` | Sensor completed and reported no findings (also: tool-unavailable, and a failure whose detail file could not be written; see the Note footnote) | Timestamp, Fire id, Sensor ID, Stage slug, optional Unit, Output path, Duration ms | `tools/aidlc-sensor.ts` `fire` |
-| `SENSOR_FAILED` | Sensor completed and reported findings; detail file written at `<record>/.aidlc-engine/sensors/<stage-slug>/<sensor-id>-<fire-id>.md` | Timestamp, Fire id, Sensor ID, Stage slug, optional Unit, Output path, Detail path, Findings count, optional Failed outputs (a fire over a set of files: the failing ones, the first 20, then `and N more`) | `tools/aidlc-sensor.ts` `fire` |
-| `SENSOR_COULD_NOT_RUN` | The check could not run: its script could not start, exited non-zero (not 127), was stopped by a signal, or printed no verdict. It checked nothing, so it is never a pass and never a failure; the gate names it in one line and stops nothing (a blocking gate binding still refuses, as it needs a verified pass) | Timestamp, Fire id, Sensor ID, Stage slug, optional Unit, Output path, Duration ms, Note (`script-error: <reason>`: `spawn-failed: <code>`, `exit-<n>`, `external-sigterm`, `signal-<name>`, `bad-output`, `unknown`; or `dispatch-error: <reason>` when a gate fire gave no verdict: `timeout`, `spawn-failed: <code or unknown>`, `signal-<name or unknown>`, `exit-<n>`, `bad-output`) | `tools/aidlc-sensor.ts` `fire`; for a gate fire with no verdict, the gate through `recordUnfinishedFire` in `tools/aidlc-sensor-record.ts` |
-| `SENSOR_BUDGET_OVERRIDE` | Sensor exceeded its configured cap (registry / binding / depth-derived per the three-layer cap model) and was terminated or skipped | Timestamp, Fire id, Sensor ID, Stage slug, optional Unit, Output path, Cap layer, Cap value, Observed value | `tools/aidlc-sensor.ts` `fire` |
-| `GUARDRAIL_LOADED` | Guardrail loader resolved the scope-hierarchical guardrail set for the active workflow (org → project → phase → stage); doctor's paired-coverage check reads from this event | Timestamp, Scope, Path, Rule count | `tools/aidlc-utility.ts` |
+| `SENSOR_FIRED` | ディスパッチャーが、一致する PostToolUse の Write/Edit、またはゲート境界での成果物の派遣のいずれかから、ステージの出力に対してセンサーを起動した。ディスパッチャーが行を書かず判定も返さなかったゲートでの発火については、ゲートが対になる `SENSOR_COULD_NOT_RUN` とともにこれを書き込む | Timestamp, Fire id, Sensor ID, Stage slug, 任意で Unit（ユニットごとのステージが作業していたユニット。アクティブなディレクティブから取得し、終端行にも反映される）, Output path | `tools/aidlc-sensor.ts` `fire`。判定のないゲートでの発火については、`tools/aidlc-sensor-record.ts` の `recordUnfinishedFire` を通じてゲートが書き込む |
+| `SENSOR_PASSED` | センサーが完了し、指摘を報告しなかった（tool-unavailable の場合と、詳細ファイルを書き込めなかった失敗の場合も含む。Note の脚注を参照） | Timestamp, Fire id, Sensor ID, Stage slug, 任意で Unit, Output path, Duration ms | `tools/aidlc-sensor.ts` `fire` |
+| `SENSOR_FAILED` | センサーが完了し、指摘を報告した。詳細ファイルは `<record>/.aidlc-engine/sensors/<stage-slug>/<sensor-id>-<fire-id>.md` に書き込まれる | Timestamp, Fire id, Sensor ID, Stage slug, 任意で Unit, Output path, Detail path, Findings count, 任意で Failed outputs（ファイルの集合に対する発火の場合: 失敗したもの。最初の 20 件、その後に `and N more`） | `tools/aidlc-sensor.ts` `fire` |
+| `SENSOR_COULD_NOT_RUN` | 検査を実行できなかった: スクリプトを開始できなかった、非ゼロ（127 以外）で終了した、シグナルで停止された、または判定を出力しなかった。何も検査していないため、合格にも失敗にも決してならない。ゲートはそれを 1 行で示し、何も止めない（ただし、ブロッキングのゲートバインディングは検証済みの合格を必要とするため、引き続き拒否する） | Timestamp, Fire id, Sensor ID, Stage slug, 任意で Unit, Output path, Duration ms, Note（`script-error: <reason>`: `spawn-failed: <code>`, `exit-<n>`, `external-sigterm`, `signal-<name>`, `bad-output`, `unknown`。またはゲートでの発火が判定を返さなかった場合は `dispatch-error: <reason>`: `timeout`, `spawn-failed: <code or unknown>`, `signal-<name or unknown>`, `exit-<n>`, `bad-output`） | `tools/aidlc-sensor.ts` `fire`。判定のないゲートでの発火については、`tools/aidlc-sensor-record.ts` の `recordUnfinishedFire` を通じてゲートが書き込む |
+| `SENSOR_BUDGET_OVERRIDE` | センサーが設定された上限（3 層の上限モデルによる registry / binding / 深度由来の値）を超え、終了またはスキップされた | Timestamp, Fire id, Sensor ID, Stage slug, 任意で Unit, Output path, Cap layer, Cap value, Observed value | `tools/aidlc-sensor.ts` `fire` |
+| `GUARDRAIL_LOADED` | ガードレールローダーが、アクティブなワークフローについてスコープ階層のガードレールセット（org → project → phase → stage）を解決した。doctor の対になるカバレッジの検査はこのイベントを読む | Timestamp, Scope, Path, Rule count | `tools/aidlc-utility.ts` |
 
-> The `Note` field on `SENSOR_PASSED` is optional. It carries `tool-unavailable` when the per-sensor script's underlying binary isn't on PATH, or `script-error: detail-write-failed: <reason>` when a failing check's detail file could not be written. A script that could not run is `SENSOR_COULD_NOT_RUN`, never a pass. Those remain advisory for write-fired sensors, but a blocking gate binding requires a verified pass, so any `Note`, a check that could not run, a dispatcher failure, a malformed verdict, or a budget override refuses gate entry. Pair correlation is via `Fire id` (echoed verbatim from `SENSOR_FIRED` to the terminal row); `Output path` alone does not disambiguate repeated write dispatches or a later gate dispatch of the same sensor + stage + path tuple.
+> `SENSOR_PASSED` の `Note` フィールドは任意である。センサーごとのスクリプトが使う実行ファイルが PATH 上にない場合は `tool-unavailable` を、失敗した検査の詳細ファイルを書き込めなかった場合は `script-error: detail-write-failed: <reason>` を持つ。実行できなかったスクリプトは `SENSOR_COULD_NOT_RUN` であり、決して合格ではない。書き込みで発火するセンサーではこれらは助言のままだが、ブロッキングのゲートバインディングは検証済みの合格を必要とするため、`Note` があるもの、実行できなかった検査、ディスパッチャーの失敗、不正な判定、予算のオーバーライドはいずれもゲートへの進入を拒否する。対の相関は `Fire id`（`SENSOR_FIRED` から終端行へそのまま反映される）で行う。`Output path` だけでは、繰り返された書き込みの派遣や、同じセンサー + ステージ + パスの組に対する後のゲートの派遣を区別できない。
 
-> **Pair by `Fire id`, not by audit-row index.** Write dispatch can fan out one tool call across several sensors, while gate dispatch fans each gate-bound sensor across every existing deliverable. Terminal rows may interleave by spawn duration, so `findAllEvents("SENSOR_FIRED")[i]` does NOT pair with `findAllEvents("SENSOR_PASSED")[i]` by index. Audit-walking consumers (the `sensor_firings[]` populator, doctor, designer) MUST match terminal rows to FIRED rows via the 8-hex `Fire id` correlator.
+> **監査行のインデックスではなく `Fire id` で対応付ける。** 書き込みの派遣は 1 回のツール呼び出しを複数のセンサーへ展開することがあり、ゲートの派遣はゲートに結び付いた各センサーを既存のすべての成果物へ展開する。終端行は起動時間によって入り混じることがあるため、`findAllEvents("SENSOR_FIRED")[i]` はインデックスで `findAllEvents("SENSOR_PASSED")[i]` と対にはならない。監査を走査する利用側（`sensor_firings[]` の生成処理、doctor、designer）は、8 桁 16 進の `Fire id` 相関子によって終端行を FIRED 行に必ず対応付けなければならない。
 
 ### Learning Loop (3 events)
 
-Emitted by stage-protocol §13 (Learnings Ritual). The runtime-graph compile emits `MEMORY_EMPTY` when a just-approved stage's memory.md has zero non-blank entries under the four standard headings. The learning-gate tool emits `RULE_LEARNED` when the user keeps a surfaced or free-text learning (a learning IS a practice — it lands as a practice line under the routed heading in `{project,team}.md`) and `SENSOR_PROPOSED` when a learning installs a sensor binding (manifest + originating stage `sensors:` frontmatter). Doctor reads `MEMORY_EMPTY` rows over time to detect systematic diary-skipping across stages.
+stage-protocol §13（Learnings Ritual）によって発行される。ランタイムグラフのコンパイルは、承認されたばかりのステージの memory.md が 4 つの標準見出しの下に空でないエントリを 1 つも持たない場合に `MEMORY_EMPTY` を発行する。学びのゲートツールは、ユーザーが提示された学びまたは自由記述の学びを残すと `RULE_LEARNED` を発行し（学びはプラクティスそのものであり、`{project,team}.md` の振り分け先の見出しの下にプラクティスの行として記録される）、学びがセンサーのバインディング（マニフェスト + 発生元ステージの `sensors:` frontmatter）を導入すると `SENSOR_PROPOSED` を発行する。doctor は `MEMORY_EMPTY` 行を時系列で読み、ステージをまたいだ日誌の体系的な省略を検出する。
 
 | Event | When | Required Fields | Emitter |
 |-------|------|-----------------|---------|
-| `MEMORY_EMPTY` | A stage approval triggered a runtime-graph compile and the stage's memory.md had zero non-blank entries under any of the four §13 headings | Timestamp, Stage | `tools/aidlc-runtime.ts compile` |
-| `RULE_LEARNED` | The learning gate persisted a kept learning as a practice line under the routed heading in `{project,team}.md` | Timestamp, Stage, Candidate-ID, Content-Hash, Destination, Heading, Source | `tools/aidlc-learnings.ts persist` |
-| `SENSOR_PROPOSED` | The learning gate scaffolded a project-tier sensor manifest and bound it to the originating stage's `sensors:` frontmatter | Timestamp, Stage, Candidate-ID, Sensor ID, Manifest path, Matches, Destinations, Source | `tools/aidlc-learnings.ts persist` |
+| `MEMORY_EMPTY` | ステージの承認がランタイムグラフのコンパイルを引き起こし、そのステージの memory.md が §13 の 4 つの見出しのいずれの下にも空でないエントリを持たなかった | Timestamp, Stage | `tools/aidlc-runtime.ts compile` |
+| `RULE_LEARNED` | 学びのゲートが、残された学びを `{project,team}.md` の振り分け先の見出しの下にプラクティスの行として永続化した | Timestamp, Stage, Candidate-ID, Content-Hash, Destination, Heading, Source | `tools/aidlc-learnings.ts persist` |
+| `SENSOR_PROPOSED` | 学びのゲートがプロジェクト層のセンサーマニフェストの雛形を作成し、発生元ステージの `sensors:` frontmatter に結び付けた | Timestamp, Stage, Candidate-ID, Sensor ID, Manifest path, Matches, Destinations, Source | `tools/aidlc-learnings.ts persist` |
 
 ### Swarm (9 events)
 
-Six events emit from the swarm referee `aidlc-swarm.ts` — the deterministic verdict surface the conductor consults — and `SWARM_SOURCE_MERGED` emits from `aidlc-worktree.ts` after application source lands in main. The referee is stateless (no iteration counter): `prepare` captures the exact stage-attempt token, stamps the Unit/Batch/Stage/Run floor into `WORKTREE_CREATED` plus worktree metadata, forks the per-unit worktrees, and emits `SWARM_STARTED` with both the prepared batch and the full attempt-bound Unit obligation set (and `SWARM_DEGRADED` when the conductor reports a loud downgrade); `finalize` requires that prepared token to still match the current attempt before merging, then preserves it on each convergence row. Completion compares the live authored DAG with that durable obligation set and refuses shrink or expansion until the DAG is restored or the stage attempt restarts. A worktree prepared by the immediately preceding unstamped release remains finalizable only when its frozen audit prefix proves the matching legacy `SWARM_STARTED`, `BOLT_STARTED`, `STATE_FORKED`, and `AUDIT_FORKED` sequence, the fork hash still matches, all three worktree mirrors exist, and the derived frozen attempt still equals the current attempt; this compatibility path never emits a backdated start or adopts a stale worktree. It re-verifies the conductor's claimed-converged set, snapshots the exact declared record artifacts plus the bound `source-manifest.json`, serialised-merges those records and AIDLC metadata for the genuine passes, and emits the per-Unit pair (`SWARM_UNIT_CONVERGED` / `SWARM_UNIT_FAILED` — except a converged unit whose record/metadata merge-back failed, which gets neither row until a finalize retry merges it), the per-failed-Unit baton row (`SWARM_BATON_RETURNED`), and the batch tally (`SWARM_COMPLETED`). Source merge then requires authority correlated to durable worktree provenance and the current Bolt/batch/stage attempt, links the main checkout from the stage-entry baseline or the prior attempt's validated final aggregate recorded on `GATE_REJECTED`, and emits `SWARM_SOURCE_MERGED`. Rejection never replaces the completion baseline. The opening link is revalidated against that trusted predecessor; later links must form an exact fingerprint chain. A pre-binding worktree whose convergence predates immutable source fields retains the historical branch merge; modern incomplete authority fails closed and does not advance batch routing. If Git mutation lands but `SWARM_SOURCE_MERGED` cannot be appended, the command preserves the worktree and reports a non-retryable `[merge-succeeded:<sha>]` failure: do not rerun the merge, because no authenticated recovery receipt exists; restart the stage attempt or use the explicit source-freshness off-switch only with human approval. If `SWARM_SOURCE_MERGED` did land and only subsequent worktree, branch, or retained-ref cleanup failed, rerunning the same merge performs cleanup-only reconciliation without reapplying source or duplicating authority. The `check` subcommand emits nothing — it is an advisory verdict that informs the conductor's retry decision. Because the loop and its cap live in the driver, the per-Unit rows carry no `Iterations` / `Cap value` fields.
+6 つのイベントはスウォームのレフェリー `aidlc-swarm.ts`（コンダクターが参照する決定論的な判定の接点）から発行され、`SWARM_SOURCE_MERGED` はアプリケーションのソースが main に着地した後に `aidlc-worktree.ts` から発行される。レフェリーはステートレスである（イテレーションのカウンターを持たない）。`prepare` は正確なステージ試行のトークンを取得し、Unit/Batch/Stage/Run floor を `WORKTREE_CREATED` とワークツリーのメタデータに刻み、ユニットごとのワークツリーをフォークし、準備したバッチと、試行に結び付いたユニットの義務の全体集合の両方とともに `SWARM_STARTED` を発行する（コンダクターが明示的な格下げを報告した場合は `SWARM_DEGRADED` も発行する）。`finalize` は、マージの前に、準備したそのトークンが現在の試行とまだ一致していることを要求し、各収束行にそれを保持する。完了時には、現在の作成済み DAG をその永続的な義務の集合と比較し、DAG が元に戻されるかステージの試行が再開されるまで、縮小や拡大を拒否する。直前のスタンプなしのリリースが準備したワークツリーは、その凍結された監査プレフィックスが対応するレガシーの `SWARM_STARTED`、`BOLT_STARTED`、`STATE_FORKED`、`AUDIT_FORKED` の連続を証明し、フォークのハッシュがまだ一致し、3 つのワークツリーのミラーがすべて存在し、導出された凍結済みの試行がなお現在の試行と等しい場合にのみ finalize できる。この互換経路が、日付を遡った開始を発行したり、古いワークツリーを採用したりすることは決してない。finalize は、コンダクターが収束したと主張する集合を再検証し、宣言された正確な記録成果物と、結び付けられた `source-manifest.json` のスナップショットを取り、本当に合格したものについてそれらの記録と AIDLC のメタデータを直列化してマージし、ユニットごとの組（`SWARM_UNIT_CONVERGED` / `SWARM_UNIT_FAILED`。ただし、記録/メタデータの書き戻しマージが失敗した収束済みユニットは、finalize の再試行でマージされるまでどちらの行も得ない）、失敗したユニットごとのバトン行（`SWARM_BATON_RETURNED`）、およびバッチの集計（`SWARM_COMPLETED`）を発行する。続くソースのマージは、永続的なワークツリーの来歴と現在の Bolt/バッチ/ステージ試行に相関付けられた権限を必要とし、main のチェックアウトを、ステージ開始時のベースライン、または `GATE_REJECTED` に記録された前回の試行の検証済み最終集約から連結し、`SWARM_SOURCE_MERGED` を発行する。却下が完了時のベースラインを置き換えることは決してない。最初のリンクはその信頼された先行者に対して再検証され、以降のリンクは正確なフィンガープリントの連鎖をなさなければならない。収束が不変のソースフィールドの導入以前である、バインディング導入以前のワークツリーは、従来のブランチマージを維持する。現代的な形式で不完全な権限はフェイルクローズし、バッチのルーティングを前進させない。Git への変更が着地したのに `SWARM_SOURCE_MERGED` を追記できない場合、コマンドはワークツリーを保持し、再試行不可能な `[merge-succeeded:<sha>]` の失敗を報告する。認証されたリカバリーのレシートが存在しないため、マージを再実行してはならない。ステージの試行を再開するか、ソースの鮮度に関する明示的なオフスイッチを人の承認がある場合にのみ使う。`SWARM_SOURCE_MERGED` が着地し、その後のワークツリー、ブランチ、または保持された参照のクリーンアップだけが失敗した場合は、同じマージを再実行すると、ソースを再適用したり権限を重複させたりせずに、クリーンアップのみの照合が行われる。`check` サブコマンドは何も発行しない。これはコンダクターの再試行の判断に情報を与える助言の判定である。ループとその上限はドライバー側にあるため、ユニットごとの行は `Iterations` / `Cap value` フィールドを持たない。
 
-When the person asks for files in the main checkout to change while the Units are built under a strict Guard Policy, `allow-change` emits `MAIN_CHECKOUT_CHANGE_ALLOWED`. When the person asks a second chat to build a batch another chat started, `take-over` emits `SWARM_TAKEN_OVER`.
+strict な Guard Policy の下でユニットが構築されている間に、利用者が main のチェックアウト内のファイルの変更を求めた場合、`allow-change` が `MAIN_CHECKOUT_CHANGE_ALLOWED` を発行する。別のチャットが開始したバッチの構築を利用者が 2 つ目のチャットに求めた場合、`take-over` が `SWARM_TAKEN_OVER` を発行する。
 
 | Event | When | Required Fields | Emitter |
 |-------|------|-----------------|---------|
-| `SWARM_STARTED` | Swarm referee `prepare` captured the exact attempt and forked a batch of dependency-linked Units | Timestamp, Batch number, Unit names, Unit obligations, Concurrency cap, Stage, Run floor, Landing branch (the branch checked out in the Units' repo, when one is), Session (the chat that started the batch, where the host names its chats) | `tools/aidlc-swarm.ts` |
-| `SWARM_UNIT_CONVERGED` | A swarm Unit re-verified green (and untampered), its exact declared record artifacts plus bound source manifest landed, and its AIDLC metadata merge-back landed; unless explicitly bypassed, finalize also verified the current global/unit source bindings and raw-aware base-to-worktree footprint against reviewed source-manifest claims | Timestamp, Batch number, Unit name, Stage, Run floor, Command SHA-256 (the authorized Construction Verification Command's digest; rows from an earlier release may lack it), optional Source Fingerprint and Source Commit (immutable reviewed source accepted by `aidlc-worktree merge`), or `Source Freshness Bypass: true` when finalize explicitly used `AIDLC_SKIP_SOURCE_FRESHNESS=1` (the freshness/unit/footprint guarantees do not apply and merge must repeat the switch) | `tools/aidlc-swarm.ts` |
-| `SWARM_SOURCE_MERGED` | The immutable reviewed source for one current-attempt swarm Unit landed in main and extended the aggregate source chain | Timestamp, Batch number, Unit name, Stage, Run floor, Previous Source Fingerprint, Source Fingerprint, Source Listing (the content-addressed listing the landing left; absent when it could not be kept and on rows an earlier release wrote), Source Commit, Merge commit, Repo (recorded selector or `-` for the workspace root); when the landing differs from the reviewed source: Landed changes (paths whose landed bytes differ from the reviewed worktree: through the person's hooks or filters, or combined by hand where the landing clashed with a Unit landed before it) and Driver merges (paths a merge driver the person configured merged) | `tools/aidlc-worktree.ts merge` |
-| `MAIN_CHECKOUT_CHANGE_ALLOWED` | Under a strict Guard Policy, while the Units are built in parallel, the person asked for files in the main checkout to change: the plan-approval guard lets those writes in, and the landing, the next batch's prepare and stage completion keep them (each keep is a `CHANGE_ACCEPTED` row with the same Message Id) | Timestamp, Stage, Run floor (the Code Generation attempt it holds for), Paths (a JSON list of project-relative paths), Person Reply (their words, when the message has them), Message Id | `tools/aidlc-swarm.ts allow-change` |
-| `SWARM_TAKEN_OVER` | The person asked a second chat to build a side-by-side batch another chat on this clone started and has not landed: `next` hands that chat the batch from then on, and says in the other one that its other chat took the build over | Timestamp, Batch number, Stage, Run floor, Session (the chat that takes it over), Person Reply (their words, when the message has them), Message Id | `tools/aidlc-swarm.ts take-over` |
-| `SWARM_UNIT_FAILED` | A swarm Unit failed the `finalize` re-verify (not claimed, claimed-but-red, or tampered) | Timestamp, Batch number, Unit name, Reason | `tools/aidlc-swarm.ts` |
+| `SWARM_STARTED` | スウォームのレフェリー `prepare` が正確な試行を取得し、依存関係で結ばれたユニットのバッチをフォークした | Timestamp, Batch number, Unit names, Unit obligations, Concurrency cap, Stage, Run floor, Landing branch（ユニットのリポジトリでチェックアウトされているブランチ。ある場合）, Session（バッチを開始したチャット。ホストがチャットに名前を付けている場合） | `tools/aidlc-swarm.ts` |
+| `SWARM_UNIT_CONVERGED` | スウォームのユニットが再検証でグリーン（かつ改ざんなし）となり、宣言された正確な記録成果物と結び付けられたソースマニフェストが着地し、AIDLC のメタデータの書き戻しマージが着地した。明示的にバイパスされない限り、finalize は現在のグローバル/ユニットのソースバインディングと、raw を考慮したベースからワークツリーへのフットプリントも、レビュー済みのソースマニフェストのクレームに対して検証した | Timestamp, Batch number, Unit name, Stage, Run floor, Command SHA-256（承認された Construction 検証コマンドのダイジェスト。以前のリリースの行にはないことがある）, 任意で Source Fingerprint と Source Commit（`aidlc-worktree merge` が受け入れる不変のレビュー済みソース）、または finalize が明示的に `AIDLC_SKIP_SOURCE_FRESHNESS=1` を使った場合は `Source Freshness Bypass: true`（鮮度/ユニット/フットプリントの保証は適用されず、merge でも同じスイッチを繰り返す必要がある） | `tools/aidlc-swarm.ts` |
+| `SWARM_SOURCE_MERGED` | 現在の試行のスウォームユニット 1 つについて、不変のレビュー済みソースが main に着地し、集約ソースの連鎖を延長した | Timestamp, Batch number, Unit name, Stage, Run floor, Previous Source Fingerprint, Source Fingerprint, Source Listing（着地が残した内容アドレス型の一覧。保持できなかった場合や以前のリリースが書いた行にはない）, Source Commit, Merge commit, Repo（記録されたセレクター、またはワークスペースルートの場合は `-`）。着地がレビュー済みソースと異なる場合: Landed changes（着地したバイト列がレビュー済みのワークツリーと異なるパス。利用者のフックやフィルターによるもの、または先に着地したユニットと衝突した箇所を手作業で統合したもの）と Driver merges（利用者が設定したマージドライバーがマージしたパス） | `tools/aidlc-worktree.ts merge` |
+| `MAIN_CHECKOUT_CHANGE_ALLOWED` | strict な Guard Policy の下で、ユニットが並行して構築されている間に、利用者が main のチェックアウト内のファイルの変更を求めた。plan-approval ガードはそれらの書き込みを通し、着地、次のバッチの prepare、ステージの完了はそれらを保持する（各保持は同じ Message Id を持つ `CHANGE_ACCEPTED` 行になる） | Timestamp, Stage, Run floor（保持の対象となる Code Generation の試行）, Paths（プロジェクト相対パスの JSON リスト）, Person Reply（メッセージにある場合、利用者の言葉）, Message Id | `tools/aidlc-swarm.ts allow-change` |
+| `SWARM_TAKEN_OVER` | このクローン上の別のチャットが開始してまだ着地していない並行バッチの構築を、利用者が 2 つ目のチャットに求めた。`next` はそれ以降そのチャットにバッチを渡し、もう一方のチャットでは別のチャットが構築を引き継いだことを伝える | Timestamp, Batch number, Stage, Run floor, Session（引き継ぐチャット）, Person Reply（メッセージにある場合、利用者の言葉）, Message Id | `tools/aidlc-swarm.ts take-over` |
+| `SWARM_UNIT_FAILED` | スウォームのユニットが `finalize` の再検証に失敗した（主張されていない、主張されたがレッド、または改ざんされている） | Timestamp, Batch number, Unit name, Reason | `tools/aidlc-swarm.ts` |
 <!-- Reason for a CLAIMED-but-red / tampered unit is always the tool's own verdict (`error`); for a DECLINED (unclaimed) unit it is the conductor's typed attribution via `finalize --reasons` (`unsatisfiable` / `budget-exhausted` / `cap-exhausted`, defaulting to `cap-exhausted`) — the tool records the conductor's knowledge call, it does not judge unsatisfiability itself (D-I). -->
-| `SWARM_BATON_RETURNED` | A swarm Unit returned the baton to the conductor for orchestrator-mediated coordination | Timestamp, Batch number, Unit name, Reason | `tools/aidlc-swarm.ts` |
-| `SWARM_COMPLETED` | All Units in the batch finished (converged or failed); batch closed | Timestamp, Batch number, Converged count, Failed count | `tools/aidlc-swarm.ts` |
-| `SWARM_DEGRADED` | `AIDLC_USE_SWARM=1` was requested but the Workflow tool was unavailable, so the conductor ran the subagent floor (loud-degrade) | Timestamp, Batch number, Requested driver, Fallback driver | `tools/aidlc-swarm.ts` |
+| `SWARM_BATON_RETURNED` | スウォームのユニットが、オーケストレーターを介した調整のためにバトンをコンダクターへ返した | Timestamp, Batch number, Unit name, Reason | `tools/aidlc-swarm.ts` |
+| `SWARM_COMPLETED` | バッチ内のすべてのユニットが終了し（収束または失敗）、バッチが閉じられた | Timestamp, Batch number, Converged count, Failed count | `tools/aidlc-swarm.ts` |
+| `SWARM_DEGRADED` | `AIDLC_USE_SWARM=1` が要求されたが Workflow ツールが利用できなかったため、コンダクターがサブエージェントによる下限の方式で実行した（明示的な格下げ） | Timestamp, Batch number, Requested driver, Fallback driver | `tools/aidlc-swarm.ts` |
 
 ### Commit Provenance (1 event)
 
-Emitted by `aidlc attest anchor` when a commit is observed to have landed reviewed source claims. Enrichment ONLY: `aidlc attest resolve` never reads these rows — attribution stays a pure function of committed content (REVIEW_COMPLETED receipts + committed `reviewed-source-<hash12>.tsv` evidence) — so a commit that was never anchored still resolves identically. One row per involved intent per (commit, repo); re-anchoring dedupes, and commits already carrying a `SWARM_SOURCE_MERGED` receipt for the same (commit, repo) are skipped rather than double-recorded.
+レビュー済みソースのクレームを着地させたコミットが観測されたときに、`aidlc attest anchor` によって発行される。補強のみ: `aidlc attest resolve` はこれらの行を決して読まない。帰属は、コミットされた内容（REVIEW_COMPLETED のレシート + コミットされた `reviewed-source-<hash12>.tsv` の証拠）の純粋な関数のままである。したがって、アンカーされなかったコミットも同じように解決される。関係するインテントごと、（commit, repo）ごとに 1 行。再アンカーは重複排除され、同じ（commit, repo）について `SWARM_SOURCE_MERGED` のレシートをすでに持つコミットは、二重に記録されずスキップされる。
 
 | Event | When | Required Fields | Emitter |
 |-------|------|-----------------|---------|
-| `SOURCE_COMMITTED` | A commit's changed paths were attributed to reviewed units (an explicit `anchor` invocation, or the opt-in session-start reconcile sweep) | Timestamp, Commit, Repo (recorded selector or `-` for the workspace root), Units, Attributed Paths, Observed (`session` \| `reconciled`) | `tools/aidlc-attest.ts anchor` (runAnchor — also called by the session-start hook's sweep when `AIDLC_SESSION_ANCHOR=1`) |
+| `SOURCE_COMMITTED` | コミットの変更パスがレビュー済みのユニットに帰属された（明示的な `anchor` の呼び出し、またはオプトインのセッション開始時の照合スイープ） | Timestamp, Commit, Repo（記録されたセレクター、またはワークスペースルートの場合は `-`）, Units, Attributed Paths, Observed（`session` \| `reconciled`） | `tools/aidlc-attest.ts anchor`（runAnchor。`AIDLC_SESSION_ANCHOR=1` の場合はセッション開始フックのスイープからも呼ばれる） |
 
 ## Hook-Generated Format
 
-Hooks emit events through the same library emitter as orchestrator-driven emissions (`appendAuditEntry` from `tools/aidlc-audit.ts`). Hook-emitted events are first-class taxonomy members (`ARTIFACT_CREATED`, `ARTIFACT_UPDATED`, `SUBAGENT_COMPLETED`, all `SESSION_*`). A hook with no active workflow in `cwd` is a no-op.
+フックは、オーケストレーター駆動の発行と同じライブラリの発行関数（`tools/aidlc-audit.ts` の `appendAuditEntry`）を通じてイベントを発行する。フックが発行するイベントは分類体系の正式なメンバーである（`ARTIFACT_CREATED`、`ARTIFACT_UPDATED`、`SUBAGENT_COMPLETED`、すべての `SESSION_*`）。`cwd` にアクティブなワークフローがない場合、フックは何もしない。
 
-The public `aidlc-audit.ts append` CLI is a diagnostic escape hatch, not the canonical emit path: it refuses the authority-bearing receipts in `CLI_PROTECTED_EVENT_TYPES` (`tools/aidlc-audit.ts`), which only their owning tool or hook may emit: `STAGE_COMPLETED`, `STATE_UPGRADED`, `STAGE_DEFINITION_CHANGED`, `STAGE_OUTPUT_AMENDED`, `SOURCE_WORK_NOT_FOUND`, `HUMAN_TURN`, `HOST_TURN`, `QUESTION_UNANSWERED`, `QUESTION_REPLIED`, `REQUEST_ROUTED`, `QUESTION_ASKED`, `QUESTION_SHOWN`, `GATE_APPROVED`, `GATE_REJECTED`, `QUESTION_ANSWERED`, `PLAN_APPROVAL_RECORDED`, `PLAN_APPROVAL_OVERRIDDEN`, `PLAN_APPROVAL_SKIPPED`, `REVIEW_REQUESTED`, `REVIEW_COMPLETED`, `PIPELINE_LINK_COMPLETED`, `ARTIFACT_REUSED`, `SWARM_STARTED`, `SWARM_UNIT_CONVERGED`, `SWARM_SOURCE_MERGED`, `MAIN_CHECKOUT_CHANGE_ALLOWED`, `SWARM_TAKEN_OVER`, `AUTONOMY_MODE_SET`, `UNIT_OWNERSHIP_SET`, `UNIT_GATE_RHYTHM_SET`, `CONSTRUCTION_POLICY_SET`, `UNIT_STARTED`, `UNIT_PAUSED`, `UNIT_RESUMED`, `UNIT_COMPLETED`, `UNIT_SKIPPED`, `UNIT_MERGED`, `DOCUMENT_INDEXED`, `DOCUMENT_UPDATED`, `DOCUMENT_REMOVED`, `BOLT_STARTED`, `BOLT_COMPLETED`, `BOLT_FAILED`, `AUDIT_FORKED`, `AUDIT_MERGED`, `STATE_FORKED`, `STATE_MERGED`, `WORKTREE_CREATED`, `WORKTREE_MERGED`, `WORKTREE_DISCARDED`, `SOURCE_COMMITTED`, `GUARD_POLICY_SET`, `CHANGE_CONTROL_SET`, `CHANGE_ACCEPTED`, `GUARD_RESTORED`, `GUARD_STOOD_ASIDE`, `SYSTEM_INSTALL_ALLOWED`, `SYSTEM_INSTALL_REQUESTED`, `CEREMONY_SET`. Field names must be printable single-line labels matching the audit field grammar; values have every line terminator escaped. `append-raw` likewise refuses a body carrying an `**Event**:` line naming a taxonomy event or an empty `**Event**:` line, and refuses line-breaking headings; the event readers take an `**Event**:` value from its own line only.
+公開の `aidlc-audit.ts append` CLI は診断用の非常口であり、正規の発行経路ではない。これは `CLI_PROTECTED_EVENT_TYPES`（`tools/aidlc-audit.ts`）にある権限を伴うレシートを拒否する。これらは、それを所有するツールまたはフックだけが発行できる: `STAGE_COMPLETED`, `STATE_UPGRADED`, `STAGE_DEFINITION_CHANGED`, `STAGE_OUTPUT_AMENDED`, `SOURCE_WORK_NOT_FOUND`, `HUMAN_TURN`, `HOST_TURN`, `QUESTION_UNANSWERED`, `QUESTION_REPLIED`, `REQUEST_ROUTED`, `QUESTION_ASKED`, `QUESTION_SHOWN`, `GATE_APPROVED`, `GATE_REJECTED`, `QUESTION_ANSWERED`, `PLAN_APPROVAL_RECORDED`, `PLAN_APPROVAL_OVERRIDDEN`, `PLAN_APPROVAL_SKIPPED`, `REVIEW_REQUESTED`, `REVIEW_COMPLETED`, `PIPELINE_LINK_COMPLETED`, `ARTIFACT_REUSED`, `SWARM_STARTED`, `SWARM_UNIT_CONVERGED`, `SWARM_SOURCE_MERGED`, `MAIN_CHECKOUT_CHANGE_ALLOWED`, `SWARM_TAKEN_OVER`, `AUTONOMY_MODE_SET`, `UNIT_OWNERSHIP_SET`, `UNIT_GATE_RHYTHM_SET`, `CONSTRUCTION_POLICY_SET`, `UNIT_STARTED`, `UNIT_PAUSED`, `UNIT_RESUMED`, `UNIT_COMPLETED`, `UNIT_SKIPPED`, `UNIT_MERGED`, `DOCUMENT_INDEXED`, `DOCUMENT_UPDATED`, `DOCUMENT_REMOVED`, `BOLT_STARTED`, `BOLT_COMPLETED`, `BOLT_FAILED`, `AUDIT_FORKED`, `AUDIT_MERGED`, `STATE_FORKED`, `STATE_MERGED`, `WORKTREE_CREATED`, `WORKTREE_MERGED`, `WORKTREE_DISCARDED`, `SOURCE_COMMITTED`, `GUARD_POLICY_SET`, `CHANGE_CONTROL_SET`, `CHANGE_ACCEPTED`, `GUARD_RESTORED`, `GUARD_STOOD_ASIDE`, `SYSTEM_INSTALL_ALLOWED`, `SYSTEM_INSTALL_REQUESTED`, `CEREMONY_SET`。フィールド名は、監査フィールドの文法に一致する印字可能な 1 行のラベルでなければならず、値はすべての行終端がエスケープされる。`append-raw` も同様に、分類体系のイベントを指す `**Event**:` 行や空の `**Event**:` 行を含む本文を拒否し、改行を含む見出しも拒否する。イベントの読み取り側は、`**Event**:` の値をその行自体からのみ取得する。
 
 ## Format Standards
 
-- All timestamps: ISO 8601 format (YYYY-MM-DDTHH:MM:SSZ)
-- Every entry's timestamp is stamped by the emitting tool or hook; nothing is hand-dated
-- Tool-owned: agents never write a shard directly (a PreToolUse guard refuses it); every row arrives through the owning command
-- Append-only: NEVER modify or delete existing entries
-- No sensitive data (credentials, PII, secrets); the tool masks key, token and password shapes in every value as `[masked]`, the work's description included, and the whole message stays in the git-ignored message record
-- Human decisions recorded verbatim: NEVER summarize
+- すべてのタイムスタンプ: ISO 8601 形式（YYYY-MM-DDTHH:MM:SSZ）
+- すべてのエントリのタイムスタンプは、発行するツールまたはフックが付与する。手作業で日付を入れるものはない
+- ツールが所有する: エージェントがシャードに直接書き込むことは決してない（PreToolUse ガードがそれを拒否する）。すべての行は所有するコマンドを通じて届く
+- 追記のみ: 既存のエントリを決して変更・削除しない
+- 機密データ（認証情報、PII、シークレット）を含めない。ツールは、作業の説明を含むすべての値で、キー、トークン、パスワードの形をしたものを `[masked]` としてマスクし、メッセージ全体は git で無視されるメッセージ記録に残る
+- 人の判断はそのまま記録する: 決して要約しない
 
 ### Free-form note format (`append-raw`)
 
-A note with no owning taxonomy event (an error worked around, a recovery, a
-mid-workflow change request) uses this command input:
+所有する分類体系イベントを持たないメモ（回避したエラー、リカバリー、
+ワークフロー途中の変更要求）は、次のコマンド入力を使う:
 
 ```bash
 {{INVOKE}} engine audit append-raw 'Error: <brief>' '**Severity**: <level>\n**Description**: <what happened>\n**Resolution**: <action taken>'
 ```
 
-Use `Recovery: <brief>` or `Change Request: <brief>` for those notes. Pass the
-user's words verbatim and exclude credentials, PII, and secrets. The tool owns
-formatting and timestamps; do not supply an Event or Timestamp field.
+それらのメモには `Recovery: <brief>` または `Change Request: <brief>` を使う。
+ユーザーの言葉をそのまま渡し、認証情報、PII、シークレットは除外する。整形と
+タイムスタンプはツールが担う。Event や Timestamp のフィールドを指定してはならない。
 
 ## Validation basis on `STAGE_COMPLETED`
 
-Main-workflow `STAGE_COMPLETED` entries may include a compact schema-3 receipt:
+メインワークフローの `STAGE_COMPLETED` エントリには、コンパクトなスキーマ 3 のレシートを含めることができる:
 
 ```text
 **Validation Basis**: {"schema":3,"graphContract":"sha256:...","projectType":"brownfield","inputs":[{"artifact":"code-summary","producer":"code-generation","required":true,"instanceCount":12,"presentCount":12,"structureHash":"sha256:...","contentHash":"sha256:..."}],"outputs":[...]}
 ```
 
-The resolver first computes the concrete runtime artifact-instance set using
-the Bolt DAG, unit kinds, `produces_kinds`, and canonical filename aliases. The
-receipt then stores deterministic stage-level aggregate fingerprints rather
-than every Unit/path row. Optional inputs are included only when at least one
-instance was present when completion was reported. This is a report-time
-snapshot: it does not prove which bytes the stage actually read. "Observed"
-dependency means recorded in this receipt, not runtime read instrumentation;
-changes before capture become the baseline and changes after capture are
-detectable.
+リゾルバーはまず、Bolt の DAG、ユニットの種類、`produces_kinds`、正規のファイル名エイリアスを使って、
+具体的な実行時の成果物インスタンスの集合を計算する。次にレシートは、ユニット/パスの
+行をすべて保存するのではなく、決定論的なステージレベルの集約フィンガープリントを保存する。
+任意の入力は、完了が報告された時点で少なくとも 1 つのインスタンスが存在した場合にのみ含まれる。
+これは報告時のスナップショットであり、ステージが実際にどのバイト列を読んだかを証明するものではない。
+"Observed" の依存関係とは、このレシートに記録されたという意味であり、実行時の読み取り計測ではない。
+取得前の変更はベースラインとなり、取得後の変更は検出可能である。
 
-If receipt capture is unavailable, the owning completion tool still appends a
-receipt-less `STAGE_COMPLETED` with `Validation Warning`. That completion is
-untracked and advisory rather than a reason to abort the state transition.
+レシートの取得が利用できない場合でも、所有する完了ツールは `Validation Warning` 付きで
+レシートなしの `STAGE_COMPLETED` を追記する。その完了は追跡されない助言扱いであり、
+状態遷移を中止する理由にはならない。
 
-The latest receipt remains useful as dependency evidence after a stage is
-reopened, while only a completion in the current attempt counts as current
-tracking for the stage itself. Earlier schemas and receipt-less completions fail
-open until the stage completes with this schema. Schema 2 is deliberately
-untracked because it cannot distinguish its old zero-instance resolution from
-the stage-level zero-Unit resolution introduced with schema 3.
+最新のレシートは、ステージが再オープンされた後も依存関係の証拠として引き続き有用だが、
+ステージ自体の現在の追跡として数えられるのは現在の試行での完了のみである。以前のスキーマと
+レシートなしの完了は、ステージがこのスキーマで完了するまでフェイルオープンする。スキーマ 2 は、
+以前のゼロインスタンスの解決と、スキーマ 3 で導入されたステージレベルのゼロユニットの解決とを
+区別できないため、意図的に追跡対象外としている。
 
-When only the stage itself changed after it finished (its graph contract, plus
-any input or output it now reads or writes, or no longer does, or whose
-`required` flag moved) and nothing of the person's work did, the stage is not
-stale. Once the next step is spoken (it says so only when the stage now needs an
-input it did not need), the engine appends a `STAGE_DEFINITION_CHANGED` row whose
-`Validation Basis` is the stage's receipt for its new definition; it stands in
-for the completion receipt until the stage starts again.
+完了後に変わったのがステージ自体だけで（グラフコントラクトに加え、新たに読み書きするようになった、
+またはしなくなった入力や出力、あるいは `required` フラグが動いた入力や出力）、利用者の作業が何も
+変わっていない場合、そのステージは古くなっていない。次のステップが告げられると（ステージが以前は
+不要だった入力を必要とするようになった場合にのみ、その旨を述べる）、エンジンは `STAGE_DEFINITION_CHANGED` 行を追記する。
+その `Validation Basis` は新しい定義に対するステージのレシートであり、ステージが再び開始されるまで
+完了レシートの代わりとなる。
 
-When the only change since a stage finished is to its own documents' content,
-and the approval it finished with names the person's latest message (no
-message of theirs since, in any conversation on the work, and no decision
-since that names another message or none), the stage is not stale under any
-Guard Policy: the change was made in the turn that approved it. Once the next
-step is spoken, which says nothing about it, the engine appends a
-`STAGE_OUTPUT_AMENDED` row whose `Validation Basis` is the stage's receipt for
-the files as they are; it stands in for the completion receipt like the row
-above, so a later edit is compared with it. A change after the person's next
-message, or with an approval that names no message, is stale as before.
+完了後の唯一の変更がステージ自身のドキュメントの内容に対するもので、かつ完了時の承認が
+利用者の最新のメッセージを指している場合（その後、作業に関するどの会話でも利用者のメッセージがなく、
+別のメッセージを指す判断や何も指さない判断もない場合）、どの Guard Policy の下でもそのステージは
+古くなっていない。変更はそれを承認したターンで行われたからである。次のステップが告げられると
+（それについては何も述べない）、エンジンは `STAGE_OUTPUT_AMENDED` 行を追記する。その `Validation Basis` は
+現状のファイルに対するステージのレシートであり、上の行と同様に完了レシートの代わりとなるため、
+後の編集はこれと比較される。利用者の次のメッセージより後の変更、または何のメッセージも指さない
+承認での変更は、従来どおり古いものとみなされる。

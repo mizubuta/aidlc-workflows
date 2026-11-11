@@ -1,35 +1,35 @@
 # Spaces and Intents
 
-[Your First Workflow](02-your-first-workflow.md) walked through one run from start
-to finish. But real work is rarely one thing at a time: you have a feature in
-flight, an urgent bug lands, a second team shares the repo. This chapter explains
-how AI-DLC organizes **many** pieces of work in **one** place — the *workspace* —
-and the two concepts you use to navigate it: **spaces** and **intents**.
+[最初のワークフロー](02-your-first-workflow.md) では、1 回の実行を最初から最後まで
+たどりました。しかし実際の作業が一度に 1 つだけということはめったにありません: 進行中の機能があり、
+緊急のバグが入り、2 つ目のチームがリポジトリを共有します。この章では、
+AI-DLC が**多数**の作業を**1 つ**の場所 — *ワークスペース* — でどのように整理するか、
+そしてそれを移動するために使う 2 つの概念、**スペース**と**インテント**について説明します。
 
-The short version: an **intent** is one piece of work (one run of the lifecycle);
-a **space** is one team's world of intents, knowledge, and practices. Most people
-work in a single space (called `default`) and never think about spaces at all —
-they just start intents and switch between them. The rest of this chapter shows
-how that works and where everything lives.
+要点: **インテント**は 1 つの作業（ライフサイクルの 1 回の実行）であり、
+**スペース**は、1 つのチームのインテント、ナレッジ、プラクティスからなる世界です。ほとんどの人は
+1 つのスペース（`default` という名前）で作業し、スペースについて意識することはまったくありません —
+インテントを開始し、それらを切り替えるだけです。この章の残りでは、
+その仕組みと、すべてがどこに置かれるかを示します。
 
 ---
 
 ## One workspace, organized by what you're working on
 
-When you run `aidlc config`, it projects the selected engine into your
-harness's own directory (`.claude/` on Claude Code, `.kiro/` on Kiro, `.codex/`
-on Codex, `.cursor/` on Cursor, `.aidlc/` on opencode and GitHub Copilot), plus
-the folders that harness itself reads (`.agents/skills/` on Codex, `.opencode/`
-on opencode, `.github/` on GitHub Copilot). Those are the *only* parts of the
-layout that differ by harness. From then on, everything AI-DLC produces lives under one
-neutral `aidlc/` directory at your project root — organized by *what you're
-working on*, not by which harness you happen to run. You browse `aidlc/`; you
-never need to open the engine directory.
+`aidlc config` を実行すると、選択したエンジンがハーネス自身のディレクトリ
+（Claude Code では `.claude/`、Kiro では `.kiro/`、Codex では `.codex/`、
+Cursor では `.cursor/`、opencode と GitHub Copilot では `.aidlc/`）に展開され、さらに
+そのハーネス自身が読むフォルダー（Codex では `.agents/skills/`、opencode では `.opencode/`、
+GitHub Copilot では `.github/`）にも展開されます。レイアウトのうちハーネスによって異なるのは、
+これらの部分*だけ*です。それ以降、AI-DLC が生成するものはすべて、プロジェクトのルートにある
+1 つの中立的な `aidlc/` ディレクトリの下に置かれます — たまたま実行しているハーネスごとではなく、
+*何に取り組んでいるか*によって整理されます。閲覧するのは `aidlc/` であり、
+エンジンのディレクトリを開く必要はありません。
 
-Here is a complete workspace with two teams and a few intents in flight (the
-engine directory is shown as `.claude/` — read it as `.kiro/` or `.codex/` on
-those harnesses). Read it top to bottom — it is the mental model the rest of
-this chapter builds on:
+次の例は、2 つのチームといくつかの進行中のインテントを持つ完全なワークスペースです（
+エンジンのディレクトリは `.claude/` と表示しています — それらのハーネスでは `.kiro/` や `.codex/` と
+読み替えてください）。上から下へ読んでください — これが、この章の残りの部分の土台となる
+メンタルモデルです:
 
 ```
 my-project/
@@ -75,77 +75,77 @@ my-project/
 └── repo-b/                       an intent can span more than one
 ```
 
-That tree shows a project with several code repos. A project with one repo is the
-same thing with the repo as the workspace itself
-([Where `aidlc/` lives](#where-aidlc-lives)).
+このツリーは、複数のコードリポジトリを持つプロジェクトを示しています。リポジトリが 1 つのプロジェクトは、
+そのリポジトリ自体がワークスペースであるという点を除けば同じです
+（[Where `aidlc/` lives](#where-aidlc-lives)）。
 
-Three things are worth pulling out of that tree, because they are the whole idea:
+このツリーから取り出しておく価値のあるものが 3 つあります。それが考え方のすべてだからです:
 
-- **`aidlc/spaces/<space>/`** is one team's self-contained world: its method
-  (`memory/`), its knowledge, its code knowledge, and its record of every intent.
-  You get `spaces/default/` for free and, as a solo developer or single team,
-  never look past it.
-- **`intents/<YYMMDD>-<label>/`** is one piece of work — the per-run record that
-  [Your First Workflow](02-your-first-workflow.md) filled in. The `<YYMMDD>` is a
-  compact UTC date so records sort chronologically; the `<label>` is a short,
-  human-readable name. Identity itself is carried by a UUIDv7 in the registry, not
-  the dir name, so two same-day same-label intents stay distinct.
-- **Two cursors** — `active-space` and `active-intent` — record *where you are
-  right now*. They are per-user (gitignored), so two teammates can sit in
-  different intents at the same time without fighting over a shared file.
+- **`aidlc/spaces/<space>/`** は、1 つのチームの自己完結した世界です: そのメソッド
+  （`memory/`）、ナレッジ、コードナレッジ、そしてすべてのインテントの記録です。
+  `spaces/default/` は最初から用意されており、個人の開発者や単一のチームであれば、
+  その先を見ることはありません。
+- **`intents/<YYMMDD>-<label>/`** は 1 つの作業です — 
+  [最初のワークフロー](02-your-first-workflow.md) で埋められた、実行ごとの記録です。`<YYMMDD>` は
+  記録が時系列に並ぶようにするための簡潔な UTC の日付で、`<label>` は短い、
+  人間が読める名前です。識別情報そのものはディレクトリ名ではなくレジストリ内の UUIDv7 が
+  持つため、同じ日に同じラベルを持つ 2 つのインテントも区別されたままです。
+- **2 つのカーソル** — `active-space` と `active-intent` — が*今どこにいるか*を
+  記録します。これらはユーザーごと（gitignore 対象）なので、2 人のチームメイトが
+  共有ファイルを奪い合うことなく、同時に異なるインテントにいることができます。
 
-> **Upgrading from an older version?** Earlier releases kept a single workflow in
-> one flat directory at the project root, which a new run would overwrite. The
-> workspace model replaces that with the per-intent record dirs above, so you can
-> keep many pieces of work side by side without one clobbering another.
+> **古いバージョンからアップグレードしますか?** 以前のリリースでは、1 つのワークフローを
+> プロジェクトのルートにある 1 つのフラットなディレクトリに保持しており、新しい実行がそれを上書きしていました。
+> ワークスペースモデルはそれを上記のインテントごとの記録ディレクトリに置き換えるため、
+> 互いに上書きすることなく、多くの作業を並べて保持できます。
 
 ---
 
 ## Intents — one per piece of work
 
-An **intent** is a single run of the AI-DLC lifecycle, scoped to one task. Every
-intent owns a row in the space's `intents.json` registry — `{uuid, slug, dirName,
-scope, repos, status}` — and a **record dir** holding that run's state, audit
-trail, and artifacts. The `uuid` (a UUIDv7) is the canonical, collision-proof
-identity; `dirName` records the human-readable record-dir name verbatim.
-A hand edit that leaves a trailing comma, a comment or a BOM still reads as every
-row. A list nothing can read is never written over: the next new piece of work
-keeps its bytes as `intents.json.unreadable-<UTC time>` beside the new list, and
-you are told once.
+**インテント**は、1 つのタスクにスコープされた AI-DLC ライフサイクルの 1 回の実行です。各
+インテントは、スペースの `intents.json` レジストリの 1 行 — `{uuid, slug, dirName,
+scope, repos, status}` — と、その実行の状態、監査
+証跡、成果物を保持する**記録ディレクトリ**を持ちます。`uuid`（UUIDv7）は正規の、衝突しない
+識別情報です。`dirName` は、人間が読める記録ディレクトリ名をそのまま記録します。
+手で編集して末尾のカンマ、コメント、BOM が残っても、すべての行は
+読み取られます。何も読み取れないリストが上書きされることは決してありません: 次の新しい作業は、
+そのバイト列を新しいリストの隣に `intents.json.unreadable-<UTC time>` として残し、
+そのことが 1 回だけ通知されます。
 
-The row's `status` is the intent's lifecycle: `in-flight` from creation,
-`complete` once the last in-scope gate closes, or `archived` when you retire
-work you will not finish or hide work you finished (`/aidlc intent archive
-<name>`). Archiving never deletes anything: the record dir, audit trail, and
-any Bolt worktrees stay put, the default listing just stops showing the row
-(`/aidlc intent list --all` still does), and `/aidlc intent unarchive <name>`
-puts it back the way it was, in flight or complete.
+行の `status` はインテントのライフサイクルです: 作成時から `in-flight`、
+スコープ内の最後のゲートが閉じると `complete`、終えるつもりのない作業を退役させたり、
+終えた作業を非表示にしたりすると `archived` になります（`/aidlc intent archive
+<name>`）。アーカイブしても何も削除されません: 記録ディレクトリ、監査証跡、
+Bolt のワークツリーはそのまま残り、デフォルトの一覧にその行が表示されなくなるだけです
+（`/aidlc intent list --all` では引き続き表示されます）。`/aidlc intent unarchive <name>` は、
+進行中または完了のいずれであっても、元の状態に戻します。
 
-You never create an intent with a special command. The first time you describe
-work, the agent proposes a plan for it:
+インテントを特別なコマンドで作成することはありません。最初に作業を説明すると、
+エージェントがそのためのプランを提案します:
 
 ```
 /aidlc Build a REST API for inventory management
 ```
 
-Once you confirm the plan, AI-DLC creates the intent and its record dir (in the
-[Getting Started](01-getting-started.md) run,
-`aidlc/spaces/default/intents/261013-inventory-rest-api/`), makes it the active
-intent, and starts the first stage, as in the previous chapter.
+プランを確認すると、AI-DLC はインテントとその記録ディレクトリ（
+[はじめに](01-getting-started.md) の実行では
+`aidlc/spaces/default/intents/261013-inventory-rest-api/`）を作成し、それをアクティブな
+インテントにして、前章と同じように最初のステージを開始します。
 
 ### Starting a second piece of work
 
-Here is where the workspace earns its keep. Say you're mid-feature and an
-unrelated bug needs attention. You don't archive anything or run an init command —
-you just describe the new work:
+ここでワークスペースが真価を発揮します。機能の開発中に、
+無関係なバグに対応する必要が出てきたとします。何かをアーカイブしたり init コマンドを実行したりする必要はありません —
+新しい作業を説明するだけです:
 
 ```
 /aidlc Fix the timeout on the export endpoint
 ```
 
-When an intent is already active, AI-DLC recognizes that this may be *new,
-unrelated* work rather than a continuation of the current feature, and **asks**
-before starting a second intent alongside the first:
+インテントがすでにアクティブな場合、AI-DLC は、これが現在の機能の続きではなく*新しい、
+無関係な*作業である可能性を認識し、1 つ目と並べて 2 つ目のインテントを開始する前に
+**確認します**:
 
 ```text
  New request
@@ -161,55 +161,55 @@ before starting a second intent alongside the first:
    5. Chat about this
 ```
 
-- Choose **2** and AI-DLC creates a second intent beside the first, on the plan
-  that option names, with its size (here the agent proposed `bugfix`). When the
-  option names no plan, you pick the new work's plan next. In that run
-  the agent said: "I've set up the export timeout fix as a separate piece of
+- **2** を選ぶと、AI-DLC は 1 つ目の隣に 2 つ目のインテントを作成します。プランは
+  その選択肢が示すもので、規模も示されます（ここではエージェントが `bugfix` を提案しました）。
+  選択肢がプランを示していない場合は、次に新しい作業のプランを選びます。その実行では、
+  エージェントは "I've set up the export timeout fix as a separate piece of
   work using the bug-fix plan, and it's waiting at Requirements Analysis. Your
-  inventory API work is unchanged at the feasibility stage." The first intent's
-  record dir, state, and progress are all preserved exactly where you left them.
-- Choose **1** and AI-DLC treats your message as part of the active intent.
-- Choose **3** and AI-DLC works out how to reshape the active intent's
-  remaining plan with you.
+  inventory API work is unchanged at the feasibility stage." と伝えました（エクスポートのタイムアウト修正を、バグ修正のプランを使った別の作業として設定し、Requirements Analysis で待機しています。インベントリ API の作業は feasibility ステージのまま変わっていません）。1 つ目のインテントの
+  記録ディレクトリ、状態、進捗は、すべて中断したところでそのまま保持されます。
+- **1** を選ぶと、AI-DLC はメッセージをアクティブなインテントの一部として扱います。
+- **3** を選ぶと、AI-DLC はアクティブなインテントの残りのプランをどのように組み直すかを、
+  あなたと一緒に検討します。
 
-Saying only that the work should go on (`/aidlc carry on`, "proceed", "keep
-going", in your own words) asks nothing: AI-DLC reads your words and carries on
-with the active work. Asking where the work stands (`/aidlc how far along are
-we?`, in your own words) asks nothing either: AI-DLC answers your question from
-the status. With work in the project but none selected yet, it asks
-which piece to pick up; name the piece with your words (`/aidlc continue auth`)
-and it picks that piece up and carries on with it at once.
+作業を続けるべきだと言うだけなら（`/aidlc carry on`、"proceed"、"keep
+going" など、自分の言葉で）、何も確認されません: AI-DLC はあなたの言葉を読み取り、
+アクティブな作業を続けます。作業の状況を尋ねる場合（`/aidlc how far along are
+we?` など、自分の言葉で）も何も確認されません: AI-DLC はステータスから質問に
+答えます。プロジェクトに作業があるもののまだ何も選択されていない場合は、どの作業を
+再開するかを尋ねます。自分の言葉で作業を指定すれば（`/aidlc continue auth`）、
+その作業を選んですぐに続行します。
 
-Settings you type with the new work go with the work you choose.
+新しい作業と一緒に入力した設定は、選んだ作業に適用されます。
 `/aidlc --depth minimal --learnings off Fix the timeout on the export endpoint`
-asks the same question: choose **2** and the new intent starts with that depth
-and learnings off; choose **1** or **3** and they apply to the active intent
-(for **3**, before its plan is reshaped). A Guard Policy you lower this way goes
-with the work you choose too, and AI-DLC says so once; when your team holds
-Guard Policy strict, the new intent is created at strict. Naming the plan first
-(`/aidlc bugfix Fix the timeout`) asks the same question, proposing that plan.
-When a plan's name is also your own first word (`classic car rental website`),
-the assistant reads which you meant and may ask you once, so your word is never
-spent on a plan you did not choose.
-So does a scope that differs from the active intent's, typed with a
-description (`/aidlc --scope express "add a health endpoint"`), with new work
-first: choose **1** and the description starts new express work, the active
-intent kept as it is, or **2** and the active intent changes to express.
-`--scope` with no description (`/aidlc --scope express`) changes the active
-intent's scope without asking. Another plan's name typed alone
-(`/aidlc workshop`) may mean new work on that plan or the active intent moved
-to it: the assistant reads which you meant and asks you once when it cannot
-tell, and new work on it asks what the work is for before anything starts.
+は同じ質問をします: **2** を選ぶと、新しいインテントはその深さで、学びをオフにして開始します。
+**1** または **3** を選ぶと、それらはアクティブなインテントに適用されます
+（**3** の場合は、プランを組み直す前に）。この方法で下げた Guard Policy も、
+選んだ作業に適用され、AI-DLC はそのことを 1 回伝えます。チームが
+Guard Policy を strict に固定している場合、新しいインテントは strict で作成されます。先にプランの名前を
+指定した場合（`/aidlc bugfix Fix the timeout`）も、そのプランを提案して同じ質問をします。
+プランの名前があなた自身の最初の単語でもある場合（`classic car rental website`）、
+アシスタントはどちらの意味かを読み取り、1 回確認することがあります。そのため、あなたの単語が
+選んでいないプランに使われてしまうことはありません。
+アクティブなインテントと異なるスコープを説明と一緒に入力した場合
+（`/aidlc --scope express "add a health endpoint"`）も同様で、新しい作業が
+先に示されます: **1** を選ぶと、説明によって新しい express の作業が開始され、アクティブな
+インテントはそのまま保たれます。**2** を選ぶと、アクティブなインテントが express に変わります。
+説明のない `--scope`（`/aidlc --scope express`）は、確認なしにアクティブな
+インテントのスコープを変更します。別のプランの名前だけを入力した場合
+（`/aidlc workshop`）は、そのプランでの新しい作業か、アクティブなインテントをそのプランに移すことを
+意味する可能性があります: アシスタントはどちらの意味かを読み取り、判断できない場合は 1 回確認します。
+そのプランでの新しい作業の場合は、何かを開始する前に、その作業の目的を尋ねます。
 
-AI-DLC never creates a second intent without asking. If a prompt is genuinely a
-follow-up to the current work — answering a gate, correcting a requirement — it
-stays in the active intent; the offer only appears when the work is clearly
-distinct.
+AI-DLC は、確認せずに 2 つ目のインテントを作成することは決してありません。プロンプトが本当に
+現在の作業の続き — ゲートへの回答や要件の修正 — である場合、それは
+アクティブなインテントにとどまります。この提案が表示されるのは、作業が明らかに
+別のものである場合だけです。
 
 ### Switching between intents
 
-List the intents in your space, then switch to one by name (its slug). From the
-same run, with the export fix active:
+スペース内のインテントを一覧表示し、名前（スラッグ）を指定して切り替えます。同じ
+実行で、エクスポートの修正がアクティブな状態での例です:
 
 ```text
 > /aidlc intent
@@ -221,167 +221,165 @@ Intents in space "default":
 Now working on inventory-rest-api. You were on export-timeout-fix: /aidlc intent export-timeout-fix goes back.
 ```
 
-The `*` marks the active intent.
+`*` はアクティブなインテントを示します。
 
-Switching updates the invoking session's binding and writes through to the
-`active-intent` cursor. The next `/aidlc` in that session resumes the intent
-right where it stopped - same stage, same state, same audit trail. You can carry
-any number of intents at once and move between them freely; each is an independent
-run.
+切り替えると、呼び出したセッションのバインディングが更新され、
+`active-intent` カーソルにも書き込まれます。そのセッションでの次の `/aidlc` は、インテントを
+中断したところから再開します — 同じステージ、同じ状態、同じ監査証跡です。インテントは
+いくつでも同時に抱えられ、自由に行き来できます。それぞれが独立した
+実行です。
 
-> Bare `/aidlc intent` is read-only — it just lists. Add `--json` for
-> machine-readable output. See [CLI Commands](12-cli-commands.md) for the full
-> flag reference.
+> 引数なしの `/aidlc intent` は読み取り専用で、一覧を表示するだけです。機械可読の出力には
+> `--json` を追加してください。フラグの完全なリファレンスは [CLI コマンド](12-cli-commands.md)
+> を参照してください。
 
 ### Concurrent sessions in one checkout
 
-Each live session keeps a machine-local binding at
-`aidlc/.aidlc-sessions/<session-id>.binding.json`. The binding records the
-session's space and intent, so another terminal or IDE window can move the shared
-cursors without silently moving this session's workflow.
+各ライブセッションは、マシンローカルのバインディングを
+`aidlc/.aidlc-sessions/<session-id>.binding.json` に保持します。バインディングは
+セッションのスペースとインテントを記録するため、別のターミナルや IDE のウィンドウが共有の
+カーソルを動かしても、このセッションのワークフローが黙って動くことはありません。
 
-A binding also records how its intent was chosen. Finding a record is not the same
-as joining it: in a fresh clone, where a teammate's intent record is committed but
-your `active-intent` cursor is not, the lone record resolves but no session has
-joined it. The first `/aidlc` asks which intent to work on, and AI-DLC's hooks leave
-that record alone until the session runs `/aidlc intent <slug>` (or creates its own
-intent), or until this machine chooses that record (your `active-intent` cursor
-names it, from another chat or your terminal): then the chat joins it on its next
-turn, silently, as a chat opened after the choice would. What you type in a chat
-that has not joined is still kept, on that chat's own message record outside the
-intent record. A session bound by an earlier version keeps working its intent when your
-cursor names the same record; otherwise it is offered a rebind to that intent. A
-session an earlier version stamped but never bound follows its stamp when it
-resumes, so a chat left open across an upgrade continues its own intent.
-A plain `git worktree` created without AI-DLC's worktree command (or one a host
-makes for each chat) starts without cursors of its own, so it reads the ones its
-main checkout holds on this machine: it opens the space the main checkout is on,
-and the intent too when the worktree has that intent's record, so a chat there is
-on that work as the next paragraph says. Switching intent in the worktree gives it
-an intent cursor of its own, and the main checkout's no longer moves it; archiving
-the intent it is on stops that intent resolving there, as in a main checkout. When
-the main checkout has no cursor either, it selects its intent with
-`/aidlc intent <slug>`. A Unit
-claimed on this machine counts for that Unit's intent; the Unit participant marker
-is checkout-wide and names no intent, so it does not count as joining a
-particular record.
+バインディングには、インテントがどのように選ばれたかも記録されます。記録を見つけることは、
+それに参加することと同じではありません: 新しいクローンでは、チームメイトのインテントの記録はコミットされていても、
+あなたの `active-intent` カーソルはコミットされていないため、唯一の記録は解決されますが、どのセッションも
+それに参加していません。最初の `/aidlc` はどのインテントで作業するかを尋ね、AI-DLC のフックは、
+セッションが `/aidlc intent <slug>` を実行する（または自身の
+インテントを作成する）まで、あるいはこのマシンがその記録を選ぶ（別のチャットやターミナルから、
+あなたの `active-intent` カーソルがその記録を指す）まで、その記録には手を付けません: その場合、チャットは次の
+ターンで、選択後に開いたチャットと同じように、黙ってそれに参加します。参加していないチャットで
+入力した内容も、インテントの記録の外にある、そのチャット自身のメッセージ記録に保持されます。
+以前のバージョンでバインドされたセッションは、あなたの
+カーソルが同じ記録を指している場合はそのインテントでの作業を続けます。そうでない場合は、そのインテントへの再バインドが提案されます。
+以前のバージョンがスタンプを付けたもののバインドしなかったセッションは、再開時に
+そのスタンプに従うため、アップグレードをまたいで開いたままのチャットは自身のインテントを続けます。
+AI-DLC のワークツリーコマンドを使わずに作成した素の `git worktree`（またはホストが
+チャットごとに作成するもの）は、独自のカーソルを持たずに開始するため、このマシン上の
+メインのチェックアウトが保持するカーソルを読みます: メインのチェックアウトが開いているスペースを開き、
+ワークツリーにそのインテントの記録があればそのインテントも開くため、そこでのチャットは
+次の段落で述べるとおりその作業を対象にします。ワークツリーでインテントを切り替えると、
+ワークツリーは独自のインテントカーソルを持ち、メインのチェックアウトのカーソルではもう動かなくなります。
+ワークツリーが対象にしているインテントをアーカイブすると、メインのチェックアウトと同様に、そこではそのインテントが解決されなくなります。
+メインのチェックアウトにもカーソルがない場合は、
+`/aidlc intent <slug>` でインテントを選択します。このマシンで claim された
+ユニットは、そのユニットのインテントについて参加として数えられます。ユニットの参加者マーカーは
+チェックアウト全体のもので、インテントを指定しないため、特定の記録への
+参加としては数えられません。
 
-A chat you open while your cursor names a piece of work is on that work: `/aidlc`
-in it carries the work on from where it stands, with nothing asked. On Claude Code,
-Codex CLI, Kiro CLI (V2) and opencode, that work's checks (Plan Approval during Code
-Generation, the review freeze) hold the chat from its first AI-DLC step there
-(`/aidlc`, an answer, a review you ask for, a setting you change), so a chat you opened in the same
-folder for something else runs your requests as in a folder with no workflow. On
-Cursor, GitHub Copilot and Kiro (Kiro IDE, or Kiro CLI started with `kiro-cli --v3`), a command cannot tell AI-DLC
-which chat it runs in, so there the checks hold the chat from the start. A worktree
-AI-DLC made for the work, or a Unit claimed on this machine, holds the chat from
-the start on every host.
+カーソルがある作業を指している間に開いたチャットは、その作業を対象にします: そこでの `/aidlc`
+は、何も確認せずに、作業を現在の状態から続けます。Claude Code、
+Codex CLI、Kiro CLI（V2）、opencode では、その作業のチェック（Code
+Generation 中の Plan Approval、レビューの凍結）は、そこでの最初の AI-DLC のステップ
+（`/aidlc`、回答、依頼したレビュー、変更した設定）からチャットに適用されます。そのため、同じ
+フォルダーで別の目的のために開いたチャットは、ワークフローのないフォルダーと同じようにリクエストを実行します。
+Cursor、GitHub Copilot、Kiro（Kiro IDE、または `kiro-cli --v3` で開始した Kiro CLI）では、コマンドがどのチャットで
+実行されているかを AI-DLC に伝えられないため、そこではチェックが最初からチャットに適用されます。AI-DLC が
+その作業のために作成したワークツリー、またはこのマシンで claim されたユニットは、どのホストでも
+最初からチャットにチェックを適用します。
 
-Session identity follows one order:
+セッションの識別情報は、次の順序で決まります:
 
-1. The host session id delivered to a hook.
-2. A valid `AIDLC_SESSION_OVERRIDE` inherited from the harness process, or the
-   one AI-DLC's opencode plugin gives each shell command for the chat it runs
-   in (opencode's `shell.env` hook), so two chats in one opencode window each
-   act on their own work.
-3. The chat the host names in the agent's own shell: Codex's `CODEX_THREAD_ID`,
-   Claude Code's `CLAUDE_CODE_SESSION_ID` while the process its `CLAUDE_PID`
-   names is alive, or Kiro CLI's `KIRO_SESSION_ID`. A shell kept open after its
-   chat ended still carries the variable, which is why Claude Code's id is read
-   only while that chat's process is alive; a dead or absent pid leaves it
-   unread. Kiro CLI puts no pid in the shell, so its id stands on its own, as
-   Codex's does. Other harnesses name no chat there.
-4. The nearest live PID ancestry entry.
-5. No session identity.
+1. フックに渡されたホストのセッション ID。
+2. ハーネスのプロセスから継承した有効な `AIDLC_SESSION_OVERRIDE`、または
+   AI-DLC の opencode プラグインが、実行されるチャットのために各シェルコマンドに与えるもの
+   （opencode の `shell.env` フック）。これにより、1 つの opencode ウィンドウ内の 2 つのチャットは、
+   それぞれ自身の作業を対象にします。
+3. ホストがエージェント自身のシェルで示すチャット: Codex の `CODEX_THREAD_ID`、
+   `CLAUDE_PID` が示すプロセスが生きている間の Claude Code の `CLAUDE_CODE_SESSION_ID`、
+   または Kiro CLI の `KIRO_SESSION_ID`。チャットの終了後も開いたままのシェルは
+   変数を持ち続けるため、Claude Code の ID は、そのチャットのプロセスが生きている間しか
+   読まれません。PID が終了しているかない場合は、読まれません。Kiro CLI はシェルに PID を置かないため、
+   その ID は Codex と同様に単独で扱われます。他のハーネスは、そこでチャットを示しません。
+4. 最も近い、生きている PID の祖先エントリ。
+5. セッションの識別情報なし。
 
-Every id found this way, and every hook payload's session id, passes through one
-door before any chat or work record is read. A helper's own id (a spawned Codex
-agent's or review thread's, a Kiro CLI delegation's, a Copilot subagent's) maps
-to the chat it belongs to: the adapter notes the pair from the first hook payload
-that shows both, the one fact the engine cannot learn by itself. That chat's
-binding is then read, and a chat with no binding yet (a host that never ran
-SessionStart for it, or hooks installed after the chat opened) is bound at first
-contact by the same rule SessionStart applies to a new chat: to the work the
-shared cursor names when this machine has joined it, else to no record, silently.
-From then on the chat stays on that work; a switch typed in another window moves
-the cursor, not the chat. A chat bound to no record only because the lone record
-here had not been chosen yet is read again at every entry: once the cursor names
-a record, it joins that work the same way, silently. A command with no session
-identity at all (your own terminal) keeps following the cursor.
+このようにして見つかったすべての ID と、すべてのフックのペイロードのセッション ID は、
+チャットや作業の記録が読まれる前に、1 つの入口を通ります。ヘルパー自身の ID（起動された Codex の
+エージェントやレビュースレッド、Kiro CLI の委譲、Copilot のサブエージェントのもの）は、
+それが属するチャットに対応付けられます: アダプターは、両方を示す最初のフックのペイロードから
+その組を記録します。これは、エンジンが自力では知ることができない唯一の事実です。次にそのチャットの
+バインディングが読まれ、まだバインディングのないチャット（ホストがそのチャットで一度も
+SessionStart を実行しなかった、またはチャットを開いた後にフックがインストールされた）は、最初の
+接触時に、SessionStart が新しいチャットに適用するのと同じルールでバインドされます: このマシンが
+共有のカーソルの指す作業に参加していればその作業に、そうでなければどの記録にもバインドされず、黙って行われます。
+それ以降、チャットはその作業にとどまります。別のウィンドウで入力した切り替えはカーソルを動かしますが、チャットは動かしません。
+ここにある唯一の記録がまだ選ばれていなかったという理由だけでどの記録にもバインドされていないチャットは、
+入るたびに再び読まれます: カーソルが記録を指すようになると、同じように黙ってその作業に参加します。
+セッションの識別情報がまったくないコマンド（あなた自身のターミナル）は、引き続きカーソルに従います。
 
-Once identity is known, an explicit space or intent selector wins, followed by
-that session's binding, then the shared `active-space` and `active-intent`
-cursors with the existing lone-intent and empty-workspace fallbacks.
+識別情報が判明すると、明示的なスペースやインテントのセレクターが優先され、次に
+そのセッションのバインディング、その次に共有の `active-space` と `active-intent` の
+カーソルが、既存の唯一のインテントおよび空のワークスペースのフォールバックとともに使われます。
 
-For headless automation, set `AIDLC_SESSION_OVERRIDE` on the harness process,
-not on individual tool commands. Every spawned tool then inherits the same
-identity. If that override disagrees with a session found through PID ancestry,
-AI-DLC refuses before writing either workflow and points you to the owning
-conversation or the intent and space switch verbs for rebinding.
-`AIDLC_SESSION_OVERRIDE_SOURCE=payload` is an internal same-user contract, not
-an authenticated security boundary; deliberately setting both variables is
-treated like an intentional sanctioned session switch.
+ヘッドレスの自動化では、個々のツールコマンドではなく、ハーネスのプロセスに
+`AIDLC_SESSION_OVERRIDE` を設定してください。そうすると、起動されるすべてのツールが同じ
+識別情報を継承します。そのオーバーライドが PID の祖先から見つかったセッションと一致しない場合、
+AI-DLC はどちらのワークフローにも書き込む前に拒否し、所有している
+会話か、再バインドのためのインテントとスペースの切り替えコマンドを案内します。
+`AIDLC_SESSION_OVERRIDE_SOURCE=payload` は同一ユーザー内部の取り決めであり、
+認証されたセキュリティ境界ではありません。両方の変数を意図的に設定することは、
+意図的で承認されたセッションの切り替えとして扱われます。
 
-The cursors remain write-through compatibility state. Older or unsupported
-environments with no binding therefore behave exactly as before.
+カーソルは、書き込み時に反映される互換用の状態として残ります。そのため、バインディングのない古い、
+またはサポート対象外の環境は、これまでとまったく同じように動作します。
 
-Session bindings isolate workflow selection across spaces, but the
-harness-native method include is still one checkout-wide surface: every
-include reads one git-ignored copy of the active space's memory files,
-`aidlc/active-memory/`, which SessionStart and the space switch verb
-write for the selected space. So two simultaneous sessions in different spaces
-can overwrite which space's ambient rules the harness delivers next. This
-increment supports concurrent intents within one space; concurrent
-multi-space ambient method delivery remains future work.
+セッションのバインディングはスペースをまたいでワークフローの選択を分離しますが、
+ハーネスネイティブのメソッドのインクルードは、依然としてチェックアウト全体で 1 つです: すべての
+インクルードは、アクティブなスペースのメモリファイルの、git で無視される 1 つのコピー
+`aidlc/active-memory/` を読みます。これは SessionStart とスペースの切り替えコマンドが、
+選択されたスペースについて書き込むものです。そのため、異なるスペースにいる 2 つの同時セッションは、
+ハーネスが次に渡すのがどのスペースの周辺ルールかを上書きし合う可能性があります。この
+段階でサポートしているのは 1 つのスペース内での同時のインテントです。複数のスペースにまたがる
+周辺メソッドの同時配信は、今後の課題です。
 
-A space switch changes no tracked file: the includes are the same for every
-teammate, and `aidlc config` refreshes them like any other shipped file. An
-install whose includes an earlier release's switch pointed at another space
-is brought to the shipped files by the next refresh, with no conflict.
+スペースを切り替えても、追跡対象のファイルは変わりません: インクルードはすべての
+チームメイトで同じであり、`aidlc config` は他の提供ファイルと同じようにそれらを更新します。
+以前のリリースの切り替えによってインクルードが別のスペースを指しているインストールは、
+次の更新で、競合なく提供ファイルの状態に戻ります。
 
-The Codex adapter pins the validated hook payload session into every core-hook
-child, and Codex gives every command it runs the session as `CODEX_THREAD_ID`
-(0.145.0 and later, the minimum AI-DLC supports; the hooks do not receive it),
-so the tools read the id from there and every command keeps the words the agent
-wrote: macOS sandbox denial of `ps` does not weaken Codex workflow selection, and
-the shipped `.codex/rules/default.rules` prefixes match what the agent runs. On
-Windows x64 and arm64, native process handles,
-creation times, and parent PIDs identify the owning session within the same
-2-second / 64-ancestor limit as Linux and macOS. Reused PID generations and unverified ancestry do not
-select a session.
-Shared-process harnesses still cannot distinguish chats that use one process,
-including Kiro IDE multi-chat. In multi-session opencode the shell commands carry
-their chat (item 2), and so do a file write's audit row and sensors and the to-do
-list sync. Children of payload-bearing hooks follow
-the payload session; tools without that parent still fall back to the shared
-cursors when ancestry is unavailable unless the harness process has a valid
-`AIDLC_SESSION_OVERRIDE`.
+Codex のアダプターは、検証済みのフックのペイロードのセッションをすべてのコアフックの
+子プロセスに固定します。また Codex は、実行するすべてのコマンドにセッションを `CODEX_THREAD_ID` として渡すため
+（0.145.0 以降。これは AI-DLC がサポートする最小バージョンです。フックはこれを受け取りません）、
+ツールはそこから ID を読み、すべてのコマンドはエージェントが書いたとおりの言葉を保ちます:
+macOS のサンドボックスが `ps` を拒否しても Codex のワークフローの選択は弱まらず、
+提供される `.codex/rules/default.rules` のプレフィックスはエージェントが実行するものと一致します。
+Windows の x64 と arm64 では、ネイティブのプロセスハンドル、
+作成時刻、親 PID によって、Linux や macOS と同じ
+2 秒 / 64 祖先の制限内で所有しているセッションを特定します。再利用された PID の世代や検証されていない祖先は、
+セッションを選択しません。
+プロセスを共有するハーネスでは、1 つのプロセスを使うチャットを依然として区別できません。
+Kiro IDE のマルチチャットもこれに含まれます。マルチセッションの opencode では、シェルコマンドは
+チャットを持ち（項目 2）、ファイル書き込みの監査行、センサー、to-do
+リストの同期も同様です。ペイロードを持つフックの子プロセスは
+ペイロードのセッションに従います。そのような親を持たないツールは、ハーネスのプロセスに有効な
+`AIDLC_SESSION_OVERRIDE` がない限り、祖先が利用できない場合は引き続き共有の
+カーソルにフォールバックします。
 
-Known limitation: hook writes and the intent and space switch verbs in those
-shared-process chats retain the pre-existing v2 shared-cursor and `.current-session`
-behavior. One chat can therefore affect another chat's navigation or hook
-attribution. Per-session isolation for those paths is future work. The exception
-is an intent or space switch typed into a Kiro IDE chat, in either form
-(`/aidlc intent switch <name>` or `/aidlc intent <name>`, and the same for
-`space`): the prompt hook runs it with that chat's session, so it binds only
-that chat.
+既知の制限: そうしたプロセス共有のチャットでのフックの書き込みと、インテントおよびスペースの切り替えコマンドは、
+以前からある v2 の共有カーソルと `.current-session` の
+動作を維持します。そのため、あるチャットが別のチャットのナビゲーションやフックの
+帰属に影響することがあります。それらの経路のセッションごとの分離は今後の課題です。例外は、
+Kiro IDE のチャットで入力したインテントまたはスペースの切り替えで、どちらの形式でも
+（`/aidlc intent switch <name>` または `/aidlc intent <name>`。
+`space` も同様）対象になります: プロンプトのフックがそのチャットのセッションでそれを実行するため、
+そのチャットだけがバインドされます。
 
 ---
 
 ## Spaces — one per team
 
-A **space** is one team's complete world: its own `memory/` (method), `knowledge/`,
-`codekb/`, and `intents/`. Everything in this chapter so far happened inside a
-single space named `default`, which is created for you automatically. **If you're a
-solo developer or a single team, that's the end of the story — you never name a
-space and everything just works.**
+**スペース**は 1 つのチームの完全な世界です: 独自の `memory/`（メソッド）、`knowledge/`、
+`codekb/`、`intents/` を持ちます。この章でここまで起きたことはすべて、
+自動的に作成される `default` という名前の 1 つのスペースの中で起きていました。**個人の
+開発者や単一のチームであれば、話はここで終わりです — スペースに名前を付けることはなく、
+すべてがそのまま動作します。**
 
-Spaces exist for the case where **more than one team shares one project** and each
-wants its own method, knowledge, and record without colliding. Adding a team is
-purely additive: a new `spaces/<name>/` of the identical shape appears beside
-`default/` — nothing moves, nothing migrates.
+スペースは、**複数のチームが 1 つのプロジェクトを共有し**、それぞれが
+衝突することなく独自のメソッド、ナレッジ、記録を持ちたい場合のためにあります。チームの追加は
+純粋に追加的です: 同一の形の新しい `spaces/<name>/` が
+`default/` の隣に現れるだけで、何も移動せず、何も移行しません。
 
-Create, list, and switch spaces with verbs that mirror the intent verbs exactly:
+スペースの作成、一覧表示、切り替えは、インテントのコマンドとまったく同じ形のコマンドで行います:
 
 ```
 /aidlc space                      List all spaces
@@ -389,7 +387,7 @@ Create, list, and switch spaces with verbs that mirror the intent verbs exactly:
 /aidlc space switch payments-team Switch the active space to "payments-team"
 ```
 
-Creating one prints what it set up:
+作成すると、設定した内容が表示されます:
 
 ```text
 > /aidlc space create payments-team
@@ -398,61 +396,60 @@ Space created: payments-team
 Switch to it with /aidlc space payments-team.
 ```
 
-The shorter `/aidlc space-create <name>` and bare `/aidlc space <name>` forms
-work too.
+短い `/aidlc space-create <name>` や、引数なしの `/aidlc space <name>` の形式も
+使えます。
 
-A newly created space starts with a copy of the default space's
-`aidlc/spaces/default/memory/org.md` (with any changes your team made there), the
-framework's own phase rules, and fresh, empty `team.md` / `project.md` practice
-files — a new team earns its own practices rather than inheriting another team's.
-Its `knowledge/` and `codekb/` start empty too. The copy is made once: later
-changes to the default space's `org.md` do not reach the new space.
-[What carries over, and what doesn't](#what-carries-over-and-what-doesnt) lists
-what is shared and what is not.
+新しく作成したスペースは、デフォルトスペースの
+`aidlc/spaces/default/memory/org.md` のコピー（チームがそこに加えた変更を含む）、
+フレームワーク自身のフェーズのルール、そして新しい空の `team.md` / `project.md` のプラクティス
+ファイルから始まります — 新しいチームは、別のチームのプラクティスを受け継ぐのではなく、自らのプラクティスを築きます。
+`knowledge/` と `codekb/` も空で始まります。コピーは 1 回だけ作られます: その後に
+デフォルトスペースの `org.md` を変更しても、新しいスペースには反映されません。
+[What carries over, and what doesn't](#what-carries-over-and-what-doesnt) に、
+何が共有され、何が共有されないかを示しています。
 
-When you switch spaces, two things follow the cursor automatically:
+スペースを切り替えると、2 つのものが自動的にカーソルに従います:
 
-1. **AI-DLC's own resolvers** — the next intent you start, and the practices and
-   knowledge agents load, all come from the space you switched into.
-2. **The rules your harness loads into context**: switching writes the new
-   space's `memory/` files into `aidlc/active-memory/`, the git-ignored
-   copy your harness's native rule include reads (Claude's `@`-import, Kiro CLI
-   resources, Cursor rules, opencode's instructions, Copilot's `AGENTS.md`;
-   Kiro IDE's steering file carries the text itself, and on Codex the engine
-   hands each step its rules), so the next turn works under that team's method.
+1. **AI-DLC 自身のリゾルバー** — 次に開始するインテントや、エージェントが読み込むプラクティスと
+   ナレッジは、すべて切り替え先のスペースから取得されます。
+2. **ハーネスがコンテキストに読み込むルール**: 切り替えると、新しい
+   スペースの `memory/` ファイルが `aidlc/active-memory/` に書き込まれます。これは、
+   ハーネスのネイティブなルールのインクルード（Claude の `@` インポート、Kiro CLI の
+   リソース、Cursor のルール、opencode の instructions、Copilot の `AGENTS.md`。
+   Kiro IDE のステアリングファイルはテキストそのものを持ち、Codex ではエンジンが
+   各ステップにルールを渡します）が読む、git で無視されるコピーです。そのため、次のターンはそのチームのメソッドの下で動作します。
 
-No tracked file changes, so a switch never churns the committed tree and
-teammates who pull never pick up your space. The copy is checkout-global
-rather than session-local, so simultaneous sessions in different spaces can
-race on ambient method delivery even though their workflow record selection
-stays bound.
+追跡対象のファイルは変わらないため、切り替えによってコミット済みのツリーが変動することはなく、
+pull したチームメイトがあなたのスペースを拾うこともありません。このコピーはセッションローカルではなく
+チェックアウト全体で共通なので、異なるスペースにいる同時セッションは、
+ワークフローの記録の選択がバインドされたままでも、周辺メソッドの配信で競合することがあります。
 
 ### Knowing which space you're in
 
-On Claude Code with AI-DLC's status line on, the line starts with the piece of
-work you are in, and once more than one space exists, with the space before it,
-as a persistent "you are here", the same way a shell prompt shows your current
-directory (the bar and the separator dot shown in plain text; the line is cut at
-the window's edge):
+AI-DLC のステータスラインをオンにした Claude Code では、ステータスラインの先頭に
+作業中の作業が表示され、スペースが複数ある場合はその前にスペースも表示されます。
+シェルのプロンプトが現在のディレクトリを示すのと同じように、常に「現在地」を示します
+（バーと区切りの点はプレーンテキストで示しています。行はウィンドウの端で
+切り詰められます）:
 
 ```text
 [AIDLC] default - inventory-rest-api - IDEATION [##--------] 1/4 > Feasibility -- Architect Age...
 ```
 
-A single-team user, having only `default`, sees no space name at all. On any
-harness, `/aidlc space` and `/aidlc intent` list where you are, marked with `*`.
+`default` しか持たない単一チームの利用者には、スペース名はまったく表示されません。どの
+ハーネスでも、`/aidlc space` と `/aidlc intent` が現在地を `*` で示して一覧表示します。
 
 ---
 
 ## Where `aidlc/` lives
 
-**`aidlc/` goes in the folder `aidlc config` installs into, and that folder is
-your workspace.** That is the folder you run it in, or the one you name with
-`--project-dir`. AI-DLC does not look upward for a git root. Install into a
-subfolder and that subfolder gets its own harness folder and its own `aidlc/`,
-with its own spaces and intents. Open your harness in the same folder.
+**`aidlc/` は `aidlc config` がインストールするフォルダーに置かれ、そのフォルダーが
+ワークスペースになります。** それは、コマンドを実行したフォルダー、または
+`--project-dir` で指定したフォルダーです。AI-DLC は git のルートを上方向に探しません。
+サブフォルダーにインストールすると、そのサブフォルダーが独自のハーネスフォルダーと独自の `aidlc/` を持ち、
+独自のスペースとインテントを持ちます。ハーネスは同じフォルダーで開いてください。
 
-Two layouts cover most teams.
+ほとんどのチームは、2 つのレイアウトのどちらかで対応できます。
 
 ### One repo, or a monorepo
 
@@ -464,18 +461,18 @@ inventory-api/        ← run `aidlc config` here; this is the git repo
 └── src/              your code
 ```
 
-Everything travels with the code, in the same repo and the same pull requests.
-A monorepo is the same layout: run `aidlc config` at the repo root and every
-package shares one `aidlc/`. Work in this layout records no repos, so generated
-code and git operations stay in the folder itself, as long as the repo has no
-immediate child folder with its own `.git` (an initialized submodule or a
-nested repo does). If it has one, AI-DLC treats those folders as the repos, as
-in the next layout. Put the install in one
-package's subfolder instead and that package gets a separate `aidlc/`, with its
-own records. Git is not separated: branches and worktrees still belong to the
-whole repo, because git resolves the repo from the subfolder. If several teams
-share the repo, a space per team (see Spaces, above) is the better fit;
-use a subfolder install only when a package is really its own project.
+すべてがコードと一緒に、同じリポジトリ、同じプルリクエストで移動します。
+モノレポも同じレイアウトです: リポジトリのルートで `aidlc config` を実行すると、すべての
+パッケージが 1 つの `aidlc/` を共有します。このレイアウトでの作業はリポジトリを記録しないため、生成された
+コードと git の操作はフォルダー自体の中にとどまります。ただし、リポジトリの
+直下に独自の `.git` を持つ子フォルダー（初期化されたサブモジュールや
+ネストされたリポジトリ）がない場合に限ります。そうしたフォルダーがある場合、AI-DLC はそれらのフォルダーを、
+次のレイアウトと同じようにリポジトリとして扱います。代わりに 1 つの
+パッケージのサブフォルダーにインストールすると、そのパッケージは独自の記録を持つ別の `aidlc/` を
+持ちます。git は分離されません: git はサブフォルダーからリポジトリを解決するため、
+ブランチとワークツリーは引き続きリポジトリ全体に属します。複数のチームが
+リポジトリを共有する場合は、チームごとのスペース（上記の Spaces を参照）のほうが適しています。
+サブフォルダーへのインストールは、パッケージが本当に独立したプロジェクトである場合にだけ使ってください。
 
 ### Several repos beside one `aidlc/`
 
@@ -489,74 +486,74 @@ my-project/           ← run `aidlc config` here
 └── checkout-web/     its own git repo
 ```
 
-The code repos are the folders next to `aidlc/` that have their own `.git`.
-AI-DLC finds them itself ([Multiple repos in one intent](#multiple-repos-in-one-intent)).
-The record of the work lives once, in `aidlc/`, not once per repo, so a change
-that touches both repos has one set of requirements and one audit trail.
+コードリポジトリは、`aidlc/` の隣にある、独自の `.git` を持つフォルダーです。
+AI-DLC はそれらを自分で見つけます（[Multiple repos in one intent](#multiple-repos-in-one-intent)）。
+作業の記録は、リポジトリごとではなく `aidlc/` に 1 つだけ置かれるため、
+両方のリポジトリに影響する変更でも、要件と監査証跡は 1 組です。
 
-The folder holding them does not have to be a git repo, and AI-DLC does not
-make it one. Because it holds no `.git` or project file, `aidlc config` can ask you
-to confirm the folder (in a script, pass `--project-dir`). What that means for
-`aidlc/`:
+それらを保持するフォルダーは git リポジトリである必要はなく、AI-DLC がそれを
+リポジトリにすることもありません。そのフォルダーには `.git` もプロジェクトファイルもないため、`aidlc config` が
+フォルダーの確認を求めることがあります（スクリプトでは `--project-dir` を渡してください）。これが
+`aidlc/` にとって意味すること:
 
-- **Just you:** nothing to do. `aidlc/` stays on your disk, untracked.
-- **A team:** run `git init` in the folder and push it as its own small
-  workspace repo. The code repos stay separate repos with their own remotes, and
-  the workspace repo must not track them, so keep them out first: for the repos
-  listed in `repos.json`, the
+- **自分だけの場合:** 何もする必要はありません。`aidlc/` はディスク上に、追跡されずに残ります。
+- **チームの場合:** フォルダーで `git init` を実行し、独自の小さな
+  ワークスペースリポジトリとして push します。コードリポジトリは独自のリモートを持つ別々のリポジトリのままで、
+  ワークスペースリポジトリはそれらを追跡してはならないため、先に除外しておきます:
+  `repos.json` に列挙されたリポジトリについては、
   [`aidlc-workspace-sync`](12-cli-commands.md#aidlc-workspace-sync-clone-and-reconcile-the-declared-repo-set)
-  tool does it for you; otherwise add an ignore line for each. Then run
-  `git status` and commit what it lists (everything `aidlc config` wrote that git
-  does not ignore, plus `repos.json`); the exact files differ by harness, so
-  don't pick paths by hand. A teammate clones the workspace repo and runs the
-  sync tool to clone the code repos beside it.
-- **Codex CLI and Cursor:** Codex finds its hooks only in a git repo, and
-  Cursor may skip them outside one
-  ([Getting Started](01-getting-started.md)), so run `git init` in the folder
-  whichever way you share it.
+  ツールがそれを行います。それ以外の場合は、それぞれに無視の行を追加します。次に
+  `git status` を実行し、表示されたもの（`aidlc config` が書き込んだもののうち git が
+  無視しないものすべてと、`repos.json`）をコミットします。正確なファイルはハーネスによって異なるため、
+  パスを手で選ばないでください。チームメイトはワークスペースリポジトリをクローンし、
+  sync ツールを実行してその隣にコードリポジトリをクローンします。
+- **Codex CLI と Cursor:** Codex は git リポジトリの中でしかフックを見つけず、
+  Cursor はリポジトリの外ではフックをスキップすることがあるため
+  （[はじめに](01-getting-started.md)）、共有の方法にかかわらず、フォルダーで
+  `git init` を実行してください。
 
 ### Which layout
 
-| Your situation | Use |
+| あなたの状況 | 使うもの |
 |---|---|
-| The code is in one repo | One repo: install in it |
-| One piece of work changes several repos | Several repos beside one `aidlc/` |
-| Several teams share the same repos | One workspace, with a space per team (see Spaces, above) |
-| Unrelated projects | A separate folder and `aidlc/` for each. They share no records, rules, or knowledge; only machine-wide settings and the active release reach both ([what carries over](#what-carries-over-and-what-doesnt)) |
+| コードが 1 つのリポジトリにある | 1 つのリポジトリ: その中にインストールする |
+| 1 つの作業が複数のリポジトリを変更する | 1 つの `aidlc/` の隣に複数のリポジトリ |
+| 複数のチームが同じリポジトリを共有する | 1 つのワークスペースと、チームごとのスペース（上記の Spaces を参照） |
+| 無関係なプロジェクト | それぞれに別のフォルダーと `aidlc/`。記録、ルール、ナレッジは共有されません。両方に及ぶのは、マシン全体の設定とアクティブなリリースだけです（[what carries over](#what-carries-over-and-what-doesnt)） |
 
-What to commit in each layout is in [What's committed and what's not](#whats-committed-and-whats-not).
+各レイアウトで何をコミットするかは、[What's committed and what's not](#whats-committed-and-whats-not) にあります。
 
 ---
 
 ## Multiple repos in one intent
 
-An intent isn't limited to a single repository. Because your code repos sit
-beside `aidlc/` in the workspace folder (not nested inside any one of them), an
-intent can span as many as it needs.
+インテントは 1 つのリポジトリに限定されません。コードリポジトリはワークスペースフォルダー内で
+`aidlc/` の隣に置かれる（どれか 1 つの中にネストされるのではない）ため、
+インテントは必要なだけ多くのリポジトリにまたがれます。
 
-The repo set is captured **when the intent is created** — you don't type anything
-extra. By default AI-DLC auto-discovers every sibling repo (each immediate child
-of the workspace root that has its own `.git`) and records the set in the intent's
-`intents.json` row. During Construction, each git operation is then anchored to
-the right repo automatically.
+リポジトリの組は**インテントの作成時に**取得されます — 余分なものを入力する必要は
+ありません。デフォルトでは、AI-DLC は兄弟のリポジトリ（ワークスペースのルートの直下にある、
+独自の `.git` を持つ子フォルダー）をすべて自動的に検出し、その組をインテントの
+`intents.json` の行に記録します。Construction の間、各 git の操作は
+自動的に正しいリポジトリに結び付けられます。
 
-A git submodule is not one of them when the project holding it has code of its
-own beside it (a shared library added with `git submodule add`, say): that
-project is a one-repo project, the workspace folder is the work's repo, and the
-submodule is left alone. A project made only of submodules records them.
-Work started before this recorded the submodule; when its code is written in the
-project itself, Code Generation asks you once whether to take the submodule off the
-work's repos (its folder stays as it is).
+git のサブモジュールは、それを保持するプロジェクトがその隣に独自のコードを
+持っている場合（たとえば `git submodule add` で追加した共有ライブラリ）は、それらに含まれません: その
+プロジェクトは 1 つのリポジトリのプロジェクトであり、ワークスペースフォルダーが作業のリポジトリで、
+サブモジュールには手を付けません。サブモジュールだけで構成されたプロジェクトは、それらを記録します。
+これより前に開始した作業はサブモジュールを記録しています。そのコードがプロジェクト自体に
+書かれる場合、Code Generation は、サブモジュールを作業のリポジトリから外すかどうかを
+1 回確認します（そのフォルダーはそのまま残ります）。
 
-Each repo is recorded by its folder's name as you gave it: a space, an accent,
-an apostrophe or another letter works (`my lib`, `C# lib`, a name with an accent). A few
-characters break something AI-DLC relies on, so a folder whose name has one is
-left out of the work, and the first step says which folder and why: `<` `>`
-`:` `"` `|` `?` `*` (Windows cannot hold them in a folder name), `&` `^` `%`
-(AI-DLC's commands on Windows), a comma (it separates repo names), an apostrophe
-together with `!`, `$` or a backtick (no one quoting reads both alike in
-PowerShell and Git Bash on Windows), a name that is `-` or starts with `--`, ends
-with `@checkout`, or starts or ends with a space.
+各リポジトリは、指定したとおりのフォルダー名で記録されます: スペース、アクセント、
+アポストロフィ、その他の文字も使えます（`my lib`、`C# lib`、アクセント付きの名前）。いくつかの
+文字は AI-DLC が依存している仕組みを壊すため、名前にそれを含むフォルダーは
+作業から除外され、最初のステップでどのフォルダーがなぜ除外されたかが示されます: `<` `>`
+`:` `"` `|` `?` `*`（Windows ではフォルダー名に使えません）、`&` `^` `%`
+（Windows での AI-DLC のコマンド）、カンマ（リポジトリ名の区切りです）、
+`!`、`$`、バッククォートのいずれかと一緒に使われたアポストロフィ（Windows の
+PowerShell と Git Bash の両方で同じように読まれる引用方法がありません）、`-` である名前、`--` で始まる名前、
+`@checkout` で終わる名前、スペースで始まるか終わる名前。
 
 ```
 my-project/
@@ -565,16 +562,16 @@ my-project/
 └── checkout-web/   # repo-b   ┘ an intent here can touch either or both
 ```
 
-An intent that records no repos is the ordinary single-repo case. See
-[Artifacts Reference](14-artifacts-reference.md) for the record-dir details and
-[Multi-repo intent](glossary.md) in the glossary.
+リポジトリを記録しないインテントは、通常の単一リポジトリの場合です。記録ディレクトリの詳細は
+[成果物リファレンス](14-artifacts-reference.md) を、
+用語集の [複数リポジトリにまたがるインテント](glossary.md) も参照してください。
 
 ### Declaring the repo set (optional manifest)
 
-Auto-discovery needs the sibling repos to already be cloned. On a fresh checkout
-of a shared workspace they are not, so a teammate would have to know which repos
-to clone and where. An **optional** `repos.json` manifest at the workspace root
-records that expected set so it can be reproduced with one command:
+自動検出では、兄弟のリポジトリがすでにクローンされている必要があります。共有ワークスペースの
+新しいチェックアウトではクローンされていないため、チームメイトはどのリポジトリを
+どこにクローンすればよいかを知っている必要があります。ワークスペースのルートにある**オプションの** `repos.json` マニフェストは、
+その想定される組を記録し、1 つのコマンドで再現できるようにします:
 
 ```json
 {
@@ -586,126 +583,124 @@ records that expected set so it can be reproduced with one command:
 }
 ```
 
-`org` supplies the default clone host (a repo with no `url` clones from
-`git@github.com:<org>/<name>.git`; set `url` on an entry to override). `branch`
-selects the checkout for a new clone and is an advisory expectation for a repo
-already on disk; omit it to use the repo's own default. A repo name is the name
-of one folder directly in the workspace, with the characters a discovered folder
-may have (above). The
-[CLI Commands](12-cli-commands.md#aidlc-workspace-sync-clone-and-reconcile-the-declared-repo-set)
-guide documents the `aidlc-workspace-sync` tool that reads this file to clone
-missing repos, keep the gitignore block current, and generate a VSCode
-multi-root workspace.
+`org` はデフォルトのクローン元ホストを指定します（`url` のないリポジトリは
+`git@github.com:<org>/<name>.git` からクローンされます。上書きするにはエントリに `url` を設定します）。`branch`
+は新しいクローンのチェックアウト先を選択し、すでにディスク上にあるリポジトリに対しては
+助言的な期待値になります。省略するとリポジトリ自身のデフォルトが使われます。リポジトリ名は、
+ワークスペース直下の 1 つのフォルダーの名前で、検出されるフォルダーが持てる文字（上記）を
+使えます。
+[CLI コマンド](12-cli-commands.md#aidlc-workspace-sync-clone-and-reconcile-the-declared-repo-set)
+ガイドでは、このファイルを読んで、不足しているリポジトリをクローンし、gitignore のブロックを最新に保ち、
+VSCode のマルチルートワークスペースを生成する `aidlc-workspace-sync` ツールについて説明しています。
 
 [`/aidlc intent add-repo <name>`](12-cli-commands.md#aidlc-intent-add-repo-name-add-a-sibling-repo-to-work-already-under-way)
-writes this file too. A repo that work needs but nobody cloned here is cloned
-from its entry; a repo with no entry is cloned from `org` (or the address you
-give) and gets one, with the file's comments and layout kept. With no `repos.json` yet, a hosted
-`--url` (a host, an owner and a name) creates one whose `org` is that owner, so
-commit it to share the list with your team. An address written here never keeps
-its credentials.
+もこのファイルに書き込みます。作業に必要なのにここで誰もクローンしていないリポジトリは、
+そのエントリからクローンされます。エントリのないリポジトリは `org`（または指定した
+アドレス）からクローンされ、ファイルのコメントとレイアウトを保ったままエントリが追加されます。まだ `repos.json` がない場合、ホストされた
+`--url`（ホスト、所有者、名前）を指定すると、`org` をその所有者とするファイルが作成されるため、
+それをコミットしてチームとリストを共有してください。ここに書かれたアドレスが
+認証情報を保持することは決してありません。
 
-The manifest is a convenience, not a second source of truth. **Disk wins at
-runtime**: intent creation still auto-discovers whatever siblings are actually
-present, so a repo works the moment it is cloned whether or not it is declared,
-and a declared repo that was never cloned simply is not part of the set. The
-manifest only drives the sync tool and the advisory `--doctor` rows that flag
-when the declared set and the disk have drifted apart. (This "workspace
-manifest" is unrelated to a harness `manifest.ts`, which is a packaging file.)
+マニフェストは利便性のためのものであり、2 つ目の信頼できる情報源ではありません。**実行時は
+ディスクが優先されます**: インテントの作成では、実際に存在する兄弟のリポジトリが引き続き自動検出されるため、
+リポジトリは宣言されているかどうかにかかわらずクローンした時点で機能し、
+宣言されていても一度もクローンされていないリポジトリは、単に組に含まれません。
+マニフェストが駆動するのは、sync ツールと、宣言された組とディスクがずれたときに
+それを知らせる助言的な `--doctor` の行だけです。（この「ワークスペース
+マニフェスト」は、パッケージング用のファイルであるハーネスの `manifest.ts` とは無関係です。）
 
 ---
 
 ## What carries over, and what doesn't
 
-Everything AI-DLC knows lives in files, so sharing follows the folders: a space
-is a boundary, a workspace is a boundary, and git carries files between people
-and machines.
+AI-DLC が知っていることはすべてファイルにあるため、共有はフォルダーに従います: スペースは
+境界であり、ワークスペースも境界であり、git が人やマシンの間でファイルを
+運びます。
 
-| What | Between intents in a space | Between spaces | Between projects (separate `aidlc/` folders) |
+| 対象 | スペース内のインテント間 | スペース間 | プロジェクト間（別々の `aidlc/` フォルダー） |
 |---|---|---|---|
-| Rules: `org.md`, `team.md`, `project.md`, `phases/` | Shared. Each stage reads the current files | A new space gets a one-time copy of the default space's `org.md` and the framework's phase rules; its `team.md` and `project.md` start empty. After that, nothing flows | Copy the files, or start from a template repo (below) |
-| Learnings you keep | Land in the active space's `project.md`, or `team.md` when you promote them | Not shared. Each space has its own | Copy the lines you want |
-| Your documents (`knowledge/`) | Shared. `associate` adds an intent to a document's list and can be repeated; a document with no intent is space-wide | Not shared. Each space has its own folder | `onboard` copies a file in and refuses a path outside the project, so copy the file into the other project |
-| Code knowledge (`codekb/`) | Shared, per repo. A current scan can be reused by your choice | Not shared. Another space scans again | Each project scans its own. A teammate's clone of the same repo can reuse a scan |
-| Saved scopes (`aidlc/scopes/`) | Shared | Shared by every space in the workspace | Copy the file |
-| Output-format overrides (`memory/templates/`) | Shared | Per space. Not copied into a new space | Copy the files |
-| Agents you add (in the harness folder) | Shared | Shared by every space | Copy the files |
-| Repo list (`repos.json`) | One per workspace | One per workspace | Per project |
-| Model and flag policy | Shared | Shared | Set once in the machine settings file and applied to every project on the machine. A project's own `aidlc.settings.json` overrides it value by value, except bypasses, which add up across the files ([the hierarchy](18-install-and-lifecycle.md)). Model and effort policy does not apply on Cursor and GitHub Copilot, where every agent uses the model you pick in the tool. On Kiro IDE only one agent's own model and effort apply; a preset or group effort does not. |
-| Kiro CLI's session model, and the effort a preset sets | Shared | Shared | Saved in your personal Kiro settings, so every Kiro CLI project uses them. Changes to agent or group policy do not do this |
-| Update, offline, mirror, and CA-bundle settings | Shared | Shared | Machine-only. A project file cannot set them |
-| Kiro IDE's Workflows switch and, on Windows, its default terminal | Shared | Shared | Kept in Kiro's user settings, outside the project. Setup asks once (`aidlc config --yes` takes the recommended answer), and `aidlc config trust` changes them on request. They apply to every project you open in that IDE |
-| Kiro CLI's Workflows switch | Shared | Shared | Kept in your own Kiro CLI settings, outside the project. In a Kiro IDE project, setup asks once, with an answer kept apart from Kiro IDE's (`aidlc config --yes` takes the recommended answer), and `aidlc config trust --kiro-cli-workflows off|on --yes` changes it on request. It applies to every project you run Kiro CLI in |
-| The AI-DLC release itself | Shared | Shared | A native project with no pinned release (`.aidlc-version`) runs the release the machine has active, so `aidlc update` changes it for every such project (its own files catch up at its next `aidlc config`). A copied project runs its own copied release |
+| ルール: `org.md`、`team.md`、`project.md`、`phases/` | 共有されます。各ステージが現在のファイルを読みます | 新しいスペースは、デフォルトスペースの `org.md` とフレームワークのフェーズのルールのコピーを 1 回だけ受け取ります。`team.md` と `project.md` は空で始まります。その後は何も流れません | ファイルをコピーするか、テンプレートリポジトリ（後述）から始めます |
+| 残すことにした学び | アクティブなスペースの `project.md`、または昇格させた場合は `team.md` に入ります | 共有されません。各スペースが独自に持ちます | 必要な行をコピーします |
+| あなたのドキュメント（`knowledge/`） | 共有されます。`associate` はドキュメントのリストにインテントを追加し、繰り返し実行できます。インテントのないドキュメントはスペース全体のものです | 共有されません。各スペースが独自のフォルダーを持ちます | `onboard` はファイルを取り込みますが、プロジェクト外のパスは拒否するため、ファイルを相手のプロジェクトにコピーします |
+| コードナレッジ（`codekb/`） | リポジトリごとに共有されます。最新のスキャンは、選択によって再利用できます | 共有されません。別のスペースは再度スキャンします | 各プロジェクトが独自にスキャンします。同じリポジトリのチームメイトのクローンはスキャンを再利用できます |
+| 保存したスコープ（`aidlc/scopes/`） | 共有されます | ワークスペース内のすべてのスペースで共有されます | ファイルをコピーします |
+| 出力形式のオーバーライド（`memory/templates/`） | 共有されます | スペースごと。新しいスペースにはコピーされません | ファイルをコピーします |
+| 追加したエージェント（ハーネスフォルダー内） | 共有されます | すべてのスペースで共有されます | ファイルをコピーします |
+| リポジトリのリスト（`repos.json`） | ワークスペースごとに 1 つ | ワークスペースごとに 1 つ | プロジェクトごと |
+| モデルとフラグのポリシー | 共有されます | 共有されます | マシンの設定ファイルで 1 回設定し、マシン上のすべてのプロジェクトに適用されます。プロジェクト自身の `aidlc.settings.json` は値ごとにそれを上書きしますが、バイパスはファイル間で合算されます（[階層](18-install-and-lifecycle.md)）。モデルとエフォートのポリシーは、すべてのエージェントがツールで選んだモデルを使う Cursor と GitHub Copilot では適用されません。Kiro IDE では、1 つのエージェント自身のモデルとエフォートだけが適用され、プリセットやグループのエフォートは適用されません。 |
+| Kiro CLI のセッションモデルと、プリセットが設定するエフォート | 共有されます | 共有されます | 個人の Kiro の設定に保存されるため、すべての Kiro CLI のプロジェクトがそれを使います。エージェントやグループのポリシーの変更では、こうはなりません |
+| 更新、オフライン、ミラー、CA バンドルの設定 | 共有されます | 共有されます | マシン専用。プロジェクトのファイルでは設定できません |
+| Kiro IDE の Workflows スイッチと、Windows ではそのデフォルトのターミナル | 共有されます | 共有されます | プロジェクトの外にある Kiro のユーザー設定に保持されます。セットアップ時に 1 回確認され（`aidlc config --yes` は推奨の回答を採用します）、`aidlc config trust` が要求に応じてそれらを変更します。その IDE で開くすべてのプロジェクトに適用されます |
+| Kiro CLI の Workflows スイッチ | 共有されます | 共有されます | プロジェクトの外にある、あなた自身の Kiro CLI の設定に保持されます。Kiro IDE のプロジェクトでは、セットアップ時に Kiro IDE のものとは別の回答として 1 回確認され（`aidlc config --yes` は推奨の回答を採用します）、`aidlc config trust --kiro-cli-workflows off|on --yes` が要求に応じてそれを変更します。Kiro CLI を実行するすべてのプロジェクトに適用されます |
+| AI-DLC のリリース自体 | 共有されます | 共有されます | リリースが固定されていない（`.aidlc-version`）ネイティブのプロジェクトは、マシンでアクティブなリリースで実行されるため、`aidlc update` はそうしたすべてのプロジェクトのリリースを変更します（プロジェクト自身のファイルは次の `aidlc config` で追いつきます）。コピーしたプロジェクトは、コピーした独自のリリースで実行されます |
 
-Apart from those machine-wide settings, IDE choices, and the active release, nothing in
-AI-DLC links two projects.
-Teammates get the shared files by pulling the repo, and the per-user files in
-[What's committed and what's not](#whats-committed-and-whats-not) never travel.
+それらのマシン全体の設定、IDE の選択、アクティブなリリースを除けば、AI-DLC には
+2 つのプロジェクトを結び付けるものは何もありません。
+チームメイトはリポジトリを pull することで共有ファイルを受け取り、
+[What's committed and what's not](#whats-committed-and-whats-not) にあるユーザーごとのファイルが移動することは決してありません。
 
 ### Standards for many projects
 
-To give many projects the same starting rules, keep a template repo that holds
-an `aidlc/` with the `org.md`, `team.md`, and knowledge files your organization
-wants everywhere. A new project starts from a copy of it and adds its own
-`project.md`. To roll out a change, change the template and bring the change into
-each project the way you bring any other change, through a pull request.
+多くのプロジェクトに同じ初期ルールを与えるには、組織がどこでも使いたい
+`org.md`、`team.md`、ナレッジファイルを含む `aidlc/` を持つテンプレートリポジトリを用意します。
+新しいプロジェクトはそのコピーから始め、独自の
+`project.md` を追加します。変更を展開するには、テンプレートを変更し、他の変更と同じように
+プルリクエストを通じて各プロジェクトに取り込みます。
 
-If you refresh a project by copying a new release over it, the copy replaces the
-default space's `org.md` and `phases/` rules with the shipped ones and keeps
-`team.md` and `project.md`. Check the git diff before you commit
-([Copy Channel](18-install-and-lifecycle.md#copy-channel)). A native
-`aidlc config` refresh keeps every space's memory files
-([Configure or Refresh a Project](18-install-and-lifecycle.md#configure-or-refresh-a-project)).
+新しいリリースを上からコピーしてプロジェクトを更新する場合、コピーによって
+デフォルトスペースの `org.md` と `phases/` のルールは提供版で置き換えられ、
+`team.md` と `project.md` は保持されます。コミットする前に git の差分を確認してください
+（[コピーチャネル](18-install-and-lifecycle.md#copy-channel)）。ネイティブの
+`aidlc config` による更新は、すべてのスペースのメモリファイルを保持します
+（[プロジェクトの設定と更新](18-install-and-lifecycle.md#configure-or-refresh-a-project)）。
 
 ---
 
 ## What's committed and what's not
 
-`aidlc/` is checked into git so a team **shares** its work — the method, the intent
-registry, each intent's state, audit trail, and artifacts all travel with the
-repo. Two kinds of file are deliberately **gitignored** instead:
+`aidlc/` は git にチェックインされるため、チームは作業を**共有**できます — メソッド、インテントの
+レジストリ、各インテントの状態、監査証跡、成果物は、すべてリポジトリと一緒に
+移動します。2 種類のファイルは、代わりに意図的に **gitignore** されます:
 
-| Gitignored (per-user, machine-local) | Why |
+| gitignore 対象（ユーザーごと、マシンローカル） | 理由 |
 |---|---|
-| `aidlc/active-space`, `…/intents/active-intent` | Cursors — "where am I right now." Committing them would turn per-user navigation into shared repository state and have teammates fight over intent creates and cursor switches. |
-| `.../intents/<id>/runtime-graph.json`, `.aidlc-*`, `aidlc/.aidlc-sessions/`, `aidlc/.aidlc-active-space-*.tmp` | Derived, machine-local runtime state, including per-session bindings and PID ancestry entries. |
-| `aidlc/.aidlc-request-text/` | A request the agent wrote to a file for the engine to read. Removed once the command goes ahead; one left there when it did not is your words, not shared work. |
-| `…/knowledge/documentkb/.journal/` | One directory per in-flight document transaction. Transient and per-clone; a committed journal would be a merge conflict on every concurrent `sync`. |
-| `…/knowledge/.sources.local.json` | Where *this machine* finds documents that live outside the repo. The path is machine-specific by definition, so committing it would break every teammate's checkout. No command creates such a link today (`onboard` copies a file into `documents/`), so you will not normally see this file. |
+| `aidlc/active-space`、`…/intents/active-intent` | カーソル — 「今どこにいるか」。これらをコミットすると、ユーザーごとのナビゲーションが共有のリポジトリの状態になり、チームメイトがインテントの作成やカーソルの切り替えを奪い合うことになります。 |
+| `.../intents/<id>/runtime-graph.json`、`.aidlc-*`、`aidlc/.aidlc-sessions/`、`aidlc/.aidlc-active-space-*.tmp` | 導出された、マシンローカルのランタイムの状態。セッションごとのバインディングと PID の祖先エントリを含みます。 |
+| `aidlc/.aidlc-request-text/` | エージェントがエンジンに読ませるためにファイルに書いたリクエスト。コマンドが進むと削除されます。進まなかったときに残ったものはあなたの言葉であり、共有の作業ではありません。 |
+| `…/knowledge/documentkb/.journal/` | 進行中のドキュメントのトランザクションごとに 1 つのディレクトリ。一時的でクローンごとのものです。ジャーナルをコミットすると、同時に実行されるすべての `sync` でマージの競合が起きます。 |
+| `…/knowledge/.sources.local.json` | リポジトリの外にあるドキュメントを*このマシン*がどこで見つけるか。パスは定義上マシン固有なので、コミットするとすべてのチームメイトのチェックアウトが壊れます。現在、そうしたリンクを作成するコマンドはない（`onboard` はファイルを `documents/` にコピーします）ため、通常このファイルを目にすることはありません。 |
 
-Everything else under a space — `memory/**`, `knowledge/**`, `codekb/**`,
-`intents.json`, each record's `aidlc-state.md`, `audit/` shards, and artifacts — is
-committed. The rule of thumb: **cursors and runtime scratch are local; the shared
-work is committed.**
+スペース配下のそれ以外のもの — `memory/**`、`knowledge/**`、`codekb/**`、
+`intents.json`、各記録の `aidlc-state.md`、`audit/` のシャード、成果物 — はすべて
+コミットされます。経験則: **カーソルとランタイムの一時データはローカル、共有の
+作業はコミットされます。**
 
-When a pull, a rebase or a stash pop leaves git's conflict in a record's
-`aidlc-state.md` (two clones advanced the same work), the next step carries on
-from your own side and writes the record back without git's markers. It says
-once where the other side stands and the git command that takes it instead; git
-shows the file as conflicted until you add it.
+pull、rebase、stash pop によって、記録の `aidlc-state.md` に git の競合が残った場合
+（2 つのクローンが同じ作業を進めた場合）、次のステップはあなたの側の内容から続行し、
+git のマーカーなしで記録を書き戻します。もう一方の側がどこにあるかと、代わりにそちらを採用する git コマンドを
+1 回伝えます。git は、あなたがファイルを add するまで、それを競合中として表示します。
 
-`knowledge/documents/` and `knowledge/documentkb/` are both committed, but they are
-owned by different parties and that difference is the whole design. `documents/`
-holds your originals: you add, move, and delete files there, and the framework never
-reorganises them. `documentkb/` is the catalog the tool derives, written
-transactionally under the workspace lock. Its **index** is reconstructible: delete
-`documentkb/index.json` alone and `/aidlc knowledge sync` rebuilds it from the
-surviving per-document `metadata.json` files, tombstones included. Deleting the
-whole `documentkb/` tree is a different, non-recoverable operation — it destroys
-every `metadata.json` too, so document ids and tombstones are lost; `sync` then
-re-onboards the surviving originals as new rows with new ids. That is also why
-hand-editing `documentkb/` is a mistake rather than a shortcut: the next `sync`
-reconciles it back to what `documents/` actually contains.
+`knowledge/documents/` と `knowledge/documentkb/` はどちらもコミットされますが、
+所有者が異なり、その違いこそが設計の要です。`documents/`
+はあなたの原本を保持します: そこではあなたがファイルを追加、移動、削除し、フレームワークがそれらを
+再編成することは決してありません。`documentkb/` はツールが導出するカタログで、
+ワークスペースのロックの下でトランザクションとして書き込まれます。その**インデックス**は再構築可能です:
+`documentkb/index.json` だけを削除すると、`/aidlc knowledge sync` が、
+残っているドキュメントごとの `metadata.json` ファイルから、トゥームストーンも含めてそれを再構築します。
+`documentkb/` のツリー全体を削除するのは別の、回復不能な操作です — それは
+すべての `metadata.json` も破壊するため、ドキュメントの ID とトゥームストーンが失われます。その後 `sync` は
+残っている原本を、新しい ID を持つ新しい行として再オンボードします。これが、
+`documentkb/` を手で編集することが近道ではなく誤りである理由でもあります: 次の `sync` は
+それを `documents/` に実際に含まれている内容に合わせて戻します。
 
 ---
 
 ## Next Steps
 
-- [Phases and Stages](04-phases-and-stages.md) — what happens inside one intent's run
-- [Knowledge](08-knowledge.md) — adding your team's standards to a space's `knowledge/`
-- [Rules and the Learning Loop](09-rules-and-the-learning-loop.md) — how a space's `memory/` method is authored and learned
-- [Artifacts Reference](14-artifacts-reference.md) — the per-intent record dir in detail
-- [CLI Commands](12-cli-commands.md) — the full `space` / `intent` verb reference
-- [Glossary](glossary.md) — Space, Intent, Record dir, and Multi-repo intent defined
+- [フェーズとステージ](04-phases-and-stages.md) — 1 つのインテントの実行の中で何が起こるか
+- [ナレッジ](08-knowledge.md) — チームの標準をスペースの `knowledge/` に追加する方法
+- [ルールと学習ループ](09-rules-and-the-learning-loop.md) — スペースの `memory/` のメソッドがどのように作成され、学習されるか
+- [成果物リファレンス](14-artifacts-reference.md) — インテントごとの記録ディレクトリの詳細
+- [CLI コマンド](12-cli-commands.md) — `space` / `intent` のコマンドの完全なリファレンス
+- [用語集](glossary.md) — Space、Intent、Record dir、Multi-repo intent の定義
 ```

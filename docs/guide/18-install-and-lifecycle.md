@@ -138,12 +138,12 @@ PowerShell の `-Json` は、`schemaVersion: 1`、`ok`、`code`、`status`、`me
 
 インストーラーは次の処理を行います。
 
-1. `version.json`、`checksums.txt`、`aidlc-release.intoto.jsonl` をダウンロードまたは読み込む。
-2. 互換性のある GitHub CLI が利用できる場合、`github.com` 上のリポジトリと署名者ワークフローに対して `checksums.txt` のアテステーションを検証する。GitHub CLI の既定ホストが GitHub Enterprise のホストであっても同様。
-3. `version.json` の SHA-256 を検証し、そのバージョン ID とソースの識別情報を読み取り、明示的に指定したバージョンと一致しない場合はリリースバイナリをダウンロードまたは実行する前に拒否する。
-4. `sourceRef` が、安定版では `refs/tags/v<version>`、プレビューでは `refs/heads/main` と等しいことを要求し、来歴の検証が利用できる場合は、その ref と認証済みの `sourceDigest` に対してアテステーションを再検証する。
-5. 選択したバイナリとハーネスのアーカイブを、SHA-256 と宣言されたバイト長で検証する。
-6. 検証済みのバイナリにリリースを検証させ、トランザクションとしてインストールさせる。
+1. `version.json`、`checksums.txt`、`aidlc-release.intoto.jsonl` をダウンロードまたは読み込みます。
+2. 互換性のある GitHub CLI が利用できる場合、`github.com` 上のリポジトリと署名者ワークフローに対して `checksums.txt` のアテステーションを検証する。GitHub CLI の既定ホストが GitHub Enterprise のホストであっても同様です。
+3. `version.json` の SHA-256 を検証し、そのバージョン ID とソースの識別情報を読み取り、明示的に指定したバージョンと一致しない場合はリリースバイナリをダウンロードまたは実行する前に拒否します。
+4. `sourceRef` が、安定版では `refs/tags/v<version>`、プレビューでは `refs/heads/main` と等しいことを要求し、来歴の検証が利用できる場合は、その ref と認証済みの `sourceDigest` に対してアテステーションを再検証します。
+5. 選択したバイナリとハーネスのアーカイブを、SHA-256 と宣言されたバイト長で検証します。
+6. 検証済みのバイナリにリリースを検証させ、トランザクションとしてインストールさせます。
 
 実行前にブートストラップスクリプト自体を認証するには、最新の GitHub CLI を使ってください。`gh` の既定が GitHub Enterprise のホストになっている場合でも、`github.com/` というリポジトリの接頭辞と `--hostname github.com` によって、これらのコマンドは github.com に対して実行されます。
 
@@ -475,7 +475,7 @@ aidlc config flags --reset --project --yes
 記録またはクリアした場合は、何が変わったかと元に戻すコマンド、切り替えたチェックについての行（さらに未完了のセットアップ手順があればそれも）だけを表示します。`--json` と `--quiet` の出力は変わりません。
 使用状況の追跡、センサー、学び以外のバイパスはすべて利用者からチェックを奪うため、いずれかが有効な間、AI-DLC はその旨を 1 行で伝えます。伝える場所は、次のステップ、すべてのチャットの開始時（セッション開始時のコンテキストを表示しない opencode を除く）、`--show`、doctor の Flags 行です。その行では、チェックの名前、いつから、どのように設定されたか、チェックを元に戻す `--clear-bypass` コマンドを示します（[CLI コマンド](12-cli-commands.md)の「Environment kill switches」を参照）。
 
-このうち 4 つは、マシン全体でフェンスを無効にします。問題がマシン全体ではなく 1 つの作業にある場合は、`/aidlc config set guard.<fence> off` を使うと、その作業に限って 1 つのフェンスを下げ、それを記録し、次の作業では元に戻します。[ガードポリシー](13-customization.md#guard-policy)と[5 つのフェンス](13-customization.md#the-five-fences)を参照してください。
+このうち 4 つは、マシン全体でフェンスを無効にします。問題がマシン全体ではなく 1 つの作業にある場合は、`/aidlc config set guard.<fence> off` を使うと、その作業に限って 1 つのフェンスを下げ、それを記録し、次の作業では元に戻します。[Guard Policy](13-customization.md#guard-policy)と[5 つのフェンス](13-customization.md#the-five-fences)を参照してください。
 
 ### Project Choices
 
@@ -654,56 +654,29 @@ Kiro の行（Kiro IDE と v3 上の Kiro CLI）では、Kiro CLI 2.24.1 以降�
 
 ## Update and Version Selection
 
-| Command | Public options and behavior |
+| コマンド | 公開オプションと動作 |
 |---------|-----------------------------|
-| `aidlc update` | Install the newest release of the machine's channel with the complete all-harness runtime, then atomically activate. Accepts `--version <version>`, `--channel <stable\|preview>`, `--from <release-dir>`, `--release-base-url <url>`, `--release-api-url <url>`, `--ca-bundle <path>`, `--offline`, and `--dry-run`. |
-| `aidlc update --check` | Refresh update metadata for the channel without installing. Returns 5 when the channel has a release newer than the running one, 0 when current (a running release newer than the channel's newest is current), 3 when unavailable/offline, and 1 when checks are disabled. |
-| `aidlc use <version>` | Install the exact stable or preview version when it is not retained, then make it machine-active without changing project files. |
-| `aidlc version` | Print the machine-active release as `aidlc X.Y.Z (runtime X.Y.Z)`. It runs on that release even in a pinned project, and there, run at a terminal, it also names the pin on stderr (`aidlc: this project is pinned to aidlc 2.10.0, which runs its workflow (machine active: 2.9.0)`); redirected or captured, it prints only that line. `--json` adds `pinnedVersion`. The stdout line is the same in every folder, because an update checks the release it activates against it. |
-| `aidlc config --channel [stable\|preview]` | Set the machine release channel, or print it when no value is given. Set from a release of the other channel, it says what the next `aidlc update` does: `aidlc update moves to <version> now` when that channel has a newer release, otherwise that it waits for one and how to go now. |
-| `aidlc config --pin <version>` | Install and validate the exact version when needed, then atomically write `.aidlc-version`, record its machine-local resolved target, and register the project pin without changing the machine-active pointer. |
-| `aidlc config --unpin` | Remove `.aidlc-version`, its machine-local resolved target, and its registry entry. |
-| `aidlc config --statusline <on\|off>` | Show AI-DLC's progress in the status line, or take it out, and say so in one line. Claude Code: your own `.claude/settings.local.json`. Codex: the shared `.codex/config.toml`, for everyone in the project. `--harness <claude\|codex>` picks one when both are installed. |
-| `aidlc config ... --download` | Let any config command fetch the release the project needs when this machine lacks it: the pinned release, otherwise the one its files already have. Natively it installs and registers that release, as `--pin` does; on a copied project it downloads `aidlc-copy-runtime-X.Y.Z.tar.gz`. It verifies the checksum, and the release attestation when `gh` is installed, then finishes the command. `--release-base-url` and `--ca-bundle` choose a mirror. At a terminal config asks instead; scripts need the flag. |
+| `aidlc update` | マシンのチャネルの最新リリースを、すべてのハーネスを含む完全なランタイムとともにインストールし、アトミックに有効化する。`--version <version>`、`--channel <stable\|preview>`、`--from <release-dir>`、`--release-base-url <url>`、`--release-api-url <url>`、`--ca-bundle <path>`、`--offline`、`--dry-run` を受け付ける。 |
+| `aidlc update --check` | インストールせずに、チャネルの更新メタデータを更新する。実行中のリリースより新しいリリースがチャネルにある場合は 5、最新の場合は 0（実行中のリリースがチャネルの最新より新しい場合も最新とみなす）、利用できない場合やオフラインの場合は 3、チェックが無効な場合は 1 を返す。 |
+| `aidlc use <version>` | 指定した安定版またはプレビュー版が保持されていなければインストールし、プロジェクトのファイルを変更せずに、マシンで有効なバージョンにする。 |
+| `aidlc version` | マシンで有効なリリースを `aidlc X.Y.Z (runtime X.Y.Z)` の形式で表示する。ピン留めされたプロジェクト内でもそのリリースで実行され、そこでターミナルから実行すると stderr にピンも示す（`aidlc: this project is pinned to aidlc 2.10.0, which runs its workflow (machine active: 2.9.0)`）。リダイレクトやキャプチャされた場合は、stdout の行だけを出力する。`--json` は `pinnedVersion` を追加する。アップデートは有効化するリリースをこの行と照合して確認するため、stdout の行はどのフォルダーでも同じになる。 |
+| `aidlc config --channel [stable\|preview]` | マシンのリリースチャネルを設定する。値を指定しない場合は現在のチャネルを表示する。もう一方のチャネルのリリースから設定した場合は、次の `aidlc update` が何をするかを伝える。そのチャネルに新しいリリースがあれば `aidlc update moves to <version> now`、なければ新しいリリースを待つことと、今すぐ移る方法を示す。 |
+| `aidlc config --pin <version>` | 必要に応じて指定したバージョンをインストールして検証し、マシンで有効なポインターを変更せずに、`.aidlc-version` をアトミックに書き込み、マシンローカルの解決済みターゲットを記録し、プロジェクトのピンを登録する。 |
+| `aidlc config --unpin` | `.aidlc-version`、そのマシンローカルの解決済みターゲット、レジストリのエントリを削除する。 |
+| `aidlc config --statusline <on\|off>` | ステータスラインに AI-DLC の進捗を表示する、または取り除き、その旨を 1 行で伝える。Claude Code では自分専用の `.claude/settings.local.json`、Codex ではプロジェクトの全員が共有する `.codex/config.toml` に設定する。両方がインストールされている場合は `--harness <claude\|codex>` でどちらかを選ぶ。 |
+| `aidlc config ... --download` | このマシンにプロジェクトが必要とするリリースがない場合に、任意の config コマンドがそれを取得できるようにする。対象はピン留めされたリリース、なければプロジェクトのファイルがすでに使っているリリース。ネイティブでは `--pin` と同様にそのリリースをインストールして登録し、コピーしたプロジェクトでは `aidlc-copy-runtime-X.Y.Z.tar.gz` をダウンロードする。チェックサムと、`gh` がインストールされている場合はリリースのアテステーションを検証してから、コマンドを完了する。`--release-base-url` と `--ca-bundle` でミラーを選ぶ。ターミナルでは config が代わりに尋ね、スクリプトではこのフラグが必要。 |
 
-Human lifecycle output states each completed fact. Update reports the
-old-to-new version check, verified download, atomic switch, retained prior
-version, any pruned unprotected releases, and the project-refresh courtesy.
-A no-op says `You're on the latest version of aidlc (<version>).`; `--dry-run`
-says `Would update aidlc from <old> to <new>.`, or
-`You're on the latest version of aidlc (<version>); nothing to update.` when
-nothing would change. On the preview channel the update lines say
-`preview releases` and `latest preview version`. A plain `aidlc update` never
-installs a release older than the one running: on a machine that follows stable
-and runs a newer preview, it changes nothing and says `You're on <preview>, newer
-than the latest stable <x.y.z>, so there's nothing to update.`, then how to go
-back to stable (`aidlc update --channel stable`) and how to keep getting
-previews (`aidlc config --channel preview`); once a newer stable ships, it moves
-to it. An update that moves onto the other channel for one run (`--channel`,
-`--version` or `--from`) says that the machine follows its channel, with the
-same two ways on. `aidlc use`
-distinguishes `Now using` from `Already using`, and uninstall states exactly
-which machine state was removed or kept. JSON and quiet messages retain their
-stable machine contracts; update JSON carries `channel` and, on a switch,
-`channelSwitch`.
+人間向けのライフサイクル出力は、完了した事実をそれぞれ示します。update は、旧バージョンから新バージョンへの確認、検証済みのダウンロード、アトミックな切り替え、保持された以前のバージョン、削除された保護されていないリリース、およびプロジェクト更新の案内を報告します。何もしない場合は `You're on the latest version of aidlc (<version>).` と表示し、`--dry-run` では `Would update aidlc from <old> to <new>.` と表示します。何も変わらない場合は `You're on the latest version of aidlc (<version>); nothing to update.` と表示します。プレビューチャネルでは、update の行は `preview releases` や `latest preview version` という表現になります。素の `aidlc update` が、実行中のものより古いリリースをインストールすることはありません。安定版を追従しつつ新しいプレビューを実行しているマシンでは、何も変更せずに `You're on <preview>, newer
+than the latest stable <x.y.z>, so there's nothing to update.` と表示し、続いて安定版に戻る方法（`aidlc update --channel stable`）とプレビューを受け取り続ける方法（`aidlc config --channel preview`）を示します。新しい安定版が公開されると、それに移ります。1 回の実行だけもう一方のチャネルに移る update（`--channel`、`--version`、`--from`）は、マシンは自身のチャネルを追従することを伝え、上記と同じ 2 つの方法を示します。`aidlc use` は `Now using` と `Already using` を区別し、uninstall はどのマシン状態を削除または保持したかを正確に示します。JSON と quiet のメッセージは、マシン向けの安定した契約を維持します。update の JSON は `channel` を含み、切り替え時には `channelSwitch` も含みます。
 
-Update downloads and fully validates a candidate before changing the active
-pointer. Failed updates automatically restore the prior consistent
-installation. A successful update retains the prior active version and every
-registered project pin, then prunes older unprotected versions automatically.
-There is no separate rollback or retained-version management command; to go
-back, see [Go Back to an Earlier Version](#go-back-to-an-earlier-version).
+update は、有効なポインターを変更する前に候補をダウンロードして完全に検証します。失敗した update は、以前の一貫したインストールを自動的に復元します。成功した update は、以前の有効なバージョンと登録されたすべてのプロジェクトのピンを保持し、その後、保護されていない古いバージョンを自動的に削除します。ロールバックや保持バージョンの管理のための個別のコマンドはありません。元に戻すには、[以前のバージョンに戻す](#go-back-to-an-earlier-version)を参照してください。
 
 ## Go Back to an Earlier Version
 
-To put this machine back on an earlier release, run `aidlc use <version>`, for
-example `aidlc use 2.10.0`. It downloads that release if the machine does not
-have it, then says `Now using aidlc 2.10.0 (was 2.11.0; retained locally, no
-project changes).` Every project without a pin now runs on 2.10.0; run
-`aidlc config` in a project to bring its files to 2.10.0 as well.
-`aidlc use 2.11.0` goes forward again.
+このマシンを以前のリリースに戻すには、`aidlc use <version>` を実行します。たとえば `aidlc use 2.10.0` です。マシンにそのリリースがなければダウンロードし、`Now using aidlc 2.10.0 (was 2.11.0; retained locally, no
+project changes).` と表示します。ピンのないすべてのプロジェクトが 2.10.0 で実行されるようになります。プロジェクトのファイルも 2.10.0 にそろえるには、そのプロジェクトで `aidlc config` を実行してください。`aidlc use 2.11.0` で再び先に進めます。
 
-To put one project back for everyone on it, pin it, then refresh it:
+1 つのプロジェクトを、そのプロジェクトを使う全員について戻すには、ピン留めしてから更新します。
 
 ```bash
 aidlc config --pin 2.10.0 --yes
@@ -711,49 +684,22 @@ aidlc config --yes
 git add .aidlc-version
 ```
 
-The pin switches the project to 2.10.0; the refresh brings its files to that
-release and lists any file 2.10.0 does not ship. `aidlc config --unpin` makes
-the project follow the machine again ([Project Pins and CI](#project-pins-and-ci)).
+ピンによってプロジェクトは 2.10.0 に切り替わり、更新によってファイルがそのリリースにそろい、2.10.0 に含まれないファイルが一覧表示されます。`aidlc config --unpin` を実行すると、プロジェクトは再びマシンに従います（[プロジェクトのピンと CI](#project-pins-and-ci)）。
 
-Releases before 2.8.0 have no native release, so `aidlc use` and
-`aidlc config --pin` cannot select them; they stop with `No published native
-release is available yet`. A copied project goes back with the earlier
-release's `aidlc-copy-runtime-X.Y.Z.tar.gz` (published from 2.9.0), as
-[Refresh Safety](#refresh-safety) shows.
+2.8.0 より前のリリースにはネイティブリリースがないため、`aidlc use` と `aidlc config --pin` ではそれらを選べず、`No published native
+release is available yet` と表示して停止します。コピーしたプロジェクトは、以前のリリースの `aidlc-copy-runtime-X.Y.Z.tar.gz`（2.9.0 以降で公開）で戻します。方法は[更新の安全性](#refresh-safety)を参照してください。
 
 ## Release Channels
 
-`main` is the shared development branch. The **stable** channel publishes a
-selected commit as a GitHub release tagged `vX.Y.Z`. The **preview** channel
-lets users try changes from `main` before the next stable release as a GitHub
-prerelease that is never marked "latest". Source versions and changelog entries
-are updated during release preparation.
+`main` は共有の開発ブランチです。**stable**（安定版）チャネルは、選択したコミットを `vX.Y.Z` のタグが付いた GitHub リリースとして公開します。**preview**（プレビュー）チャネルでは、次の安定版リリースより前に `main` の変更を試せます。これは "latest" と表示されることのない GitHub のプレリリースとして公開されます。ソースのバージョンと変更履歴のエントリは、リリースの準備中に更新されます。
 
-Scheduled and manual runs share one serialized publication queue. A run skips
-publication when the source is unchanged since the latest published preview, or
-when a newer preview already contains it (an older run, retried or queued); its
-checks and nightly tests still run, and no preview is published. When `main`
-advances more than once on the same UTC date, each changed source can publish a
-new preview with the next build counter.
+スケジュール実行と手動実行は、直列化された 1 つの公開キューを共有します。最後に公開されたプレビュー以降ソースが変わっていない場合や、より新しいプレビューにすでに含まれている場合（再試行された、またはキューで待っていた古い実行）、その実行は公開をスキップします。チェックと夜間テストは実行されますが、プレビューは公開されません。同じ UTC 日付に `main` が複数回進んだ場合、変更された各ソースは次のビルドカウンターで新しいプレビューを公開できます。
 
-A preview still publishes when its nightly tests fail. Its release notes then
-open with a warning and end with a Full Suite failure report (failed jobs and
-any failing tests), so check it before relying on a preview.
+夜間テストが失敗してもプレビューは公開されます。その場合、リリースノートは警告で始まり、Full Suite の失敗レポート（失敗したジョブと失敗しているテスト）で終わります。プレビューに頼る前に確認してください。
 
-A preview id is `<x.y.(z+1)>-preview.<YYYYMMDD>.<N>`: the next patch after the
-source tree's current stable version, the UTC build date chosen during
-planning, and a retry counter (`1` initially). The workflow calculates the
-preview version without editing the source version. Drafts and tags left by
-failed attempts reserve ids. A retry or another changed source on the same date
-advances `N` past those occupied ids.
+プレビューの ID は `<x.y.(z+1)>-preview.<YYYYMMDD>.<N>` です。ソースツリーの現在の安定版の次のパッチバージョン、計画時に選ばれた UTC のビルド日付、再試行カウンター（初期値は `1`）からなります。ワークフローはソースのバージョンを編集せずにプレビューのバージョンを計算します。失敗した試行が残したドラフトやタグは ID を予約します。同じ日付の再試行や別の変更されたソースでは、`N` がそれらの使用済み ID の次に進みます。
 
-Stable ids stay exactly `x.y.z`, and nothing else is accepted anywhere a
-version appears (installer flags, `use`, pins, `.aidlc-version`, retained
-version directories). Ids order numerically on `x.y.z`; at an equal base the
-stable release sorts above every preview built from it, and previews order by
-build date then counter. Inside a preview artifact `aidlc version`,
-`version.json`, and doctor bundles all report the preview id; the source tree is
-never modified.
+安定版の ID は厳密に `x.y.z` のままで、バージョンが現れるどの場所（インストーラーのフラグ、`use`、ピン、`.aidlc-version`、保持されたバージョンのディレクトリ）でもそれ以外の形式は受け付けません。ID は `x.y.z` の数値順に並びます。ベースが同じ場合、安定版リリースはそこからビルドされたすべてのプレビューより上に並び、プレビューはビルド日付、次にカウンターの順に並びます。プレビューの成果物の中では、`aidlc version`、`version.json`、doctor のバンドルがすべてプレビューの ID を報告します。ソースツリーが変更されることはありません。
 
 ```bash
 aidlc config --channel preview   # follow the preview stream
@@ -763,44 +709,15 @@ aidlc config --channel stable    # back to the stable stream
 aidlc update --channel stable    # newest stable now
 ```
 
-The channel is machine-local: `aidlc config --channel` writes a `channel`
-marker beside the update cache and `pins.json` under the install root
-(`stable` when the marker is absent), `aidlc uninstall` preserves it with the
-other machine settings, and `--purge` removes it. `aidlc update --channel <c>`
-overrides the marker for one run; `--version` and `--from` select an exact
-release regardless of channel. Stable discovery is unchanged (the
-`latest/download` redirect). Preview discovery lists the releases of the
-repository behind the release base URL through the GitHub API, keeps the
-newest published prerelease by preview version id, and installs it through
-the exact-version path. Drafts and tags without a published release are ignored.
-For `github.com` base URLs the API endpoint is derived; for any other host set
-`--release-api-url <url>` or `AIDLC_RELEASE_API_URL`.
-An API failure, a rate limit, or a repository with no published preview is
-reported as unavailable (exit 3); the client never falls back to the stable
-release. The update cache records the channel it was refreshed for, so a cached
-preview result never answers a stable check or the reverse.
+チャネルはマシンローカルです。`aidlc config --channel` は、インストールルート配下の更新キャッシュと `pins.json` の隣に `channel` マーカーを書き込みます（マーカーがない場合は `stable`）。`aidlc uninstall` は他のマシン設定とともにこれを保持し、`--purge` は削除します。`aidlc update --channel <c>` は 1 回の実行だけマーカーを上書きします。`--version` と `--from` はチャネルにかかわらず特定のリリースを選びます。安定版の検出方法は変わりません（`latest/download` のリダイレクト）。プレビューの検出では、リリースのベース URL の背後にあるリポジトリのリリースを GitHub API で一覧表示し、プレビューのバージョン ID で最新の公開済みプレリリースを選び、特定バージョンのインストール経路でインストールします。公開されたリリースのないドラフトやタグは無視されます。`github.com` のベース URL では API エンドポイントが導出されます。それ以外のホストでは `--release-api-url <url>` または `AIDLC_RELEASE_API_URL` を設定してください。API の失敗、レート制限、公開済みプレビューのないリポジトリは、利用不可（終了コード 3）として報告されます。クライアントが安定版リリースにフォールバックすることはありません。更新キャッシュは更新時のチャネルを記録するため、キャッシュされたプレビューの結果が安定版のチェックに答えたり、その逆が起きたりすることはありません。
 
-Switching back is `aidlc config --channel stable`. A plain `aidlc update` then
-waits for a stable release newer than the preview you are running; to go back
-now, run `aidlc update --channel stable`, which installs the newest stable even
-when its id sorts below the preview. Preview retention is a bounded window on top
-of the protection every release has (active, rollback, in use, pinned): after
-an update the two newest complete previews stay, and every older preview
-without its own protection is pruned; stable retention is unchanged.
+元に戻すには `aidlc config --channel stable` を実行します。その後、素の `aidlc update` は、実行中のプレビューより新しい安定版リリースが出るのを待ちます。今すぐ戻すには `aidlc update --channel stable` を実行してください。ID がプレビューより下に並ぶ場合でも最新の安定版をインストールします。プレビューの保持は、すべてのリリースが持つ保護（有効、ロールバック用、使用中、ピン留め）に加えた、範囲を限定したウィンドウです。update の後は、完全な最新プレビュー 2 つが残り、独自の保護がないそれより古いプレビューはすべて削除されます。安定版の保持は変わりません。
 
-Version pruning also uses recorded file lists and empty-directory cleanup.
-If a selected version contains unowned or changed paths, pruning is refused
-and the files are kept for review.
+バージョンの削除では、記録されたファイル一覧と空ディレクトリの整理も使います。選択したバージョンに所有者のないパスや変更されたパスが含まれている場合、削除は拒否され、ファイルはレビューのために残されます。
 
-Project pins keep overriding the machine channel: `aidlc config --pin <id>` and
-`.aidlc-version` accept preview ids, and a pinned project dispatches to that
-exact retained version whatever the machine follows.
+プロジェクトのピンは引き続きマシンのチャネルより優先されます。`aidlc config --pin <id>` と `.aidlc-version` はプレビューの ID を受け付け、ピン留めされたプロジェクトは、マシンがどのチャネルを追従していても、保持されたその特定のバージョンにディスパッチされます。
 
-Previews are `main` as it stands, including project state-schema changes. A
-preview that raises the state schema writes project state a stable build does
-not understand, and the code refuses to open state newer than the build; that
-project cannot be walked back to stable until a stable release ships the same
-schema. Use the preview channel on projects you can recreate, or pin them.
+プレビューは、プロジェクトの状態スキーマの変更を含め、その時点の `main` そのものです。状態スキーマを引き上げるプレビューは、安定版のビルドが理解できないプロジェクト状態を書き込みます。コードはビルドより新しい状態を開くことを拒否するため、そのプロジェクトは、安定版リリースが同じスキーマを公開するまで安定版に戻せません。プレビューチャネルは、作り直せるプロジェクトで使うか、プロジェクトをピン留めして使ってください。
 
 ## Project Pins and CI
 
@@ -809,35 +726,13 @@ aidlc config --pin 2.10.0
 git add .aidlc-version
 ```
 
-`aidlc config --pin <version>` installs and validates the version if needed,
-writes `.aidlc-version`, records the absolute binary target under the
-gitignored `aidlc/.aidlc-sessions/` runtime directory, and registers the real
-project path in machine-local `pins.json`.
-Registry reads canonicalize filesystem aliases (including macOS `/var` and
-`/private/var`) and JSON output reports the canonical project path. Equivalent
-keys with the same version collapse; conflicting equivalents fail closed until
-`config --pin` or `config --unpin` reconciles every alias for that project.
+`aidlc config --pin <version>` は、必要に応じてバージョンをインストールして検証し、`.aidlc-version` を書き込み、gitignore された `aidlc/.aidlc-sessions/` ランタイムディレクトリ配下にバイナリの絶対パスのターゲットを記録し、実際のプロジェクトパスをマシンローカルの `pins.json` に登録します。レジストリの読み取りではファイルシステムのエイリアス（macOS の `/var` と `/private/var` を含む）を正規化し、JSON 出力は正規化されたプロジェクトパスを報告します。同じバージョンを持つ等価なキーは 1 つにまとめられます。等価なキーが矛盾する場合は、`config --pin` または `config --unpin` がそのプロジェクトのすべてのエイリアスを調整するまで、安全側に倒して失敗します。
 
-Commit only `.aidlc-version`. The stable `aidlc` launcher starts the
-integrity-checked active binary, whose dispatcher validates the complete pinned
-binary and runtime before selecting it. A missing, malformed, tampered, or
-unavailable target fails closed with `aidlc config --pin <version>` remediation, and
-`aidlc doctor` reports the same condition. Machine lifecycle commands use the
-active binary; `doctor`, `config`, and `use` are never trapped behind a broken
-pin. When a teammate commits a pin to a release this machine lacks, a config
-command on the project names it, and `--download` (or a yes at the terminal)
-installs and registers it as `config --pin` would, then finishes the command.
-An installed pinned release is used without asking, and files behind it are
-updated first.
+コミットするのは `.aidlc-version` だけにしてください。安定した `aidlc` ランチャーは整合性チェック済みの有効なバイナリを起動し、そのディスパッチャーは、ピン留めされたバイナリとランタイムを選択する前にそれらを完全に検証します。ターゲットが存在しない、不正である、改ざんされている、または利用できない場合は、`aidlc config --pin <version>` という対処方法とともに安全側に倒して失敗し、`aidlc doctor` も同じ状態を報告します。マシンのライフサイクルコマンドは有効なバイナリを使います。`doctor`、`config`、`use` が壊れたピンのせいで使えなくなることはありません。このマシンにないリリースへのピンをチームメイトがコミットした場合、プロジェクトでの config コマンドがそのリリースを示し、`--download`（またはターミナルでの yes）によって `config --pin` と同様にインストールと登録を行ってから、コマンドを完了します。インストール済みのピン留めされたリリースは確認なしで使われ、それより遅れているファイルは先に更新されます。
 
-A pin switches the engine that serves the project at once, but the project's
-own files stay at the version they were last refreshed to until the next
-`aidlc config`. `config --pin` and `config --unpin` are done as asked, also
-while work is open; when the project's files are on another version than the
-one it now follows (or on a release from before versions were recorded), the
-reply ends with "Run `aidlc config` to finish updating this project."
+ピンはプロジェクトを担当するエンジンを即座に切り替えますが、プロジェクト自身のファイルは、次の `aidlc config` まで最後に更新されたバージョンのままです。`config --pin` と `config --unpin` は、作業が開いている間も指示どおりに実行されます。プロジェクトのファイルが現在追従しているものとは別のバージョンにある場合（またはバージョンが記録される前のリリースにある場合）、応答は "Run `aidlc config` to finish updating this project."（このプロジェクトの更新を完了するには、このコマンドを実行してください）で終わります。
 
-A fresh clone or CI runner installs the committed version before config:
+新しいクローンや CI ランナーでは、config の前にコミットされたバージョンをインストールします。
 
 ```bash
 version=$(cat .aidlc-version)
@@ -858,10 +753,7 @@ aidlc config --project-dir "$PWD" --harness claude --mcp none --quiet
 aidlc doctor --project-dir "$PWD" --quiet
 ```
 
-A CI container job or agent sandbox that runs as root, with root as its only
-user, adds `--allow-root` to the installer line. The pinned version must be a
-release that ships `--allow-root`: the recipe runs that tag's own `install.sh`,
-and an older one rejects the flag as an unknown argument.
+root が唯一のユーザーで root として実行される CI のコンテナジョブやエージェントサンドボックスでは、インストーラーの行に `--allow-root` を追加します。ピン留めするバージョンは `--allow-root` を含むリリースである必要があります。この手順はそのタグ自身の `install.sh` を実行するため、古いものはこのフラグを不明な引数として拒否します。
 
 ```bash
 sh "$tmp/install.sh" --version "$version" --quiet --yes --allow-root
@@ -869,23 +761,17 @@ sh "$tmp/install.sh" --version "$version" --quiet --yes --allow-root
 
 ## Harness Selection
 
-Harness selection belongs to `aidlc config --harness <name>`. Machine-level
-harness management is not a public command.
+ハーネスの選択は `aidlc config --harness <name>` が担います。マシンレベルのハーネス管理は公開コマンドではありません。
 
 ## Offline Packages
 
-The release asset set is the offline package. It includes
-`aidlc-release.intoto.jsonl` alongside the binaries, runtime, installers,
-`version.json`, and `checksums.txt`. Download one complete release on a
-connected machine and transfer that directory unchanged. Local installation
-fails closed if the bundle is missing or does not authenticate
-`checksums.txt`:
+リリースアセット一式がオフラインパッケージです。バイナリ、ランタイム、インストーラー、`version.json`、`checksums.txt` と並んで `aidlc-release.intoto.jsonl` が含まれます。接続されたマシンで 1 つのリリースを完全にダウンロードし、そのディレクトリを変更せずに転送してください。バンドルが存在しないか `checksums.txt` を認証できない場合、ローカルインストールは安全側に倒して失敗します。
 
 ```bash
 gh release download v2.5.45 --repo github.com/awslabs/aidlc-workflows --dir ./aidlc-offline
 ```
 
-Install on the disconnected machine:
+接続されていないマシンでインストールします。
 
 ```bash
 bash ./aidlc-offline/install.sh \
@@ -898,23 +784,20 @@ Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force
   -From .\aidlc-offline -Offline
 ```
 
-For native commands, `--offline`, `AIDLC_OFFLINE=1`, or global `offline=true`
-prevents release sockets. A network operation without `--from` then fails
-before mutation. Config, doctor, version, and uninstall are local regardless.
+ネイティブコマンドでは、`--offline`、`AIDLC_OFFLINE=1`、またはグローバルの `offline=true` によってリリース用のソケットが使われなくなります。その場合、`--from` のないネットワーク操作は変更の前に失敗します。config、doctor、version、uninstall はいずれにしてもローカルで動作します。
 
 ## Mirrors, Proxies, CAs, and Update Settings
 
-Release settings resolve in explicit option, environment, machine-config,
-default order:
+リリースの設定は、明示的なオプション、環境変数、マシン設定、既定値の順に解決されます。
 
-| Setting | Environment | Machine config |
+| 設定 | 環境変数 | マシン設定 |
 |---------|-------------|----------------|
-| Offline | `AIDLC_OFFLINE=1` (`0` explicitly enables network) | `aidlc system config global set offline on` |
-| Mirror | `AIDLC_RELEASE_BASE_URL` | `aidlc system config global set release-base-url <url>` |
-| Preview releases API | `AIDLC_RELEASE_API_URL` (or `aidlc update --release-api-url <url>`) | derived from the mirror for `github.com`; not a machine config key |
-| CA bundle | `AIDLC_CA_BUNDLE` | `aidlc system config global set ca-bundle <absolute-path>` |
+| オフライン | `AIDLC_OFFLINE=1`（`0` で明示的にネットワークを有効化） | `aidlc system config global set offline on` |
+| ミラー | `AIDLC_RELEASE_BASE_URL` | `aidlc system config global set release-base-url <url>` |
+| プレビューリリースの API | `AIDLC_RELEASE_API_URL`（または `aidlc update --release-api-url <url>`） | `github.com` の場合はミラーから導出される。マシン設定のキーではない |
+| CA バンドル | `AIDLC_CA_BUNDLE` | `aidlc system config global set ca-bundle <absolute-path>` |
 
-Manage the four machine keys:
+4 つのマシンキーを管理します。
 
 ```bash
 aidlc system config global list
@@ -926,245 +809,83 @@ aidlc system config global set ca-bundle /absolute/path/corporate-ca.pem
 aidlc system config global clear ca-bundle
 ```
 
-The keys are `update-check`, `offline`, `release-base-url`, and `ca-bundle`.
-Boolean values accept `true|false`, `on|off`, `1|0`, or `yes|no`.
-`aidlc config <get|set|clear|list> ... --global` is equivalent.
+キーは `update-check`、`offline`、`release-base-url`、`ca-bundle` です。真偽値には `true|false`、`on|off`、`1|0`、`yes|no` を指定できます。`aidlc config <get|set|clear|list> ... --global` も同等です。
 
-Mirror base URLs must use HTTPS, except loopback HTTP for local testing, and
-cannot contain credentials, a query, or a fragment. The native lifecycle
-client follows at most five redirects; redirected URLs may contain a query but
-still cannot contain credentials or a fragment. Its errors redact URL
-credentials, queries, and fragments.
+ミラーのベース URL は HTTPS を使う必要があり（ローカルテスト用のループバックの HTTP は例外）、資格情報、クエリ、フラグメントを含めることはできません。ネイティブのライフサイクルクライアントがたどるリダイレクトは最大 5 回です。リダイレクト先の URL にはクエリを含められますが、資格情報やフラグメントは引き続き含められません。エラーメッセージでは URL の資格情報、クエリ、フラグメントが伏せられます。
 
-The native release client honors `HTTPS_PROXY` / `https_proxy` and
-`NO_PROXY` / `no_proxy`; proxy URLs must use HTTP or HTTPS. It does not read
-`HTTP_PROXY`. The bootstrap scripts delegate proxy behavior to `curl`,
-`wget`, or `Invoke-WebRequest`. On Windows, a custom CA bundle requires
-`curl.exe`.
+ネイティブのリリースクライアントは `HTTPS_PROXY` / `https_proxy` と `NO_PROXY` / `no_proxy` に従います。プロキシの URL は HTTP または HTTPS を使う必要があります。`HTTP_PROXY` は読み取りません。ブートストラップスクリプトはプロキシの動作を `curl`、`wget`、`Invoke-WebRequest` に任せます。Windows では、カスタムの CA バンドルに `curl.exe` が必要です。
 
-Bare help and management listings never refresh the network. They may display
-a valid cached update notice. Interactive human `aidlc doctor`, and
-`aidlc doctor --export` with or without a terminal, may refresh stale or
-absent metadata within 750 ms. Other non-TTY, `--json`, and `--quiet` doctor
-runs are cache-only unless `--check-updates` is explicit. A doctor update row
-read from a check older than 24 hours names the version as the latest known
-one and says how long ago it was checked. On a machine that has never checked,
-a refresh that fails inside that budget leaves the row passing as not checked
-yet, naming `aidlc update --check`; only an explicit `--check-updates` reports
-the failed check.
-`doctor --check-updates` and `update --check` use a five-minute metadata
-backstop. Preview discovery and metadata downloads share the same deadline;
-looking up the preview release does not restart the timeout.
-Update checks accept version identifiers of at most 84 characters, and each numeric component
-must be a safe integer (at most 9,007,199,254,740,991). Invalid identifiers in
-release metadata or an existing cache are rejected before displaying notices.
-The cache expires after 24 hours; a failed refresh or metadata older
-than the installed binary in the same channel does not replace a valid cache.
-A successful refresh can correct a previously cached future version: the cache
-is advisory and does not establish a trusted minimum version.
-`update-check=off` disables even explicit refreshes
-but does not prevent an explicit `aidlc update`.
-Update checks (the doctor refresh and `aidlc update --check`) download
-`version.json` and `checksums.txt`, verify the manifest checksum, and neither
-download nor verify `aidlc-release.intoto.jsonl`. This checks integrity against
-the supplied checksums; it does not authenticate the release's origin.
-Every install path (`aidlc update`, `aidlc use`, `aidlc config --pin`, and
-`--from`) requires the provenance bundle and verifies checksums before
-activation. When a compatible GitHub CLI is available, installation also
-verifies the signed provenance and rejects a failed verification.
+引数なしのヘルプや管理用の一覧表示が、ネットワークで更新を行うことはありません。有効なキャッシュ済みの更新通知を表示することはあります。人間による対話型の `aidlc doctor` と、ターミナルの有無にかかわらず `aidlc doctor --export` は、古いメタデータや存在しないメタデータを 750 ms 以内で更新することがあります。それ以外の非 TTY、`--json`、`--quiet` の doctor の実行は、`--check-updates` を明示しない限りキャッシュのみを使います。24 時間より前のチェックから読み取った doctor の更新行は、そのバージョンを既知の最新バージョンとして示し、どのくらい前にチェックしたかを伝えます。一度もチェックしたことのないマシンでは、その時間内に更新が失敗しても、行は `aidlc update --check` を示して「まだチェックしていない」として合格のままになります。失敗したチェックを報告するのは、明示的な `--check-updates` の場合だけです。`doctor --check-updates` と `update --check` は、5 分間のメタデータのバックストップを使います。プレビューの検出とメタデータのダウンロードは同じ期限を共有し、プレビューのリリースを調べてもタイムアウトは再開されません。更新チェックが受け付けるバージョン識別子は最大 84 文字で、数値の各要素は安全な整数（最大 9,007,199,254,740,991）である必要があります。リリースのメタデータや既存のキャッシュにある無効な識別子は、通知を表示する前に拒否されます。キャッシュの有効期限は 24 時間です。更新に失敗した場合や、同じチャネルでインストール済みのバイナリより古いメタデータは、有効なキャッシュを置き換えません。更新に成功すると、以前にキャッシュされた未来のバージョンを訂正できます。キャッシュは参考情報であり、信頼できる最小バージョンを定めるものではありません。`update-check=off` は明示的な更新も無効にしますが、明示的な `aidlc update` は妨げません。更新チェック（doctor の更新と `aidlc update --check`）は、`version.json` と `checksums.txt` をダウンロードしてマニフェストのチェックサムを検証しますが、`aidlc-release.intoto.jsonl` はダウンロードも検証もしません。これは提供されたチェックサムに対して整合性を確認するもので、リリースの出所を認証するものではありません。すべてのインストール経路（`aidlc update`、`aidlc use`、`aidlc config --pin`、`--from`）は来歴バンドルを必要とし、有効化の前にチェックサムを検証します。互換性のある GitHub CLI が利用できる場合、インストール時に署名付きの来歴も検証し、検証に失敗した場合は拒否します。
 
 ## Plugins
 
-AI-DLC's own plugins (test-pro and those that follow) share one `aidlc-plugins`
-catalogue, which a native install keeps at one path across releases:
-`${XDG_DATA_HOME:-$HOME/.local/share}/aidlc/plugins/` on Linux and macOS,
-`%LOCALAPPDATA%\aidlc\plugins\` on Windows. The installer prints the full path
-after it installs, and `aidlc doctor --verbose` names it under Machine. Add it
-once to your tool:
+AI-DLC 自身のプラグイン（test-pro とそれに続くもの）は 1 つの `aidlc-plugins` カタログを共有し、ネイティブインストールではリリースをまたいで 1 つのパスに置かれます。Linux と macOS では `${XDG_DATA_HOME:-$HOME/.local/share}/aidlc/plugins/`、Windows では `%LOCALAPPDATA%\aidlc\plugins\` です。インストーラーはインストール後にフルパスを表示し、`aidlc doctor --verbose` は Machine の下にそれを示します。ツールに一度だけ追加してください。
 
 ```bash
 /plugin marketplace add <path>          # Claude Code
 codex plugin marketplace add <path>     # Codex CLI
 ```
 
-Install, `aidlc update`, `aidlc use <version>` and `aidlc system rollback`
-refresh the catalogue from the release they make active, writing it whole and then swapping
-it in, so the tool never reads half of one. After an update, the tool's own
-marketplace update (`/plugin marketplace update aidlc-plugins` in Claude Code)
-reads the new plugin versions from the same path. If the folder cannot be
-replaced, the command still succeeds, the folder keeps the earlier catalogue,
-and one line says why and what to do: on Windows, when a program may hold a
-file in it, close Claude Code and Codex and run `aidlc use <version>`; for any
-other cause, such as a full disk, fix that and run it. A file you put in the
-folder yourself is never replaced; the line names it instead. A machine that updated to this release
-with an earlier release's `aidlc update` gets the folder at its next `aidlc
-use <version>` or update. The source checkout's `dist/plugins/` and the copy
-runtime's `plugins/` are the same catalogue for the copy channel.
+インストール、`aidlc update`、`aidlc use <version>`、`aidlc system rollback` は、有効にするリリースからカタログを更新します。カタログ全体を書き込んでから入れ替えるため、ツールが中途半端なカタログを読むことはありません。update の後は、ツール自身のマーケットプレイスの更新（Claude Code では `/plugin marketplace update aidlc-plugins`）が同じパスから新しいプラグインのバージョンを読み取ります。フォルダーを置き換えられない場合でもコマンドは成功し、フォルダーには以前のカタログが残り、理由と対処方法が 1 行で示されます。Windows で、プログラムがその中のファイルを開いている可能性がある場合は、Claude Code と Codex を終了して `aidlc use <version>` を実行してください。ディスクの空き不足など他の原因の場合は、その原因を解消してから実行してください。自分でフォルダーに置いたファイルが置き換えられることはなく、代わりにその行でファイル名が示されます。以前のリリースの `aidlc update` でこのリリースに更新したマシンは、次の `aidlc
+use <version>` または update でこのフォルダーを取得します。コピーチャネルでは、ソースのチェックアウトの `dist/plugins/` とコピーランタイムの `plugins/` が同じカタログです。
 
-`aidlc doctor` reports installed-versus-composed plugin state. Plugin changes
-are project configuration and converge through `aidlc config`; there is no
-separate public plugin command.
+`aidlc doctor` は、インストール済みのプラグインと合成されたプラグインの状態を報告します。プラグインの変更はプロジェクトの設定であり、`aidlc config` を通じて反映されます。プラグイン用の個別の公開コマンドはありません。
 
 ## Output, Automation, and Exit Codes
 
-The public commands support human, `--quiet`, and `--json` output where
-declared by the route registry. `--json` emits a schema-versioned result
-with `ok`, `code`, `status`, `message`, and command-specific `data` when
-available. `--quiet` emits one success line or remediation line. Download
-progress appears only in human mode.
+公開コマンドは、ルートレジストリで宣言されている場合、人間向け、`--quiet`、`--json` の出力をサポートします。`--json` は、`ok`、`code`、`status`、`message`、および利用可能な場合はコマンド固有の `data` を含む、スキーマバージョン付きの結果を出力します。`--quiet` は、成功の行または対処方法の行を 1 行出力します。ダウンロードの進捗は人間向けモードでのみ表示されます。
 
-The native diagnostic form is
+ネイティブの診断コマンドの形式は
 `aidlc doctor [--project-dir <path>] [--verbose] [--json|--quiet]
 [--check-updates] [--release-base-url <url>] [--ca-bundle <path>]
-[--offline]`. `--export` writes a redacted diagnostic bundle, with
-`--output <directory>` overriding its default project location; export output
-is additional to the selected live-report mode. Human output groups Machine,
-Project, and Framework integrity checks. Every section keeps warning/failure
-rows visible and collapses healthy rows by default; `--verbose` expands every
-check. Warnings are advisory and exit 0; any failed check exits 1.
+[--offline]` です。`--export` は秘匿化された診断バンドルを書き込み、`--output <directory>` でプロジェクト内の既定の場所を上書きできます。エクスポートの出力は、選択したライブレポートのモードに加えて行われます。人間向けの出力では、Machine、Project、Framework の整合性チェックをグループ化します。各セクションは警告と失敗の行を表示したままにし、正常な行は既定で折りたたみます。`--verbose` を付けるとすべてのチェックが展開されます。警告は助言であり終了コード 0 で終わります。いずれかのチェックが失敗すると終了コード 1 で終わります。
 
-`--no-color` and `NO_COLOR` disable ANSI output. `--project-dir <path>` selects
-project context without changing the shell directory. Destructive operations
-such as `uninstall` ask nothing on a TTY: they print what they remove and
-keep, then do it. Without a TTY they require `--yes`. `--yes` never bypasses
-ownership, integrity, active-workflow, or release-authentication refusals, with
-one exception on Windows: an `aidlc` in the bin directory that AI-DLC did not
-write, such as a hand-made Git Bash forwarder. `aidlc use`, `aidlc update` and
-the installer ask once at a terminal whether to replace it; `--yes` answers
-yes, and the file is kept beside it as `aidlc.bak-<time>`.
+`--no-color` と `NO_COLOR` は ANSI 出力を無効にします。`--project-dir <path>` は、シェルのディレクトリを変えずにプロジェクトのコンテキストを選びます。`uninstall` のような破壊的な操作は、TTY では何も尋ねず、削除するものと保持するものを表示してから実行します。TTY がない場合は `--yes` が必要です。`--yes` が所有権、整合性、アクティブなワークフロー、リリース認証による拒否を回避することはありません。ただし Windows では 1 つ例外があります。手作りの Git Bash 用フォワーダーのように、bin ディレクトリにある AI-DLC が書き込んでいない `aidlc` です。`aidlc use`、`aidlc update`、インストーラーは、それを置き換えるかどうかをターミナルで一度だけ尋ねます。`--yes` は yes と答えたことになり、元のファイルは `aidlc.bak-<time>` としてその隣に保持されます。
 
-| Code | Meaning |
+| コード | 意味 |
 |------|---------|
-| 0 | Success |
-| 1 | Operational failure |
-| 2 | Usage or invalid machine configuration |
-| 3 | Required network result or retained runtime unavailable |
-| 4 | Integrity or ownership refusal |
-| 5 | Check completed and action is required, such as an available update |
+| 0 | 成功 |
+| 1 | 操作の失敗 |
+| 2 | 使い方の誤り、または無効なマシン設定 |
+| 3 | 必要なネットワークの結果、または保持されたランタイムが利用できない |
+| 4 | 整合性または所有権による拒否 |
+| 5 | チェックは完了し、利用可能なアップデートなどの対応が必要 |
 
 ## Help and Completions
 
-`aidlc --help` prints exactly the six public commands. Each public command also
-has side-effect-free command help: `aidlc <command> --help` (or `-h`) for
-`config`, `doctor`, `version`, `update`, `use`, and `uninstall`. Command help
-names every option that command accepts, with a one-line meaning for each,
-grouped so download and mirror options and the options that only shape output
-read separately from the rest; `use` also describes the version it takes. The
-intent is that you can run a command correctly from its help alone. Config-level
-help names all six policy sections; `aidlc config <section> --help` keeps the
-section-specific help. `aidlc help --all` reveals the hidden `engine` and
-`system` namespaces and points to
-`aidlc engine --help` / `aidlc system --help` for their full inventories.
-The installer places Bash, Zsh, Fish, and PowerShell files under the per-user AI-DLC data root's
-`completions/` directory, generated from the public route registry; there is
-no public completion-generation verb.
+`aidlc --help` は、6 つの公開コマンドだけを表示します。各公開コマンドには、副作用のないコマンドヘルプもあります。`config`、`doctor`、`version`、`update`、`use`、`uninstall` に対する `aidlc <command> --help`（または `-h`）です。コマンドヘルプは、そのコマンドが受け付けるすべてのオプションを、それぞれ 1 行の意味とともに示します。ダウンロードとミラーのオプション、および出力の形だけを変えるオプションは、他のオプションと分けて読めるようにグループ化されます。`use` は受け取るバージョンについても説明します。ヘルプだけを見てコマンドを正しく実行できることを目指しています。config レベルのヘルプは 6 つのポリシーセクションすべてを示し、`aidlc config <section> --help` はセクション固有のヘルプを示します。`aidlc help --all` は非表示の `engine` と `system` の名前空間を表示し、それぞれの完全な一覧として `aidlc engine --help` / `aidlc system --help` を案内します。インストーラーは、公開ルートレジストリから生成した Bash、Zsh、Fish、PowerShell 用のファイルを、ユーザー単位の AI-DLC データルートの `completions/` ディレクトリ配下に配置します。補完を生成するための公開コマンドはありません。
 
 ## Transactions and Recovery
 
-Project and machine mutations stage on the destination filesystem, validate
-the candidate, and commit through rename boundaries. The filesystem remains
-responsible for coherent file identity and append behavior, atomic file
-replacement and directory rename, exclusive creation, and meaningful regular-file
-`fsync`. AI-DLC adds no copy-and-delete fallback for rename. Concurrent changes
-detected against planned state abort instead of overwriting new bytes.
-Abandoned owner-private staging is swept only after lock and ownership checks.
-Unsupported directory `fsync` is tolerated, so a successful command alone
-cannot promise metadata durability after a crash.
+プロジェクトとマシンの変更は、宛先のファイルシステム上でステージングし、候補を検証し、リネームの境界を通じてコミットします。ファイルの同一性と追記の動作の一貫性、アトミックなファイル置換とディレクトリのリネーム、排他的な作成、意味のある通常ファイルの `fsync` は、引き続きファイルシステムが担います。AI-DLC はリネームの代わりにコピーと削除を行うフォールバックを追加しません。計画された状態に対する同時の変更を検出した場合は、新しいバイト列を上書きせずに中止します。放棄された所有者専用のステージングは、ロックと所有権のチェックの後でのみ片付けられます。ディレクトリの `fsync` がサポートされていなくても許容されるため、コマンドが成功しただけでは、クラッシュ後のメタデータの永続性は保証できません。
 
-Transaction locking uses one owner-stamped directory, `.aidlc-transaction.lock`
-in the project, made with an exclusive create on every storage; it also keeps
-out a live file lock left by an older release. A dedicated owner-stamped gate in
-the local temporary directory serializes transactions and ownership changes
-among commands that share it. Commands with different temporary directories,
-WSL beside Windows on one folder, or two computers on a shared folder are kept
-apart by the project lock itself: a lock stamped by another computer is never
-cleared from this one, and the command names the folder to delete once nothing
-is running there. AI-DLC makes no hard links: a document copy or a generated
-file is put at its name with an exclusive create and a rename, and never
-replaces a file another command put there first. This is not distributed
-locking across independent mounts that do not share one view of the folder,
-even when they access the same bucket.
+トランザクションのロックには、所有者の情報が刻まれた 1 つのディレクトリ、プロジェクト内の `.aidlc-transaction.lock` を使います。これはどのストレージでも排他的な作成によって作られ、古いリリースが残した有効なファイルロックも締め出します。ローカルの一時ディレクトリにある、所有者の情報が刻まれた専用のゲートが、それを共有するコマンド間でトランザクションと所有権の変更を直列化します。一時ディレクトリが異なるコマンド、1 つのフォルダーで Windows と並行して動く WSL、共有フォルダー上の 2 台のコンピューターは、プロジェクトのロック自体によって分離されます。別のコンピューターが刻んだロックがこのコンピューターから解除されることはなく、そこで何も実行されていない状態になったら削除すべきフォルダーをコマンドが示します。AI-DLC はハードリンクを作りません。ドキュメントのコピーや生成ファイルは、排他的な作成とリネームによってその名前の場所に置かれ、別のコマンドが先に置いたファイルを置き換えることはありません。これは、フォルダーの同じビューを共有しない独立したマウントにまたがる分散ロックではありません。同じバケットにアクセスしている場合も同様です。
 
-The first-run probe is the capability check, and transactions do not repeat
-it. It does not replace validation or real lock acquisition, and passing calls
-cannot prove atomic rename or crash durability. A transaction whose commit
-rename the storage does not support stops with the same storage line and fix.
-Compatibility depends on the driver and its actual semantics:
+初回実行時の調査が機能チェックであり、トランザクションはそれを繰り返しません。この調査は検証や実際のロック取得の代わりにはならず、呼び出しが成功してもアトミックなリネームやクラッシュ時の永続性を証明することはできません。ストレージがコミットのリネームをサポートしていないトランザクションは、同じストレージの行と対処方法を示して停止します。互換性はドライバーとその実際のセマンティクスに依存します。
 
-| Storage | Compatibility boundary |
+| ストレージ | 互換性の境界 |
 | --- | --- |
-| Local ext4 or XFS, including EC2 EBS volumes | Suitable project storage for the required filesystem operations. |
-| Storage without hard links, such as exFAT, network shares, or WSL `/mnt/c` | Config and transactions run as on local storage when the remaining requirements hold; AI-DLC makes no hard links. |
-| Mountpoint for Amazon S3 | Full workflows remain incompatible: directory rename and general mutable-file updates are unavailable. S3 Express single-file rename does not remove those limits. See [Mountpoint filesystem semantics](https://github.com/awslabs/mountpoint-s3/blob/5e400f788f8cbca028f3314d84ef2df2c7fcf536/doc/SEMANTICS.md). |
-| s3fs-fuse | Rename uses copy then delete and is not atomic. Passing probes does not establish support for general crash-safe AI-DLC transactions. See [s3fs limitations](https://github.com/s3fs-fuse/s3fs-fuse/blob/fc5778fe83b533a9beed9383f3ce99de76207ef9/README.md#L153-L163). |
+| EC2 の EBS ボリュームを含む、ローカルの ext4 または XFS | 必要なファイルシステム操作に適したプロジェクトのストレージ。 |
+| exFAT、ネットワーク共有、WSL の `/mnt/c` など、ハードリンクのないストレージ | 残りの要件を満たしていれば、config とトランザクションはローカルストレージと同様に動作する。AI-DLC はハードリンクを作らない。 |
+| Mountpoint for Amazon S3 | ディレクトリのリネームと一般的な可変ファイルの更新が利用できないため、ワークフロー全体は引き続き互換性がない。S3 Express の単一ファイルのリネームでもこれらの制限はなくならない。[Mountpoint のファイルシステムのセマンティクス](https://github.com/awslabs/mountpoint-s3/blob/5e400f788f8cbca028f3314d84ef2df2c7fcf536/doc/SEMANTICS.md)を参照。 |
+| s3fs-fuse | リネームはコピーしてから削除する方式で、アトミックではない。調査に合格しても、クラッシュに対して安全な一般的な AI-DLC トランザクションをサポートしているとは言えない。[s3fs の制限事項](https://github.com/s3fs-fuse/s3fs-fuse/blob/fc5778fe83b533a9beed9383f3ce99de76207ef9/README.md#L153-L163)を参照。 |
 
-Upstream semantics and simulated failures are not live validation of a
-particular S3 mount. Use compatible local/EBS project storage when a mount
-cannot meet these requirements; see [filesystem troubleshooting](15-troubleshooting.md#config-fails-with-a-storage-error).
-For foreign or incomplete lock owners, follow [Transaction lock ownership](15-troubleshooting.md#transaction-lock-ownership)
-before any manual recovery.
+上流のセマンティクスや模擬的な障害は、特定の S3 マウントを実際に検証したものではありません。マウントがこれらの要件を満たせない場合は、互換性のあるローカルまたは EBS のプロジェクトストレージを使ってください。[ファイルシステムのトラブルシューティング](15-troubleshooting.md#config-fails-with-a-storage-error)を参照してください。ロックの所有者が別の環境のものである場合や不完全な場合は、手動で復旧する前に[トランザクションロックの所有権](15-troubleshooting.md#transaction-lock-ownership)の手順に従ってください。
 
-If rollback of an interrupted commit cannot be completed safely, evidence is
-retained in a named `.aidlc-recovery-*` quarantine under the machine install
-root or project root. `aidlc doctor` reports it. Recover any needed files,
-ensure no AI-DLC mutation is running, then remove only the listed directory
-manually. Automatic staging cleanup never deletes quarantines.
+中断されたコミットのロールバックを安全に完了できない場合、証拠はマシンのインストールルートまたはプロジェクトルート配下の、名前付きの `.aidlc-recovery-*` 隔離領域に保持されます。`aidlc doctor` がそれを報告します。必要なファイルを復元し、AI-DLC の変更処理が実行中でないことを確認してから、一覧に示されたディレクトリだけを手動で削除してください。ステージングの自動クリーンアップが隔離領域を削除することはありません。
 
-Windows uninstall uses a recoverable continuation because a running executable
-cannot remove its own command shim. A later command resumes a valid pending
-continuation before doing other work, unless one is still running. A worker
-that stops without recording a result is resumed at most three times.
+実行中の実行ファイルは自身のコマンドシムを削除できないため、Windows のアンインストールは復旧可能な継続処理を使います。後続のコマンドは、他の作業を行う前に、有効な保留中の継続処理を再開します（まだ実行中のものがある場合を除く）。結果を記録せずに停止したワーカーは、最大 3 回まで再開されます。
 
-When cleanup fails, it records the step that failed and the reason, and
-`aidlc doctor` reports both. A failed cleanup is never relaunched by other
-commands, which keep working, but machine changes stay blocked until the
-uninstall finishes. Resolve the reported problem and run `aidlc uninstall`
-again (with `--purge` if the original used it):
+クリーンアップが失敗すると、失敗したステップとその理由が記録され、`aidlc doctor` が両方を報告します。失敗したクリーンアップが他のコマンドによって再起動されることはなく、それらのコマンドは引き続き動作しますが、アンインストールが完了するまでマシンの変更はブロックされたままです。報告された問題を解決してから、再度 `aidlc uninstall` を実行してください（元の実行で使った場合は `--purge` を付けます）。
 
-- If nothing was removed yet, the failed plan is discarded and uninstall plans
-  again from the files on disk, so a file edited after confirmation is kept.
-- If removal had begun, the same plan resumes. Files edited since are kept.
+- まだ何も削除されていない場合、失敗したプランは破棄され、アンインストールはディスク上のファイルから改めてプランを立てます。そのため、確認後に編集したファイルは保持されます。
+- 削除が始まっていた場合は、同じプランが再開されます。その後に編集されたファイルは保持されます。
 
-The `aidlc` command itself (`aidlc.cmd` and `aidlc.exe` in bin, the shim, the
-active-version pointers, and the active `aidlc.exe`) is removed last, after every other file and the
-User PATH entry, so a failed cleanup still leaves a command to retry it. Because
-the PATH entry may already be gone, run that command by its full path, which
-`aidlc doctor` prints (by default
-`& "$env:LOCALAPPDATA\aidlc\bin\aidlc.exe" uninstall`, or the recorded `aidlc.cmd`
-when `aidlc.exe` and `aidlc.cmd` in bin are not both as AI-DLC installed them). If the failure
-happened while removing those last files and the command no longer runs, run
-the installer again: it retries the pending cleanup first, so you may need to
-run it twice.
+`aidlc` コマンド自体（bin 内の `aidlc.cmd` と `aidlc.exe`、シム、有効バージョンのポインター、有効な `aidlc.exe`）は、他のすべてのファイルとユーザー PATH のエントリの後、最後に削除されます。そのため、クリーンアップが失敗しても再試行用のコマンドが残ります。PATH のエントリはすでに削除されている可能性があるため、そのコマンドは `aidlc doctor` が表示するフルパスで実行してください（既定では `& "$env:LOCALAPPDATA\aidlc\bin\aidlc.exe" uninstall`。bin 内の `aidlc.exe` と `aidlc.cmd` の両方が AI-DLC がインストールしたとおりの状態でない場合は、記録された `aidlc.cmd`）。最後のファイルを削除している最中に失敗し、コマンドがもう実行できない場合は、インストーラーを再実行してください。インストーラーは保留中のクリーンアップを先に再試行するため、2 回実行する必要がある場合があります。
 
 ## Copy Channel
 
-The supported manual-copy payload is the versioned `aidlc-copy-runtime-X.Y.Z.tar.gz`
-release asset. Download one exact release, extract it, and copy the complete
-`runtime/<harness>/` root so the harness tree, `aidlc/` workspace shell, and
-any project-root files the harness needs stay together. The copy runtime leaves
-out files a team's editor owns, such as Copilot's `.vscode/settings.json`, so
-copying never replaces them; the [Copilot guide](harnesses/copilot.md#vs-code-request-cap)
-names the one setting to add yourself. It leaves out your `.gitignore` and
-`AGENTS.md` too: AI-DLC adds its own lines to them, after everything already
-there, or creates them when the project has none. opencode's `opencode.json`
-is left out the same way: the copy's setup adds AI-DLC's entries to your file
-and keeps everything else in it, or writes the file when there is none. Claude Code's `.mcp.json` is
-left out as well, so a copy starts with no MCP servers, as `aidlc config` does
-by default; to turn the shipped servers on, run
-`bun .claude/tools/aidlc.ts config project --harness claude --mcp defaults --yes`. It also leaves out the team's memory
-files (`aidlc/spaces/default/memory/team.md`, where Practices Discovery records
-the practices you affirmed, and `project.md`, where your project rules and
-learnings go) and your chosen space (`aidlc/active-space`). Copying a newer
-release, or a second harness, over a project therefore keeps them. In a fresh
-copy, AI-DLC creates the two memory files from its bundled copy the first time
-you start work. Use **Bun 1.4.4 or newer**, which includes the Brotli decoder fix
-for CVE-2026-111497; the native `aidlc` executable is not required. Updating
-a copied runtime does not update the Bun installation that runs it.
-Native installations instead need an AI-DLC release built with the fixed Bun:
-updating a separate Bun installation does not replace the runtime embedded in
-the `aidlc` executable. Markdown analysis (summary confirmation,
-Plan Approval tags, and the claim-sources sensor) uses Bun's built-in
-`Bun.markdown` renderer and follows the installed Bun's rendering:
+サポートされている手動コピー用のペイロードは、バージョン付きのリリースアセット `aidlc-copy-runtime-X.Y.Z.tar.gz` です。特定のリリースを 1 つダウンロードして展開し、`runtime/<harness>/` ルートを丸ごとコピーしてください。そうすれば、ハーネスのツリー、`aidlc/` ワークスペースの外枠、ハーネスが必要とするプロジェクトルートのファイルがそろったままになります。コピーランタイムには、Copilot の `.vscode/settings.json` のようにチームのエディターが所有するファイルは含まれないため、コピーによってそれらが置き換えられることはありません。自分で追加する 1 つの設定は[Copilot ガイド](harnesses/copilot.md#vs-code-request-cap)に示されています。`.gitignore` と `AGENTS.md` も含まれません。AI-DLC は既存の内容の後に独自の行を追加し、プロジェクトにファイルがない場合は作成します。opencode の `opencode.json` も同様に含まれません。コピーのセットアップが既存のファイルに AI-DLC のエントリを追加して他の内容はすべて保持し、ファイルがない場合は書き込みます。Claude Code の `.mcp.json` も含まれないため、`aidlc config` の既定と同様に、コピーは MCP サーバーなしで始まります。同梱のサーバーを有効にするには、`bun .claude/tools/aidlc.ts config project --harness claude --mcp defaults --yes` を実行してください。チームのメモリファイル（Practices Discovery があなたが認めたプラクティスを記録する `aidlc/spaces/default/memory/team.md` と、プロジェクトのルールと学びが入る `project.md`）と、選択したスペース（`aidlc/active-space`）も含まれません。そのため、新しいリリースや 2 つ目のハーネスをプロジェクトに上書きコピーしても、これらは保持されます。新しいコピーでは、作業を初めて開始したときに、AI-DLC が同梱のコピーから 2 つのメモリファイルを作成します。CVE-2026-111497 に対する Brotli デコーダーの修正を含む **Bun 1.4.4 以降**を使ってください。ネイティブの `aidlc` 実行ファイルは必要ありません。コピーしたランタイムを更新しても、それを実行する Bun のインストールは更新されません。一方、ネイティブインストールでは、修正済みの Bun でビルドされた AI-DLC のリリースが必要です。別途インストールした Bun を更新しても、`aidlc` 実行ファイルに組み込まれたランタイムは置き換わりません。Markdown の解析（サマリーの確認、Plan Approval のタグ、claim-sources センサー）は Bun の組み込みの `Bun.markdown` レンダラーを使い、インストールされた Bun のレンダリングに従います。
 
 ```bash
 tag=vX.Y.Z
@@ -1190,113 +911,56 @@ cp -R "$RUNTIME_ROOT/claude/." your-project/
 cd your-project && bun .claude/tools/aidlc.ts config --from "$RUNTIME_ROOT" --harness claude
 ```
 
-The last line is the copy's own setup, run once from the extracted runtime: it
-adds AI-DLC's lines to your `.gitignore` and `AGENTS.md` before the first chat
-and checks the rest of the setup. Without it, AI-DLC adds them when the first
-chat starts, or at the latest when you start work.
+最後の行はコピー自身のセットアップで、展開したランタイムから 1 回実行します。最初のチャットの前に `.gitignore` と `AGENTS.md` に AI-DLC の行を追加し、セットアップの残りの部分を確認します。これを実行しない場合、AI-DLC は最初のチャットの開始時、遅くとも作業の開始時にそれらを追加します。
 
-Later, a copied project fetches releases itself. When a config command needs
-files the project does not have (a teammate's newer pin, a harness you add,
-or restored files), it asks at a terminal, or accepts `--download` in a
-script, to download that exact `aidlc-copy-runtime-X.Y.Z.tar.gz`, verify its
-`.sha256` and, when `gh` is installed, its release attestation, and finish the
-command. Without network access, the error's `offline:` line names the file
-to fetch elsewhere and pass with `--from`.
+その後、コピーしたプロジェクトはリリースを自分で取得します。プロジェクトにないファイルを config コマンドが必要とする場合（チームメイトの新しいピン、追加するハーネス、復元するファイル）、ターミナルでは尋ね、スクリプトでは `--download` を受け付けて、その特定の `aidlc-copy-runtime-X.Y.Z.tar.gz` をダウンロードし、その `.sha256` と、`gh` がインストールされている場合はリリースのアテステーションを検証して、コマンドを完了します。ネットワークにアクセスできない場合は、エラーの `offline:` 行が、別の場所で取得して `--from` で渡すべきファイルを示します。
 
-When a refresh (`config` with `--from` or `--download`) brings in files from a
-newer release than the project's own tool, that release's own config runs the
-command as you typed it, and a `Note:` line names the release whose tool ran
-it. A same or older release is refreshed by the project's own tool. Either
-way the project's own tool reads the command first, so its `--harness`
-names are the ones that tool's release reads (for Kiro, see
-[Root Integrations and Ownership](#root-integrations-and-ownership)).
+更新（`--from` または `--download` を付けた `config`）でプロジェクト自身のツールより新しいリリースからファイルを取り込む場合、そのリリース自身の config が入力どおりにコマンドを実行し、`Note:` の行でどのリリースのツールが実行したかが示されます。同じリリースや古いリリースは、プロジェクト自身のツールで更新されます。いずれの場合も、まずプロジェクト自身のツールがコマンドを読み取るため、`--harness` の名前はそのツールのリリースが解釈する名前になります（Kiro については[ルートの統合と所有権](#root-integrations-and-ownership)を参照）。
 
-The archive is assembled from the freshly regenerated Bun projections under
-`dist/`. Its generated hooks and tools invoke the included TypeScript through
-Bun. The native installers and lifecycle commands instead consume
-`aidlc-runtime-X.Y.Z.tar.gz`, assembled from `dist-release/`; users do
-not normally download that archive directly.
+このアーカイブは、`dist/` 配下で新たに再生成された Bun 起動型のプロジェクションから組み立てられます。生成されたフックとツールは、同梱の TypeScript を Bun で起動します。一方、ネイティブのインストーラーとライフサイクルコマンドは、`dist-release/` から組み立てられた `aidlc-runtime-X.Y.Z.tar.gz` を使います。利用者が通常このアーカイブを直接ダウンロードすることはありません。
 
-The copy archive stays outside `version.json` and `checksums.txt` so existing
-2.8.x native clients can continue to parse release metadata and self-update.
-Its versioned `.sha256` sidecar authenticates the bytes directly, and the
-release provenance covers both files.
+コピー用アーカイブは `version.json` と `checksums.txt` の対象外になっています。これにより、既存の 2.8.x のネイティブクライアントは引き続きリリースのメタデータを解析して自己更新できます。バージョン付きの `.sha256` サイドカーがバイト列を直接認証し、リリースの来歴は両方のファイルを対象とします。
 
-On a copy install, the AI-DLC files in your project are code you run. Its hooks
-run them through Bun, and on every harness except GitHub Copilot the settings it
-ships also pre-approve the agent's calls to them; each harness guide describes
-how its pre-approval behaves. Trusting the project folder therefore means
-trusting those files: anyone who can change the project can change what those
-hooks and pre-approved commands run.
+コピーインストールでは、プロジェクト内の AI-DLC のファイルはあなたが実行するコードです。そのフックは Bun でそれらを実行し、GitHub Copilot 以外のすべてのハーネスでは、同梱の設定によってエージェントからそれらへの呼び出しも事前承認されます。事前承認の動作は各ハーネスのガイドで説明しています。そのため、プロジェクトのフォルダーを信頼することは、それらのファイルを信頼することを意味します。プロジェクトを変更できる人は誰でも、それらのフックや事前承認されたコマンドが実行する内容を変更できます。
 
-When native executables are permitted, prefer `aidlc config`. It installs the
-native runtime transactionally and records ownership for later refreshes.
+ネイティブの実行ファイルが許可されている場合は、`aidlc config` を優先してください。ネイティブのランタイムをトランザクションとしてインストールし、後の更新のために所有権を記録します。
 
-Framework developers may instead clone the source, install dependencies, and
-materialize ignored local outputs:
+フレームワークの開発者は、代わりにソースをクローンし、依存関係をインストールして、git で無視されるローカル出力を生成することもできます。
 
 ```bash
 bun install --frozen-lockfile
 bun scripts/package.ts
 ```
 
-That creates the Bun-invoking `dist/<harness>/`, native `dist-release/<harness>/`,
-and plugin projections locally. Neither generated root is committed. Direct
-`bun .../tools/*.ts` calls remain source/development and debugging mechanisms,
-not a second native lifecycle interface.
+これにより、Bun 起動型の `dist/<harness>/`、ネイティブの `dist-release/<harness>/`、プラグインのプロジェクションがローカルに作成されます。どちらの生成ルートもコミットされません。`bun .../tools/*.ts` の直接呼び出しは、引き続きソース／開発およびデバッグ用の仕組みであり、2 つ目のネイティブライフサイクルのインターフェースではありません。
 
 ## Remove AI-DLC from a Project
 
-No command removes AI-DLC from one project. `aidlc uninstall` removes the
-machine install, for every project on this machine, and leaves project files
-alone. The steps below take a project back
-to how it was before AI-DLC was added to it. They keep your own harness files and
-settings, which share folders and files with AI-DLC (a `.kiro/` you had before,
-your own `.claude/settings.json` entries, your part of `AGENTS.md`). Close the
-harness in the project first.
+1 つのプロジェクトから AI-DLC を削除するコマンドはありません。`aidlc uninstall` はこのマシン上のすべてのプロジェクトを対象にマシンのインストールを削除し、プロジェクトのファイルには手を付けません。以下の手順で、プロジェクトを AI-DLC を追加する前の状態に戻せます。これらの手順では、AI-DLC とフォルダーやファイルを共有している、あなた自身のハーネスのファイルと設定（以前からあった `.kiro/`、あなた自身の `.claude/settings.json` のエントリ、`AGENTS.md` のあなたの部分）は保持されます。まず、そのプロジェクトでハーネスを閉じてください。
 
 ### 1. Keep your records
 
-If the project is pinned (it has a `.aidlc-version` file), unpin it first,
-while AI-DLC is still installed: `aidlc config --unpin`, or in a copied project
-`bun <harness folder>/tools/aidlc.ts config --unpin`. That also clears the
-machine's record of the pin, which deleting the file does not.
+プロジェクトがピン留めされている（`.aidlc-version` ファイルがある）場合は、AI-DLC がまだインストールされている間に、まずピン留めを解除してください。`aidlc config --unpin`、コピーしたプロジェクトでは `bun <harness folder>/tools/aidlc.ts config --unpin` を実行します。これにより、マシン側のピンの記録も消去されます。ファイルを削除するだけでは消去されません。
 
-On Claude Code, turn AI-DLC's status line off too, while AI-DLC is still
-installed: `aidlc config --statusline off`, or in a copied project
-`bun .claude/tools/aidlc.ts config --statusline off`. When AI-DLC's status line
-replaced one of your own, that is the only step that puts yours back: AI-DLC
-keeps it in `aidlc.settings.local.json`, which you delete below.
+Claude Code では、AI-DLC がまだインストールされている間に、AI-DLC のステータスラインもオフにしてください。`aidlc config --statusline off`、コピーしたプロジェクトでは `bun .claude/tools/aidlc.ts config --statusline off` を実行します。AI-DLC のステータスラインがあなた自身のものを置き換えていた場合、あなたのものを元に戻せるのはこの手順だけです。AI-DLC はそれを `aidlc.settings.local.json` に保持しており、このファイルは後の手順で削除するためです。
 
-`aidlc/` holds your work: each intent's state, artifacts and audit trail, and
-the space's memory and knowledge. Archive it before you delete it. In a POSIX
-shell:
+`aidlc/` にはあなたの作業が入っています。各インテントの状態、成果物、監査証跡、スペースのメモリとナレッジです。削除する前にアーカイブしてください。POSIX シェルでは次のとおりです。
 
 ```bash
 tar -czf aidlc-records.tar.gz aidlc && rm -rf aidlc
 ```
 
-In PowerShell (Windows 10 and later include `tar`):
+PowerShell では次のとおりです（Windows 10 以降には `tar` が含まれています）。
 
 ```powershell
 tar -czf aidlc-records.tar.gz aidlc; if ($?) { Remove-Item -Recurse -Force aidlc }
 ```
 
-Delete these too if they are there: `aidlc.settings.json`,
-`aidlc.settings.local.json`, and the `aidlc.settings.local.json` line config
-may have added to `.git/info/exclude`.
+次のものがあれば、これらも削除してください。`aidlc.settings.json`、`aidlc.settings.local.json`、および config が `.git/info/exclude` に追加した可能性のある `aidlc.settings.local.json` の行です。
 
 ### 2. Delete AI-DLC's own files
 
-`aidlc config` records what it installed in
-`<harness folder>/tools/data/aidlc-manifest.json`: every file with its SHA-256,
-and the shared files it added its part to. This script reads that record and
-deletes only the files it lists whose content still matches, counting a file
-whose only difference is its line endings (a CRLF checkout) as unchanged. It
-keeps and lists a file you changed, never deletes a file the record does not
-list apart from the few AI-DLC generates while it runs, and removes only the
-folders it emptied. Save it as `remove-aidlc.cjs` in the folder that holds the
-project, next to the project folder rather than inside it:
+`aidlc config` は、インストールした内容を `<harness folder>/tools/data/aidlc-manifest.json` に記録します。各ファイルとその SHA-256、および AI-DLC が自分の部分を追加した共有ファイルです。次のスクリプトはその記録を読み取り、記録に載っているファイルのうち内容がまだ一致するものだけを削除します。改行コードだけが異なるファイル（CRLF のチェックアウト）は変更なしとみなします。変更したファイルは保持して一覧表示し、AI-DLC が実行中に生成する少数のファイルを除き、記録に載っていないファイルを削除することはなく、空になったフォルダーだけを削除します。これを `remove-aidlc.cjs` として、プロジェクトのフォルダーの中ではなくその隣、つまりプロジェクトを含むフォルダーに保存してください。
 
 ```js
 // Usage, from the project root: node <path to>/remove-aidlc.cjs <harness folder>   (Bun works too)
@@ -1341,10 +1005,9 @@ for (const file of removed) {
 for (const file of shared) if (fs.existsSync(file)) console.log(`edit by hand: ${file}`);
 ```
 
-Run it from the project root with Node.js or Bun, once for each harness folder
-in the project. The same commands work in a POSIX shell and in PowerShell:
+プロジェクトのルートから Node.js または Bun で、プロジェクト内のハーネスのフォルダーごとに 1 回ずつ実行します。同じコマンドが POSIX シェルと PowerShell の両方で動作します。
 
-| Harness | Run |
+| ハーネス | 実行するコマンド |
 |---------|-----|
 | Claude Code | `node ../remove-aidlc.cjs .claude` |
 | Kiro CLI, Kiro IDE | `node ../remove-aidlc.cjs .kiro` |
@@ -1352,44 +1015,28 @@ in the project. The same commands work in a POSIX shell and in PowerShell:
 | Cursor | `node ../remove-aidlc.cjs .cursor` |
 | OpenCode, GitHub Copilot | `node ../remove-aidlc.cjs .aidlc` |
 
-If it says the record predates the shipped-files-only record, an earlier
-release wrote it: refresh with `aidlc config --harness <name>` first (in a
-copied project, `bun <harness folder>/tools/aidlc.ts config --harness <name>`),
-then run the script again. Review any file it kept: it is an AI-DLC file you edited, so
-keep it only if you still want your edit.
+記録が shipped-files-only の記録より古いと表示された場合、それは以前のリリースが書き込んだものです。まず `aidlc config --harness <name>` で更新し（コピーしたプロジェクトでは `bun <harness folder>/tools/aidlc.ts config --harness <name>`）、その後スクリプトを再実行してください。保持されたファイルは確認してください。それはあなたが編集した AI-DLC のファイルなので、その編集をまだ残したい場合にのみ保持してください。
 
 ### 3. Take AI-DLC's part out of shared files
 
-The script lists each shared file still holding AI-DLC's part. If git has the
-project from before AI-DLC was added, restoring them from that commit is the
-quickest way, for example
-`git checkout <commit> -- .gitignore AGENTS.md .claude/settings.json`. That also
-undoes any change you made to them since, so check `git diff --cached` before
-you commit. Otherwise remove AI-DLC's part by hand. Remove a value only while it
-still holds what AI-DLC wrote; a value your team changed is yours, so keep it:
+スクリプトは、まだ AI-DLC の部分を含んでいる共有ファイルをそれぞれ一覧表示します。AI-DLC を追加する前のプロジェクトが git にある場合は、そのコミットから復元するのが最も手早い方法です。たとえば `git checkout <commit> -- .gitignore AGENTS.md .claude/settings.json` です。これはそれ以降にあなたがそれらのファイルに加えた変更も元に戻すため、コミットする前に `git diff --cached` を確認してください。それ以外の場合は、AI-DLC の部分を手で削除します。値を削除するのは、それが AI-DLC が書き込んだ内容のままの場合だけにしてください。チームが変更した値はあなたのものなので、残してください。
 
-| File | Remove |
+| ファイル | 削除するもの |
 |------|--------|
-| `.gitignore` | The lines from `# BEGIN AI-DLC:gitignore` to `# END AI-DLC:gitignore`, and the blank line above them. Several harnesses share this one block. |
-| `AGENTS.md` | The lines from `<!-- BEGIN AI-DLC:agents -->` to `<!-- END AI-DLC:agents -->`, and the blank line above them. |
-| `.claude/settings.json` | `companyAnnouncements`, unless your team set its own. `statusLine` when its command runs `aidlc`. Every hook group whose command runs `aidlc` (`aidlc engine hook ...`, or `bun "$CLAUDE_PROJECT_DIR/.claude/tools/aidlc.ts" engine hook ...` in a copied project). The `permissions.allow` entries that name `aidlc`, and `Edit(/**)`, `Task` and `WebSearch` unless you added them. `env` keys that start with `AIDLC_` or `AWS_AIDLC_`, and any provider keys you chose in `aidlc config providers`. |
-| `.claude/settings.local.json` | A `statusLine` whose command runs `aidlc`; AI-DLC's status line lands here when it is turned on. Step 1's `--statusline off` takes it out. |
-| `.mcp.json` (Claude Code), `.kiro/settings/mcp.json` (Kiro CLI) | The MCP servers AI-DLC ships (`context7`, `aws-mcp`, `aws-pricing`, `aws-iac`, `aws-serverless`), unless you set one up yourself. Kiro CLI gets them by default, turned off; Claude Code gets them when you turned them on, by answering yes when `aidlc config` asked at a terminal or with `config project --mcp defaults`. |
-| `.codex/config.toml` | `developer_instructions`, `sandbox_mode`, `suppress_unstable_features_warning` and `tool_output_token_limit`; AI-DLC's keys in `[shell_environment_policy]` (`set`, holding `AIDLC_RULES_DIR`), `[sandbox_workspace_write]` (`network_access`), `[agents]` (`max_depth`), `[features]` (`default_mode_request_user_input`), `[tools]` (`experimental_request_user_input`) and `[tui]` (`status_line`); the `#` comments directly above them; and any of those tables left empty. Keep keys you set yourself, also inside those tables. |
-| `opencode.json` (or `opencode.jsonc`) | `$schema` unless it is yours; `.aidlc/skills` in `skills.paths`; the `instructions` entries under `.aidlc/` and `aidlc/`; and AI-DLC's `permission` rules: the ones naming `.aidlc/`, `"aidlc engine *": "allow"` under `bash` (a native install), its asks before `rm -r*` and `git push *`, and the `"*"` rules earlier releases added under `edit` and `bash`, unless you wrote the same rule yourself. |
-| `.vscode/settings.json` (Copilot) | `chat.agent.maxRequests` (`200`) and `chat.useHooks` (`true`), unless you set them yourself. |
+| `.gitignore` | `# BEGIN AI-DLC:gitignore` から `# END AI-DLC:gitignore` までの行と、その上の空行。複数のハーネスがこの 1 つのブロックを共有する。 |
+| `AGENTS.md` | `<!-- BEGIN AI-DLC:agents -->` から `<!-- END AI-DLC:agents -->` までの行と、その上の空行。 |
+| `.claude/settings.json` | チームが独自に設定していない限り `companyAnnouncements`。コマンドが `aidlc` を実行する場合の `statusLine`。コマンドが `aidlc` を実行するすべてのフックグループ（`aidlc engine hook ...`、コピーしたプロジェクトでは `bun "$CLAUDE_PROJECT_DIR/.claude/tools/aidlc.ts" engine hook ...`）。`aidlc` を指定している `permissions.allow` のエントリと、自分で追加したものでない限り `Edit(/**)`、`Task`、`WebSearch`。`AIDLC_` または `AWS_AIDLC_` で始まる `env` のキーと、`aidlc config providers` で選んだプロバイダーのキー。 |
+| `.claude/settings.local.json` | コマンドが `aidlc` を実行する `statusLine`。AI-DLC のステータスラインはオンにするとここに置かれる。手順 1 の `--statusline off` で取り除かれる。 |
+| `.mcp.json`（Claude Code）、`.kiro/settings/mcp.json`（Kiro CLI） | AI-DLC が同梱する MCP サーバー（`context7`、`aws-mcp`、`aws-pricing`、`aws-iac`、`aws-serverless`）。自分で設定したものは除く。Kiro CLI には既定で無効の状態で追加される。Claude Code には、`aidlc config` がターミナルで尋ねたときに yes と答えたか、`config project --mcp defaults` で有効にした場合に追加される。 |
+| `.codex/config.toml` | `developer_instructions`、`sandbox_mode`、`suppress_unstable_features_warning`、`tool_output_token_limit`。`[shell_environment_policy]`（`AIDLC_RULES_DIR` を保持する `set`）、`[sandbox_workspace_write]`（`network_access`）、`[agents]`（`max_depth`）、`[features]`（`default_mode_request_user_input`）、`[tools]`（`experimental_request_user_input`）、`[tui]`（`status_line`）内の AI-DLC のキー。それらの直上にある `#` コメント。空になったそれらのテーブル。自分で設定したキーは、それらのテーブル内のものも含めて残す。 |
+| `opencode.json`（または `opencode.jsonc`） | 自分のものでない限り `$schema`。`skills.paths` 内の `.aidlc/skills`。`.aidlc/` と `aidlc/` 配下の `instructions` のエントリ。AI-DLC の `permission` ルール、つまり `.aidlc/` を指定するもの、`bash` 配下の `"aidlc engine *": "allow"`（ネイティブインストール）、`rm -r*` と `git push *` の前の確認、以前のリリースが `edit` と `bash` 配下に追加した `"*"` ルール。ただし自分で同じルールを書いた場合は除く。 |
+| `.vscode/settings.json`（Copilot） | `chat.agent.maxRequests`（`200`）と `chat.useHooks`（`true`）。自分で設定した場合は除く。 |
 
-Delete a file when nothing of yours is left in it: AI-DLC created it. Cursor's
-root `install.ts` and the other whole files AI-DLC wrote at the project root are
-deleted by the script in step 2. Codex keeps its trust for the project's hooks
-outside the project, in `$CODEX_HOME/config.toml` (`~/.codex/config.toml` by
-default); remove the project's entries there if you want Codex to forget them.
+あなたのものが何も残っていないファイルは削除してください。AI-DLC が作成したファイルです。Cursor のルートの `install.ts` や、AI-DLC がプロジェクトルートに書き込んだその他のファイル全体は、手順 2 のスクリプトで削除されます。Codex はプロジェクトのフックに対する信頼をプロジェクトの外、`$CODEX_HOME/config.toml`（既定では `~/.codex/config.toml`）に保持します。Codex にそれを忘れさせたい場合は、そこからプロジェクトのエントリを削除してください。
 
 ### 4. Check
 
-`git status` shows AI-DLC's files deleted and your shared files back to what they
-held before. Searching each shared file from step 3 for `AI-DLC` and `aidlc`
-should find nothing of AI-DLC's left:
+`git status` で、AI-DLC のファイルが削除され、共有ファイルが以前の内容に戻っていることを確認します。手順 3 の各共有ファイルで `AI-DLC` と `aidlc` を検索しても、AI-DLC のものは何も見つからないはずです。
 
 ```bash
 grep -n "AI-DLC\|aidlc" .gitignore AGENTS.md
@@ -1399,60 +1046,21 @@ grep -n "AI-DLC\|aidlc" .gitignore AGENTS.md
 Select-String -Path .gitignore, AGENTS.md -Pattern 'AI-DLC|aidlc'
 ```
 
-A project copied from `aidlc-copy-runtime-X.Y.Z.tar.gz` gets the manifest when
-its setup command runs (see [Copy Channel](#copy-channel)). If that command never
-ran, there is no manifest: delete the files that are byte-identical to the
-`runtime/<harness>/` folder you copied, then follow steps 3 and 4. Copying also
-replaces files of the same name that the project already had (such as your own
-`.claude/settings.json`); restore those from git or your backup.
+`aidlc-copy-runtime-X.Y.Z.tar.gz` からコピーしたプロジェクトは、セットアップコマンドを実行したときにマニフェストを取得します（[コピーチャネル](#copy-channel)を参照）。そのコマンドを実行していない場合はマニフェストがないため、コピーした `runtime/<harness>/` フォルダーとバイト単位で同一のファイルを削除し、その後手順 3 と 4 に従ってください。コピーによって、プロジェクトにすでにあった同名のファイル（あなた自身の `.claude/settings.json` など）も置き換えられています。それらは git やバックアップから復元してください。
 
 ## Uninstall
 
-`aidlc uninstall` removes the machine install. To remove AI-DLC from one
-project, see [Remove AI-DLC from a Project](#remove-ai-dlc-from-a-project).
+`aidlc uninstall` はマシンのインストールを削除します。1 つのプロジェクトから AI-DLC を削除するには、[プロジェクトから AI-DLC を削除する](#remove-ai-dlc-from-a-project)を参照してください。
 
 ```bash
 aidlc uninstall
 aidlc uninstall --purge --yes
 ```
 
-Uninstall uses an explicit list of installer-owned files and checks their
-contents before deleting them. It does not recursively remove installation or
-version directories. Directories are removed only when empty; project trees,
-unlisted files, changed files, and linked targets are preserved. The result
-lists, once, each path it left because AI-DLC did not install it or it changed
-after install.
+アンインストールは、インストーラーが所有するファイルの明示的な一覧を使い、削除する前にその内容を確認します。インストールディレクトリやバージョンディレクトリを再帰的に削除することはありません。ディレクトリは空の場合にのみ削除され、プロジェクトのツリー、一覧にないファイル、変更されたファイル、リンク先は保持されます。結果には、AI-DLC がインストールしたものでない、またはインストール後に変更されたために残した各パスが一度だけ一覧表示されます。
 
-New installations record a full per-version `installed-files.json` inventory,
-whose hash is stored in `version.json`. Older installations use their verified
-runtime inventory where available, plus the plugin folders their release
-unpacked beside it, which carry the marker the release build wrote; other files
-without ownership evidence are kept. The plugin catalogue's own record lists
-the files its last refresh wrote: those go, and anything else you put in that
-folder is kept. A shell completion counts as AI-DLC's when
-it is exactly what an AI-DLC release renders, so the completions an earlier
-release wrote while it updated to this one are removed, and an edited one is
-kept.
-Without `--purge`, machine config, update cache, pin registrations, and the
-default harness are also preserved. `--purge` selects those known machine
-records for removal; it does not broaden deletion to unrelated files.
+新しいインストールでは、バージョンごとの完全な `installed-files.json` インベントリを記録し、そのハッシュを `version.json` に保存します。古いインストールでは、利用可能な場合は検証済みのランタイムインベントリと、そのリリースがその隣に展開したプラグインフォルダー（リリースのビルドが書き込んだマーカーを持つ）を使います。所有を示す証拠のないその他のファイルは保持されます。プラグインカタログ自身の記録には、最後の更新で書き込まれたファイルが載っています。それらは削除され、あなたがそのフォルダーに置いたその他のものは保持されます。シェルの補完ファイルは、AI-DLC のリリースが生成する内容と完全に一致する場合に AI-DLC のものとみなされます。そのため、以前のリリースがこのリリースへの更新中に書き込んだ補完ファイルは削除され、編集されたものは保持されます。`--purge` を付けない場合、マシン設定、更新キャッシュ、ピンの登録、既定のハーネスも保持されます。`--purge` はそれらの既知のマシン記録を削除対象に加えますが、無関係なファイルにまで削除範囲を広げることはありません。
 
-On Windows, both forms remove the User PATH entry recorded in the install
-root's `windows-path.json`. Entries that existed before installation and
-unrelated changes made afterward are preserved. An install without an
-ownership record leaves User PATH alone. `-NoModifyPath` on a later installer
-run preserves an earlier record, so that entry is still removed on uninstall.
+Windows では、どちらの形式でも、インストールルートの `windows-path.json` に記録されたユーザー PATH のエントリを削除します。インストール前から存在したエントリや、その後に行われた無関係な変更は保持されます。所有記録のないインストールでは、ユーザー PATH には手を付けません。後のインストーラーの実行で `-NoModifyPath` を指定しても以前の記録は保持されるため、そのエントリはアンインストール時に引き続き削除されます。
 
-At a terminal, uninstall says what it removes and keeps, then proceeds; without
-a terminal it needs `--yes`. It refuses filesystem, home, shared-system, and
-project roots, as well as root-owned, package-manager-owned, or
-mixed-ownership commands. A root install made with `--allow-root` is removed
-with `aidlc uninstall --allow-root` (or `AIDLC_ALLOW_ROOT=1`); the opt-in is
-refused under `sudo` and when `$HOME` is not owned by root. On Windows, a bound file list and expected checksums
-are recorded before cleanup is scheduled. The worker rechecks paths and hashes,
-refuses reparse points, and deletes files individually after the running command
-exits; uninstall is done when the `aidlc` command is no longer found. An
-interrupted continuation can resume only with its validated file plan.
-Older journals without such a plan are refused and left for inspection. See
-[Transactions and Recovery](#transactions-and-recovery) for how a failed
-cleanup is reported and retried.
+ターミナルでは、アンインストールは削除するものと保持するものを示してから処理を進めます。ターミナルがない場合は `--yes` が必要です。ファイルシステム、ホーム、システム共有、プロジェクトのルートや、root が所有するコマンド、パッケージマネージャーが所有するコマンド、所有者が混在するコマンドは拒否します。`--allow-root` で行った root のインストールは `aidlc uninstall --allow-root`（または `AIDLC_ALLOW_ROOT=1`）で削除します。このオプトインは `sudo` 配下と、`$HOME` が root の所有でない場合には拒否されます。Windows では、クリーンアップをスケジュールする前に、対象のファイル一覧と期待されるチェックサムを記録します。ワーカーはパスとハッシュを再確認し、リパースポイントを拒否し、実行中のコマンドが終了した後にファイルを 1 つずつ削除します。`aidlc` コマンドが見つからなくなればアンインストールは完了です。中断された継続処理は、検証済みのファイルプランがある場合にのみ再開できます。そのようなプランのない古いジャーナルは拒否され、調査のために残されます。失敗したクリーンアップがどのように報告され、再試行されるかについては、[トランザクションと復旧](#transactions-and-recovery)を参照してください。

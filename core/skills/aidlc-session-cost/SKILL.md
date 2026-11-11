@@ -15,36 +15,36 @@ classification: read-only
 
 ## Purpose
 
-Give the team a transparent, deterministic view of what the current
-workflow has consumed: how long it has run, how many stages have
-cleared their gates, how much the orchestrator wrote to its observation
-diaries, how often sensors fired, and how many learnings were captured.
+現在のワークフローが何を消費したかについて、透明で決定論的なビューをチームに提供する:
+どれだけの時間実行されたか、いくつのステージがゲートを通過したか、
+オーケストレーターが観察の日誌にどれだけ書き込んだか、センサーが何回発火したか、
+そして学びがいくつ記録されたか。
 
-Every number this skill prints comes from
-`{{INVOKE}} engine runtime summary --json` — the materialised,
-event-sourced view over `runtime-graph.json`. This skill does **no
-counting of its own**. It does not estimate tokens, does not walk the
-artefact tree, and does not read `audit.md`. If a number isn't in the
-tool's output, this skill does not invent it.
+このスキルが出力する数値はすべて
+`{{INVOKE}} engine runtime summary --json` から得る。これは `runtime-graph.json` を
+イベントソーシングで集計して実体化したビューである。このスキルは**独自の集計を
+一切行わない**。トークンを見積もらず、成果物のツリーを走査せず、
+`audit.md` も読まない。ツールの出力にない数値を、
+このスキルが作り出すことはない。
 
 ## Classification
 
-Read-only. This skill never advances the workflow stage pointer, never
-emits an audit event, and never writes a file. It is safe to run at any
-point in a workflow, including mid-stage.
+読み取り専用。このスキルは、ワークフローのステージポインタを決して進めず、
+監査イベントを決して発行せず、ファイルを決して書き込まない。ステージの途中を含め、
+ワークフローのどの時点でも安全に実行できる。
 
 ## Steps
 
 ### Step 1: Read the aggregates
 
-Run:
+次を実行する:
 
 ```bash
 {{INVOKE}} engine runtime summary --json
 ```
 
-If the command exits non-zero (no `runtime-graph.json` yet — the
-workflow hasn't compiled a graph), print:
+コマンドが 0 以外で終了した場合（`runtime-graph.json` がまだない — ワークフローが
+グラフをまだコンパイルしていない）、次を出力する:
 
 ```
 No session data yet.
@@ -54,9 +54,9 @@ first stage transition has compiled runtime-graph.json. Run /aidlc to
 begin, then re-run /aidlc-session-cost.
 ```
 
-and STOP.
+そして停止する。
 
-Otherwise parse the JSON. The shape is:
+それ以外の場合は JSON を解析する。形式は次のとおり:
 
 ```jsonc
 {
@@ -74,8 +74,8 @@ Otherwise parse the JSON. The shape is:
 
 ### Step 2: Render the report
 
-Print the fields verbatim — do not recompute, round, or re-estimate any
-value. Use `in progress` when `duration_minutes` is `null`.
+各フィールドをそのまま出力する — どの値も再計算、丸め、再見積もりしてはならない。
+`duration_minutes` が `null` の場合は `in progress` を使う。
 
 ```
 Session Cost
@@ -117,12 +117,11 @@ Learnings captured
 
 ### Step 3: Surface advisory notes (optional, narrative only)
 
-You may add a short narrative note after the table — for example,
-flagging that many stages are still pending, or that sensors are firing
-`incomplete` often. Keep it to one or two sentences and base it only on
-the numbers above. Do not invent metrics the tool did not report.
+表の後に、短い説明の注記を加えてもよい — たとえば、多くのステージがまだ保留中である
+ことや、センサーが頻繁に `incomplete` で発火していることを指摘する。注記は 1〜2 文にとどめ、
+上記の数値だけに基づかせる。ツールが報告していない指標を作り出してはならない。
 
-> Note on tokens: this skill deliberately does **not** print a token
-> estimate. The retired file-size-to-token heuristic was guesswork
-> dressed as data. If you need real token accounting, read it from your
-> Claude Code session, not from a file-size approximation.
+> トークンに関する注記: このスキルは意図的にトークンの見積もりを**出力しない**。
+> 廃止された、ファイルサイズからトークン数を推定するヒューリスティックは、データの体裁をとった
+> 当て推量にすぎなかった。実際のトークン集計が必要な場合は、ファイルサイズからの概算ではなく、
+> Claude Code のセッションから読み取ること。

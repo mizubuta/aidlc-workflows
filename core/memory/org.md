@@ -1,91 +1,89 @@
 # Org-Level Rules
 
-> Framework defaults. Read with `team.md` and `project.md` from the active
-> space. The resolver loads every applicable layer; narrower layers add
-> specialisation and must not contradict broader policy.
+> フレームワークの既定値。アクティブなスペースの `team.md` と `project.md` とあわせて
+> 読む。リゾルバーは適用可能なすべての層を読み込む。より狭い層は
+> 特化を加えるものであり、より広いポリシーと矛盾してはならない。
 
 ## Way of Working
 
-AI-DLC's own defaults for the branches and merges it makes. They are not a
-description of how this project works: your team's practices go in `team.md`
-and this project's in `project.md`, which are read first and replace anything
-written here.
+AI-DLC 自身が作成するブランチとマージについての既定値である。これはこのプロジェクトの
+作業方法を説明するものではない。チームのプラクティスは `team.md` に、
+このプロジェクトのプラクティスは `project.md` に書く。それらが先に読まれ、ここに書かれた
+内容をすべて置き換える。
 
-A commit you ask for goes where you already are, on the branch you are on.
-AI-DLC makes a branch for it only when you ask for one, or when `team.md` or
-`project.md` says the project works that way.
+依頼されたコミットは、現在いる場所、つまり現在のブランチに行う。
+AI-DLC がそのためにブランチを作成するのは、利用者が求めた場合か、`team.md` または
+`project.md` にプロジェクトがそのように作業すると書かれている場合だけである。
 
-For the Construction worktrees AI-DLC creates, the default is
-**trunk-based development**. The worktree base branch is `main` and the
-merge target is `main`. Each Bolt branch is **squash-merged** into `main` as
-one commit named by the Bolt slug, with the Bolt's own commits left on the
-source branch until the worktree is discarded. Squash keeps a linear `main`
-history that maps 1:1 to delivery-planning's Bolt sequence, and the audit log
-holds the full event sequence either way.
+AI-DLC が作成する Construction の worktree については、既定値は
+**トランクベース開発** である。worktree のベースブランチは `main`、
+マージ先は `main` である。各 Bolt ブランチは、Bolt の slug を名前とする 1 つのコミットとして
+`main` に **squash マージ** され、Bolt 自身のコミットは worktree が破棄されるまで
+ソースブランチに残る。squash によって `main` の履歴は直線的に保たれ、
+delivery-planning の Bolt の順序と 1 対 1 で対応する。どちらの場合も、監査ログは
+イベントの順序をすべて保持する。
 
-Where a project runs several environments (staging, production), the default
-keeps one trunk and gates releases with tags or environment-specific deployment
-configs rather than long-lived release branches.
+プロジェクトが複数の環境（ステージング、本番）を運用する場合、既定では
+トランクを 1 つに保ち、長期間存続するリリースブランチではなく、タグや環境ごとのデプロイ設定で
+リリースをゲートする。
 
-Work that teams build Unit by Unit merges into the branch on this line;
-`team.md` or `project.md` names another the same way:
+チームがユニットごとにビルドする作業は、この行に記載されたブランチにマージされる。
+`team.md` や `project.md` でも同じ形式で別のブランチを指定できる。
 
 - **Integration branch**: main
 
 ## Walking Skeleton
 
-When practices are scope-dependent, select the walking skeleton only when the
-active scope declares `skeleton: on`. In checkpoint-enabled solo work with a
-non-empty Unit DAG, the first Unit is the smallest working integrated slice.
-Run it through all applicable per-unit stages, including Code Generation, before
-later Units even if stage-major was selected. Verify it with the intent's recorded,
-human-authorized Construction Verification Command, which must demonstrate the
-project's real end-to-end result, then require the human's skeleton checkpoint
-approval. A first design-stage review does not demonstrate a working skeleton.
+プラクティスがスコープ依存の場合、アクティブなスコープが `skeleton: on` を宣言しているときにのみ
+ウォーキングスケルトンを選択する。チェックポイントが有効で、空でないユニット DAG を持つソロ作業では、
+最初のユニットが動作する最小の統合スライスとなる。stage-major が選択されていても、
+そのユニットを後続のユニットより先に、Code Generation を含む適用可能なすべてのユニットごとのステージに通す。
+インテントに記録された、人間承認済みの Construction Verification Command でそれを検証する。
+このコマンドはプロジェクトの実際のエンドツーエンドの結果を示すものでなければならない。その後、
+人間によるスケルトンのチェックポイントの承認を必須とする。最初の設計ステージのレビューは、
+動作するスケルトンを示したことにはならない。
 
-For `skeleton: off`, skip the skeleton ceremony: no bootstrap checkpoint; offer
-the explicit Construction choice at entry. For skeleton-on, offer it after the verified,
-human-approved skeleton. Follow `construction_policy.offer_autonomy`; never
-repeat a recorded choice. **Continue automatically** records `autonomous`;
-**Review each checkpoint** records `gated`. On-demand requests can grant or
-revoke autonomy during Construction. Ordinary completion approvals follow that
-choice; Plan Approval, summary confirmation, verification command selection,
-and failures remain human stops.
+`skeleton: off` の場合は、スケルトンの手続きをスキップする。ブートストラップのチェックポイントは設けず、
+Construction の開始時に明示的な選択を提示する。skeleton-on の場合は、検証され、
+人間が承認したスケルトンの後に提示する。`construction_policy.offer_autonomy` に従い、
+記録済みの選択を決して繰り返さない。**Continue automatically** は `autonomous` を記録し、
+**Review each checkpoint** は `gated` を記録する。オンデマンドの依頼によって、Construction 中に
+自律性を付与または取り消せる。通常の完了の承認はその選択に従う。Plan Approval、サマリー確認、
+検証コマンドの選択、失敗は、人間による停止点のままである。
 
-Existing workflows without `Construction Checkpoints` retain their legacy
-first-stage and late stage approvals. Team-owned Unit gates retain their own
-policy; no Unit DAG means no skeleton checkpoint ceremony.
+`Construction Checkpoints` を持たない既存のワークフローは、旧来の
+最初のステージと後半のステージの承認を維持する。チーム所有のユニットゲートは独自の
+ポリシーを維持する。ユニット DAG がなければ、スケルトンのチェックポイントの手続きもない。
 
 ## Testing Posture
 
-We treat tests as a first-class deliverable in every Bolt. The specific
-methodology (TDD, BDD, ATDD, or classic test-after) is affirmed at
-practices-discovery and recorded in `team.md` under this heading with explicit
-`Methodology` and `Ordering` fields; Code Generation resolves those fields
-independently from coverage, tooling, and scope notes.
+テストは、すべての Bolt における第一級の成果物として扱う。具体的な
+方法論（TDD、BDD、ATDD、または従来の後付けテスト）は
+practices-discovery で確認され、この見出しの下に明示的な
+`Methodology` と `Ordering` のフィールドとして `team.md` に記録される。Code Generation は、
+カバレッジ、ツール、スコープに関する注記とは独立してそれらのフィールドを解決する。
 
-When no posture has been affirmed, our default per scope is:
+方針が確認されていない場合、スコープごとの既定値は次のとおりである。
 - **Methodology**: test-after
-- **Ordering**: implement each applicable testable layer, then write and run
-  that layer's tests.
-- `mvp`, `enterprise`, `feature`, `infra`, `classic` add an 80% line-coverage
-  floor and CI execution before merge.
-- `bugfix`, `security-patch` add a targeted regression for the specific
-  bug/vulnerability and require the existing suite to remain green.
-- `express` uses the Minimal strategy: requirement-driven unit tests (one per
-  requirement, with a happy-path floor per component); existing tests remain
-  green.
-- `poc`, `refactor`, `workshop` add no extra new-test floor and require the
-  existing suite to remain green.
+- **Ordering**: 適用可能なテスト可能な層ごとに実装し、その後
+  その層のテストを書いて実行する。
+- `mvp`、`enterprise`、`feature`、`infra`、`classic` では、80% の行カバレッジの
+  下限と、マージ前の CI での実行を追加する。
+- `bugfix`、`security-patch` では、特定のバグ/脆弱性に対する的を絞った回帰テストを追加し、
+  既存のテストスイートがグリーンのままであることを必須とする。
+- `express` は Minimal 戦略を使う。要件駆動のユニットテスト（要件ごとに 1 つ、
+  コンポーネントごとに正常系の下限）を書き、既存のテストはグリーンのままとする。
+- `poc`、`refactor`、`workshop` では、新しいテストの追加の下限は設けず、
+  既存のテストスイートがグリーンのままであることを必須とする。
 
-The active `Test Strategy` still applies in every scope and determines test
-volume/types. Scope floors are additive; they never reduce or replace the
-selected strategy.
+アクティブな `Test Strategy` はすべてのスコープで引き続き適用され、テストの
+量と種類を決める。スコープの下限は追加的なものであり、選択された戦略を減らしたり
+置き換えたりすることは決してない。
 
-Build and Test verifies defined coverage floors and affirmed quality targets;
-they may not be weakened to make a step pass.
+Build and Test は、定義されたカバレッジの下限と確認済みの品質目標を検証する。
+ステップを通過させるためにそれらを弱めてはならない。
 
-Affirm a stricter posture in `team.md` if the team commits to one.
+チームがより厳格な方針を採用する場合は、それを `team.md` で確認する。
 
 ## Guard Policy
 
@@ -93,29 +91,29 @@ Affirm a stricter posture in `team.md` if the team commits to one.
 
 ## Deployment
 
-We **deploy on merge** to staging environments. Production deploys gate
-on a separate manual approval — typically tech lead + product owner
-sign-off in CodePipeline or a CD platform's environment protection.
+ステージング環境へは **マージ時にデプロイ** する。本番へのデプロイは、
+別途の手動承認でゲートする。通常は、CodePipeline や CD プラットフォームの環境保護での
+テックリードとプロダクトオーナーの承認である。
 
-Teams that have invested in test coverage and observability sometimes
-graduate to continuous deployment to production (every commit
-auto-deploys); that's a team decision, not a framework default.
+テストカバレッジとオブザーバビリティに投資してきたチームは、本番への
+継続的デプロイ（すべてのコミットを自動デプロイ）に移行することもある。
+それはチームの判断であり、フレームワークの既定値ではない。
 
 ## Code Style
 
-We defer to project-level configurations:
-- Formatter: Prettier (JS/TS), Black (Python), `gofmt` (Go), or
-  language-default. Configured in repo root (`.prettierrc`,
-  `pyproject.toml`, etc.).
-- Linter: ESLint, Ruff, golangci-lint, etc. Run in CI before merge;
-  failure blocks the PR.
-- Naming conventions: language idiomatic (camelCase for JS/TS,
-  snake_case for Python, etc.). No project-wide rename rules unless
-  team affirms one.
+プロジェクトレベルの設定に従う。
+- フォーマッター: Prettier（JS/TS）、Black（Python）、`gofmt`（Go）、または
+  言語の標準。リポジトリのルートで設定する（`.prettierrc`、
+  `pyproject.toml` など）。
+- リンター: ESLint、Ruff、golangci-lint など。マージ前に CI で実行し、
+  失敗は PR をブロックする。
+- 命名規則: 言語の慣用に従う（JS/TS は camelCase、
+  Python は snake_case など）。チームが確認しない限り、
+  プロジェクト全体の命名変更ルールは設けない。
 
-When the framework makes a code-style suggestion, agents read the
-project's linter config first; the agent's suggestion only fires if the
-linter doesn't already cover it.
+フレームワークがコードスタイルを提案する場合、エージェントはまず
+プロジェクトのリンター設定を読む。エージェントの提案は、
+リンターがまだその点をカバーしていない場合にのみ行う。
 
 ## Forbidden
 
@@ -124,10 +122,10 @@ linter doesn't already cover it.
 
 ## Mandated
 
-- **Conversation language — resolution**: Every artifact a person reads or reviews is written in the workflow's established conversation language. The orchestrator resolves that language from the human's substantive prose and MUST state it as a `Conversation language: <language>` line in every delegated brief, because a delegated agent or reviewer never sees the conversation and some stages hand it nothing else (a greenfield run of a stage whose `consumes` are all `conditional_on: brownfield` reaches its lead with no upstream artifact at all). Delegated agents and reviewers resolve the language in this order and stop at the first source that answers: (1) the `Conversation language:` line in your brief — AUTHORITATIVE for delegated work, because the orchestrator regenerates it on every dispatch from the live conversation and it is therefore never staler than a persisted rule; (2) an explicit conversation-language rule in `aidlc/spaces/<active-space>/memory/project.md` — the FALLBACK for a brief that states no language, and the ONLY file a language switch is ever persisted to, so `project.md` ALWAYS outranks a conversation-language rule in `team.md`, which can only ever be a team default and NEVER the record of a switch (cross-file position is NOT recency: the runtime rule chain concatenates `org → team → project → phase`, so `team.md` reaches you before `project.md` in every bundle no matter which was written last, and the winner is this stated precedence rather than the later position); within `project.md`, when it carries more than one conversation-language rule the LAST one under `## Corrections` is the current one (this tie-break governs conversation-language rules ONLY and leaves the additive rule model untouched; the learnings write path appends and never replaces, so a superseded language rule can still be on disk); (3) the verbatim initial description decoded from `<record>/project-description.json`, falling back to `## Project Information` → `**Project**` in legacy records, when it carries a real language signal (not the `[Project description]` placeholder, not a bare identifier or path); (4) any artifact or draft you were handed — the directive's `consumes[]` contracts, the artifact you were dispatched to review, or the lead draft you were dispatched against. Every source is readable on every harness: the rule bundle carries (2) through the dispatch-rules hook on Claude, Codex, and opencode and through always-included agent resources or workspace steering on Kiro, and neither `aidlc-state.md` nor the handed artifacts fall inside the per-unit reviewer read-scope bound.
-- **Conversation language — stability**: The established conversation language holds for the whole session, and inside that session for every stage, dispatch, reviewer pass and approval gate of the workflow — nothing but a session boundary ends it. A turn that carries no language signal never changes it — `Approve`, `Looks correct`, an option letter or number, pasted code, a quoted error or stack trace, a bare file path or identifier. Only an explicit human request to switch languages changes it, and that switch takes effect IMMEDIATELY: everything written from that point follows the new language, and the orchestrator states the new language in the `Conversation language:` line of every subsequent delegated brief. Persistence is a separate, later step and never the activation step: the §13 learnings ritual is the ONLY sanctioned write path for persisting a conversation-language switch into `aidlc/spaces/<active-space>/memory/` and it is human-gated, so NEVER edit a memory file directly to record a switch — a direct write skips the tool's audit event, its duplicate key, and its admission conflict-check, and "do not wait for persistence" is never licence to bypass that gate (this bounds the persistence of a language switch and forbids a direct agent edit; it does not govern the deterministic memory writers a stage invokes by contract, such as `aidlc-state.ts practices-promote`, which own the stamped `## Mandated` / `## Forbidden` rules and the five replaced `team.md` sections rather than the `## Corrections` language record). When `directive.ceremony.learnings` is `off`, no language-switch persistence happens and no direct memory edits replace the ritual; the current session still uses the new language. When the enabled `learnings` protocol module offers it, the switch is recorded as a single-line rule under `## Corrections` in `project.md` and NEVER in `team.md`, so the cross-file precedence in (2) never has to arbitrate one switch against another; when the human declines, it is simply not persisted, and the `Conversation language:` line the orchestrator states in every brief carries it for the rest of the session. A session boundary is where that carrier ends, and a workflow outlives it: the resume context the engine injects at session start carries scope, phase, stage, status, agent and next action but NO language, so on the FIRST turn of a new session the orchestrator MUST re-resolve the language before it dispatches anything — the persisted rule from (2), else the human-readable artifacts this workflow has already produced, which record the language the human was last served in, else the verbatim initial description from (3) — and when every one of those is silent it ASKS the human rather than defaulting to English. Re-resolving is not a switch: it is never announced as one and never persisted as one. An unpersisted switch therefore does not outlive its session, which is exactly what persistence buys — a human who wants a switch to survive a resume accepts the ritual, and a human who declines is served correctly for the rest of the session and re-resolved from disk in the next one. A persisted rule NEVER outranks the brief, and never outranks a later explicit human request to switch: it is the fallback for a brief that states no language, and because the learnings write path appends rather than replaces, a superseded language rule can outlive the switch — the LAST conversation-language rule under `## Corrections` is the current one.
-- **Conversation language — what to localize**: Write in the resolved conversation language every artifact a person reads or reviews — requirements, user stories, plans, specs, reviews, questions, discovered practices, affirmed team and project rules, evidence, decision rationale, and any other explanatory prose — and the agent's own human-facing conversational output in every turn, for the orchestrator and delegated agents alike: conversational chat messages, status updates, progress reports, and transitional narration between tool calls. Structured-question `prompt`, `header`, `options[].description`, and free-text follow-ups are human-facing prose and follow the same rule; only `options[].label` literals the protocol spells verbatim are preserved tokens. This includes the descriptive text of a rule shaped as `ALWAYS …` / `NEVER …`, where the leading marker is a fixed token but the sentence it introduces is not. A Markdown artifact is not English merely because a tool parses part of it: localize the prose that surrounds a preserved token. Verbatim human input echoed into an artifact is always kept exactly as the human wrote it.
-- **Conversation language — preserved tokens**: Any literal a stage file or the stage protocol spells in backticks and tells you to write exactly is a fixed token — keep it English, character for character, and localize only the prose around it. This covers option labels and sentinel VALUES, not just syntax: `[Answer]:` tags with their option letters, the mandatory final option `X. Other (please specify)`, the assumption-confirmation options `A. Accept assumptions` / `B. Convert to follow-up questions` (the claim-sources sensor tells them from the assumptions by the literal), the `None.` / `None` sentinels under `## Assumptions & Open Questions` and `## Positions`, the `AGREE:` / `OBJECT:` position prefixes, and the `**Collaborator:** <agent-slug>` first line the engine matches exactly before it accepts a stage. Glossing such a literal when you PRESENT it to the human is fine; what you WRITE into an artifact is the literal itself. Also preserved: the source-register tags `[desc]`, `[scope]`, `[assumption]`, `[Q<n>]`, `[memory:M<n>]` with their literal prefixes (`Initial description:`, `Workflow-selected scope:`); the H2 headings the claim-sources sensor matches verbatim (`## Sources`, `## Assumptions & Open Questions`, `## Assumption Confirmation`, `## Review`) plus any other H2 taken from a stage template, which the `required-sections` sensor matches verbatim whenever a template is supplied (the framework ships none, so a team's `aidlc/spaces/<active-space>/memory/templates/` is what arms that check); the reviewer verdicts `READY` and `NOT-READY`; YAML keys and enum values inside fenced blocks (`units`, `name`, `kind`, `depends_on`, `service | spec | ui | packaging | library`); the field labels, status values, and checkbox states of `aidlc-state.md` and the audit shards; the verbatim initial description decoded from `<record>/project-description.json` (the `**Project**` state field is only its safe single-line preview); stable IDs (`FR1`, `ENT-001`, `BR1.1`); enum and classification values; code and identifiers; file paths; mermaid keywords; and cross-references.
+- **会話言語 — 解決**: 利用者が読む、またはレビューするすべての成果物は、ワークフローで確立された会話言語で書く。オーケストレーターは人間の実質的な散文からその言語を解決し、委任するすべてのブリーフに `Conversation language: <language>` の行として必ず明記する。委任されたエージェントやレビュアーは会話を見ることがなく、ステージによっては他に何も渡さないためである（`consumes` がすべて `conditional_on: brownfield` であるステージを greenfield で実行すると、リードには上流の成果物がまったく届かない）。委任されたエージェントとレビュアーは、次の順序で言語を解決し、最初に答えが得られた情報源で止まる。(1) ブリーフ内の `Conversation language:` 行 — 委任作業では**権威あるもの**である。オーケストレーターはディスパッチのたびにライブの会話からそれを再生成するため、永続化されたルールより古くなることはない。(2) `aidlc/spaces/<active-space>/memory/project.md` 内の明示的な会話言語のルール — 言語を明記していないブリーフに対する**フォールバック**であり、言語の切り替えが永続化される**唯一の**ファイルである。そのため `project.md` は、`team.md` 内の会話言語のルールより**常に**優先される。そちらのルールはチームの既定値にしかなり得ず、切り替えの記録には**決して**ならない（ファイル間の位置は新しさを意味**しない**。実行時のルールチェーンは `org → team → project → phase` を連結するため、どちらが後に書かれたかにかかわらず、どのバンドルでも `team.md` は `project.md` より先に届く。勝つのはこの明記された優先順位であり、後ろの位置ではない）。`project.md` 内に会話言語のルールが複数ある場合は、`## Corrections` の下の**最後の**ものが現在のルールである（このタイブレークは会話言語のルール**だけ**に適用され、追加的なルールモデルには影響しない。学びの書き込み経路は追記のみで置き換えは行わないため、置き換えられた言語のルールがディスク上に残っていることがある）。(3) `<record>/project-description.json` からデコードした最初の説明の原文（旧来の記録では `## Project Information` → `**Project**` にフォールバックする）。ただし、実際の言語の手がかりを含む場合に限る（`[Project description]` のプレースホルダーや、単なる識別子やパスは対象外）。(4) 渡された成果物や草案 — ディレクティブの `consumes[]` の契約、レビューのためにディスパッチされた対象の成果物、またはディスパッチの対象となったリードの草案。どの情報源もすべてのハーネスで読み取れる。ルールバンドルは、Claude、Codex、opencode ではディスパッチルールのフックを通じて、Kiro では常に含まれるエージェントのリソースやワークスペースのステアリングを通じて (2) を運ぶ。また、`aidlc-state.md` も渡された成果物も、ユニットごとのレビュアーの読み取り範囲の制限には含まれない。
+- **会話言語 — 安定性**: 確立された会話言語はセッション全体を通じて維持され、そのセッション内ではワークフローのすべてのステージ、ディスパッチ、レビュアーのパス、承認ゲートに適用される。それを終わらせるのはセッションの境界だけである。言語の手がかりを含まないターンによって言語が変わることは決してない — `Approve`、`Looks correct`、選択肢の文字や番号、貼り付けたコード、引用されたエラーやスタックトレース、単なるファイルパスや識別子などである。言語を変えるのは、人間による言語切り替えの明示的な依頼だけであり、その切り替えは**直ちに**有効になる。その時点以降に書くものはすべて新しい言語に従い、オーケストレーターは以降に委任するすべてのブリーフの `Conversation language:` 行に新しい言語を明記する。永続化は別の、後のステップであり、有効化のステップでは決してない。§13 の学びの手順は、会話言語の切り替えを `aidlc/spaces/<active-space>/memory/` に永続化するための**唯一の**認められた書き込み経路であり、人間によるゲートがある。そのため、切り替えを記録するためにメモリファイルを直接編集しては**ならない**。直接の書き込みは、ツールの監査イベント、重複キー、受け入れ時の競合チェックを飛ばしてしまう。「永続化を待たない」ことは、そのゲートを迂回してよいという許可には決してならない（これは言語切り替えの永続化を制限し、エージェントによる直接の編集を禁じるものである。`## Corrections` の言語の記録ではなく、スタンプ付きの `## Mandated` / `## Forbidden` のルールと置き換えられる 5 つの `team.md` セクションを所有する `aidlc-state.ts practices-promote` のような、ステージが契約に基づいて呼び出す決定論的なメモリ書き込み処理は対象外である）。`directive.ceremony.learnings` が `off` の場合、言語切り替えの永続化は行われず、手順の代わりにメモリを直接編集することもない。現在のセッションでは引き続き新しい言語を使う。有効な `learnings` プロトコルモジュールが提示した場合、切り替えは `project.md` の `## Corrections` の下に 1 行のルールとして記録され、`team.md` には**決して**記録されない。そのため、(2) のファイル間の優先順位で切り替え同士を調停する必要は生じない。人間が断った場合は単に永続化されず、オーケストレーターがすべてのブリーフに明記する `Conversation language:` 行が、セッションの残りの間それを運ぶ。その運び手が終わるのはセッションの境界であり、ワークフローはそれより長く続く。エンジンがセッション開始時に注入する再開コンテキストは、スコープ、フェーズ、ステージ、ステータス、エージェント、次のアクションを運ぶが、言語は運ば**ない**。そのため、新しいセッションの**最初の**ターンでは、オーケストレーターは何かをディスパッチする前に必ず言語を再解決する。(2) の永続化されたルール、なければこのワークフローがすでに生み出した人間が読む成果物（人間に最後に提供した言語が記録されている）、なければ (3) の最初の説明の原文を使う。それらがすべて手がかりを持たない場合は、英語を既定とせずに人間に**尋ねる**。再解決は切り替えではない。切り替えとして告知することも、切り替えとして永続化することも決してない。したがって、永続化されていない切り替えはそのセッションを越えて残らない。それこそが永続化によって得られるものである。再開後も切り替えを残したい人間は手順を受け入れ、断った人間はセッションの残りの間は正しく対応され、次のセッションではディスクから再解決される。永続化されたルールがブリーフより優先されることは**決してなく**、後から人間が明示的に切り替えを依頼した場合にもそれより優先されることはない。それは言語を明記していないブリーフに対するフォールバックである。学びの書き込み経路は置き換えではなく追記を行うため、置き換えられた言語のルールが切り替えの後も残ることがある — `## Corrections` の下の**最後の**会話言語のルールが現在のルールである。
+- **会話言語 — ローカライズの対象**: 利用者が読む、またはレビューするすべての成果物 — 要件、ユーザーストーリー、計画、仕様、レビュー、質問、発見されたプラクティス、確認されたチームとプロジェクトのルール、証拠、判断の根拠、その他の説明的な散文 — と、オーケストレーターと委任されたエージェントの双方について、各ターンにおけるエージェント自身の人間向けの会話出力（会話のチャットメッセージ、ステータスの更新、進捗の報告、ツール呼び出しの間のつなぎの説明）を、解決された会話言語で書く。構造化された質問の `prompt`、`header`、`options[].description`、自由記述のフォローアップは人間向けの散文であり、同じルールに従う。保持されるトークンは、プロトコルが一字一句指定している `options[].label` のリテラルだけである。これには `ALWAYS …` / `NEVER …` の形をしたルールの説明文も含まれる。先頭のマーカーは固定のトークンだが、それに続く文は固定ではない。ツールがその一部を解析するからといって、Markdown の成果物が英語になるわけではない。保持されるトークンの周囲の散文はローカライズする。成果物に引用した人間の入力の原文は、常に人間が書いたとおりに保持する。
+- **会話言語 — 保持されるトークン**: ステージファイルやステージプロトコルがバッククォートで記し、そのとおりに書くよう指示しているリテラルは、すべて固定のトークンである。一字一句英語のまま残し、その周囲の散文だけをローカライズする。これは構文だけでなく、選択肢のラベルと番兵の**値**も対象とする。選択肢の文字付きの `[Answer]:` タグ、必須の最後の選択肢 `X. Other (please specify)`、前提確認の選択肢 `A. Accept assumptions` / `B. Convert to follow-up questions`（claim-sources センサーはリテラルによってそれらを前提と区別する）、`## Assumptions & Open Questions` と `## Positions` の下の `None.` / `None` の番兵、`AGREE:` / `OBJECT:` の立場の接頭辞、エンジンがステージを受け入れる前に正確に照合する最初の行 `**Collaborator:** <agent-slug>` である。そのようなリテラルを人間に**提示する**ときに説明を添えるのはかまわないが、成果物に**書く**のはリテラルそのものである。次のものも保持する。リテラルの接頭辞（`Initial description:`、`Workflow-selected scope:`）付きの情報源のタグ `[desc]`、`[scope]`、`[assumption]`、`[Q<n>]`、`[memory:M<n>]`。claim-sources センサーが原文どおりに照合する H2 見出し（`## Sources`、`## Assumptions & Open Questions`、`## Assumption Confirmation`、`## Review`）と、ステージのテンプレートから取ったその他の H2（テンプレートが提供されている場合、`required-sections` センサーが原文どおりに照合する。フレームワークは何も同梱していないため、そのチェックを有効にするのはチームの `aidlc/spaces/<active-space>/memory/templates/` である）。レビュアーの判定 `READY` と `NOT-READY`。フェンス付きブロック内の YAML のキーと列挙値（`units`、`name`、`kind`、`depends_on`、`service | spec | ui | packaging | library`）。`aidlc-state.md` と監査シャードのフィールドラベル、ステータス値、チェックボックスの状態。`<record>/project-description.json` からデコードした最初の説明の原文（状態フィールドの `**Project**` は、その安全な 1 行のプレビューにすぎない）。安定した ID（`FR1`、`ENT-001`、`BR1.1`）。列挙値と分類値。コードと識別子。ファイルパス。mermaid のキーワード。相互参照。
 
 ## Corrections
 

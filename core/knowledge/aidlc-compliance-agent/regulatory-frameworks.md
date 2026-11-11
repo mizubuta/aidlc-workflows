@@ -1,115 +1,115 @@
 # Regulatory Frameworks
 
-Overview of major compliance frameworks, their requirements, and practical implementation guidance for cloud-native applications on AWS.
+主要なコンプライアンスフレームワークの概要、その要件、および AWS 上のクラウドネイティブアプリケーションに向けた実践的な実装ガイダンス。
 
 ## PCI-DSS (Payment Card Industry Data Security Standard)
 
-**Applies to**: Any system that stores, processes, or transmits cardholder data.
+**適用対象**: カード会員データを保存、処理、または送信するあらゆるシステム。
 
-**Key Requirements** (organized by the 12 requirements):
-1. **Network security**: Use security groups and NACLs to segment the cardholder data environment (CDE). No public internet access to CDE resources.
-2. **Default credentials**: Change all vendor-supplied defaults. Automate with hardened AMIs and container images.
-3. **Protect stored data**: Encrypt cardholder data at rest with KMS (AES-256). Implement data retention and disposal policies.
-4. **Encrypt transmission**: TLS 1.2+ for all data in transit. Enforce HTTPS at ALB/API Gateway.
-5. **Anti-malware**: Use Amazon Inspector for vulnerability scanning. GuardDuty for threat detection.
-6. **Secure systems**: Patch management via SSM Patch Manager. IaC security scanning in CI.
-7. **Access control**: Least-privilege IAM policies. No shared credentials. Role-based access.
-8. **Authentication**: MFA for all administrative access. Cognito or IAM Identity Center for user management.
-9. **Physical security**: Inherited from AWS for cloud infrastructure. Document shared responsibility model.
-10. **Logging and monitoring**: CloudTrail for API activity. CloudWatch Logs for application logs. Retain for 1 year minimum.
-11. **Testing**: Quarterly vulnerability scans. Annual penetration testing. IaC scanning in CI.
-12. **Security policy**: Document and maintain an information security policy. Review annually.
+**主要な要件**（12 の要件に沿って整理）:
+1. **ネットワークセキュリティ**: セキュリティグループと NACL を使って、カード会員データ環境（CDE）をセグメント化する。CDE のリソースにはパブリックなインターネットからアクセスさせない。
+2. **デフォルトの認証情報**: ベンダーが提供するデフォルト値はすべて変更する。強化した AMI とコンテナイメージで自動化する。
+3. **保存データの保護**: カード会員データを KMS（AES-256）で保存時に暗号化する。データの保持と廃棄のポリシーを実装する。
+4. **送信の暗号化**: 転送中のすべてのデータに TLS 1.2 以上を使う。ALB/API Gateway で HTTPS を強制する。
+5. **マルウェア対策**: 脆弱性スキャンには Amazon Inspector を使う。脅威の検出には GuardDuty を使う。
+6. **安全なシステム**: SSM Patch Manager でパッチを管理する。CI で IaC のセキュリティスキャンを行う。
+7. **アクセス制御**: 最小権限の IAM ポリシー。共有の認証情報は使わない。ロールベースのアクセス。
+8. **認証**: すべての管理者アクセスに MFA を使う。ユーザー管理には Cognito または IAM Identity Center を使う。
+9. **物理的セキュリティ**: クラウドインフラについては AWS から継承される。責任共有モデルを文書化する。
+10. **ロギングとモニタリング**: API のアクティビティには CloudTrail を使う。アプリケーションのログには CloudWatch Logs を使う。最低 1 年間保持する。
+11. **テスト**: 四半期ごとの脆弱性スキャン。年 1 回のペネトレーションテスト。CI での IaC スキャン。
+12. **セキュリティポリシー**: 情報セキュリティポリシーを文書化し、維持する。毎年見直す。
 
-**Scope reduction**: Use tokenization (via a PCI-compliant payment processor like Stripe) to minimize the CDE footprint. If you never touch raw card numbers, most PCI requirements do not apply.
+**スコープの縮小**: トークン化（Stripe のような PCI 準拠の決済代行業者を介して）を使い、CDE の範囲を最小化する。生のカード番号に一切触れなければ、PCI の要件の大半は適用されない。
 
 ## HIPAA (Health Insurance Portability and Accountability Act)
 
-**Applies to**: Organizations handling Protected Health Information (PHI) in the US healthcare context.
+**適用対象**: 米国の医療分野で保護対象保健情報（PHI）を扱う組織。
 
-**Key Requirements**:
-- **BAA (Business Associate Agreement)**: Required with AWS before storing PHI. AWS offers BAAs for eligible services.
-- **HIPAA-eligible services only**: Not all AWS services are HIPAA-eligible. Verify each service on the AWS HIPAA page.
-- **Encryption**: PHI must be encrypted at rest (KMS) and in transit (TLS). This satisfies the Safe Harbor provision.
-- **Access controls**: Role-based access to PHI. Audit all access with CloudTrail.
-- **Audit trail**: Log all access to, creation of, and modification of PHI. Retain logs for 6 years.
-- **Minimum necessary**: Only access and expose the minimum PHI required for the specific purpose.
-- **Breach notification**: Notify affected individuals within 60 days of discovering a breach. Report to HHS.
+**主要な要件**:
+- **BAA（Business Associate Agreement）**: PHI を保存する前に AWS と締結する必要がある。AWS は対象となるサービスについて BAA を提供している。
+- **HIPAA 対象サービスのみ**: すべての AWS サービスが HIPAA の対象というわけではない。AWS の HIPAA のページで各サービスを確認する。
+- **暗号化**: PHI は保存時（KMS）と転送時（TLS）に暗号化しなければならない。これにより Safe Harbor 条項を満たす。
+- **アクセス制御**: PHI へのロールベースのアクセス。すべてのアクセスを CloudTrail で監査する。
+- **監査証跡**: PHI へのアクセス、作成、変更をすべてログに記録する。ログは 6 年間保持する。
+- **必要最小限**: 特定の目的に必要な最小限の PHI にだけアクセスし、公開する。
+- **侵害の通知**: 侵害の発見から 60 日以内に影響を受けた個人に通知する。HHS に報告する。
 
-**Architecture considerations**: Isolate PHI in dedicated accounts or VPCs. Use AWS PrivateLink to avoid PHI traversing the public internet. Tag all resources containing PHI for governance.
+**アーキテクチャ上の考慮事項**: PHI は専用のアカウントまたは VPC に分離する。AWS PrivateLink を使い、PHI がパブリックなインターネットを通らないようにする。ガバナンスのため、PHI を含むすべてのリソースにタグを付ける。
 
 ## SOC 2 (Service Organization Control 2)
 
-**Applies to**: Service providers that store or process customer data. Increasingly expected by enterprise customers.
+**適用対象**: 顧客データを保存または処理するサービスプロバイダー。エンタープライズの顧客から求められることが増えている。
 
-**Type I vs Type II**:
-- **Type I**: Point-in-time assessment. "Controls are properly designed as of a specific date." Faster to achieve.
-- **Type II**: Assessment over a period (usually 6-12 months). "Controls operated effectively during the review period." More rigorous and more valued.
+**Type I と Type II**:
+- **Type I**: 特定時点の評価。「特定の日付の時点で、統制が適切に設計されている」。達成までが早い。
+- **Type II**: 一定期間（通常 6〜12 か月）にわたる評価。「レビュー期間中、統制が有効に運用されていた」。より厳格で、より高く評価される。
 
 **Trust Service Criteria**:
-1. **Security** (required): Protection against unauthorized access. Covers firewalls, access controls, encryption, monitoring.
-2. **Availability**: System is operational and accessible per SLA commitments.
-3. **Processing Integrity**: System processing is complete, valid, accurate, and timely.
-4. **Confidentiality**: Information designated as confidential is protected.
-5. **Privacy**: Personal information is collected, used, retained, and disposed of per the privacy notice.
+1. **セキュリティ**（必須）: 不正アクセスからの保護。ファイアウォール、アクセス制御、暗号化、モニタリングを対象とする。
+2. **可用性**: システムが SLA の約束どおりに稼働し、アクセスできる。
+3. **処理のインテグリティ**: システムの処理が完全、有効、正確、かつ適時である。
+4. **機密性**: 機密に指定された情報が保護されている。
+5. **プライバシー**: 個人情報がプライバシー通知に従って収集、利用、保持、廃棄される。
 
-**Practical implementation**: Use AWS Config rules to continuously evaluate compliance. Automate evidence collection with Config conformance packs. Use Security Hub for centralized findings.
+**実践的な実装**: AWS Config のルールを使い、コンプライアンスを継続的に評価する。Config の適合パックで証拠の収集を自動化する。指摘の一元管理には Security Hub を使う。
 
 ## GDPR (General Data Protection Regulation)
 
-**Applies to**: Any organization processing personal data of EU/EEA residents, regardless of where the organization is located.
+**適用対象**: 組織の所在地にかかわらず、EU/EEA の居住者の個人データを処理するあらゆる組織。
 
-**Core Principles**:
-- **Lawfulness**: Process data only with a legal basis (consent, contract, legitimate interest, legal obligation).
-- **Purpose limitation**: Collect data only for specified, explicit purposes.
-- **Data minimization**: Process only the data necessary for the stated purpose.
-- **Accuracy**: Keep personal data accurate and up to date.
-- **Storage limitation**: Retain data only as long as necessary. Define and enforce retention policies.
-- **Integrity and confidentiality**: Protect data with appropriate security measures.
+**基本原則**:
+- **適法性**: 法的根拠（同意、契約、正当な利益、法的義務）がある場合にのみデータを処理する。
+- **目的の限定**: 特定された明示的な目的のためにのみデータを収集する。
+- **データの最小化**: 示された目的に必要なデータだけを処理する。
+- **正確性**: 個人データを正確かつ最新に保つ。
+- **保存の制限**: 必要な期間だけデータを保持する。保持ポリシーを定義し、強制する。
+- **完全性と機密性**: 適切なセキュリティ対策でデータを保護する。
 
-**Data Subject Rights**:
-- Right of access (provide a copy of their data)
-- Right to rectification (correct inaccurate data)
-- Right to erasure ("right to be forgotten")
-- Right to data portability (export in machine-readable format)
-- Right to object to processing
+**データ主体の権利**:
+- アクセス権（本人のデータのコピーを提供する）
+- 訂正権（不正確なデータを訂正する）
+- 消去権（「忘れられる権利」）
+- データポータビリティの権利（機械可読な形式でエクスポートする）
+- 処理に対する異議申し立ての権利
 
-**Technical implementation**: Build data subject access request (DSAR) automation. Implement soft-delete with configurable retention. Use DynamoDB TTL or S3 lifecycle policies for automatic data expiry. Tag PII data stores for governance.
+**技術的な実装**: データ主体アクセス要求（DSAR）の自動化を構築する。保持期間を設定できる論理削除を実装する。データの自動失効には DynamoDB の TTL または S3 のライフサイクルポリシーを使う。ガバナンスのため、PII のデータストアにタグを付ける。
 
 ## Data Residency and Sovereignty
 
-- **Data residency**: Data must be stored within a specific geographic region. Choose AWS regions accordingly (eu-west-1 for EU, ap-southeast-2 for Australia).
-- **Data sovereignty**: Data is subject to the laws of the country where it is stored.
-- Use AWS Organizations SCPs to restrict resource creation to approved regions.
-- Configure S3 bucket policies and DynamoDB table locations to enforce residency.
-- Cross-region replication must respect residency requirements; do not replicate to unapproved regions.
-- Document data flows across regions for compliance audits.
+- **データレジデンシー**: データは特定の地理的リージョン内に保存しなければならない。それに合わせて AWS リージョンを選ぶ（EU なら eu-west-1、オーストラリアなら ap-southeast-2）。
+- **データ主権**: データは、それが保存されている国の法律に従う。
+- AWS Organizations の SCP を使い、リソースの作成を承認済みのリージョンに制限する。
+- S3 バケットポリシーと DynamoDB テーブルの場所を設定して、レジデンシーを強制する。
+- クロスリージョンレプリケーションはレジデンシーの要件を守らなければならない。承認されていないリージョンには複製しない。
+- コンプライアンス監査のため、リージョンをまたぐデータフローを文書化する。
 
 ## Privacy Impact Assessment (PIA)
 
-Conduct a PIA when introducing a new system or significantly changing data processing:
+新しいシステムを導入する場合や、データ処理を大きく変更する場合は、PIA を実施する:
 
-1. **Describe the processing**: What data, from whom, for what purpose, how long retained.
-2. **Assess necessity**: Is the processing proportionate to the goal? Could the same outcome be achieved with less data?
-3. **Identify risks**: Unauthorized access, accidental disclosure, data loss, function creep.
-4. **Define mitigations**: Encryption, access controls, anonymization, pseudonymization, retention limits.
-5. **Document and review**: Record the assessment. Review when processing changes or annually.
+1. **処理を記述する**: どのデータを、誰から、何の目的で、どのくらいの期間保持するか。
+2. **必要性を評価する**: 処理は目的に釣り合っているか？ より少ないデータで同じ成果を達成できないか？
+3. **リスクを特定する**: 不正アクセス、偶発的な開示、データの損失、機能の拡大解釈（function creep）。
+4. **緩和策を定義する**: 暗号化、アクセス制御、匿名化、仮名化、保持の制限。
+5. **文書化して見直す**: 評価を記録する。処理が変わったとき、または毎年見直す。
 
 ## Compliance-as-Code Patterns
 
-Automate compliance verification rather than relying on manual audits:
+手動の監査に頼るのではなく、コンプライアンスの検証を自動化する:
 
-- **AWS Config Rules**: Continuously evaluate resource configurations against compliance requirements (encrypted-volumes, restricted-ssh, mfa-enabled-for-iam).
-- **Config Conformance Packs**: Pre-built rule sets for PCI-DSS, HIPAA, SOC2. Deploy via CloudFormation.
-- **Security Hub**: Aggregate findings from Config, GuardDuty, Inspector, and third-party tools. Score against compliance frameworks.
-- **cdk-nag**: Enforce compliance rules at synthesis time in CDK. Use AwsSolutionsChecks, NIST80053R5Checks, HIPAASecurityChecks, or PCIDSS321Checks.
-- **Custom Config Rules**: Write Lambda-backed rules for organization-specific requirements.
+- **AWS Config Rules**: リソースの構成を、コンプライアンスの要件（encrypted-volumes、restricted-ssh、mfa-enabled-for-iam）に照らして継続的に評価する。
+- **Config Conformance Packs**: PCI-DSS、HIPAA、SOC2 向けの事前構築済みのルールセット。CloudFormation でデプロイする。
+- **Security Hub**: Config、GuardDuty、Inspector、サードパーティのツールからの指摘を集約する。コンプライアンスフレームワークに照らしてスコアを付ける。
+- **cdk-nag**: CDK の合成時にコンプライアンスのルールを強制する。AwsSolutionsChecks、NIST80053R5Checks、HIPAASecurityChecks、PCIDSS321Checks のいずれかを使う。
+- **Custom Config Rules**: 組織固有の要件に対して、Lambda をバックエンドとするルールを書く。
 
 ## Audit Trail Requirements
 
-Across all frameworks, a robust audit trail is a common requirement:
+すべてのフレームワークに共通する要件として、堅牢な監査証跡がある:
 
-- **CloudTrail**: Enable in all regions, all accounts. Send to a centralized, immutable S3 bucket with Object Lock.
-- **Application-level audit logs**: Log who did what, when, to which resource. Include the authentication context (user ID, role, IP).
-- **Integrity protection**: Use CloudTrail log file integrity validation. S3 Object Lock for immutability.
-- **Retention**: PCI-DSS: 1 year. HIPAA: 6 years. SOC2: per policy (typically 1-3 years). GDPR: as long as necessary for the purpose.
-- **Access to logs**: Restrict log access to security and compliance roles. Log access to logs (meta-auditing) for sensitive environments.
+- **CloudTrail**: すべてのリージョン、すべてのアカウントで有効にする。Object Lock を有効にした、一元化された変更不可能な S3 バケットに送る。
+- **アプリケーションレベルの監査ログ**: 誰が、何を、いつ、どのリソースに対して行ったかを記録する。認証のコンテキスト（ユーザー ID、ロール、IP）を含める。
+- **完全性の保護**: CloudTrail のログファイルの整合性検証を使う。変更不可能性には S3 Object Lock を使う。
+- **保持期間**: PCI-DSS: 1 年。HIPAA: 6 年。SOC2: ポリシーによる（通常 1〜3 年）。GDPR: 目的に必要な期間。
+- **ログへのアクセス**: ログへのアクセスをセキュリティとコンプライアンスのロールに制限する。機密性の高い環境では、ログへのアクセス自体もログに記録する（メタ監査）。
