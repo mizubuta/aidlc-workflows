@@ -2,28 +2,28 @@
 
 ## User Story Format
 
-Standard format: **As a [persona], I want [action], so that [benefit].**
+標準形式: **As a [persona], I want [action], so that [benefit].**（[ペルソナ] として、[便益] のために、[アクション] したい。）
 
 ### INVEST Criteria Checklist
-Every story must pass all six criteria:
-- **I - Independent**: Can be developed and delivered without depending on another story
-- **N - Negotiable**: Details can be discussed; it is not a rigid contract
-- **V - Valuable**: Delivers identifiable value to a user or stakeholder
-- **E - Estimable**: Team can estimate effort (if not, the story needs decomposition or spike)
-- **S - Small**: Completable within a single iteration (1-5 days of implementation work)
-- **T - Testable**: Has concrete acceptance criteria that can be verified
+すべてのストーリーは、6 つの基準すべてを満たさなければならない:
+- **I - Independent（独立している）**: 他のストーリーに依存せずに開発・提供できる
+- **N - Negotiable（交渉可能である）**: 詳細を話し合える。厳格な契約ではない
+- **V - Valuable（価値がある）**: ユーザーまたはステークホルダーに、識別可能な価値を提供する
+- **E - Estimable（見積もり可能である）**: チームが工数を見積もれる（見積もれない場合、そのストーリーは分解またはスパイクが必要）
+- **S - Small（小さい）**: 1 回のイテレーション内で完了できる（実装作業で 1〜5 日）
+- **T - Testable（テスト可能である）**: 検証可能な具体的な受け入れ基準がある
 
 ### Story Decomposition Patterns
-When a story is too large (epic), split using these strategies:
-1. **By workflow step**: Login -> Browse -> Select -> Purchase -> Confirm
-2. **By data variation**: Handle text input / Handle file upload / Handle image upload
-3. **By business rule**: Basic validation / Advanced validation / Cross-field validation
-4. **By interface**: Web UI / API endpoint / Admin panel
-5. **By operation**: Create / Read / Update / Delete (but prefer vertical slices)
+ストーリーが大きすぎる（エピックである）場合は、次の戦略で分割する:
+1. **ワークフローのステップ別**: Login -> Browse -> Select -> Purchase -> Confirm
+2. **データのバリエーション別**: テキスト入力の処理 / ファイルアップロードの処理 / 画像アップロードの処理
+3. **ビジネスルール別**: 基本的なバリデーション / 高度なバリデーション / フィールド間のバリデーション
+4. **インターフェース別**: Web UI / API エンドポイント / 管理画面
+5. **操作別**: Create / Read / Update / Delete（ただし垂直スライスを優先する）
 
 ## Persona Development
 
-For each persona, define:
+各ペルソナについて、次を定義する:
 ```
 Name: [descriptive name, e.g., "Alex the Admin"]
 Role: [their role in the system]
@@ -33,36 +33,37 @@ Tech Comfort: [low / medium / high]
 Frequency: [how often they use the system]
 ```
 
-Every story must reference a defined persona. If a story does not fit any persona, either the story is wrong or a persona is missing.
+
+すべてのストーリーは、定義済みのペルソナを参照しなければならない。どのペルソナにも当てはまらないストーリーがある場合、ストーリーが間違っているか、ペルソナが欠けている。
 
 ## Prioritization Frameworks
 
 ### MoSCoW (preferred for MVP definition)
-- **Must Have**: System is unusable without this. If removed, the product fails its core purpose.
-- **Should Have**: Important but not critical. Workarounds exist. Include if time permits.
-- **Could Have**: Desirable. Enhances experience but not expected in first release.
-- **Won't Have (this time)**: Explicitly out of scope. Documented for future consideration.
+- **Must Have**: これがなければシステムは使えない。取り除くと、製品は中核的な目的を果たせない。
+- **Should Have**: 重要だが、致命的ではない。回避策がある。時間が許せば含める。
+- **Could Have**: あると望ましい。体験を向上させるが、最初のリリースでは期待されない。
+- **Won't Have (this time)**: 明示的にスコープ外とする。将来の検討のために文書化しておく。
 
 ### RICE Scoring (preferred for backlog ranking)
 Score = (Reach x Impact x Confidence) / Effort
-- **Reach**: How many users/sessions affected per time period (use real numbers)
-- **Impact**: How much it moves the needle (3=massive, 2=high, 1=medium, 0.5=low, 0.25=minimal)
-- **Confidence**: How sure are you about estimates (100%/80%/50%)
-- **Effort**: Person-days of work (all roles combined)
+- **Reach**: 一定期間あたりに影響を受けるユーザー数/セッション数（実数を使う）
+- **Impact**: どれだけ大きく状況を動かすか（3=非常に大きい、2=大きい、1=中程度、0.5=小さい、0.25=最小）
+- **Confidence**: 見積もりにどれだけ確信があるか（100%/80%/50%）
+- **Effort**: 作業の人日（全ロールの合計）
 
 ## MVP Definition Criteria
 
-The MVP must:
-1. Solve the core problem for the primary persona
-2. Include all Must Have stories and no Could/Won't stories
-3. Be deployable and usable without manual workarounds
-4. Include basic error handling (not just happy paths)
-5. Meet minimum NFRs for security and data integrity
-6. Be demonstrable to stakeholders in under 10 minutes
+MVP は次を満たさなければならない:
+1. 主要ペルソナにとっての中核的な問題を解決する
+2. Must Have のストーリーをすべて含み、Could/Won't のストーリーは含まない
+3. 手作業の回避策なしにデプロイでき、利用できる
+4. 基本的なエラーハンドリングを含む（正常系だけではない）
+5. セキュリティとデータ整合性に関する最低限の NFR を満たす
+6. ステークホルダーに 10 分以内でデモできる
 
 ## Delivery Planning Structure
 
-Organize stories into iterations:
+ストーリーをイテレーションに編成する:
 ```
 Iteration 0 (Foundation): Infrastructure, auth, core data model
 Iteration 1 (Core Value): Primary user workflow end-to-end
@@ -70,20 +71,21 @@ Iteration 2 (Completeness): Secondary workflows, edge cases, admin features
 Iteration 3 (Polish): Performance optimization, UX refinement, advanced features
 ```
 
-For each iteration, define:
-- Entry criteria (what must be complete before starting)
-- Stories included (with dependency order)
-- Exit criteria (what "done" looks like for this iteration)
-- Demo scenario (how to showcase the increment)
+
+各イテレーションについて、次を定義する:
+- 開始基準（開始前に何が完了していなければならないか）
+- 含まれるストーリー（依存関係の順序付き）
+- 終了基準（このイテレーションの「完了」とはどういう状態か）
+- デモシナリオ（インクリメントをどう披露するか）
 
 ## Story Mapping Layout
 
-Arrange stories in a 2D map:
-- **Horizontal axis**: User journey steps (left to right, in sequence)
-- **Vertical axis**: Priority (top = must-have, bottom = nice-to-have)
-- **Horizontal line**: MVP boundary (everything above the line is MVP)
+ストーリーを 2 次元のマップに配置する:
+- **横軸**: ユーザージャーニーのステップ（左から右へ、順番に）
+- **縦軸**: 優先度（上 = must-have、下 = nice-to-have）
+- **水平線**: MVP の境界（線より上はすべて MVP）
 
-This visualization makes it easy to spot:
-- Missing journey steps (vertical gaps)
-- Over-invested areas (too many stories in one column)
-- Dependency chains (stories that must be above others)
+この可視化により、次を容易に見つけられる:
+- 欠けているジャーニーステップ（縦方向の隙間）
+- 過剰に投資された領域（1 つの列にストーリーが多すぎる）
+- 依存関係の連鎖（他のストーリーより上に置かなければならないストーリー）

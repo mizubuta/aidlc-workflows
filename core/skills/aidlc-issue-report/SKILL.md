@@ -15,139 +15,138 @@ description: >
 
 # AI-DLC issue report
 
-The person ran AI-DLC and something went wrong. Their part ends when they send a folder to the AI-DLC team; the
-team analyses it on their own machines. Your job is to gather that folder — **as much of the run's records as
-possible, with nothing that could identify a person, a company or a project.** You do not diagnose, rank or explain
-what went wrong: the scripts gather and filter, the team reads. You never fix the workflow, never run `/aidlc` or any
-AI-DLC command except the one doctor run below, and never send anything anywhere.
+利用者が AI-DLC を実行し、何か問題が起きた。利用者の役割は、フォルダを AI-DLC チームに送った時点で終わる。チームは
+自分たちのマシンでそれを分析する。あなたの仕事はそのフォルダを集めることである — **実行の記録をできる限り多く含め、
+個人、会社、プロジェクトを特定しうるものは一切含めない。** 何が問題だったかを診断、順位付け、説明することはしない。
+スクリプトが収集とフィルタリングを行い、チームが読む。ワークフローを修正することは決してせず、`/aidlc` や、下記の doctor の 1 回の実行を除く
+いかなる AI-DLC コマンドも決して実行せず、何もどこにも送信しない。
 
-The output is files in a folder, nothing else. Do not open a GitHub issue, a pull request or a comment, do not run
-`gh`, `git push` or any upload, and do not post to Slack or email — not even when the person asks you to "just file
-it". Sending the folder is their decision, made outside this skill.
+出力はフォルダ内のファイルだけであり、それ以外は何もない。GitHub の issue、プルリクエスト、コメントを作成せず、
+`gh`、`git push`、いかなるアップロードも実行せず、Slack やメールへの投稿もしない — 利用者に「とにかく登録しておいて」と
+頼まれた場合であっても同様である。フォルダを送るかどうかは利用者の判断であり、このスキルの外で行われる。
 
-Speak to the person in short plain sentences. They are not expected to know AI-DLC commands; do not ask them to run any.
+利用者には短く平易な文で話す。利用者が AI-DLC のコマンドを知っていることは想定しない。コマンドの実行を頼んではならない。
 
-**Language.** This skill is written in English, but you speak the person's language. Detect it from what they wrote
-to you in this conversation (the request that started the skill, then each reply); if they switch, switch with them.
-When nothing they wrote shows a language, use English. Every line this skill gives you to say is written here in
-English: say it in their language, keeping its meaning, not word for word. The folder's files stay in English.
+**言語。** このスキルは日本語で書かれているが、あなたは利用者の言語で話す。言語は、この会話で利用者が
+あなたに書いた内容（スキルを開始した依頼、その後の各返信）から判定する。利用者が言語を切り替えたら、あなたも切り替える。
+利用者の書いた内容から言語が判断できない場合は英語を使う。このスキルがあなたに言わせるセリフはすべて、ここでは
+英語で書かれている（必要に応じて日本語訳を添えている）。それを利用者の言語で、逐語訳ではなく意味を保って伝える。フォルダ内のファイルは英語のままにする。
 
 ## Why the care about privacy
 
-The folder leaves the company. AI-DLC's records are full of the person's own words (requests, answers, feedback),
-file paths with their name in them, and project content. So the scripts write two layers:
+このフォルダは社外に出る。AI-DLC の記録には、利用者自身の言葉（依頼、回答、フィードバック）、
+利用者の名前を含むファイルパス、プロジェクトの内容が詰まっている。そのため、スクリプトは 2 つの層を書き出す:
 
-- `safe.json` — the data that is sent. Every value is AI-DLC's own word where its field holds only AI-DLC's words (an
-  event, a stage, an agent, a status), a number, a time or a version; any name the person chose (a Unit, an intent, a
-  file) and anything a person or an agent wrote is a label such as `<custom-text-12>`, the same value the same label.
-  `references/data.md` says what each part holds.
-- `local/` — what the labels stand for, and what the check needs. It is never sent and is deleted at the end.
+- `safe.json` — 送信されるデータ。各値は、そのフィールドが AI-DLC 自身の語だけを保持する場合（イベント、ステージ、
+  エージェント、ステータス）の AI-DLC 自身の語、数値、時刻、バージョンのいずれかである。利用者が選んだ名前（Unit、インテント、
+  ファイル）や、人またはエージェントが書いたものはすべて `<custom-text-12>` のようなラベルになり、同じ値には同じラベルが付く。
+  各部分が何を保持するかは `references/data.md` に記載されている。
+- `local/` — ラベルが何を表すかと、チェックに必要なもの。決して送信されず、最後に削除される。
 
-Before anything is handed over, a check reads every file in the folder as written and refuses any value that is not
-what its field's rule writes, and any line of the cover that holds something which could identify a person, a company
-or a machine. It does not guess what is safe; it refuses.
+何かを引き渡す前に、チェックがフォルダ内のすべてのファイルを書かれたとおりに読み、そのフィールドのルールが書く形式ではない値と、
+個人、会社、マシンを特定しうるものを含むカバーの行をすべて拒否する。何が安全かを推測することはせず、拒否する。
 
 ## Steps
 
-The scripts are in this skill's `scripts/` folder (`<skill>` below is this skill's folder). Each command below starts
-with `<run>`, which runs one of them from any folder:
+スクリプトはこのスキルの `scripts/` フォルダにある（以下の `<skill>` はこのスキルのフォルダ）。以下の各コマンドは
+`<run>` で始まり、これは任意のフォルダからスクリプトの 1 つを実行する:
 
-- `bun`, when it is found;
-- otherwise (a native AI-DLC install brings no Bun) AI-DLC's own `aidlc` command, with `BUN_BE_BUN` set for that one
-  command:
-  - macOS, Linux, WSL: `BUN_BE_BUN=1 aidlc <script> …`
+- `bun` が見つかる場合はそれを使う。
+- 見つからない場合（ネイティブの AI-DLC インストールには Bun が付属しない）は、AI-DLC 自身の `aidlc` コマンドを、そのコマンドに限り
+  `BUN_BE_BUN` を設定して使う:
+  - macOS、Linux、WSL: `BUN_BE_BUN=1 aidlc <script> …`
   - Windows PowerShell: `& { $env:BUN_BE_BUN = '1'; try { aidlc <script> … } finally { Remove-Item Env:BUN_BE_BUN } }`
   - Windows cmd: `cmd /c "set BUN_BE_BUN=1&& aidlc <script> …"`
 
-Never leave `BUN_BE_BUN` set in the shell: any `aidlc` run with it starts Bun instead of AI-DLC. If `aidlc` is
-not found either (an editor opened before AI-DLC was installed), use the executable named in
-`~/.local/share/aidlc/active-executable` (Windows: `%LOCALAPPDATA%\aidlc\active-executable`) in its place.
+シェルに `BUN_BE_BUN` を設定したままにしてはならない。設定されたままだと、`aidlc` の実行はすべて AI-DLC ではなく Bun を起動する。`aidlc` も
+見つからない場合（AI-DLC のインストール前に開かれたエディターなど）は、代わりに
+`~/.local/share/aidlc/active-executable`（Windows: `%LOCALAPPDATA%\aidlc\active-executable`）に記載された実行ファイルを使う。
 
 ### 1. When
 
-Ask once: "Roughly when did it happen? It's fine if you don't know." If they already said it, do not ask again.
-Turn a time they give ("yesterday afternoon", "this morning") into `--since`/`--until` in **UTC with `Z`**
-(`2026-10-17T08:00:00Z`), computed from the date you already know — do not run `date`. Kiro refuses a command whose
-argument looks like `host:port`, and an offset such as `+09:00` does (measured on Kiro CLI 2.32.0). Otherwise the
-window is the last 7 days before the last AI-DLC activity. What they said does not go into the folder.
+一度だけ尋ねる: "Roughly when did it happen? It's fine if you don't know."（だいたいいつ起きましたか？ わからなくても大丈夫です。）利用者が既に述べていれば、再度尋ねない。
+利用者が示した時刻（「昨日の午後」「今朝」）を、既に知っている日付から計算して **`Z` 付きの UTC** の `--since`/`--until`
+（`2026-10-17T08:00:00Z`）に変換する — `date` を実行してはならない。Kiro は引数が `host:port` のように見えるコマンドを拒否し、
+`+09:00` のようなオフセットもそれに該当する（Kiro CLI 2.32.0 で確認）。時刻の指定がない場合、
+対象期間は最後の AI-DLC の活動より前の 7 日間となる。利用者が述べた内容はフォルダに入れない。
 
 ### 2. Collect
 
-Tell them in one line first: "I'll run AI-DLC's diagnostics once. It adds one line to the project's record and
-refreshes AI-DLC's memory copy. It does not change your code." Then run (always pass the project folder — the one that
-holds `aidlc/`; when unsure, the folder open in the tool):
+まず 1 行で伝える: "I'll run AI-DLC's diagnostics once. It adds one line to the project's record and
+refreshes AI-DLC's memory copy. It does not change your code."（AI-DLC の診断を 1 回実行します。プロジェクトの記録に 1 行追加され、AI-DLC のメモリのコピーが更新されます。コードは変更しません。）その後、次を実行する（プロジェクトフォルダ、つまり
+`aidlc/` を保持するフォルダを必ず渡す。不明な場合はツールで開いているフォルダ）:
 
 ```bash
 <run> <skill>/scripts/collect.ts --project <project folder> [--since <ISO>] [--until <ISO>]
 ```
 
-Do not pass `--out`: the script picks the folder. It prints a short JSON with `out` (the folder,
-`<project>/aidlc/diagnostics/issue-reports/<time>/`, in AI-DLC's own diagnostics folder, which git ignores), what it
-gathered, and `safeJsonHits`: the `safe.json` fields the check refuses (normally none). Replace each named value in
-`safe.json` with `<redacted>` — a label always passes — or, where the reason says to remove it, delete that field (that key, for a key a part does not have). When `safe.json` `window.notes` says a time was left out, the
-default window was used: tell the person in one line. When `found.aidlcWords` is 0, AI-DLC's own words could not be read
-from this install, so every AI-DLC name in the folder is a label: tell the person in one line. If it says `no-aidlc-project`, ask which folder they ran AI-DLC in.
+`--out` は渡さない。フォルダはスクリプトが決める。スクリプトは短い JSON を出力する。そこには `out`（フォルダ。
+`<project>/aidlc/diagnostics/issue-reports/<time>/` で、git が無視する AI-DLC 自身の diagnostics フォルダ内にある）、収集したもの、
+そして `safeJsonHits`（チェックが拒否する `safe.json` のフィールド。通常はなし）が含まれる。`safe.json` 内の指摘された各値を
+`<redacted>` に置き換える — ラベルは常に通過する — か、理由に削除せよとある場合はそのフィールドを削除する（ある部分が持たないキーについては、そのキーを削除する）。`safe.json` の `window.notes` に時刻が除外されたとある場合は、
+既定の対象期間が使われたということなので、利用者に 1 行で伝える。`found.aidlcWords` が 0 の場合、このインストールから AI-DLC 自身の語を読み取れなかったため、
+フォルダ内の AI-DLC の名前はすべてラベルになっている。利用者に 1 行で伝える。`no-aidlc-project` と出力された場合は、どのフォルダで AI-DLC を実行したかを尋ねる。
 
 ### 3. Missing tool versions
 
-`safe.json` `environment.versionsMissing` lists the tools this run used whose version could not be found — neither in
-the tool's own chat log nor on this machine now. For each one, ask the person once to read it off their screen — never
-ask them to run a command. Tell them where it is: Kiro IDE in the Kiro menu → About Kiro (Windows and Linux: Help →
-About); a CLI tool in the banner it shows when it starts (Claude Code also in `/status`). Always offer "I don't know".
-If `environment.toolsUsed` is empty, no chat log showed which tool the run used (one may have held only this report, or could not be read), so ask which AI tool they used together with its version.
-Record each answer: write the version as they gave it to `<out>/local/version-<key>.json` (the `<key>` of the command)
-with your file-writing tool, never in a command (`{ "version": "1.4.13" }`), then run
+`safe.json` の `environment.versionsMissing` には、この実行で使われたツールのうち、ツール自身のチャットログにも
+現在のこのマシン上にもバージョンが見つからなかったものが列挙される。それぞれについて、画面から読み取ってもらうよう利用者に一度だけ頼む — コマンドの実行を
+頼んではならない。どこにあるかを伝える: Kiro IDE は Kiro メニュー → About Kiro（Windows と Linux: Help →
+About）、CLI ツールは起動時に表示されるバナー（Claude Code は `/status` でも確認できる）。常に「わからない」という選択肢を示す。
+`environment.toolsUsed` が空の場合、どのチャットログからも実行に使われたツールがわからなかった（このレポートだけを保持していたか、読み取れなかった）ため、使った AI ツールとそのバージョンを併せて尋ねる。
+各回答を記録する: 利用者が示したとおりのバージョンを、コマンドではなくファイル書き込みツールで `<out>/local/version-<key>.json`（`<key>` はコマンドのもの）
+に書き込み（`{ "version": "1.4.13" }`）、次を実行する
 
 ```bash
 <run> <skill>/scripts/set-version.ts --out <out> --tool <key>
 ```
 
-It accepts only a version-shaped value; when it refuses the value (`not-a-version`), or the person does not know, move
-on — do not ask twice. When it refuses the file itself, write it again and run it again.
-When they name the tool but not its version, run it without writing the file: the tool is recorded, its version unknown.
+バージョンの形をした値だけが受け付けられる。値が拒否された場合（`not-a-version`）や、利用者がわからない場合は次に
+進む — 二度尋ねない。ファイル自体が拒否された場合は、書き直して再実行する。
+利用者がツール名を挙げたがバージョンを挙げなかった場合は、ファイルを書かずに実行する。ツールは記録され、バージョンは不明となる。
 
-When the person names a company, customer, product or person they want kept out, hide it. Write the names to
-`<out>/local/hide-names.json` with your file-writing tool, never in a command, since a shell would read a name's `&` or
-apostrophe as its own syntax (`[{ "kind": "customer", "name": "<name>" }, …]`, kind `customer`, `org`, `product`,
-`person` or `other`), then run
+利用者が除外したい会社、顧客、製品、人物の名前を挙げた場合は、それを隠す。名前はコマンドではなく、ファイル書き込みツールで
+`<out>/local/hide-names.json` に書き込む。シェルは名前に含まれる `&` やアポストロフィを独自の構文として解釈するためである
+（`[{ "kind": "customer", "name": "<name>" }, …]`、kind は `customer`、`org`、`product`、
+`person`、`other` のいずれか）。その後、次を実行する
 
 ```bash
 <run> <skill>/scripts/hide.ts --out <out>
 ```
 
-When it refuses, correct what it names in the file (`entries` are places in it) and run it again; a name of one
-character cannot be hidden, so take it out and tell the person.
-When it lists `notHidden`, those names (by their place in the file) were not hidden: `aidlc-word`, the name
-is part of AI-DLC's own words (`Bolt` in `BOLT_FAILED`) or of an AI-DLC message's fixed text, or
-`ordinary-word`, it is an everyday word (`Will`). Tell the person in one line each, and ask once whether to hide them
-anyway: each of AI-DLC's words or messages holding the name, or each value holding that word, then becomes a label, and
-the team reads less of the run. If they say yes, write only those names to `<out>/local/hide-everywhere.json` and run
+拒否された場合は、指摘された箇所をファイル内で修正し（`entries` はファイル内の位置を示す）、再実行する。1 文字の名前は
+隠せないため、ファイルから取り除いて利用者に伝える。
+`notHidden` が列挙された場合、それらの名前（ファイル内の位置で示される）は隠されていない: `aidlc-word` は、その名前が
+AI-DLC 自身の語の一部（`BOLT_FAILED` の中の `Bolt`）または AI-DLC のメッセージの固定テキストの一部であること、
+`ordinary-word` は日常的な単語（`Will`）であることを示す。それぞれ 1 行で利用者に伝え、それでも隠すかどうかを一度だけ尋ねる。
+隠す場合、その名前を含む AI-DLC の語やメッセージ、またはその単語を含む値はそれぞれラベルになり、
+チームが読み取れる実行の情報は減る。利用者が「はい」と答えたら、それらの名前だけを `<out>/local/hide-everywhere.json` に書き込み、次を実行する
 
 ```bash
 <run> <skill>/scripts/hide.ts --out <out> --everywhere
 ```
 
-then collect a new report from this one (the folder it prints in `from`):
+続いて、このレポート（`from` に出力されたフォルダ）から新しいレポートを収集する:
 
 ```bash
 <run> <skill>/scripts/collect.ts --from <from>
 ```
 
-It makes a new folder with the same window, the names already hidden, the versions the person gave and doctor's result
-(doctor is not run twice), with the words holding those names no longer read as AI-DLC's. Read its result as in step 2,
-and from then on use its `out`. If it says `project-not-found`, the project moved: add `--project <its folder now>`.
-Then remove the earlier folder, which is not sent:
+これにより、同じ対象期間、隠し済みの名前、利用者が示したバージョン、doctor の結果を持つ新しいフォルダが作られる
+（doctor は二度実行されない）。それらの名前を含む語は、もはや AI-DLC の語としては読まれない。結果はステップ 2 と同様に読み、
+以降はその `out` を使う。`project-not-found` と出力された場合はプロジェクトが移動しているので、`--project <its folder now>` を追加する。
+その後、送信しない以前のフォルダを削除する:
 
 ```bash
 <run> <skill>/scripts/finish.ts --discard --out <the earlier out>
 ```
 
-`emptyFolderLeft`: only the empty folder could not be removed (a window or shell has it open); tell the person they can
-delete it. `folder-in-use`: close what has it open (a window, a shell in it) and run it again; when its hint says the
-folder holds no report any more, tell the person they can delete it.
+`emptyFolderLeft`: 空のフォルダだけが削除できなかった（ウィンドウやシェルが開いている）。利用者に、自分で削除してよいと伝える。
+`folder-in-use`: フォルダを開いているもの（ウィンドウ、その中のシェル）を閉じて再実行する。ヒントにフォルダにはもうレポートがないとある場合は、
+利用者に、自分で削除してよいと伝える。
 
-The report's own field names, the same in every report, stay as they are. If they say no, leave them, and do not ask
-again.
+レポート自身のフィールド名は、どのレポートでも同じであり、そのまま残る。利用者が「いいえ」と答えた場合は名前をそのままにし、二度と
+尋ねない。
 
 ### 4. Cover, check, hand over
 
@@ -156,26 +155,26 @@ again.
 <run> <skill>/scripts/check.ts --out <out>
 ```
 
-`cover.ts` writes `aidlc-issue-report.md` from `safe.json`: the window, the versions, what the folder holds and what
-was replaced by labels. Do not edit it; run it again after any change to `safe.json`. `check.ts` prints, for each hit,
-the file, the line or the `safe.json` field, and the reason — never the value. In `safe.json`, replace the named value
-with `<redacted>`; `refused`: only the cover and `safe.json` are sent, so move any other file out of the folder;
-`pending`: an answer you wrote is not applied yet (the run stopped before its script), so run the command it names, or
-delete its file when the person took the answer back. Run
-`cover.ts` and `check.ts` again until `ok: true`. Do not hand over anything until the check passes.
+`cover.ts` は `safe.json` から `aidlc-issue-report.md` を書き出す: 対象期間、バージョン、フォルダの内容、ラベルに
+置き換えられたもの。これを編集してはならない。`safe.json` を変更したら再実行する。`check.ts` は、指摘ごとに
+ファイル、行または `safe.json` のフィールド、そして理由を出力する — 値は決して出力しない。`safe.json` では、指摘された値を
+`<redacted>` に置き換える。`refused`: 送信されるのはカバーと `safe.json` だけなので、それ以外のファイルはフォルダの外に移動する。
+`pending`: あなたが書いた回答がまだ適用されていない（スクリプトの前で実行が止まった）ので、指示されたコマンドを実行するか、
+利用者が回答を取り消した場合はそのファイルを削除する。
+`ok: true` になるまで `cover.ts` と `check.ts` を再実行する。チェックが通るまで、何も引き渡してはならない。
 
-**Then the person reads the cover.** "Please open `<out>/aidlc-issue-report.md` and read it once. It says what is in
-the folder. Is there anything you would not send?" Hide what they name (step 3), run `cover.ts` and `check.ts` again,
-and go on only when they say it can go. Do not ask twice.
+**次に、利用者がカバーを読む。** "Please open `<out>/aidlc-issue-report.md` and read it once. It says what is in
+the folder. Is there anything you would not send?"（このファイルを開いて一度読んでください。フォルダの内容が書かれています。送りたくないものはありますか？）利用者が挙げたものを隠し（ステップ 3）、`cover.ts` と `check.ts` を再実行し、
+送ってよいと言われたときにだけ先に進む。二度尋ねない。
 
-Then:
+その後:
 
 ```bash
 <run> <skill>/scripts/finish.ts --out <out>
 ```
 
-It runs the same check once more, then deletes `local/` and opens the folder. Pass the same `<out>` collect printed: it
-refuses (`ok: false`) a folder collect did not make, or one whose check finds anything, and deletes nothing; fix what
-it names and rerun it, never delete `local/` by hand. Tell the person, briefly: what the folder holds (in one line, from
-the cover), that names, paths and anything they typed were replaced by labels (and, if they chose to leave a name in
-step 3, that it was left), and "Please send the files in this folder to your AI-DLC contact", with the folder path.
+これは同じチェックをもう一度実行し、`local/` を削除してフォルダを開く。collect が出力したのと同じ `<out>` を渡す。collect が
+作ったものではないフォルダや、チェックで何かが見つかるフォルダは拒否され（`ok: false`）、何も削除されない。指摘された箇所を修正して
+再実行し、決して `local/` を手で削除しない。利用者に簡潔に伝える: フォルダの内容（カバーから 1 行で）、
+名前、パス、利用者が入力したものはすべてラベルに置き換えられたこと（ステップ 3 で名前を残すことを選んだ場合はそれが残されたこと）、
+そしてフォルダのパスとともに "Please send the files in this folder to your AI-DLC contact"（このフォルダ内のファイルを AI-DLC の担当者に送ってください）。

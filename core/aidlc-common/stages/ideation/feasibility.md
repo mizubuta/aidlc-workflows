@@ -44,57 +44,56 @@ outputs: feasibility-assessment.md, constraint-register.md, raid-log.md, feasibi
 
 ### Step 1: Load Prior Context
 
-- Read intent statement from `<record>/ideation/intent-capture/`
-- Read market research from `<record>/ideation/market-research/` (if exists)
-- Load guardrails from
-  `aidlc/spaces/<active-space>/memory/{org,team,project}.md`
+- `<record>/ideation/intent-capture/` からインテントステートメントを読み込む
+- `<record>/ideation/market-research/` から市場調査を読み込む（存在する場合）
+- ガードレールを
+  `aidlc/spaces/<active-space>/memory/{org,team,project}.md` から読み込む
 
 ### Step 2: Generate Clarifying Questions
 
-Create `<record>/ideation/feasibility/feasibility-questions.md` with questions:
-- What existing systems must this integrate with?
-- Are there regulatory/compliance requirements (PCI, HIPAA, SOC2, data residency)?
-- What is the team's current tech stack and skill profile?
-- What are the budget and timeline constraints?
-- Are there organizational blockers (change freeze, competing priorities)?
-- What AWS services and accounts are currently in use?
+次の質問を含む `<record>/ideation/feasibility/feasibility-questions.md` を作成する:
+- どの既存システムと連携する必要があるか？
+- 規制・コンプライアンス要件（PCI、HIPAA、SOC2、データレジデンシー）はあるか？
+- チームの現在の技術スタックとスキル構成はどうなっているか？
+- 予算とスケジュールの制約は何か？
+- 組織上の阻害要因（変更凍結期間、競合する優先事項）はあるか？
+- 現在どの AWS サービスとアカウントを使用しているか？
 
-Follow stage-protocol.md question flow.
+stage-protocol.md の質問フローに従う。
 
 ### Step 3: Collect and Analyze Answers
 
-Run ambiguity detection and contradiction analysis.
+曖昧さの検出と矛盾の分析を行う。
 
 ### Step 4: Generate Artifacts
 
-Create feasibility assessment (technical viability, risk analysis), constraint register (technical, organizational, regulatory), and RAID log (Risks, Assumptions, Issues, Dependencies).
+フィージビリティ評価（技術的な実現可能性、リスク分析）、制約レジスタ（技術・組織・規制）、RAID ログ（Risks、Assumptions、Issues、Dependencies）を作成する。
 
-The orchestrator will pass these artifacts to aidlc-aws-platform-agent for AWS landscape assessment and aidlc-compliance-agent for regulatory scanning, then synthesize all inputs.
+オーケストレーターは、これらの成果物を AWS 環境評価のために aidlc-aws-platform-agent へ、規制スキャンのために aidlc-compliance-agent へ渡し、すべての入力を統合する。
 
 ### Step 5: Completion Handoff
 
-Hand completion to `stage-protocol.md` via
-`{{INVOKE}} engine orchestrate report --stage feasibility --result <outcome>`.
-That `report` call owns every lifecycle transition and advancement; never perform one in prose, and never narrate this bookkeeping to the user.
+`{{INVOKE}} engine orchestrate report --stage feasibility --result <outcome>` を通じて、
+完了を `stage-protocol.md` に引き渡す。
+その `report` 呼び出しが、ライフサイクルの遷移と前進をすべて担う。散文の中で遷移を実行してはならず、この記録処理をユーザーに説明してもならない。
 
 ### Step 6: Present Completion & Request Approval
 
-Completion emoji: :test_tube:
-Review path: `<record>/ideation/feasibility/`
-Standard approval gate (Approve / Request Changes).
+完了時の絵文字: :test_tube:
+レビュー対象のパス: `<record>/ideation/feasibility/`
+標準の承認ゲート（Approve / Request Changes）。
 
 ## Sensors
 
-This stage's outputs are markdown artefacts under `<record>/ideation/feasibility/`.
+このステージの出力は `<record>/ideation/feasibility/` 配下の Markdown 成果物である。
 
-Imports: `required-sections`, `upstream-coverage`.
+インポート: `required-sections`, `upstream-coverage`.
 
-Upstream targets: `intent-statement`, `competitive-analysis`, `market-trends`, `build-vs-buy`.
+上流の対象: `intent-statement`, `competitive-analysis`, `market-trends`, `build-vs-buy`.
 
 ## Learn
 
-When `directive.protocol_modules` lists `learnings`, follow
-`stage-protocol-learnings.md`: keep the diary at `directive.memory_path` while
-working, and take the learnings step before the approval gate; that module says
-when it asks the person anything. When the module is absent, skip both the diary
-and the step.
+`directive.protocol_modules` に `learnings` が含まれている場合は、
+`stage-protocol-learnings.md` に従う。作業中は `directive.memory_path` に日誌を付け、
+承認ゲートの前に学びのステップを実施する。そのモジュールが、利用者に何かを尋ねるタイミングを定めている。
+モジュールがない場合は、日誌とステップの両方を省略する。

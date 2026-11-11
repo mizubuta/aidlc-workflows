@@ -67,68 +67,68 @@ outputs: "performance-requirements.md, security-requirements.md, scalability-req
 
 ### Execution Modes
 
-This stage supports two execution modes, controlled by the orchestrator:
+このステージは、オーケストレーターが制御する 2 つの実行モードをサポートする:
 
-**QUESTION-ONLY mode** (invoked by orchestrator during a Bolt's question phase):
-Execute Steps 1–4 only (read artifacts, assess categories, generate questions, collect answers).
-Do NOT proceed to artifact generation. Return control to the orchestrator.
+**QUESTION-ONLY モード**（Bolt の質問フェーズ中にオーケストレーターが呼び出す）:
+Step 1〜4 のみを実行する（成果物の読み込み、カテゴリの評価、質問の生成、回答の収集）。
+成果物の生成には決して進まない。制御をオーケストレーターに返す。
 
-**ARTIFACT-ONLY mode** (invoked by orchestrator during a Bolt's design phase):
-Skip Steps 1–4 (questions already collected and approved).
-Read the answered questions file from the per-unit directory.
-Execute Steps 5–7 only (generate artifacts, update state, completion).
+**ARTIFACT-ONLY モード**（Bolt の設計フェーズ中にオーケストレーターが呼び出す）:
+Step 1〜4 をスキップする（質問は収集・承認済み）。
+ユニット単位のディレクトリから回答済みの質問ファイルを読み込む。
+Step 5〜7 のみを実行する（成果物の生成、状態の更新、完了）。
 
-**Full mode** (default — single-unit projects or direct stage invocation):
-Execute all steps sequentially as written.
+**Full モード**（既定 — 単一ユニットのプロジェクト、またはステージの直接呼び出し）:
+書かれたとおりにすべてのステップを順に実行する。
 
 ### Step 1: Read Prior Artifacts
 
-Read functional design artifacts from `<record>/construction/{unit-name}/functional-design/` (if they exist). Read `<record>/inception/requirements-analysis/requirements.md` (if exists), the inter-unit contracts from `<record>/inception/contract-design/contract-summary.md` (if produced — its SLAs, retry/timeout, and integration-mechanism decisions constrain this unit's NFR targets), and any reverse engineering artifacts from `aidlc/spaces/<active-space>/codekb/<repo>/` (the directory `codekb-path --repo <repo>` prints). Incremental scopes (infra) skip functional-design by design; when its artifacts are absent, derive the NFR context from the requirements and the code knowledge base instead — never invent the content of a missing artifact.
+`<record>/construction/{unit-name}/functional-design/` から機能設計の成果物を読み込む（存在する場合）。`<record>/inception/requirements-analysis/requirements.md`（存在する場合）、`<record>/inception/contract-design/contract-summary.md` のユニット間契約（生成されている場合。その SLA、リトライ/タイムアウト、統合メカニズムの決定が、このユニットの NFR 目標を制約する）、そして `aidlc/spaces/<active-space>/codekb/<repo>/`（`codekb-path --repo <repo>` が出力するディレクトリ）にあるリバースエンジニアリングの成果物を読み込む。インクリメンタルなスコープ（infra）は設計上 functional-design をスキップする。その成果物がない場合は、代わりに要件とコードナレッジベースから NFR のコンテキストを導出する。欠けている成果物の内容を決して捏造しない。
 
 ### Step 2: Assess NFR Categories
 
-Analyze the unit across NFR categories:
-- **Performance**: Response times, throughput, latency targets, resource utilization
-- **Security**: Authentication, authorization, data protection, compliance requirements
-- **Scalability**: Load handling, growth projections, scaling strategies
-- **Reliability**: Availability targets, fault tolerance, disaster recovery, data durability
-- **Observability**: Monitoring, logging, alerting, tracing requirements
+ユニットを NFR カテゴリ全体にわたって分析する:
+- **Performance**: 応答時間、スループット、レイテンシ目標、リソース使用率
+- **Security**: 認証、認可、データ保護、コンプライアンス要件
+- **Scalability**: 負荷への対応、成長予測、スケーリング戦略
+- **Reliability**: 可用性目標、フォールトトレランス、災害復旧、データの耐久性
+- **Observability**: モニタリング、ロギング、アラート、トレーシングの要件
 
 ### Step 3: Generate Questions
 
-Create a questions file at `<record>/construction/{unit-name}/nfr-requirements/nfr-requirements-questions.md` for unclear NFR areas using [Answer]: tags. Focus on quantifiable targets and specific constraints.
+不明確な NFR 領域について、[Answer]: タグを使った質問ファイルを `<record>/construction/{unit-name}/nfr-requirements/nfr-requirements-questions.md` に作成する。定量化可能な目標と具体的な制約に焦点を当てる。
 
 ### Step 4: Collect and Analyze Answers
 
-Collect answers following stage-protocol.md §3 question flow (offer interaction mode choice, collect answers, write back to file). Perform MANDATORY ambiguity analysis:
-- Identify vague answers ("fast enough", "highly available", "secure")
-- Check for contradictions between NFR targets
-- Flag missing quantitative targets
+stage-protocol.md §3 の質問フローに従って回答を収集する（対話モードの選択肢を提示し、回答を収集し、ファイルに書き戻す）。必須のあいまいさ分析を行う:
+- あいまいな回答（「十分に速い」「高可用」「セキュア」など）を特定する
+- NFR 目標間の矛盾を確認する
+- 欠けている定量的な目標を指摘する
 
-If ANY ambiguity found: create follow-up questions and resolve before proceeding.
+あいまいさが 1 つでも見つかった場合: フォローアップ質問を作成し、先に進む前に解決する。
 
 ### Step 5: Generate Artifacts
 
-Generate the following in `<record>/construction/{unit-name}/nfr-requirements/`:
+`<record>/construction/{unit-name}/nfr-requirements/` に次のものを生成する:
 
-- **performance-requirements.md**: Response time targets, throughput requirements, latency budgets, resource constraints, benchmarks
-- **security-requirements.md**: Authentication requirements, authorization model, data protection, compliance, threat considerations
-- **scalability-requirements.md**: Load projections, scaling triggers, capacity planning, data growth, concurrency targets
-- **reliability-requirements.md**: Availability targets (SLA/SLO), fault tolerance requirements, backup/recovery, graceful degradation
-- **observability-requirements.md**: Monitoring requirements, logging standards, distributed tracing needs, alerting thresholds, dashboard requirements, SLI/SLO definitions
-- **tech-stack-decisions.md**: Technology selections and rationale — languages, frameworks, databases, infrastructure tools, and justification for each choice
+- **performance-requirements.md**: 応答時間の目標、スループット要件、レイテンシの予算、リソースの制約、ベンチマーク
+- **security-requirements.md**: 認証要件、認可モデル、データ保護、コンプライアンス、脅威に関する考慮事項
+- **scalability-requirements.md**: 負荷予測、スケーリングのトリガー、キャパシティプランニング、データの増加、同時実行性の目標
+- **reliability-requirements.md**: 可用性目標（SLA/SLO）、フォールトトレランス要件、バックアップ/リカバリー、グレースフルデグラデーション
+- **observability-requirements.md**: モニタリング要件、ロギング標準、分散トレーシングの必要性、アラートのしきい値、ダッシュボード要件、SLI/SLO の定義
+- **tech-stack-decisions.md**: 技術の選定と根拠 — 言語、フレームワーク、データベース、インフラストラクチャツール、および各選択の正当性
 
-Every detailed requirement inherits its inception NFR ID and appends a
-sub-number, such as `NFR4.1` and `NFR4.2`. Carry these IDs on every requirement
-row.
+詳細な要件はそれぞれ、Inception の NFR ID を継承し、サブ番号を付加する
+（`NFR4.1`、`NFR4.2` など）。これらの ID をすべての要件の
+行に記載する。
 
-Create
-`<record>/construction/{unit-name}/nfr-requirements/traceability.json` by running
-`{{INVOKE}} engine sensor-traceability --stage nfr-requirements --output-path <that path> --write-upstream`:
-it lists every inception `NFR{n}` Requirements Analysis recorded, or, when User Stories
-did not run and `unit-of-work-story-map.md` gives this Unit NFR rows, the NFRs
-on those rows, each with a `GAP` row. Target the derived `NFRx.y` IDs; one that does not apply to this
-Unit is `N/A` in `coverage`, with the reason as its target:
+次を実行して
+`<record>/construction/{unit-name}/nfr-requirements/traceability.json` を作成する:
+`{{INVOKE}} engine sensor-traceability --stage nfr-requirements --output-path <that path> --write-upstream`
+これは、Requirements Analysis が記録したすべての Inception の `NFR{n}` を列挙する。User Stories が
+実行されず、`unit-of-work-story-map.md` がこのユニットに NFR の行を与えている場合は、それらの行の NFR を
+列挙する。それぞれに `GAP` の行が付く。導出した `NFRx.y` の ID をターゲットにする。このユニットに適用されないものは
+`coverage` で `N/A` とし、その理由をターゲットとして記載する:
 
 ```json
 {
@@ -144,42 +144,41 @@ Unit is `N/A` in `coverage`, with the reason as its target:
 
 ### Step 6: Completion Handoff
 
-Hand completion to `stage-protocol.md` via
-`{{INVOKE}} engine orchestrate report --stage nfr-requirements --result <outcome>`.
-That `report` call owns every lifecycle transition and advancement; never perform one in prose, and never narrate this bookkeeping to the user.
+`{{INVOKE}} engine orchestrate report --stage nfr-requirements --result <outcome>` を通じて、
+完了を `stage-protocol.md` に引き渡す。
+その `report` 呼び出しが、ライフサイクルの遷移と前進をすべて担う。散文の中で遷移を実行してはならず、この記録処理をユーザーに説明してもならない。
 
 ### Step 7: Completion
 
-Present completion message and approval gate:
+完了メッセージと承認ゲートを提示する:
 
 ```
 # :bar_chart: NFR Requirements Complete — {unit-name}
 ```
 
-Summary of NFR categories addressed and key targets, then:
+対応した NFR カテゴリと主要な目標のサマリーを示し、続けて:
 
 ```
 **Review:** `<record>/construction/{unit-name}/nfr-requirements/`
 ```
 
-Approval gate: strictly 2-option (Approve / Request Changes).
+承認ゲート: 厳密に 2 択（Approve / Request Changes）。
 
 ## Sensors
 
-This stage's outputs are markdown design artefacts under `<record>/construction/{unit-name}/nfr-requirements/`. Some sections include code samples that the code-shape sensors can also flag.
+このステージの出力は、`<record>/construction/{unit-name}/nfr-requirements/` 配下の Markdown の設計成果物である。一部のセクションにはコードサンプルが含まれ、コード形状のセンサーがそれを指摘することもある。
 
-Imports: `required-sections`, `upstream-coverage`, `linter`, `type-check`, `traceability`.
+インポート: `required-sections`、`upstream-coverage`、`linter`、`type-check`、`traceability`。
 
-Upstream targets: `functional-spec`, `rules`, `requirements`, `contract-summary`, `technology-stack`.
+上流のターゲット: `functional-spec`、`rules`、`requirements`、`contract-summary`、`technology-stack`。
 
-`linter` and `type-check` inspect matching TypeScript/JavaScript snippets.
-`traceability` verifies that inception NFR IDs are declared and covered by
-per-Unit `NFRx.y` requirements.
+`linter` と `type-check` は、該当する TypeScript/JavaScript のスニペットを検査する。
+`traceability` は、Inception の NFR ID が宣言され、ユニットごとの
+`NFRx.y` 要件によってカバーされていることを検証する。
 
 ## Learn
 
-When `directive.protocol_modules` lists `learnings`, follow
-`stage-protocol-learnings.md`: keep the diary at `directive.memory_path` while
-working, and take the learnings step before the approval gate; that module says
-when it asks the person anything. When the module is absent, skip both the diary
-and the step.
+`directive.protocol_modules` に `learnings` が含まれている場合は、
+`stage-protocol-learnings.md` に従う。作業中は `directive.memory_path` に日誌を付け、
+承認ゲートの前に学びのステップを実行する。そのモジュールが、いつ利用者に何かを尋ねるかを
+規定している。モジュールがない場合は、日誌とステップの両方をスキップする。

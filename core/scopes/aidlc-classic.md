@@ -15,53 +15,52 @@ collaborators: off
 
 # classic scope
 
-`classic` is the implicit default scope - used when neither the user nor
-`AWS_AIDLC_DEFAULT_SCOPE` names one - and restores v1-style ceremony through
-Inception and Construction: one human approval per Inception stage. In
-Construction, built Unit by Unit, the human approves each Unit's code plan and,
-under "Review each checkpoint", its checkpoint, so a Unit's design stages run
-without a stop of their own; team-owned Units keep their own per-stage or
-end-of-Unit gates. Ideation is skipped and Operation remains a placeholder. Stage-declared execution modes
-are unchanged; collaborators are off, so each stage runs with its lead agent
-only (`/aidlc --collaborators on` brings the support agents in).
+`classic` は暗黙の既定スコープである - 利用者も
+`AWS_AIDLC_DEFAULT_SCOPE` もスコープを指定しないときに使われ、Inception と Construction を通じて
+v1 スタイルのセレモニーを復元する: Inception のステージごとに人間の承認が1回ある。
+Construction では Unit ごとにビルドし、人間は各 Unit のコードプランと、
+"Review each checkpoint" の下ではそのチェックポイントを承認するため、Unit の設計ステージは
+それ自体では停止せずに実行される。チーム所有の Unit は、ステージごとまたは
+Unit の終わりの独自のゲートを保持する。Ideation はスキップされ、Operation はプレースホルダのままである。ステージで宣言された実行モードは
+変わらない。コラボレーターはオフなので、各ステージはリードエージェント
+だけで実行される（`/aidlc --collaborators on` でサポートエージェントが加わる）。
 
-Guard Policy defaults to off: changed inputs are recorded and announced in one line, and plan approval, review freeze, state transition, and reviewer read scope are lowered for undirected work. Human presence stays up.
+Guard Policy の既定はオフである: 変更された入力は記録され、1行で告知される。また、指示のない作業については、プラン承認、レビューの凍結、状態遷移、レビュアーの読み取りスコープが引き下げられる。人間の関与は維持される。
 
-Reviews are advisory: one pass per stage whose findings reach the human at
-the approval gate, with no refute-and-repair loop; explicit autonomy keeps the
-single pre-merge review. Walking-skeleton ceremony and summary confirmation
-are off. Sensors run and the learnings ritual runs. Under off, Plan Approval,
-review freeze, state transition, and reviewer read scope stand aside for
-undirected work and record a `GUARD_STOOD_ASIDE` row each time; the approval
-question is still asked by the conductor. Human-turn authority and audit remain
-in force.
+レビューは助言的である: ステージごとに1パスで、その指摘は
+承認ゲートで人間に届き、反駁と修復のループはない。明示的な自律モードでは、
+マージ前の単一のレビューが維持される。ウォーキングスケルトンのセレモニーとサマリー確認は
+オフである。センサーは実行され、学びの儀式も実行される。オフの下では、Plan Approval、
+レビューの凍結、状態遷移、レビュアーの読み取りスコープは、指示のない作業については脇に退き、
+そのたびに `GUARD_STOOD_ASIDE` 行を記録する。承認の
+質問は引き続きコンダクターが尋ねる。人間のターンの権限と監査は引き続き
+有効である。
 
-Override ceremonies per intent with `/aidlc --sensors on|off`,
-`/aidlc --learnings on|off`, `/aidlc --summary-confirmation on|off`, and
-`/aidlc --collaborators on|off`. The global kill switches
-`AIDLC_DISABLE_SENSORS=1`, `AIDLC_DISABLE_LEARNINGS=1`,
-`AIDLC_DISABLE_SUMMARY_CONFIRMATION=1`, and `AIDLC_DISABLE_COLLABORATORS=1`
-force their ceremony off even when the intent says on; they can also be
-recorded with `aidlc config flags --bypass <NAME>`.
+インテントごとのセレモニーは `/aidlc --sensors on|off`、
+`/aidlc --learnings on|off`、`/aidlc --summary-confirmation on|off`、
+`/aidlc --collaborators on|off` で上書きする。グローバルなキルスイッチ
+`AIDLC_DISABLE_SENSORS=1`、`AIDLC_DISABLE_LEARNINGS=1`、
+`AIDLC_DISABLE_SUMMARY_CONFIRMATION=1`、`AIDLC_DISABLE_COLLABORATORS=1` は、
+インテントがオンと言っていても、それぞれのセレモニーを強制的にオフにする。これらは
+`aidlc config flags --bypass <NAME>` で記録することもできる。
 
 ## Why these stages, why skip those
 
-AI-DLC v1 had no Ideation phase, so `classic` skips all seven Ideation stages.
-It keeps all Inception stages and the Construction stages through Build and
-Test. CI Pipeline and all seven Operation stages are skipped: customers bring
-their own CI and downstream, and Build and Test is the one integrated build
-across every unit. Only eight stages are unconditional: the three Initialization stages,
-Requirements Analysis, Units Generation, Delivery Planning, Code Generation,
-and Build and Test. The remaining Inception and Construction work is
-CONDITIONAL and self-selects from project context, preserving v1's adaptive behavior.
+AI-DLC v1 には Ideation フェーズがなかったため、`classic` は Ideation の7ステージをすべてスキップする。
+Inception のステージはすべて保持し、Construction のステージは Build and
+Test まで保持する。CI Pipeline と Operation の7ステージはすべてスキップする: 顧客は
+独自の CI と下流の仕組みを持ち込み、Build and Test がすべての Unit にまたがる唯一の統合ビルドであるためである。無条件のステージは8つだけである: Initialization の3ステージ、
+Requirements Analysis、Units Generation、Delivery Planning、Code Generation、
+Build and Test。残りの Inception と Construction の作業は
+CONDITIONAL であり、プロジェクトのコンテキストから自ら選択されるため、v1 の適応的な振る舞いが保たれる。
 
-Its test strategy inherits Standard from its depth, so production testing
-expectations remain in force. The separate `workshop` scope retains the
-teaching-oriented Minimal test override for existing workshop workflows.
+テスト戦略は depth から Standard を継承するため、本番相当のテストへの
+期待は引き続き有効である。別の `workshop` スコープは、既存のワークショップのワークフロー向けに、
+教育目的の Minimal テストの上書きを保持している。
 
 ## Membership
 
-Initialization, every Inception stage, and the Construction stages through
-Build and Test are in the grid: 18 of 33 stages. All seven Ideation stages,
-CI Pipeline, and all seven Operation stages are SKIP. The scope intentionally has no keywords; name it explicitly
-or use the implicit default.
+Initialization、Inception のすべてのステージ、そして Build and Test までの Construction ステージが
+グリッドに含まれる: 33ステージ中18ステージ。Ideation の7ステージすべて、
+CI Pipeline、Operation の7ステージすべては SKIP である。このスコープには意図的にキーワードがない。明示的に名前を指定するか、
+暗黙の既定として使う。

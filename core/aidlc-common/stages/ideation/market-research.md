@@ -33,54 +33,53 @@ outputs: competitive-analysis.md, market-trends.md, build-vs-buy.md, market-rese
 
 ### Step 1: Load Prior Context
 
-- Read intent statement from `<record>/ideation/intent-capture/`
-- Identify market-relevant aspects of the initiative
+- `<record>/ideation/intent-capture/` からインテントステートメントを読み込む
+- 取り組みのうち、市場に関係する側面を特定する
 
 ### Step 2: Generate Clarifying Questions
 
-Create `<record>/ideation/market-research/market-research-questions.md` with questions:
-- What competing products or solutions exist in the market?
-- What are their strengths, weaknesses, and pricing models?
-- What industry trends or regulatory shifts are relevant?
-- What do customers expect as table-stakes vs. differentiators?
-- For internal initiatives: are there existing tools, SaaS products, or open-source alternatives?
-- What is the build-vs-buy-vs-partner calculus?
-- What market size or addressable audience are we targeting?
+次の質問を含む `<record>/ideation/market-research/market-research-questions.md` を作成する:
+- 市場にはどのような競合製品やソリューションが存在するか？
+- それぞれの強み・弱み・価格モデルは何か？
+- 関連する業界トレンドや規制の変化は何か？
+- 顧客が「あって当然（table-stakes）」と考えるものと、差別化要因と考えるものは何か？
+- 社内向けの取り組みの場合: 既存のツール、SaaS 製品、オープンソースの代替手段はあるか？
+- 自社開発・購入・提携（build-vs-buy-vs-partner）の判断はどうなるか？
+- 対象とする市場規模や想定利用者層はどれくらいか？
 
-Follow stage-protocol.md question flow (Guide Me / Edit File / Chat).
+stage-protocol.md の質問フロー（Guide Me / Edit File / Chat）に従う。
 
 ### Step 3: Collect and Analyze Answers
 
-Run ambiguity detection and contradiction analysis on all answers.
+すべての回答に対して、曖昧さの検出と矛盾の分析を行う。
 
 ### Step 4: Generate Artifacts
 
-Create competitive analysis, market trends report, build-vs-buy assessment, and differentiation strategy brief based on answers and research.
+回答と調査に基づき、競合分析、市場トレンドレポート、build-vs-buy 評価、差別化戦略の概要を作成する。
 
 ### Step 5: Completion Handoff
 
-Hand completion to `stage-protocol.md` via
-`{{INVOKE}} engine orchestrate report --stage market-research --result <outcome>`.
-That `report` call owns every lifecycle transition and advancement; never perform one in prose, and never narrate this bookkeeping to the user.
+`{{INVOKE}} engine orchestrate report --stage market-research --result <outcome>` を通じて、
+完了を `stage-protocol.md` に引き渡す。
+その `report` 呼び出しが、ライフサイクルの遷移と前進をすべて担う。散文の中で遷移を実行してはならず、この記録処理をユーザーに説明してもならない。
 
 ### Step 6: Present Completion & Request Approval
 
-Completion emoji: :bar_chart:
-Review path: `<record>/ideation/market-research/`
-Standard approval gate (Approve / Request Changes).
+完了時の絵文字: :bar_chart:
+レビュー対象のパス: `<record>/ideation/market-research/`
+標準の承認ゲート（Approve / Request Changes）。
 
 ## Sensors
 
-This stage's outputs are markdown artefacts under `<record>/ideation/market-research/`.
+このステージの出力は `<record>/ideation/market-research/` 配下の Markdown 成果物である。
 
-Imports: `required-sections`, `upstream-coverage`.
+インポート: `required-sections`, `upstream-coverage`.
 
-Upstream targets: `intent-statement`.
+上流の対象: `intent-statement`.
 
 ## Learn
 
-When `directive.protocol_modules` lists `learnings`, follow
-`stage-protocol-learnings.md`: keep the diary at `directive.memory_path` while
-working, and take the learnings step before the approval gate; that module says
-when it asks the person anything. When the module is absent, skip both the diary
-and the step.
+`directive.protocol_modules` に `learnings` が含まれている場合は、
+`stage-protocol-learnings.md` に従う。作業中は `directive.memory_path` に日誌を付け、
+承認ゲートの前に学習ステップを実施する。そのモジュールが、利用者に何かを尋ねるタイミングを定めている。
+モジュールがない場合は、日誌とステップの両方を省略する。

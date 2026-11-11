@@ -15,23 +15,23 @@ collaborators: off
 
 # feature scope
 
-The full-lifecycle scope for new feature work at practical depth. Like
-`enterprise`, it runs every stage in the graph, but the stage bodies apply
-Standard rather than Comprehensive depth — lighter ceremony, the same
-end-to-end coverage from ideation through operation.
+新機能の開発作業を実用的な深さで進める、ライフサイクル全体のスコープ。
+`enterprise` と同様にグラフ内のすべてのステージを実行するが、ステージ本体は
+Comprehensive ではなく Standard の深さを適用する。手続きは軽くなるが、
+ideation から operation までのエンドツーエンドの網羅性は同じである。
 
-Guard Policy defaults to off: changed inputs are recorded and announced, the run continues, and plan approval, review freeze, state transition, and reviewer read scope are lowered for undirected work. Human presence stays up.
+Guard Policy の既定値は off である。変更された入力は記録・通知され、実行は継続し、指示のない作業についてはプラン承認、レビューフリーズ、状態遷移、レビュアーの読み取り範囲が緩和される。人間の関与（human presence）は維持される。
 
 ## Why every stage
 
-A new feature still needs the full arc: understand the problem
-(ideation), design it (inception), build and test it (construction), and
-operate it (operation). `feature` keeps all of those so nothing silently
-drops. The difference from `enterprise` is depth, expressed in the stage
-bodies and the org/team rule layers, not in which stages run.
+新機能であっても、一連の流れ全体が必要である。問題を理解し（ideation）、
+設計し（inception）、構築・テストし（construction）、運用する（operation）。
+`feature` はこれらをすべて保持するため、何かが黙って抜け落ちることはない。
+`enterprise` との違いは深さであり、それはステージ本体と org/team のルール層で
+表現される。どのステージを実行するかの違いではない。
 
 ## Membership
 
-`feature` marks all 33 stages EXECUTE. It remains the implicit freeform fallback
-and is also available through `--scope feature` and the `/aidlc-feature` runner.
-There are no keyword triggers of its own.
+`feature` は 33 個のステージすべてを EXECUTE とする。暗黙の自由形式フォールバックであり続け、
+`--scope feature` や `/aidlc-feature` ランナーからも利用できる。
+独自のキーワードトリガーは持たない。

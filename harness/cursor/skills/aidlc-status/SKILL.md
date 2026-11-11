@@ -11,18 +11,17 @@ classification: read-only
 
 # AI-DLC status
 
-Show the current workflow status through the same deterministic route as
-`/aidlc --status`.
+`/aidlc --status` と同じ決定的な経路で、現在のワークフローの状態を表示する。
 
-1. Run:
+1. 次を実行する:
 
    ```bash
    {{INVOKE}} engine orchestrate next --status
    ```
 
-2. Act on the returned directive exactly as the `aidlc` skill's forwarding
-   loop describes. The expected terminal `print` directive names the read-only
-   status command: run that command, print its stdout verbatim, and stop.
+2. 返されたディレクティブに対し、`aidlc` スキルの転送ループの記述どおりに
+   動作する。想定される終端の `print` ディレクティブは読み取り専用の
+   状態表示コマンドを指定している。そのコマンドを実行し、標準出力をそのまま表示して停止する。
 
-Never print the directive JSON as the status report, and never advance or
-mutate workflow state.
+ディレクティブの JSON を状態レポートとして表示してはならず、ワークフローの状態を
+前進させたり変更したりしてもならない。

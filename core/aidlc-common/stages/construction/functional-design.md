@@ -59,90 +59,89 @@ outputs: "entities.md, rules.md, functional-spec.md, traceability.json, CONDITIO
 ---
 
 # Functional Design
-
 ## Constraints
 
-This is a design stage — artifacts describe business logic, domain models, and rules at an architectural level, not implementation-ready code. Complete function bodies, class implementations, and framework-specific code belong in code-generation. Limit code to short illustrative snippets (pseudocode or interface-level, ≤15 lines) that clarify a design decision.
+これは設計ステージである。成果物はビジネスロジック、ドメインモデル、ルールをアーキテクチャのレベルで記述するものであり、そのまま実装できるコードではない。完全な関数本体、クラスの実装、フレームワーク固有のコードは code-generation で扱う。コードは、設計上の決定を明確にする短い例示用のスニペット（擬似コードまたはインターフェースレベル、15 行以内）に限定する。
 
 ## Steps
 
 ### Execution Modes
 
-This stage supports two execution modes, controlled by the orchestrator:
+このステージは、オーケストレーターが制御する 2 つの実行モードをサポートする:
 
-**QUESTION-ONLY mode** (invoked by orchestrator during a Bolt's question phase):
-Execute Steps 1–3 only (read context, generate questions, collect answers).
-Do NOT proceed to artifact generation. Return control to the orchestrator.
+**QUESTION-ONLY モード**（Bolt の質問フェーズでオーケストレーターが呼び出す）:
+ステップ 1〜3 のみを実行する（コンテキストの読み込み、質問の生成、回答の収集）。
+成果物の生成には進んではならない。制御をオーケストレーターに返す。
 
-**ARTIFACT-ONLY mode** (invoked by orchestrator during a Bolt's design phase):
-Skip Steps 1–3 (questions already collected and approved).
-Read the answered questions file from the per-unit directory.
-Execute Steps 4–6 only (generate artifacts, update state, completion).
+**ARTIFACT-ONLY モード**（Bolt の設計フェーズでオーケストレーターが呼び出す）:
+ステップ 1〜3 をスキップする（質問はすでに収集・承認済み）。
+ユニットごとのディレクトリから、回答済みの質問ファイルを読み込む。
+ステップ 4〜6 のみを実行する（成果物の生成、状態の更新、完了）。
 
-**Full mode** (default — single-unit projects or direct stage invocation):
-Execute all steps sequentially as written.
+**Full モード**（デフォルト — 単一ユニットのプロジェクト、またはステージの直接呼び出し）:
+記載どおりにすべてのステップを順番に実行する。
 
 ### Step 1: Read Unit Context
 
-Read the unit definition from `<record>/inception/units-generation/unit-of-work.md` and assigned stories from `<record>/inception/units-generation/unit-of-work-story-map.md` (if they exist), and the acceptance criteria (`ACx.y.z`) of those stories from `<record>/inception/user-stories/stories.md` (if it exists). Read `<record>/inception/requirements-analysis/requirements.md` (if exists), the component catalogue from `<record>/inception/domain-design/components.md` (if it exists), and the contracts for this unit's boundaries from `<record>/inception/contract-design/contract-summary.md` (if it exists).
+`<record>/inception/units-generation/unit-of-work.md` からユニットの定義を、`<record>/inception/units-generation/unit-of-work-story-map.md` から割り当てられたストーリーを（存在する場合）、`<record>/inception/user-stories/stories.md` からそれらのストーリーの受け入れ基準（`ACx.y.z`）を（存在する場合）読み込む。`<record>/inception/requirements-analysis/requirements.md`（存在する場合）、`<record>/inception/domain-design/components.md` のコンポーネントカタログ（存在する場合）、`<record>/inception/contract-design/contract-summary.md` にあるこのユニットの境界に関するコントラクト（存在する場合）を読み込む。
 
-Incremental scopes (refactor) deliberately skip user-stories, units-generation and domain-design, so those inputs are absent by design there. When an input is absent, work from what the scope does provide — the requirements and, on a brownfield workspace, the reverse-engineered code knowledge base at `aidlc/spaces/<active-space>/codekb/<repo>/` (the directory `codekb-path --repo <repo>` prints) — and treat the existing code structure as the de-facto domain design. Never invent the content of a missing artifact.
+インクリメンタルなスコープ（refactor）は意図的に user-stories、units-generation、domain-design をスキップするため、そこではこれらの入力は設計上存在しない。入力が存在しない場合は、スコープが提供するもの — 要件と、ブラウンフィールドのワークスペースでは `aidlc/spaces/<active-space>/codekb/<repo>/`（`codekb-path --repo <repo>` が出力するディレクトリ）にあるリバースエンジニアリングされたコードナレッジベース — をもとに作業し、既存のコード構造を事実上のドメイン設計として扱う。存在しない成果物の内容を決してでっち上げてはならない。
 
 ### Step 2: Create Functional Design Plan
 
-Analyze the unit's scope and create a functional design questions file at `<record>/construction/{unit-name}/functional-design/functional-design-questions.md` with context-appropriate questions using [Answer]: tags.
+ユニットのスコープを分析し、[Answer]: タグを使った文脈に即した質問を含む機能設計の質問ファイルを `<record>/construction/{unit-name}/functional-design/functional-design-questions.md` に作成する。
 
-Focus areas:
-- Business logic workflows and algorithms
-- Domain models and entity relationships
-- Business rules, constraints, and validation logic
-- Data flow and transformations
-- Integration points with other units or external systems
-- Error handling and edge cases (at Standard and Comprehensive depth, sweep each component against `{{HARNESS_DIR}}/knowledge/aidlc-product-agent/corner-checklist.md`; corners the requirements already settled carry forward, and only open corners that need the user's judgement become questions)
-- Frontend Components (component hierarchy, props/state, interaction flows, form validation)
-- Business Scenarios (end-to-end user journeys, happy/unhappy paths, concurrency edge cases)
+重点領域:
+- ビジネスロジックのワークフローとアルゴリズム
+- ドメインモデルとエンティティの関係
+- ビジネスルール、制約、バリデーションのロジック
+- データフローと変換
+- 他のユニットや外部システムとの連携ポイント
+- エラー処理とエッジケース（Standard と Comprehensive の深さでは、各コンポーネントを `{{HARNESS_DIR}}/knowledge/aidlc-product-agent/corner-checklist.md` と照らし合わせて確認する。要件ですでに決着しているコーナーケースはそのまま引き継ぎ、利用者の判断が必要な未解決のコーナーケースだけを質問にする）
+- フロントエンドのコンポーネント（コンポーネント階層、props/state、インタラクションフロー、フォームのバリデーション）
+- ビジネスシナリオ（エンドツーエンドのユーザージャーニー、正常系／異常系、並行処理のエッジケース）
 
 ### Step 3: Collect and Analyze Answers
 
-Collect answers following stage-protocol.md §3 question flow (offer interaction mode choice, collect answers, write back to file). After collecting answers, perform MANDATORY ambiguity analysis:
-- Identify vague answers ("mix of", "not sure", "depends", "probably")
-- Check for contradictions between answers
-- Flag missing details needed for artifact generation
+stage-protocol.md §3 の質問フローに従って回答を収集する（インタラクションモードの選択肢を提示し、回答を収集し、ファイルに書き戻す）。回答を収集した後、**必須**の曖昧さの分析を行う:
+- 曖昧な回答を特定する（"mix of"、"not sure"、"depends"、"probably" など）
+- 回答間の矛盾を確認する
+- 成果物の生成に必要な詳細の欠落を指摘する
 
-If ANY ambiguity found: create follow-up questions and resolve before proceeding.
+曖昧さが 1 つでも見つかった場合: フォローアップの質問を作成し、解決してから先に進む。
 
 ### Step 4: Generate Artifacts
 
-Generate the following in `<record>/construction/{unit-name}/functional-design/`. Technology-agnostic — implementable in any language. No code, no SQL, no framework references.
+`<record>/construction/{unit-name}/functional-design/` に次のものを生成する。技術に依存しない内容とし、どの言語でも実装できるようにする。コード、SQL、フレームワークへの言及は含めない。
 
-- **entities.md**: The entity model. Carries a fenced ```yaml source-of-truth block listing each entity with its description, attributes (name, logical type, required/unique, references, allowed values, defaults, min/max, constraints), entity-level constraints, and relationships (cardinality + direction). Follow the block with a short human-readable summary of the entity set.
-- **rules.md**: The business rules. Carries a fenced ```yaml source-of-truth block listing each numbered rule (`id: BRx.y`, e.g. `BR1.1` — the `BR{group}.{seq}` format the traceability sensor recognizes) with its statement, category (validation/authorization/constraint/calculation/policy), what it applies to, trigger, logic (IF…THEN in plain language), violation behaviour, and source (FR{n}/NFR{n}). Follow the block with a short human-readable rules summary table.
-- **functional-spec.md**: The behavioural specification. It is the **source of truth for workflows and state machines** — the numbered step sequences a use case follows and the lifecycle-entity state transitions — because `entities.md` (data shape) and `rules.md` (decision logic) do not capture ordered behaviour or transitions. It also carries two **derived** views for readability: an entity-relationship `mermaid` diagram (derived from `entities.md` — the YAML there is source of truth) and a rules summary (derived from `rules.md`). For a UI-only unit that produces `functional-spec.md` without `entities.md`/`rules.md`, this file is self-contained: it authoritatively specifies the interaction workflows and screen/state transitions from the unit definition and requirements, with no entity/rule dependency. When `stories.md` exists, name it beside the stories (`USx.y`) this Unit implements.
-- **frontend-components.md** (CONDITIONAL — only if unit includes frontend/UI): Component hierarchy, props/state design, interaction flows, form validation rules, API integration points
+- **entities.md**: エンティティモデル。フェンス付きの ```yaml による信頼できる唯一の情報源のブロックを持ち、各エンティティについて、説明、属性（名前、論理型、必須／一意、参照、許容値、デフォルト、最小／最大、制約）、エンティティレベルの制約、関係（カーディナリティと方向）を列挙する。ブロックの後に、エンティティ群の人間が読める短い要約を続ける。
+- **rules.md**: ビジネスルール。フェンス付きの ```yaml による信頼できる唯一の情報源のブロックを持ち、番号付きの各ルール（`id: BRx.y`、例: `BR1.1` — トレーサビリティセンサーが認識する `BR{group}.{seq}` 形式）について、その記述、カテゴリ（validation/authorization/constraint/calculation/policy）、適用対象、トリガー、ロジック（平易な言葉による IF…THEN）、違反時の振る舞い、出典（FR{n}/NFR{n}）を列挙する。ブロックの後に、人間が読める短いルールの要約表を続ける。
+- **functional-spec.md**: 振る舞いの仕様。これは**ワークフローとステートマシンに関する信頼できる唯一の情報源**であり、ユースケースがたどる番号付きのステップの順序と、ライフサイクルを持つエンティティの状態遷移を記述する。`entities.md`（データの形）と `rules.md`（判断のロジック）では、順序付けられた振る舞いや遷移を表現できないためである。また、読みやすさのために 2 つの**派生**ビューも含める: エンティティ関係の `mermaid` 図（`entities.md` から派生。そこにある YAML が信頼できる唯一の情報源）と、ルールの要約（`rules.md` から派生）である。`entities.md`/`rules.md` なしで `functional-spec.md` を生成する UI のみのユニットでは、このファイルは自己完結している。ユニットの定義と要件から、インタラクションのワークフローと画面／状態の遷移を正式に規定し、エンティティやルールへの依存は持たない。`stories.md` が存在する場合は、このユニットが実装するストーリー（`USx.y`）と並べてその名前を記載する。
+- **frontend-components.md**（条件付き — ユニットにフロントエンド／UI が含まれる場合のみ）: コンポーネント階層、props/state の設計、インタラクションフロー、フォームのバリデーションルール、API との連携ポイント
 
-Create
-`<record>/construction/{unit-name}/functional-design/traceability.json` by running
-`{{INVOKE}} engine sensor-traceability --stage functional-design --output-path <that path> --write-upstream`:
-it lists in `upstream_ids` every ID this Unit answers for, each with a `GAP` row:
+`{{INVOKE}} engine sensor-traceability --stage functional-design --output-path <that path> --write-upstream`
+を実行して、
+`<record>/construction/{unit-name}/functional-design/traceability.json` を作成する。
+これは、このユニットが責任を持つすべての ID を `upstream_ids` に列挙し、それぞれに `GAP` の行を付ける:
 
-- With both `stories.md` and `unit-of-work-story-map.md`: every `ACx.y.z` of
-  every story the story map assigns to this Unit, including the criteria of a
-  shared story that another Unit delivers.
-- Otherwise, with `unit-of-work-story-map.md`: every `FR` on this Unit's rows.
-- Otherwise: every `FR` Requirements Analysis recorded.
+- `stories.md` と `unit-of-work-story-map.md` の両方がある場合: ストーリーマップが
+  このユニットに割り当てたすべてのストーリーのすべての `ACx.y.z`。別のユニットが提供する
+  共有ストーリーの基準も含む。
+- そうでなく、`unit-of-work-story-map.md` がある場合: このユニットの行にあるすべての `FR`。
+- それ以外の場合: Requirements Analysis が記録したすべての `FR`。
 
-A requirement with sub-requirements is traced through its `FR{n}.{m}` IDs and
-needs no row of its own.
+サブ要件を持つ要件は、その `FR{n}.{m}` の ID を通じて追跡され、
+それ自体の行は不要である。
 
-Set each ID's `coverage` row: `OK` with a `target` naming one or more
-`BRx.y` IDs that exist in `rules.md` (a Unit whose kind writes no `rules.md`,
-such as a `ui` Unit, instead names on its own the file of this stage that
-covers the ID, `functional-spec.md` or `frontend-components.md`, which must
-exist); `N/A` with the reason as its `target`
-(for example `delivered by u2-profile`); `Deferred` with the later stage that
-covers it as its `target`; or `GAP` while this design does not cover it. Use
-the optional `reverse` array to explain rules that intentionally have no
-upstream ID; any unexplained rule is mechanically derived as an orphan:
+各 ID の `coverage` の行を設定する: `OK` の場合は、`rules.md` に存在する 1 つ以上の
+`BRx.y` の ID を `target` に記載する（`ui` ユニットのように、その種類が `rules.md` を
+書かないユニットは、代わりにその ID をカバーするこのステージのファイル、
+`functional-spec.md` または `frontend-components.md` を単独で記載する。そのファイルは
+存在していなければならない）。`N/A` の場合は理由を `target` に記載する
+（例: `delivered by u2-profile`）。`Deferred` の場合は、それをカバーする後のステージを
+`target` に記載する。この設計でカバーしていない間は `GAP` とする。上流の ID を
+意図的に持たないルールを説明するには、任意の `reverse` 配列を使用する。説明のないルールは
+機械的に孤立（orphan）として導出される:
 
 ```json
 {
@@ -162,43 +161,42 @@ upstream ID; any unexplained rule is mechanically derived as an orphan:
 
 ### Step 5: Completion Handoff
 
-Hand completion to `stage-protocol.md` via
-`{{INVOKE}} engine orchestrate report --stage functional-design --result <outcome>`.
-That `report` call owns every lifecycle transition and advancement; never perform one in prose, and never narrate this bookkeeping to the user.
+`{{INVOKE}} engine orchestrate report --stage functional-design --result <outcome>` を通じて、
+完了を `stage-protocol.md` に引き渡す。
+その `report` 呼び出しが、ライフサイクルの遷移と前進をすべて担う。散文の中で遷移を実行してはならず、この記録処理をユーザーに説明してもならない。
 
 ### Step 6: Completion
 
-Present completion message and approval gate:
+完了メッセージと承認ゲートを提示する:
 
 ```
 # :clipboard: Functional Design Complete — {unit-name}
 ```
 
-Summary of artifacts produced, then:
+生成した成果物の要約を示し、続けて次を示す:
 
 ```
 **Review:** `<record>/construction/{unit-name}/functional-design/`
 ```
 
-Approval gate: strictly 2-option (Approve / Request Changes).
+承認ゲート: 厳密に 2 択（Approve / Request Changes）。
 
 ## Sensors
 
-This stage's outputs are markdown design artefacts under `<record>/construction/{unit-name}/functional-design/`. Some sections include code samples that the code-shape sensors can also flag.
+このステージの出力は、`<record>/construction/{unit-name}/functional-design/` 配下の Markdown の設計成果物である。一部のセクションにはコードサンプルが含まれ、コードの形を扱うセンサーがそれを指摘することもある。
 
-Imports: `required-sections`, `upstream-coverage`, `linter`, `type-check`, `traceability`.
+インポート: `required-sections`, `upstream-coverage`, `linter`, `type-check`, `traceability`.
 
-Upstream targets: `unit-of-work`, `unit-of-work-story-map`, `stories`, `requirements`, `components`, `contract-summary`.
+上流の対象: `unit-of-work`, `unit-of-work-story-map`, `stories`, `requirements`, `components`, `contract-summary`.
 
-`linter` and `type-check` inspect matching TypeScript/JavaScript snippets.
-`traceability` verifies that every acceptance criterion of the stories mapped
-to this Unit, or every fallback `FR`, is declared and covered; checks `BRx.y`
-targets against `rules.md`; and finds unexplained business-rule orphans.
+`linter` と `type-check` は、一致する TypeScript/JavaScript のスニペットを検査する。
+`traceability` は、このユニットに対応付けられたストーリーのすべての受け入れ基準、
+またはフォールバックのすべての `FR` が宣言・カバーされていることを検証し、`BRx.y` の
+ターゲットを `rules.md` と照合し、説明のないビジネスルールの孤立を検出する。
 
 ## Learn
 
-When `directive.protocol_modules` lists `learnings`, follow
-`stage-protocol-learnings.md`: keep the diary at `directive.memory_path` while
-working, and take the learnings step before the approval gate; that module says
-when it asks the person anything. When the module is absent, skip both the diary
-and the step.
+`directive.protocol_modules` に `learnings` が含まれている場合は、
+`stage-protocol-learnings.md` に従う。作業中は `directive.memory_path` に日誌を付け、
+承認ゲートの前に学習ステップを実施する。そのモジュールが、利用者に何かを尋ねるタイミングを定めている。
+モジュールがない場合は、日誌とステップの両方を省略する。

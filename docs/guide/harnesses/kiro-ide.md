@@ -1,88 +1,88 @@
 # Running AI-DLC on Kiro IDE and Kiro CLI
 
-This guide moved to [Running AI-DLC on Kiro](kiro.md). Each heading below
-links to its section there.
+このガイドは [Running AI-DLC on Kiro](kiro.md) に移動しました。以下の各見出しは、
+移動先の対応するセクションにリンクしています。
 
 ## Prerequisites
 
-Moved to [Prerequisites](kiro.md#prerequisites).
+[Prerequisites](kiro.md#prerequisites) に移動しました。
 
 ## Install
 
-Moved to [Install](kiro.md#install).
+[Install](kiro.md#install) に移動しました。
 
 ### Native channel (recommended)
 
-Moved to [Native channel (recommended)](kiro.md#native-channel-recommended).
+[Native channel (recommended)](kiro.md#native-channel-recommended) に移動しました。
 
 ### Versioned manual-copy alternative
 
-Moved to [Versioned manual-copy alternative](kiro.md#versioned-manual-copy-alternative).
+[Versioned manual-copy alternative](kiro.md#versioned-manual-copy-alternative) に移動しました。
 
 ## First run
 
-Moved to [First run](kiro.md#first-run).
+[First run](kiro.md#first-run) に移動しました。
 
 ## Usage
 
-Moved to [Usage](kiro.md#usage).
+[Usage](kiro.md#usage) に移動しました。
 
 ### Start AI-DLC in a Kiro IDE chat
 
-Moved to [Start AI-DLC in a Kiro IDE chat](kiro.md#start-ai-dlc-in-a-kiro-ide-chat).
+[Start AI-DLC in a Kiro IDE chat](kiro.md#start-ai-dlc-in-a-kiro-ide-chat) に移動しました。
 
 ### Supervised or Autopilot
 
-Moved to [Supervised or Autopilot](kiro.md#supervised-or-autopilot).
+[Supervised or Autopilot](kiro.md#supervised-or-autopilot) に移動しました。
 
 ### When the chat fills up
 
-Moved to [When the chat fills up](kiro.md#when-the-chat-fills-up).
+[When the chat fills up](kiro.md#when-the-chat-fills-up) に移動しました。
 
 ## How hooks work on Kiro
 
-Moved to [How hooks work on Kiro](kiro.md#how-hooks-work-on-kiro).
+[How hooks work on Kiro](kiro.md#how-hooks-work-on-kiro) に移動しました。
 
 ### Debugging hooks
 
-Moved to [Debugging hooks](kiro.md#debugging-hooks).
+[Debugging hooks](kiro.md#debugging-hooks) に移動しました。
 
 ## What's different on Kiro
 
-Moved to [What's different on Kiro](kiro.md#whats-different-on-kiro).
+[What's different on Kiro](kiro.md#whats-different-on-kiro) に移動しました。
 
 ### A Unit's reviewer reads only that Unit
 
-Moved to [A Unit's reviewer reads only that Unit](kiro.md#a-units-reviewer-reads-only-that-unit).
+[A Unit's reviewer reads only that Unit](kiro.md#a-units-reviewer-reads-only-that-unit) に移動しました。
 
 ### One agent on its own model and effort
 
-Moved to [One agent on its own model and effort](kiro.md#one-agent-on-its-own-model-and-effort).
+[One agent on its own model and effort](kiro.md#one-agent-on-its-own-model-and-effort) に移動しました。
 
 ### Kiro's Workflows feature stops AI-DLC's reviews and helpers
 
-Moved to [Kiro's Workflows feature stops AI-DLC's reviews and helpers](kiro.md#kiros-workflows-feature-stops-ai-dlcs-reviews-and-helpers).
+[Kiro's Workflows feature stops AI-DLC's reviews and helpers](kiro.md#kiros-workflows-feature-stops-ai-dlcs-reviews-and-helpers) に移動しました。
 
 ### Command Prompt as Kiro's terminal on Windows
 
-Moved to [Command Prompt as Kiro's terminal on Windows](kiro.md#command-prompt-as-kiros-terminal-on-windows).
+[Command Prompt as Kiro's terminal on Windows](kiro.md#command-prompt-as-kiros-terminal-on-windows) に移動しました。
 
 ### PowerShell without Kiro's shell integration on Windows
 
-Moved to [PowerShell without Kiro's shell integration on Windows](kiro.md#powershell-without-kiros-shell-integration-on-windows).
+[PowerShell without Kiro's shell integration on Windows](kiro.md#powershell-without-kiros-shell-integration-on-windows) に移動しました。
 
 ### Command cards end with "dministrator: ...powershell.exe" on Windows
 
-Moved to [Command cards end with "dministrator: ...powershell.exe" on Windows](kiro.md#command-cards-end-with-dministrator-powershellexe-on-windows).
+[Command cards end with "dministrator: ...powershell.exe" on Windows](kiro.md#command-cards-end-with-dministrator-powershellexe-on-windows) に移動しました。
 
 ### Kiro memories carry old AI-DLC advice
 
-Moved to [Kiro memories carry old AI-DLC advice](kiro.md#kiro-memories-carry-old-ai-dlc-advice).
+[Kiro memories carry old AI-DLC advice](kiro.md#kiro-memories-carry-old-ai-dlc-advice) に移動しました。
 
 ## For framework developers
 
-Moved to [For framework developers](kiro.md#for-framework-developers).
+[For framework developers](kiro.md#for-framework-developers) に移動しました。
 
 ## Next steps
 
-Moved to [Next steps](kiro.md#next-steps).
+[Next steps](kiro.md#next-steps) に移動しました。

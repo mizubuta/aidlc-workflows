@@ -1,145 +1,145 @@
 # AWS Well-Architected Framework
 
 ## Purpose
-A structured approach for evaluating architectures against AWS best practices across six pillars. Use this framework during architecture reviews, before production launches, and periodically for existing workloads.
+6 つの柱にわたって、AWS のベストプラクティスに照らしてアーキテクチャを評価するための構造化されたアプローチ。このフレームワークは、アーキテクチャレビューの際、本番リリースの前、そして既存のワークロードに対して定期的に使う。
 
 ## Six Pillars Overview
 
-| Pillar | Focus | Key Metric |
+| 柱 | 焦点 | 主要指標 |
 |--------|-------|------------|
-| Operational Excellence | Run and monitor systems effectively | Mean time to recovery (MTTR) |
-| Security | Protect data, systems, and assets | Number of security findings |
-| Reliability | Recover from failures, meet demand | Availability percentage (e.g., 99.9%) |
-| Performance Efficiency | Use resources efficiently | Latency percentiles (p50, p95, p99) |
-| Cost Optimization | Avoid unnecessary costs | Cost per transaction/user |
-| Sustainability | Minimize environmental impact | Resources per unit of work |
+| Operational Excellence（運用上の優秀性） | システムを効果的に運用・監視する | 平均復旧時間（MTTR） |
+| Security（セキュリティ） | データ、システム、資産を保護する | セキュリティ検出結果の件数 |
+| Reliability（信頼性） | 障害から復旧し、需要を満たす | 可用性の割合（例: 99.9%） |
+| Performance Efficiency（パフォーマンス効率） | リソースを効率的に使う | レイテンシーのパーセンタイル（p50、p95、p99） |
+| Cost Optimization（コスト最適化） | 不要なコストを避ける | トランザクション／ユーザーあたりのコスト |
+| Sustainability（持続可能性） | 環境への影響を最小化する | 作業単位あたりのリソース |
 
 ## Pillar 1: Operational Excellence
 
 ### Key Questions
-- How do you determine what your priorities are?
-- How do you design your workload to understand its state?
-- How do you reduce defects, ease remediation, and improve flow?
-- How do you evolve your operations?
+- 優先事項をどのように決定しているか？
+- ワークロードの状態を把握できるよう、どのように設計しているか？
+- 欠陥を減らし、修復を容易にし、フローを改善するために何をしているか？
+- 運用をどのように進化させているか？
 
 ### Best Practices
-- **Infrastructure as code**: All resources defined in CDK/CloudFormation, version controlled
-- **Observability**: Structured logging, distributed tracing (X-Ray), custom metrics (CloudWatch)
-- **Runbooks and playbooks**: Documented procedures for common operational tasks and incident response
-- **Deployment automation**: CI/CD pipelines with automated testing, canary deployments, automatic rollback
-- **Game days**: Regularly simulate failures to validate operational readiness
+- **Infrastructure as Code**: すべてのリソースを CDK/CloudFormation で定義し、バージョン管理する
+- **オブザーバビリティ**: 構造化ログ、分散トレーシング（X-Ray）、カスタムメトリクス（CloudWatch）
+- **ランブックとプレイブック**: 一般的な運用タスクとインシデント対応の手順を文書化する
+- **デプロイの自動化**: 自動テスト、カナリアデプロイ、自動ロールバックを備えた CI/CD パイプライン
+- **ゲームデー**: 定期的に障害をシミュレートし、運用準備ができていることを検証する
 
 ### Common Anti-Patterns
-- Manual infrastructure changes via the console
-- Logging only errors (missing context for debugging)
-- No runbooks for common failure modes
-- Deploying on Friday afternoons without monitoring
+- コンソールからの手動によるインフラ変更
+- エラーのみのログ記録（デバッグに必要なコンテキストが欠ける）
+- よくある障害モードに対するランブックがない
+- 監視なしで金曜日の午後にデプロイする
 
 ## Pillar 2: Security
 
 ### Key Questions
-- How do you manage identities and permissions?
-- How do you detect and investigate security events?
-- How do you protect your network, compute, and data?
+- ID と権限をどのように管理しているか？
+- セキュリティイベントをどのように検出し、調査しているか？
+- ネットワーク、コンピューティング、データをどのように保護しているか？
 
 ### Best Practices
-- **Identity**: Use IAM roles (not long-lived keys), enforce MFA, apply least-privilege policies
-- **Detection**: Enable CloudTrail, GuardDuty, Security Hub, and Config rules
-- **Data protection**: Encrypt at rest (KMS) and in transit (TLS 1.2+), classify data sensitivity
-- **Network**: Use VPC with private subnets for databases/compute, security groups as firewalls, VPC endpoints for AWS services
-- **Incident response**: Pre-provisioned forensic tools, automated containment playbooks
+- **ID**: IAM ロールを使い（長期間有効なキーは使わない）、MFA を強制し、最小権限のポリシーを適用する
+- **検出**: CloudTrail、GuardDuty、Security Hub、Config ルールを有効にする
+- **データ保護**: 保存時（KMS）と転送時（TLS 1.2 以上）に暗号化し、データの機密度を分類する
+- **ネットワーク**: データベース／コンピューティングにはプライベートサブネットを持つ VPC を使い、セキュリティグループをファイアウォールとして使い、AWS サービスには VPC エンドポイントを使う
+- **インシデント対応**: 事前にプロビジョニングしたフォレンジックツール、自動化された封じ込めのプレイブック
 
 ### Common Anti-Patterns
-- Wildcard IAM policies (`Action: "*"`, `Resource: "*"`)
-- Secrets in environment variables or code (use Secrets Manager or Parameter Store)
-- Public S3 buckets or security groups open to 0.0.0.0/0
-- No encryption on databases or message queues
+- ワイルドカードの IAM ポリシー（`Action: "*"`, `Resource: "*"`）
+- 環境変数やコード内のシークレット（Secrets Manager または Parameter Store を使う）
+- 公開された S3 バケットや、0.0.0.0/0 に開かれたセキュリティグループ
+- データベースやメッセージキューが暗号化されていない
 
 ## Pillar 3: Reliability
 
 ### Key Questions
-- How do you manage service quotas and constraints?
-- How does your workload adapt to changes in demand?
-- How do you design interactions to prevent failures?
-- How do you test reliability?
+- サービスクォータと制約をどのように管理しているか？
+- ワークロードは需要の変化にどのように適応するか？
+- 障害を防ぐために、インタラクションをどのように設計しているか？
+- 信頼性をどのようにテストしているか？
 
 ### Best Practices
-- **Multi-AZ**: Deploy across at least 2 Availability Zones for all critical components
-- **Auto scaling**: Configure for both scale-out and scale-in with appropriate cooldowns
-- **Fault isolation**: Use bulkheads, circuit breakers, and timeouts for all remote calls
-- **Backup and recovery**: Automated backups with tested restore procedures, define RPO/RTO
-- **Chaos engineering**: Inject failures (instance termination, AZ loss, latency) to verify resilience
+- **マルチ AZ**: すべての重要なコンポーネントを少なくとも 2 つのアベイラビリティーゾーンにまたがってデプロイする
+- **Auto Scaling**: スケールアウトとスケールインの両方を、適切なクールダウンとともに設定する
+- **障害の分離**: すべてのリモート呼び出しにバルクヘッド、サーキットブレーカー、タイムアウトを使う
+- **バックアップと復旧**: 復元手順をテスト済みの自動バックアップを用意し、RPO/RTO を定める
+- **カオスエンジニアリング**: 障害（インスタンスの終了、AZ の喪失、レイテンシー）を注入して回復力を検証する
 
 ### Common Anti-Patterns
-- Single-AZ deployments for production workloads
-- No health checks on load balancer targets
-- Untested backup restores (backups exist but recovery has never been validated)
-- Hard dependencies on services without fallback behavior
+- 本番ワークロードのシングル AZ デプロイ
+- ロードバランサーのターゲットにヘルスチェックがない
+- 復元がテストされていないバックアップ（バックアップは存在するが、復旧が一度も検証されていない）
+- フォールバック動作のないサービスへの強い依存
 
 ## Pillar 4: Performance Efficiency
 
 ### Key Questions
-- How do you select the best performing architecture?
-- How do you select and manage your compute, storage, and database solutions?
-- How do you monitor to ensure performance?
+- 最もパフォーマンスの高いアーキテクチャをどのように選択しているか？
+- コンピューティング、ストレージ、データベースのソリューションをどのように選択・管理しているか？
+- パフォーマンスを確保するためにどのように監視しているか？
 
 ### Best Practices
-- **Right-size resources**: Start small, measure, and adjust — do not guess capacity
-- **Caching**: CloudFront for static content, ElastiCache for application data, API Gateway caching
-- **Database selection**: Match engine to access pattern (relational for joins, DynamoDB for key-value, OpenSearch for full-text)
-- **Async processing**: Offload long-running tasks to SQS/Lambda, keep API response times fast
-- **Load testing**: Establish baseline performance and test at 2-3x expected peak load
+- **リソースの適正化**: 小さく始めて測定し、調整する — キャパシティを推測しない
+- **キャッシュ**: 静的コンテンツには CloudFront、アプリケーションデータには ElastiCache、API Gateway のキャッシュ
+- **データベースの選定**: アクセスパターンにエンジンを合わせる（結合にはリレーショナル、キーバリューには DynamoDB、全文検索には OpenSearch）
+- **非同期処理**: 長時間実行されるタスクは SQS/Lambda にオフロードし、API の応答時間を短く保つ
+- **負荷テスト**: ベースラインのパフォーマンスを確立し、想定ピーク負荷の 2〜3 倍でテストする
 
 ### Common Anti-Patterns
-- Using RDS for simple key-value lookups (DynamoDB is more efficient)
-- Over-provisioned instances running at 5% utilization
-- Synchronous processing of tasks that users do not need to wait for
-- No performance baseline — cannot detect degradation without a reference point
+- 単純なキーバリュー検索に RDS を使う（DynamoDB の方が効率的）
+- 使用率 5% で稼働している過剰にプロビジョニングされたインスタンス
+- ユーザーが待つ必要のないタスクを同期的に処理する
+- パフォーマンスのベースラインがない — 基準点がなければ劣化を検出できない
 
 ## Pillar 5: Cost Optimization
 
 ### Key Questions
-- How do you implement cloud financial management?
-- How do you govern usage and manage demand/supply?
-- How do you evaluate new services for cost impact?
+- クラウド財務管理をどのように実施しているか？
+- 使用状況をどのように統制し、需要と供給を管理しているか？
+- 新しいサービスのコストへの影響をどのように評価しているか？
 
 ### Best Practices
-- **Visibility**: Enable Cost Explorer, set up budgets and alerts, use cost allocation tags
-- **Right-sizing**: Use Compute Optimizer recommendations, review utilization monthly
-- **Pricing models**: Savings Plans for steady-state compute, Spot for fault-tolerant workloads, On-Demand for variable/unpredictable
-- **Storage lifecycle**: S3 lifecycle policies to transition to Infrequent Access / Glacier
-- **Eliminate waste**: Stop unused instances, delete unattached EBS volumes, remove unused Elastic IPs
+- **可視化**: Cost Explorer を有効にし、予算とアラートを設定し、コスト配分タグを使う
+- **適正化**: Compute Optimizer の推奨事項を使い、使用率を毎月レビューする
+- **料金モデル**: 定常的なコンピューティングには Savings Plans、耐障害性のあるワークロードにはスポット、変動が大きく予測できないものにはオンデマンドを使う
+- **ストレージのライフサイクル**: S3 ライフサイクルポリシーで Infrequent Access / Glacier に移行する
+- **無駄の排除**: 使われていないインスタンスを停止し、アタッチされていない EBS ボリュームを削除し、使われていない Elastic IP を解放する
 
 ### Common Anti-Patterns
-- No cost allocation tagging (cannot attribute costs to teams or products)
-- Running development environments 24/7 (schedule stop outside business hours)
-- Paying On-Demand prices for predictable workloads (use Savings Plans)
-- Unused Elastic IPs, idle load balancers, orphaned snapshots
+- コスト配分タグがない（コストをチームやプロダクトに帰属させられない）
+- 開発環境を 24 時間 365 日稼働させる（業務時間外は停止をスケジュールする）
+- 予測可能なワークロードにオンデマンド料金を払う（Savings Plans を使う）
+- 使われていない Elastic IP、アイドル状態のロードバランサー、孤立したスナップショット
 
 ## Pillar 6: Sustainability
 
 ### Key Questions
-- How do you select regions to minimize carbon impact?
-- How do you minimize resources required for your workload?
+- 炭素への影響を最小化するために、リージョンをどのように選択しているか？
+- ワークロードに必要なリソースをどのように最小化しているか？
 
 ### Best Practices
-- **Efficient resources**: Use Graviton (ARM) processors — better performance per watt
-- **Scale to demand**: Auto-scale down during low traffic, schedule non-production shutdowns
-- **Managed services**: Serverless and managed services optimize resource utilization across customers
-- **Data management**: Delete unnecessary data, use appropriate storage tiers, compress data
+- **効率的なリソース**: Graviton（ARM）プロセッサーを使う — ワットあたりのパフォーマンスが高い
+- **需要に合わせたスケーリング**: トラフィックが少ない時間帯は自動でスケールダウンし、非本番環境の停止をスケジュールする
+- **マネージドサービス**: サーバーレスやマネージドサービスは、顧客全体でリソースの利用を最適化する
+- **データ管理**: 不要なデータを削除し、適切なストレージ階層を使い、データを圧縮する
 
 ## Well-Architected Review Process
 
 ### When to Conduct
-- Before production launch (mandatory)
-- Quarterly for critical workloads
-- After significant architectural changes
-- When performance or cost issues arise
+- 本番リリース前（必須）
+- 重要なワークロードについては四半期ごと
+- 大幅なアーキテクチャ変更の後
+- パフォーマンスやコストの問題が発生したとき
 
 ### Steps
-1. Select the workload scope (one application or service)
-2. Walk through each pillar's questions with the team
-3. Identify high-risk issues (HRIs) and improvement opportunities
-4. Prioritize remediation by risk and effort
-5. Create action items with owners and deadlines
-6. Re-review after remediation to verify closure
+1. ワークロードのスコープ（1 つのアプリケーションまたはサービス）を選ぶ
+2. チームとともに各柱の質問を順に確認する
+3. 高リスクの問題（HRI）と改善の機会を特定する
+4. リスクと工数に基づいて修復の優先順位を付ける
+5. オーナーと期限を設定したアクションアイテムを作成する
+6. 修復後に再レビューを行い、クローズしたことを検証する

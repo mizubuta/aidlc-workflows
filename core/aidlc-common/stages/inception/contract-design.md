@@ -40,85 +40,84 @@ outputs: contract-summary.md (under this stage's record dir, engine-resolved) �
 
 # Contract Design
 
-Define the formal contracts the system must honour so teams can build in parallel with confidence. A contract is a formal agreement across a boundary: what data crosses it, in what shape, via what protocol, and what happens when things go wrong. Two kinds of boundary qualify:
+システムが守らなければならない正式なコントラクトを定義し、チームが確信をもって並行して構築できるようにする。コントラクトとは、境界をまたぐ正式な合意である。どのデータがその境界を越えるか、どのような形で、どのプロトコルを介してか、そして問題が起きたときに何が起こるかを定める。対象となる境界は 2 種類ある:
 
-- **Inter-unit boundaries** — the agreement between a provider unit and a consumer unit inside the system. Treat each like a B2B agreement between two teams in two companies: it must be right from the start, because a wrong contract turns integration into a rework disaster.
-- **Public/external API boundaries** — the agreement between a unit and a consumer *outside* the system (another team, a partner, the public internet). A single-unit system with no inter-unit edges still needs this contract pinned before Code Generation when it exposes such an API; there is no other stage that owns the external API specification.
+- **ユニット間の境界** — システム内部の提供側ユニットと利用側ユニットの間の合意。それぞれを、2 つの会社の 2 つのチーム間の B2B 契約のように扱う。誤ったコントラクトは統合を手戻りの大惨事に変えるため、最初から正しくなければならない。
+- **公開/外部 API の境界** — ユニットとシステムの*外部*の利用者（別のチーム、パートナー、パブリックインターネット）との間の合意。ユニット間のエッジを持たない単一ユニットのシステムであっても、そのような API を公開する場合は、Code Generation の前にこのコントラクトを確定させる必要がある。外部 API の仕様を担う他のステージは存在しない。
 
-This stage runs once per workflow (not per unit) — it maps the whole set of boundaries at once, using the dependency DAG from Units Generation to know which units talk to each other, plus each unit's externally consumed surface for public API contracts.
+このステージはワークフローごとに 1 回（ユニットごとではなく）実行され、境界の全体を一度にマッピングする。どのユニットどうしが通信するかを知るために Units Generation の依存 DAG を使い、公開 API のコントラクトについては各ユニットの外部から利用される面を使う。
 
 ## Steps
 
 ### Step 1: Load Prior Context
 
-- Read `<record>/inception/units-generation/unit-of-work.md` (unit definitions and kinds)
-- Read `<record>/inception/units-generation/unit-of-work-dependency.md` (the dependency DAG — every edge is a candidate contract)
-- Read `<record>/inception/domain-design/components.md` (if produced) — the entity shapes inform payload design
-- Read `<record>/inception/requirements-analysis/requirements.md` (if produced) — NFRs shape SLAs and error budgets
+- `<record>/inception/units-generation/unit-of-work.md` を読み込む（ユニットの定義と種別）
+- `<record>/inception/units-generation/unit-of-work-dependency.md` を読み込む（依存 DAG — すべてのエッジがコントラクトの候補）
+- `<record>/inception/domain-design/components.md` を読み込む（生成されている場合） — エンティティの形がペイロード設計の参考になる
+- `<record>/inception/requirements-analysis/requirements.md` を読み込む（生成されている場合） — NFR が SLA とエラーバジェットを形作る
 
 ### Step 2: Create Contract Plan with Questions
 
-Create `<record>/inception/contract-design/contract-design-questions.md` with context-appropriate questions using [Answer]: tag format:
-- Public/external API surface (which units expose an API consumed outside the system, and its shape) — the single-unit trigger for this stage
-- Integration mechanism per boundary (synchronous REST/HTTP, async event/message, shared schema, gRPC, etc.)
-- Contract ownership (which unit owns each spec)
-- Versioning and breaking-change policy
-- Error, timeout, and retry behaviour at each boundary
+[Answer]: タグ形式を使い、状況に応じた質問を含む `<record>/inception/contract-design/contract-design-questions.md` を作成する:
+- 公開/外部 API の面（どのユニットがシステム外部から利用される API を公開するか、その形） — 単一ユニットでこのステージが実行される契機となる
+- 境界ごとの統合メカニズム（同期 REST/HTTP、非同期イベント/メッセージ、共有スキーマ、gRPC など）
+- コントラクトの所有権（どのユニットが各仕様を所有するか）
+- バージョニングと破壊的変更のポリシー
+- 各境界でのエラー、タイムアウト、リトライの挙動
 
 ### Step 3: Collect and Analyze Answers
 
-Collect answers following stage-protocol.md §3 question flow (offer interaction mode choice, collect answers, write back to file).
-- MANDATORY ambiguity analysis: scan for vague language, contradictions, missing details
-- Create follow-up questions if ANY ambiguity found
-- Resolve all ambiguities before proceeding
+stage-protocol.md §3 の質問フローに従って回答を収集する（インタラクションモードの選択肢を提示し、回答を収集し、ファイルに書き戻す）。
+- **必須**の曖昧さ分析: 曖昧な表現、矛盾、欠落している詳細を洗い出す
+- 曖昧さが 1 つでも見つかれば、追加の質問を作成する
+- 先に進む前にすべての曖昧さを解消する
 
 ### Step 4: Generate the Contract Summary
 
-Create `<record>/inception/contract-design/contract-summary.md`. This single artifact carries both the human-readable overview and the contract specs themselves.
+`<record>/inception/contract-design/contract-summary.md` を作成する。この単一の成果物に、人間が読める概要とコントラクト仕様そのものの両方を含める。
 
-**Contracts table** — one row per boundary (inter-unit and public/external):
+**コントラクト表** — 境界（ユニット間および公開/外部）ごとに 1 行:
 
 `| # | Provider Unit | Consumer | Mechanism | Owner |`
 
-For an external boundary, name the outside consumer (e.g. `External: partner API`, `External: public web`) in the Consumer column.
+外部の境界では、Consumer 列に外部の利用者を記載する（例: `External: partner API`、`External: public web`）。
 
-**Per-contract spec** — for each boundary, a fenced code block carrying the actual spec in the appropriate format:
+**コントラクトごとの仕様** — 各境界について、適切な形式で実際の仕様を記述したフェンス付きコードブロック:
 
-- a fenced ```yaml OpenAPI block for synchronous REST/HTTP contracts
-- a fenced ```yaml AsyncAPI block for event-driven/message-based contracts
-- a fenced ```yaml shared-schema block for shared database or shared model contracts
-- any other contract format appropriate to the integration mechanism
+- 同期 REST/HTTP コントラクト用: ```yaml OpenAPI block for synchronous REST/HTTP contracts
+- a fenced ```yaml AsyncAPI ブロック（イベント駆動/メッセージベースのコントラクト用）
+- 共有データベースまたは共有モデルのコントラクトには、フェンス付きの ```yaml shared-schema ブロック
+- 統合メカニズムに適したその他のコントラクト形式
 
-**Contract ownership rules** — a short list stating who owns each spec, how breaking changes are agreed, and how additive changes stay safe (consumers ignore unknown fields).
+**コントラクト所有権のルール** — 各仕様を誰が所有するか、破壊的変更をどのように合意するか、追加的な変更をどのように安全に保つか（利用側は未知のフィールドを無視する）を述べる短いリスト。
 
-**Open questions** — a table of unresolved contract points and which unit each blocks:
+**未解決の質問** — 未解決のコントラクト上の論点と、それぞれがどのユニットをブロックするかの表:
 `| Contract | Question | Blocks |`
 
 ### Step 5: Completion Handoff
 
-Hand completion to `stage-protocol.md` via
-`{{INVOKE}} engine orchestrate report --stage contract-design --result <outcome>`.
-That `report` call owns every lifecycle transition and advancement; never perform one in prose, and never narrate this bookkeeping to the user.
+`{{INVOKE}} engine orchestrate report --stage contract-design --result <outcome>`
+を介して、完了処理を `stage-protocol.md` に引き渡す。
+その `report` 呼び出しが、ライフサイクルの遷移と前進をすべて担う。散文の中で遷移を実行してはならず、この記録処理をユーザーに説明してもならない。
 
 ### Step 6: Present Completion & Request Approval
 
-Use stage-protocol.md completion template with completion emoji: :handshake:
-- Summary of contracts defined (count, mechanisms, ownership)
-- Review path: `<record>/inception/contract-design/`
-- Structured approval question with options: Approve (continue to next stage) / Request Changes
+stage-protocol.md の完了テンプレートを、完了絵文字 :handshake: とともに使用する:
+- 定義したコントラクトの要約（件数、メカニズム、所有権）
+- レビューパス: `<record>/inception/contract-design/`
+- 選択肢付きの構造化された承認質問: Approve（次のステージへ進む）/ Request Changes
 
 ## Sensors
 
-This stage's output is a markdown artefact under `<record>/inception/contract-design/`.
+このステージの出力は、`<record>/inception/contract-design/` 配下の Markdown 成果物である。
 
-Imports: `required-sections`, `upstream-coverage`.
+インポート: `required-sections`、`upstream-coverage`。
 
-Upstream targets: `unit-of-work`, `unit-of-work-dependency`, `components`, `requirements`.
+上流のターゲット: `unit-of-work`、`unit-of-work-dependency`、`components`、`requirements`。
 
 ## Learn
 
-When `directive.protocol_modules` lists `learnings`, follow
-`stage-protocol-learnings.md`: keep the diary at `directive.memory_path` while
-working, and take the learnings step before the approval gate; that module says
-when it asks the person anything. When the module is absent, skip both the diary
-and the step.
+`directive.protocol_modules` に `learnings` が含まれている場合は、
+`stage-protocol-learnings.md` に従う。作業中は `directive.memory_path` に日誌を付け、
+承認ゲートの前に学びのステップを実施する。利用者に何かを尋ねるタイミングは
+そのモジュールが定める。モジュールがない場合は、日誌とステップの両方を省略する。

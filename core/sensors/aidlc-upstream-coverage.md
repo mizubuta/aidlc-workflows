@@ -20,29 +20,24 @@ timeout_seconds: 300
 
 # upstream-coverage sensor
 
-Reads the stage frontmatter `consumes:` list and checks the stage's
-deliverables reference each required upstream artifact that exists. An
-optional one (`required: false`) is not checked, because it may not have
-informed the output, unless the stage marks it `cited: true`. A reference counts in any of the forms the framework's
-artifacts actually use:
+ステージ frontmatter の `consumes:` リストを読み込み、存在する必須の上流成果物それぞれを
+ステージの成果物が参照しているかを検査する。任意のもの（`required: false`）は、
+出力の根拠になっていない可能性があるため検査しない。ただし、ステージがそれに `cited: true` を付けている場合は検査する。参照は、フレームワークの
+成果物が実際に使う次のいずれの形式でも数える。
 
-- the artifact slug as a standalone token (not embedded in a longer
-  kebab token: `requirements` inside `nfr-requirements` does not count)
-- a wikilink (`[[<slug>]]`) or backticked filename (`` `<slug>.md` ``)
-- the producing stage's directory as a path segment (e.g. a provenance
-  header citing `nfr-requirements/` covers every artifact that stage
-  produces)
+- 独立したトークンとしての成果物 slug（より長いケバブ形式のトークンに埋め込まれたものは
+  数えない: `nfr-requirements` の中の `requirements` は数えない）
+- wikilink（`[[<slug>]]`）またはバッククォートで囲んだファイル名（`` `<slug>.md` ``）
+- パスセグメントとしての生成元ステージのディレクトリ（例: `nfr-requirements/` を引用する
+  出自ヘッダーは、そのステージが生成するすべての成果物をカバーする）
 
-Coverage is a property of the stage's whole output, not of each file:
-the check runs over the union of the stage's declared deliverables in
-the output directory (scaffolding - `*-questions.md`, `*-timestamp.md`,
-`memory.md` - is excluded from both sides), so a citation in a sibling
-deliverable counts.
+カバレッジはファイルごとではなく、ステージの出力全体の性質である。
+検査は出力ディレクトリ内のステージが宣言した成果物の和集合に対して実行される（足場ファイル - `*-questions.md`、`*-timestamp.md`、
+`memory.md` - は双方から除外される）ため、兄弟の成果物での引用も数える。
 
-Pure derivation from frontmatter - no per-stage config needed.
+frontmatter からの純粋な導出であり、ステージごとの設定は不要。
 
 ## Failure mode
 
-Emits `SENSOR_FAILED` and writes detail listing required or cited artifacts
-declared in `consumes:` that appear in none of the stage's deliverables in any
-accepted form.
+`SENSOR_FAILED` を発行し、`consumes:` で宣言された必須または引用対象の成果物のうち、
+ステージのどの成果物にも、受け入れられるどの形式でも現れないものを列挙した詳細を書き込む。

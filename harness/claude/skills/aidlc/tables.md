@@ -1,12 +1,12 @@
 # AI-DLC scopes and stages
 
-Generated tables, kept beside the skill as human-readable data: the engine routes from the compiled scope grid and stage graph, never from these.
+自動生成された表であり、人が読むためのデータとしてスキルの横に置いている。エンジンはコンパイル済みのスコープグリッドとステージグラフに基づいてルーティングし、これらの表は決して参照しない。
 
 ## Scope-to-Stage Mapping
 
-The orchestration engine resolves scope-level stage routing internally (it reads the compiled scope grid the table below summarises). The summary table is kept here as human-readable data - not dispatch logic - and is regenerated, never hand-edited. (One carve-out: `scope save` adds a plan the human chose to keep to the runtime scope registry (the durable `aidlc/scopes/<name>.md` record, projected into `{{HARNESS_DIR}}/scopes/aidlc-<name>.md` and a `scope-grid.json` entry) - that is the sanctioned write path for saved scopes, not a hand-edit; this summary table itself stays generated.)
+オーケストレーションエンジンは、スコープ単位のステージルーティングを内部で解決する（下の表が要約しているコンパイル済みスコープグリッドを読み込む）。この要約表は人が読むためのデータとしてここに置いているもので、ディスパッチロジックではなく、再生成されるものであり、決して手で編集しない。（例外が1つある: `scope save` は、人が保持すると決めたプランをランタイムのスコープレジストリに追加する（永続的な `aidlc/scopes/<name>.md` 記録で、`{{HARNESS_DIR}}/scopes/aidlc-<name>.md` と `scope-grid.json` のエントリに投影される）。これは保存済みスコープのための正規の書き込み経路であり、手編集ではない。この要約表そのものは引き続き自動生成である。）
 
-Source of truth: one file per scope under `.claude/scopes/aidlc-<name>.md` (identity + keywords + description + skeleton default) plus each stage's `scopes:` frontmatter (membership), transposed into the compiled grid at `{{INVOKE}} engine graph compile`. Adding a scope is the same muscle memory as authoring a sensor or agent — drop `.claude/scopes/aidlc-<name>.md`, tag the member stages' `scopes:` lists, recompile, then `{{INVOKE}} engine gen scope-table` to regenerate the table below + commit. No prose edit required. CI runs `scope-table --check` to prevent drift.
+信頼できる情報源: `.claude/scopes/aidlc-<name>.md` 配下のスコープごとに1つのファイル（識別情報 + キーワード + 説明 + スケルトンのデフォルト）と、各ステージの `scopes:` frontmatter（所属）であり、これらは `{{INVOKE}} engine graph compile` の時点でコンパイル済みグリッドに転置される。スコープの追加は、センサーやエージェントの作成と同じ手順で行う — `.claude/scopes/aidlc-<name>.md` を置き、所属ステージの `scopes:` リストにタグを付け、再コンパイルし、`{{INVOKE}} engine gen scope-table` で下の表を再生成してコミットする。散文の編集は不要。CI は `scope-table --check` を実行してずれを防ぐ。
 
 <!-- BEGIN: compiled scope grid via `{{INVOKE}} engine gen scope-table` - do NOT hand-edit -->
 
@@ -30,7 +30,7 @@ Source of truth: one file per scope under `.claude/scopes/aidlc-<name>.md` (iden
 
 ## Stage Graph
 
-The engine reads the compiled `data/stage-graph.json` directly for all routing; this table is the human-readable mirror of that graph (each compiled stage, its phase, execution mode, lead/support agents, and run mode) — data, not dispatch logic.
+エンジンはすべてのルーティングでコンパイル済みの `data/stage-graph.json` を直接読み込む。この表はそのグラフを人が読める形に写したもの（コンパイル済みの各ステージ、そのフェーズ、実行区分、リード/サポートエージェント、実行モード）であり、データであってディスパッチロジックではない。
 
 <!-- BEGIN: compiled stage graph via `{{INVOKE}} engine gen stage-table` - do NOT hand-edit -->
 

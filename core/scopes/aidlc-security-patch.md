@@ -20,31 +20,31 @@ collaborators: off
 
 # security-patch scope
 
-Minimal depth for responding to a CVE or vulnerability fast. It threads a
-narrow path: understand the code (reverse-engineering), state what the
-patch must do (requirements-analysis), capture the security constraint
-(nfr-requirements), fix and test (code-generation, build-and-test), then
-ship through the deployment stages so the patch actually reaches
-production.
+CVE や脆弱性に迅速に対応するための Minimal 深度のスコープ。
+次の狭い経路をたどる: コードを理解し（reverse-engineering）、パッチが
+満たすべきことを述べ（requirements-analysis）、セキュリティ上の制約を
+記録し（nfr-requirements）、修正してテストし（code-generation、build-and-test）、
+その後デプロイステージを通じて出荷し、パッチを確実に本番環境へ
+届ける。
 
-Guard Policy defaults to off: a patch whose inputs move after approval is recorded and announced rather than approved again; plan approval, review freeze, state transition, and reviewer read scope are lowered for undirected work. Human presence stays up.
+Guard Policy のデフォルトは off である。承認後に入力が変化したパッチは、再承認されるのではなく記録・通知される。指示のない作業については、プラン承認、レビューの凍結、状態遷移、レビュアーの読み取りスコープが緩和される。人間の関与（Human presence）は維持される。
 
 ## Why these stages, why skip those
 
-A security patch is urgent, incremental, and must deploy. It skips the
-whole design ceremony (ideation, domain-design, units-generation,
-nfr-design, infrastructure-design) because the change is targeted. Like the
-other incremental scopes it keeps deployment-pipeline and
-deployment-execution EXECUTE — a patch that never deploys does not close the
-vulnerability. Its distinctive stage is nfr-requirements, which records the
-security constraint; requirements-analysis also runs so there is an auditable
-statement of the vulnerability and its remediation criteria (the
-`requirements` artifact nfr-requirements and code-generation consume). One of
-the three incremental scopes that skip the walking-skeleton ceremony.
+セキュリティパッチは緊急かつ漸進的であり、必ずデプロイしなければならない。
+変更が的を絞ったものであるため、設計のセレモニー全体（ideation、domain-design、units-generation、
+nfr-design、infrastructure-design）をスキップする。他の
+漸進的なスコープと同様に、deployment-pipeline と
+deployment-execution は EXECUTE のまま残す。デプロイされないパッチでは
+脆弱性は塞がらないからである。このスコープに特有のステージは nfr-requirements であり、
+セキュリティ上の制約を記録する。requirements-analysis も実行し、脆弱性と
+その是正基準について監査可能な記述を残す（nfr-requirements と code-generation が
+消費する `requirements` 成果物）。walking-skeleton のセレモニーをスキップする
+3 つの漸進的スコープの 1 つである。
 
 ## Membership
 
-Keyword triggers: `security`, `CVE`, `vulnerability`, `patch`.
-Initialization, reverse-engineering, requirements-analysis,
-nfr-requirements, code-generation, build-and-test, deployment-pipeline,
-and deployment-execution execute; the rest is SKIP.
+キーワードトリガー: `security`、`CVE`、`vulnerability`、`patch`。
+Initialization、reverse-engineering、requirements-analysis、
+nfr-requirements、code-generation、build-and-test、deployment-pipeline、
+deployment-execution を実行し、それ以外は SKIP となる。

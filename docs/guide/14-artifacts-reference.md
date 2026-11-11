@@ -1,25 +1,25 @@
 # Artifacts Reference
 
-Every AI-DLC workflow produces artifacts under its **intent record dir** —
-`aidlc/spaces/<space>/intents/<YYMMDD>-<label>/` (where `<space>` is `default`
-unless a non-default space is in play, and `<YYMMDD>-<label>` is the intent dir;
-written `<record>/` below). This chapter is a complete reference for the
-directory structure, per-artifact descriptions, lifecycle, and git policy.
+すべての AI-DLC ワークフローは、その **インテント記録ディレクトリ**
+`aidlc/spaces/<space>/intents/<YYMMDD>-<label>/` の下に成果物を生成します（`<space>` は、
+既定以外のスペースを使っていない限り `default` で、`<YYMMDD>-<label>` がインテントディレクトリです。
+以下では `<record>/` と表記します）。この章は、
+ディレクトリ構造、成果物ごとの説明、ライフサイクル、git ポリシーの完全なリファレンスです。
 
 ---
 
 ## Directory Tree
 
-This is the complete set of places an artifact can land, not what a fresh record
-looks like. Intent creation makes one folder per phase your scope runs (plus
-`verification/`); the rest appear as work happens, and a per-stage folder is
-created the first time that stage writes.
+これは成果物が置かれうる場所の完全な一覧であり、作成直後の記録が
+どう見えるかを示すものではありません。インテントの作成時には、スコープが実行するフェーズごとに 1 つのフォルダー（と
+`verification/`）が作られます。それ以外は作業の進行に応じて現れ、ステージごとのフォルダーは
+そのステージが最初に書き込んだときに作成されます。
 
-Framework files share one `.aidlc-engine/` directory beside the human artifacts.
-After an upgrade, existing audit rows still verify reviews at their recorded
-paths. Sensor findings and summary authorizations use their older directories
-only while the corresponding new directory is absent. New writes use
-`.aidlc-engine/`; other transient or derived files are recreated there.
+フレームワークのファイルは、人間向けの成果物の隣にある 1 つの `.aidlc-engine/` ディレクトリを共有します。
+アップグレード後も、既存の監査行は記録されたパスでレビューを引き続き検証します。
+センサーの指摘とサマリーの承認は、対応する新しいディレクトリが存在しない間に限り、
+古いディレクトリを使います。新しい書き込みは
+`.aidlc-engine/` を使い、その他の一時ファイルや派生ファイルはそこに再作成されます。
 
 ```
 aidlc/spaces/<space>/intents/<YYMMDD>-<label>/   # one record dir per intent
@@ -97,11 +97,11 @@ aidlc/spaces/<space>/intents/<YYMMDD>-<label>/   # one record dir per intent
     {ISO-date}-{stage-name}/
 ```
 
-Inside a stage folder are the stage's artifacts, its questions file, its
-`memory.md` diary when learnings are on, and `reviews/review-NN.md`: a readable
-copy of each review of the stage, numbered in the order the verdicts came. After
-Intent Capture on the `mvp` plan, with Feasibility started, one record held
-(captured, `.aidlc-engine/` left out):
+ステージフォルダーの中には、ステージの成果物、質問ファイル、
+学びがオンの場合は `memory.md` 日誌、そして `reviews/review-NN.md` があります。後者はステージの各レビューの読みやすい
+コピーで、判定が出た順に番号が振られています。`mvp` 計画で Intent Capture を終え、
+Feasibility を開始した後の記録は、次のようになっていました
+（取得時のもので、`.aidlc-engine/` は省略しています）:
 
 ```text
 aidlc/spaces/default/intents/261013-inventory-api/
@@ -127,71 +127,71 @@ aidlc/spaces/default/intents/261013-inventory-api/
   verification/
 ```
 
-**The 9 reverse-engineering deliverables are not in the record dir.** They
-(`architecture.md`, `code-structure.md`, `technology-stack.md`, …) land one
-level up, in the space-level per-repo CodeKB —
-`aidlc/spaces/<space>/codekb/<repo>/` — one store per repo rather than a copy
-per intent. When the project folder is itself the repo, `<repo>` starts as the
-folder's name (the main checkout's name in a linked git worktree), with each
-character other than a letter, a digit, `.`, `_` or `-` made a hyphen (`portal app` is `portal-app`;
-the folder keeps its name), and stays with the store: a moved, renamed or copied project folder keeps reading the same
-store. The exception is a space holding two or more stores that no intent
-records as its repo: there the current folder name is used, and the next step
-can warn that completed stage results have drifted. On each applicable
-brownfield intent, the stage checks the store's
-recorded scope and working-tree fingerprint first. A verified-current store
-whose coverage fits the intent may be reused by human choice; otherwise a full
-rescan replaces those nine files, while a focused scan merges the newly
-analyzed area into them and preserves prior prose outside it. Verified-current
-coverage is accumulated as a union; stale or unverifiable prior deep coverage
-is retained as prose and demoted to shallow
-(`reverse-engineering-timestamp.md` records when the last scan ran and what
-it covered). Pre-scan source/store generations and a locked all-artifact
-publication prevent a source change from being mislabeled current and prevent
-concurrent focused scans from silently replacing each other. Intents therefore
-read the newest scan of the repo, not the one
-taken when their own record dir was created. When the learnings ritual is on,
-the record dir gets the stage's own `memory.md` diary — created by the engine
-when it emits the run-stage directive (see **Per-stage memory diary** below) — so an
+**リバースエンジニアリングの 9 つの成果物は、記録ディレクトリにはありません。** それら
+（`architecture.md`、`code-structure.md`、`technology-stack.md` など）は 1 つ上の
+階層、スペースレベルのリポジトリごとの CodeKB
+`aidlc/spaces/<space>/codekb/<repo>/` に置かれます。インテントごとのコピーではなく、リポジトリごとに 1 つのストアです。
+プロジェクトフォルダー自体がリポジトリである場合、`<repo>` は最初は
+フォルダー名（リンクされた git worktree ではメインのチェックアウトの名前）になり、
+英字、数字、`.`、`_`、`-` 以外の文字はハイフンに置き換えられます（`portal app` は `portal-app` になります。
+フォルダー自体の名前は変わりません）。この名前はストアに固定されます。プロジェクトフォルダーを移動、名前変更、コピーしても、同じ
+ストアを読み続けます。例外は、どのインテントも自分のリポジトリとして記録していない
+ストアを 2 つ以上持つスペースです。その場合は現在のフォルダー名が使われ、次のステップで、
+完了済みのステージ結果がずれていることを警告する場合があります。該当する
+ブラウンフィールドのインテントごとに、ステージはまずストアの
+記録済みのスコープと作業ツリーのフィンガープリントを確認します。現在の状態であることが検証され、
+カバー範囲がインテントに合うストアは、人間の選択によって再利用できます。そうでない場合は、完全な
+再スキャンでその 9 つのファイルが置き換えられます。一方、焦点を絞ったスキャンでは、新たに
+分析した領域をそれらにマージし、その範囲外の既存の記述は保持します。現在の状態であることが検証された
+カバー範囲は和集合として蓄積されます。古い、または検証できない過去の深いカバー範囲は、
+記述として残されたうえで浅いカバー範囲に格下げされます
+（`reverse-engineering-timestamp.md` には、最後のスキャンがいつ実行され、何を
+カバーしたかが記録されます）。スキャン前のソース/ストアの世代と、すべての成果物をロックした状態での
+公開によって、ソースの変更が誤って現在のものとラベル付けされることや、
+並行する焦点スキャンが互いを黙って置き換えることが防がれます。そのため、インテントは
+自分の記録ディレクトリが作成された時点のスキャンではなく、リポジトリの最新のスキャンを
+読みます。学びの儀式がオンの場合、
+記録ディレクトリにはステージ自身の `memory.md` 日誌が置かれます。これはエンジンが
+run-stage ディレクティブを発行するときに作成されます（下記の **ステージごとのメモリ日誌** を参照）。そのため、
 `inception/reverse-engineering/`
-directory can appear there, holding the diary and nothing else. Codekb writes
-are audit-logged with a `codekb > <repo> > <name>` breadcrumb, so the
-per-intent trail still records what changed and when.
+ディレクトリがそこに現れることがあり、その中身は日誌だけです。CodeKB への書き込みは
+`codekb > <repo> > <name>` というパンくずとともに監査ログに記録されるため、
+インテントごとの記録には、何がいつ変わったかが引き続き残ります。
 
-**Team knowledge is not in the record dir.** It lives one level up, at the space
-level — `aidlc/spaces/<space>/knowledge/` (a sibling of `intents/`) — so it
-accumulates across every intent in the space rather than being trapped in one
-intent's record. The engine creates it empty; the team adds free-form files
-under an optional `aidlc-shared/` and per-agent subdirectories. See
-[Knowledge](08-knowledge.md).
+**チームのナレッジは記録ディレクトリにはありません。** 1 つ上の階層、スペースの
+レベルにある `aidlc/spaces/<space>/knowledge/`（`intents/` の兄弟）に置かれます。そのため、
+1 つのインテントの記録に閉じ込められることなく、スペース内のすべてのインテントにわたって蓄積されます。
+エンジンはこれを空の状態で作成し、チームが任意の `aidlc-shared/` とエージェントごとのサブディレクトリの下に
+自由形式のファイルを追加します。
+[ナレッジ](08-knowledge.md) を参照してください。
 
-**Per-stage memory diary.** When the learnings ritual is on, each executed stage
-also keeps a committed `memory.md` alongside its artifacts (e.g.
-`<record>/inception/requirements-analysis/memory.md`). It is the
-stage's observation diary — created by the engine from a template when it emits
-the run-stage directive and maintained by the orchestrator during the stage, as
-the stage's record of the agent's reasoning; nothing in it is offered to you as
-something to keep. It is never hand-edited. See
-[Rules and the Learning Loop](09-rules-and-the-learning-loop.md) for the
-learning loop, which keeps the corrections you make.
+**ステージごとのメモリ日誌。** 学びの儀式がオンの場合、実行された各ステージは
+成果物と並べて、コミット対象の `memory.md` も保持します（例:
+`<record>/inception/requirements-analysis/memory.md`）。これは
+ステージの観察日誌です。エンジンが
+run-stage ディレクティブを発行するときにテンプレートから作成し、ステージ中はオーケストレーターが、
+エージェントの推論に関するステージの記録として管理します。その中の何かが、残すべきものとして
+あなたに提示されることはありません。手作業で編集されることもありません。
+あなたが行った修正を保持する学習ループについては、
+[ルールと学習ループ](09-rules-and-the-learning-loop.md) を参照してください。
 
-**Code lives in sibling repos, not the record dir.** The `aidlc/` tree holds only
-method, state, audit, and artifacts — never application code. Generated code lands
-in the workspace's **code repos**: in the common single-repo case, the project dir
-itself; in a multi-repo workspace, the sibling repo directories that are immediate
-children of the workspace root (each with its own `.git`; a git submodule of a
-project with code of its own is not one, so that project is the single-repo
-case). An intent records the
-repos it touches at creation - auto-discovered, or scoped with `--repos a,b` - in its
-`intents.json` row (`repos: [...]`); Construction anchors each git operation to one
-of them. An intent with no recorded `repos` is the single-repo default. See
-[CLI Commands](12-cli-commands.md).
+**コードは記録ディレクトリではなく、兄弟リポジトリに置かれます。** `aidlc/` ツリーが保持するのは
+メソッド、状態、監査、成果物だけであり、アプリケーションコードは決して置かれません。生成されたコードは
+ワークスペースの **コードリポジトリ** に置かれます。一般的な単一リポジトリの場合はプロジェクトディレクトリ
+そのものです。マルチリポジトリのワークスペースでは、ワークスペースのルート直下の
+子である兄弟リポジトリのディレクトリです（それぞれが独自の `.git` を持ちます。独自のコードを持つ
+プロジェクトの git サブモジュールはこれに該当せず、そのプロジェクトは単一リポジトリの
+ケースになります）。インテントは、作成時に
+自分が触れるリポジトリを記録します（自動検出されるか、`--repos a,b` でスコープを指定します）。記録先は
+`intents.json` の行（`repos: [...]`）です。Construction は、各 git 操作をそのうちの 1 つに
+結び付けます。`repos` が記録されていないインテントは、既定の単一リポジトリになります。
+[CLI コマンド](12-cli-commands.md) を参照してください。
 
 ---
 
 ## Artifact Lifecycle
 
-Artifacts flow through a predictable lifecycle from creation to consumption by downstream stages:
+成果物は、作成から下流のステージによる利用まで、予測可能なライフサイクルを通過します:
 
 ```mermaid
 flowchart LR
@@ -210,11 +210,11 @@ flowchart LR
 
 <!-- Text fallback: Stage creates artifact, reviewed at approval gate, committed to version control, consumed by downstream stages, verified at phase boundary. -->
 
-1. **Created** — The lead agent produces the artifact during stage execution and writes it to the appropriate subdirectory of the intent's record dir (with the space-level exceptions noted above: Reverse Engineering writes to the per-repo codekb store, team knowledge to `knowledge/`)
-2. **Reviewed** — You review the artifact at the approval gate and either approve or request changes
-3. **Committed** — After approval, the artifact is ready for version control (see git policy below)
-4. **Consumed** — Downstream stages read the artifact as input (see the inputs table below)
-5. **Verified** — Phase boundary verification checks confirm traceability across all artifacts in the phase
+1. **作成** — リードエージェントがステージの実行中に成果物を生成し、インテントの記録ディレクトリ内の適切なサブディレクトリに書き込みます（上記のスペースレベルの例外があります: Reverse Engineering はリポジトリごとの CodeKB ストアに、チームのナレッジは `knowledge/` に書き込みます）
+2. **レビュー** — あなたが承認ゲートで成果物をレビューし、承認するか変更を依頼します
+3. **コミット** — 承認後、成果物はバージョン管理に入れられる状態になります（下記の git ポリシーを参照）
+4. **利用** — 下流のステージが成果物を入力として読みます（下記の入力の表を参照）
+5. **検証** — フェーズ境界の検証チェックにより、フェーズ内のすべての成果物にわたるトレーサビリティが確認されます
 
 ---
 
@@ -222,138 +222,138 @@ flowchart LR
 
 ### Initialization (stages 0.1-0.3)
 
-| Stage | What it leaves | Notes |
+| ステージ | 残すもの | 備考 |
 |-------|-----------|-------|
-| 0.1 Workspace Scaffold | The record dir: one folder per phase the plan runs, plus `verification/`, and the space's `knowledge/` | Deterministic (runs inside `aidlc-utility intent-create`) |
-| 0.2 Workspace Detection | The scan behind `Project Type` and `Workspace State` in `aidlc-state.md`, and a `WORKSPACE_SCANNED` audit row | Deterministic rule-based scanner |
-| 0.3 State Init | The full `aidlc-state.md` | Deterministic |
+| 0.1 Workspace Scaffold | 記録ディレクトリ: 計画が実行するフェーズごとに 1 つのフォルダーと `verification/`、およびスペースの `knowledge/` | 決定的（`aidlc-utility intent-create` の中で実行される） |
+| 0.2 Workspace Detection | `aidlc-state.md` 内の `Project Type` と `Workspace State` の根拠となるスキャン、および `WORKSPACE_SCANNED` 監査行 | 決定的なルールベースのスキャナー |
+| 0.3 State Init | 完全な `aidlc-state.md` | 決定的 |
 
-None of the three writes a document of its own, so `initialization/` stays empty.
+3 つのいずれも独自のドキュメントを書き込まないため、`initialization/` は空のままです。
 
-The welcome message is rendered at session start via `companyAnnouncements` in `settings.json` — it is not a stage and produces no artifact.
+ウェルカムメッセージは、セッション開始時に `settings.json` の `companyAnnouncements` によって表示されます。これはステージではなく、成果物も生成しません。
 
 ### Ideation (stages 1.1-1.7)
 
-| Stage | Key Artifacts | Condition |
+| ステージ | 主な成果物 | 条件 |
 |-------|--------------|-----------|
-| 1.1 Intent Capture | `intent-capture-questions.md` (source register and confirmed answers), `intent-statement.md`, `stakeholder-map.md` (inline source tags and mandatory assumptions sections) | Always |
-| 1.2 Market Research | `competitive-analysis.md`, `build-vs-buy.md` | Conditional |
-| 1.3 Feasibility | `feasibility-assessment.md`, `constraint-register.md`, `raid-log.md` | Conditional |
-| 1.4 Scope Definition | `scope-document.md`, `intent-backlog.md` | Always |
-| 1.5 Team Formation | `team-assessment.md`, `mob-composition.md` | Conditional |
-| 1.6 Rough Mockups | `wireframes.md`, `user-flow.md` | Conditional |
-| 1.7 Approval & Handoff | `initiative-brief.md`, `decision-log.md` | Always |
+| 1.1 Intent Capture | `intent-capture-questions.md`（ソース登録簿と確認済みの回答）、`intent-statement.md`、`stakeholder-map.md`（インラインのソースタグと必須の前提セクション） | 常に |
+| 1.2 Market Research | `competitive-analysis.md`、`build-vs-buy.md` | 条件付き |
+| 1.3 Feasibility | `feasibility-assessment.md`、`constraint-register.md`、`raid-log.md` | 条件付き |
+| 1.4 Scope Definition | `scope-document.md`、`intent-backlog.md` | 常に |
+| 1.5 Team Formation | `team-assessment.md`、`mob-composition.md` | 条件付き |
+| 1.6 Rough Mockups | `wireframes.md`、`user-flow.md` | 条件付き |
+| 1.7 Approval & Handoff | `initiative-brief.md`、`decision-log.md` | 常に |
 
 ### Inception (stages 2.1-2.9)
 
-| Stage | Key Artifacts | Condition |
+| ステージ | 主な成果物 | 条件 |
 |-------|--------------|-----------|
-| 2.1 Reverse Engineering | 9 files including `architecture.md`, `code-structure.md`, `technology-stack.md` (written to the space-level `aidlc/spaces/<active-space>/codekb/<repo>/` — one shared store per repo, reused when verified current, replaced by a full rescan, or cumulatively extended by a focused scan; only the stage's `memory.md` diary lands in the intent record, when the learnings ritual is on) | Brownfield only |
-| 2.2 Practices Discovery | `team-practices.md`, `discovered-rules.md`, `evidence.md`, `practices-discovery-timestamp.md`, plus quality/developer/devsecops contribution files (promoted to `aidlc/spaces/<active-space>/memory/team.md` and `project.md` after approval) | Conditional |
-| 2.3 Requirements Analysis | `requirements.md` | Always |
-| 2.4 User Stories | `stories.md`, `personas.md` | User-facing features |
-| 2.5 Refined Mockups | `mockups.md`, `interaction-spec.md`, `accessibility-checklist.md` | UI projects |
-| 2.6 Domain Design | `components.md` (consolidated component catalogue), `decisions.md` (ADR log) | When new components needed |
-| 2.7 Units Generation | `unit-of-work.md`, `unit-of-work-dependency.md`, `unit-of-work-story-map.md` | Always |
-| 2.8 Contract Design | `contract-summary.md` (inter-unit contracts and public or external APIs) | More than one unit, or a unit with an API used outside the system |
-| 2.9 Delivery Planning | `bolt-plan.md`, `team-allocation.md`, `risk-and-sequencing-rationale.md`, `external-dependency-map.md` | Always |
+| 2.1 Reverse Engineering | `architecture.md`、`code-structure.md`、`technology-stack.md` を含む 9 ファイル（スペースレベルの `aidlc/spaces/<active-space>/codekb/<repo>/` に書き込まれる。リポジトリごとに 1 つの共有ストアで、現在の状態と検証されれば再利用され、完全な再スキャンで置き換えられ、焦点を絞ったスキャンで累積的に拡張される。学びの儀式がオンの場合、インテントの記録に置かれるのはステージの `memory.md` 日誌だけ） | ブラウンフィールドのみ |
+| 2.2 Practices Discovery | `team-practices.md`、`discovered-rules.md`、`evidence.md`、`practices-discovery-timestamp.md`、および quality/developer/devsecops の貢献ファイル（承認後に `aidlc/spaces/<active-space>/memory/team.md` と `project.md` に昇格される） | 条件付き |
+| 2.3 Requirements Analysis | `requirements.md` | 常に |
+| 2.4 User Stories | `stories.md`、`personas.md` | ユーザー向けの機能 |
+| 2.5 Refined Mockups | `mockups.md`、`interaction-spec.md`、`accessibility-checklist.md` | UI プロジェクト |
+| 2.6 Domain Design | `components.md`（統合されたコンポーネントカタログ）、`decisions.md`（ADR ログ） | 新しいコンポーネントが必要な場合 |
+| 2.7 Units Generation | `unit-of-work.md`、`unit-of-work-dependency.md`、`unit-of-work-story-map.md` | 常に |
+| 2.8 Contract Design | `contract-summary.md`（ユニット間の契約と、公開 API または外部 API） | ユニットが複数ある場合、またはシステム外部から使われる API を持つユニットがある場合 |
+| 2.9 Delivery Planning | `bolt-plan.md`、`team-allocation.md`、`risk-and-sequencing-rationale.md`、`external-dependency-map.md` | 常に |
 
 ### Construction (stages 3.1-3.7)
 
-Stages 3.1-3.5 repeat per unit of work. Artifacts go in `construction/{unit-name}/{stage-name}/`. Stages 3.6-3.7 run once after all units.
+ステージ 3.1〜3.5 は作業ユニットごとに繰り返されます。成果物は `construction/{unit-name}/{stage-name}/` に置かれます。ステージ 3.6〜3.7 は、すべてのユニットの後に 1 回実行されます。
 
-The four design stages (3.1-3.4) prune their artifacts to each unit's **kind** (tagged in 2.7's edge block: `service`, `spec`, `ui`, `packaging`, or `library`). A `spec` unit owes no scalability doc, a `packaging` unit no functional spec; a unit left untagged receives the full matrix below. Which artifact applies to which kind is stage frontmatter data (`produces_kinds`, see [Stage definition](../reference/15-stage-definition.md)). A unit for which none of a stage's artifacts apply is complete for that stage with zero files.
+4 つの設計ステージ（3.1〜3.4）は、成果物を各ユニットの **種類**（2.7 のエッジブロックでタグ付けされる: `service`、`spec`、`ui`、`packaging`、`library`）に合わせて絞り込みます。`spec` ユニットにはスケーラビリティのドキュメントは不要で、`packaging` ユニットには機能仕様は不要です。タグのないユニットには、下記の完全なマトリクスが適用されます。どの成果物がどの種類に適用されるかは、ステージの frontmatter のデータです（`produces_kinds`。[ステージ定義](../reference/15-stage-definition.md) を参照）。あるステージの成果物がどれも適用されないユニットは、ファイル 0 個でそのステージを完了します。
 
-| Stage | Key Artifacts | Condition |
+| ステージ | 主な成果物 | 条件 |
 |-------|--------------|-----------|
-| 3.1 Functional Design | `entities.md`, `rules.md`, `functional-spec.md` | Per plan, per unit (by kind) |
-| 3.2 NFR Requirements | `security-requirements.md`, `performance-requirements.md` | Per plan, per unit (by kind) |
-| 3.2 NFR Requirements | `observability-requirements.md` | Per plan, service units only |
-| 3.3 NFR Design | `security-design.md`, `performance-design.md` | Per plan, per unit (by kind) |
-| 3.3 NFR Design | `observability-design.md` | Per plan, service units only |
-| 3.4 Infrastructure Design | `infrastructure-specification.md`, `monitoring-design.md`, `cicd-pipeline.md` | Per plan, per unit (by kind) |
-| 3.5 Code Generation | `code-generation-plan.md`, `code-generation-questions.md`, `unit-test-instructions.md`, `code-summary.md`, `traceability.json`, plus engine-required `source-manifest.json` (code goes to workspace root) | Always, per unit |
-| 3.6 Build and Test | `build-instructions.md`, `test-results.md` | Always, after all units |
-| 3.7 CI Pipeline | `ci-config.md`, `quality-gates.md` | Conditional, after all units |
+| 3.1 Functional Design | `entities.md`、`rules.md`、`functional-spec.md` | 計画に応じて、ユニットごと（種類別） |
+| 3.2 NFR Requirements | `security-requirements.md`、`performance-requirements.md` | 計画に応じて、ユニットごと（種類別） |
+| 3.2 NFR Requirements | `observability-requirements.md` | 計画に応じて、service ユニットのみ |
+| 3.3 NFR Design | `security-design.md`、`performance-design.md` | 計画に応じて、ユニットごと（種類別） |
+| 3.3 NFR Design | `observability-design.md` | 計画に応じて、service ユニットのみ |
+| 3.4 Infrastructure Design | `infrastructure-specification.md`、`monitoring-design.md`、`cicd-pipeline.md` | 計画に応じて、ユニットごと（種類別） |
+| 3.5 Code Generation | `code-generation-plan.md`、`code-generation-questions.md`、`unit-test-instructions.md`、`code-summary.md`、`traceability.json`、およびエンジンが必須とする `source-manifest.json`（コードはワークスペースのルートに置かれる） | 常に、ユニットごと |
+| 3.6 Build and Test | `build-instructions.md`、`test-results.md` | 常に、すべてのユニットの後 |
+| 3.7 CI Pipeline | `ci-config.md`、`quality-gates.md` | 条件付き、すべてのユニットの後 |
 
 ### Operation (stages 4.1-4.7)
 
-| Stage | Key Artifacts | Condition |
+| ステージ | 主な成果物 | 条件 |
 |-------|--------------|-----------|
-| 4.1 Deployment Pipeline | `cd-config.md`, `deployment-strategy.md`, `rollback-runbook.md` | Conditional |
-| 4.2 Environment Provisioning | `environment-inventory.md`, `validation-report.md` | Conditional |
-| 4.3 Deployment Execution | `deployment-log.md`, `smoke-test-results.md` | Conditional |
-| 4.4 Observability Setup | `dashboards.md`, `alarms.md`, `slo-config.md` | Conditional |
-| 4.5 Incident Response | `runbooks.md`, `incident-plan.md`, `escalation-matrix.md` | Conditional |
-| 4.6 Performance Validation | `load-test-plan.md`, `nfr-validation-matrix.md` | Conditional |
-| 4.7 Feedback & Optimization | `slo-report.md`, `cost-analysis.md`, `feedback-loop.md` | Conditional |
+| 4.1 Deployment Pipeline | `cd-config.md`、`deployment-strategy.md`、`rollback-runbook.md` | 条件付き |
+| 4.2 Environment Provisioning | `environment-inventory.md`、`validation-report.md` | 条件付き |
+| 4.3 Deployment Execution | `deployment-log.md`、`smoke-test-results.md` | 条件付き |
+| 4.4 Observability Setup | `dashboards.md`、`alarms.md`、`slo-config.md` | 条件付き |
+| 4.5 Incident Response | `runbooks.md`、`incident-plan.md`、`escalation-matrix.md` | 条件付き |
+| 4.6 Performance Validation | `load-test-plan.md`、`nfr-validation-matrix.md` | 条件付き |
+| 4.7 Feedback & Optimization | `slo-report.md`、`cost-analysis.md`、`feedback-loop.md` | 条件付き |
 
 ---
 
 ## Question Files
 
-Every stage that collects user input produces a co-located question file named `{stage-name}-questions.md`. Questions use lettered options (A-E, or A-D on Claude Code, whose question box shows four) plus a mandatory `X. Other (please specify)` option, with `[Answer]:` tags for recording responses. In a file the agent creates, each ordinary question's heading names who would usually answer it (`## Q3. [Developer] ...`), and each person's questions are kept together unless one has to wait for another person's answer. A question added later goes at the end. Confirmation, change-request and approval sections carry no label. An existing file keeps its questions as they were, unless you ask to redo the stage from scratch, which replaces it with a new one.
+ユーザーの入力を収集するすべてのステージは、`{stage-name}-questions.md` という名前の質問ファイルを同じ場所に生成します。質問には文字付きの選択肢（A〜E。質問ボックスに 4 つまで表示される Claude Code では A〜D）と、必須の `X. Other (please specify)` 選択肢があり、回答を記録するための `[Answer]:` タグが付きます。エージェントが作成するファイルでは、通常の質問の見出しに、通常それに答える人が記載されます（`## Q3. [Developer] ...`）。各人の質問は、ある質問が別の人の回答を待たなければならない場合を除き、まとめて配置されます。後から追加された質問は末尾に置かれます。確認、変更依頼、承認のセクションにはラベルは付きません。既存のファイルは、ステージを最初からやり直すよう依頼しない限り、質問がそのまま保持されます。やり直す場合は新しいファイルに置き換えられます。
 
-You choose how to answer at each stage:
+各ステージで、回答方法を選びます:
 
-| Mode | How it works |
+| モード | 仕組み |
 |------|-------------|
-| **Guide me** | The agent asks the questions here, in batches (Claude Code shows up to four at a time) |
-| **I'll edit the file** | Edit the question file directly, then tell the agent you are done |
-| **Chat** | Freeform conversation; decisions are extracted and written to the file |
+| **Guide me** | エージェントがここで質問をまとめて尋ねます（Claude Code では一度に最大 4 つまで表示されます） |
+| **I'll edit the file** | 質問ファイルを直接編集し、完了したらエージェントに伝えます |
+| **Chat** | 自由形式の会話です。決定事項が抽出され、ファイルに書き込まれます |
 
-Later stages reuse the way you chose, and you can switch mid-stage. The question file is always the source of truth. See [Interaction Modes](07-interaction-modes.md).
+以降のステージでは選んだ方法が再利用され、ステージの途中で切り替えることもできます。質問ファイルが常に唯一の正となる情報源です。[インタラクションモード](07-interaction-modes.md) を参照してください。
 
 ---
 
 ## What to Commit vs. Gitignore
 
-The shipped `.gitignore` encodes this split: the shared work (method, registry,
-state, audit, artifacts) is committed; per-user session cursors, your own
-settings, and machine-local derived state are ignored.
+同梱の `.gitignore` は、この区分を反映しています。共有される作業（メソッド、レジストリ、
+状態、監査、成果物）はコミットされ、ユーザーごとのセッションカーソル、あなた自身の
+設定、マシンローカルな派生状態は無視されます。
 
-| Commit | Gitignore |
+| コミットする | Gitignore する |
 |--------|-----------|
-| `aidlc-state.md` | `aidlc/active-space`, `intents/active-intent` (per-user cursors) |
-| `audit/*.md` (per-clone shards) | `.aidlc-engine/` (framework state) |
-| All stage artifacts | `runtime-graph.json` (re-derivable from the audit shards) |
-| `verification/` phase check results | `aidlc/.aidlc-clone-id` (names this clone's shard; must stay machine-local) |
-| Space-level `aidlc/spaces/<space>/knowledge/` team knowledge files | `aidlc/.aidlc-sessions/` (per-session UUID stamps, workflow bindings, PID ancestry map) |
-| Per-stage `memory.md` diaries; space `memory/` layer | `.aidlc-engine/hooks-health/`, `.aidlc-engine/sensors/` (heartbeats, advisory findings) |
-| Each reviewed stage's `reviews/` copies | `.claude/settings.local.json`, `aidlc.settings.local.json` (your own settings) |
-| | `aidlc/active-memory/` (the engine's copy of the active space's `memory/` that every harness include reads; written at session start and on a space switch, so a switch changes no tracked file; each copied file starts with a comment naming the file to edit, and an edit made in the copy is replaced at the next refresh) |
-| | `aidlc/.aidlc-request-text/` (a request the agent wrote to a file for the engine to read; removed once the command goes ahead, left there when it did not) |
+| `aidlc-state.md` | `aidlc/active-space`、`intents/active-intent`（ユーザーごとのカーソル） |
+| `audit/*.md`（クローンごとのシャード） | `.aidlc-engine/`（フレームワークの状態） |
+| すべてのステージの成果物 | `runtime-graph.json`（監査シャードから再導出可能） |
+| `verification/` のフェーズチェック結果 | `aidlc/.aidlc-clone-id`（このクローンのシャード名を決める。マシンローカルのままにする必要がある） |
+| スペースレベルの `aidlc/spaces/<space>/knowledge/` にあるチームのナレッジファイル | `aidlc/.aidlc-sessions/`（セッションごとの UUID スタンプ、ワークフローのバインディング、PID の祖先マップ） |
+| ステージごとの `memory.md` 日誌、スペースの `memory/` レイヤー | `.aidlc-engine/hooks-health/`、`.aidlc-engine/sensors/`（ハートビート、助言的な指摘） |
+| レビューされた各ステージの `reviews/` のコピー | `.claude/settings.local.json`、`aidlc.settings.local.json`（あなた自身の設定） |
+| | `aidlc/active-memory/`（すべてのハーネスのインクルードが読む、アクティブなスペースの `memory/` のエンジンによるコピー。セッション開始時とスペース切り替え時に書き込まれるため、切り替えによって追跡対象のファイルが変わることはありません。コピーされた各ファイルの先頭には、編集すべきファイルを示すコメントがあり、コピー側で行った編集は次回の更新で置き換えられます） |
+| | `aidlc/.aidlc-request-text/`（エージェントがエンジンに読ませるためにファイルに書き出したリクエスト。コマンドが実行されると削除され、実行されなかった場合は残ります） |
 
 ---
 
 ## Inputs and Dependencies
 
-Each stage reads artifacts from prior stages as input. Key dependency chains:
+各ステージは、前のステージの成果物を入力として読みます。主な依存関係の連鎖:
 
-- **Intent Capture** artifacts flow into Market Research, Feasibility, Scope Definition, and Rough Mockups
-- **Requirements Analysis** artifacts flow into User Stories, Domain Design, and all Construction stages
-- **Domain Design** and **Units Generation** artifacts flow into all per-unit Construction stages
-- **All Construction artifacts** flow into Build and Test and CI Pipeline
-- **Infrastructure Design** artifacts flow into Operation stages
+- **Intent Capture** の成果物は、Market Research、Feasibility、Scope Definition、Rough Mockups に流れます
+- **Requirements Analysis** の成果物は、User Stories、Domain Design、およびすべての Construction ステージに流れます
+- **Domain Design** と **Units Generation** の成果物は、ユニットごとのすべての Construction ステージに流れます
+- **すべての Construction の成果物** は、Build and Test と CI Pipeline に流れます
+- **Infrastructure Design** の成果物は、Operation ステージに流れます
 
-Each stage's own inputs are listed on its phase page in the Developer Reference: [Initialization](../reference/04-stages/initialization.md), [Ideation](../reference/04-stages/ideation.md), [Inception](../reference/04-stages/inception.md), [Construction](../reference/04-stages/construction.md), and [Operation](../reference/04-stages/operation.md).
+各ステージ自身の入力は、Developer Reference の各フェーズのページに記載されています: [Initialization](../reference/04-stages/initialization.md)、[Ideation](../reference/04-stages/ideation.md)、[Inception](../reference/04-stages/inception.md)、[Construction](../reference/04-stages/construction.md)、[Operation](../reference/04-stages/operation.md)。
 
 ---
 
 ## Phase Boundary Verification
 
-Three stages end their phase with a traceability check and write it to `verification/`. A plan that skips the stage gets no check for that phase (`mvp`, for example, skips Approval and Handoff):
+3 つのステージが、トレーサビリティのチェックでフェーズを締めくくり、その結果を `verification/` に書き込みます。そのステージを省略する計画では、そのフェーズのチェックは行われません（たとえば `mvp` は Approval and Handoff を省略します）:
 
-| Check File | Written by | What it validates |
+| チェックファイル | 書き込むステージ | 検証内容 |
 |-----------|-----------|-------------------|
-| `phase-check-ideation.md` | 1.7 Approval and Handoff | Intent to scope to intent backlog consistency |
-| `phase-check-inception.md` | 2.9 Delivery Planning | Requirements to stories to architecture alignment |
-| `phase-check-construction.md` | 3.7 CI Pipeline | All units built and tested, CI configured |
+| `phase-check-ideation.md` | 1.7 Approval and Handoff | インテントからスコープ、インテントバックログまでの一貫性 |
+| `phase-check-inception.md` | 2.9 Delivery Planning | 要件からストーリー、アーキテクチャまでの整合 |
+| `phase-check-construction.md` | 3.7 CI Pipeline | すべてのユニットがビルド・テスト済みで、CI が構成されていること |
 
 ---
 
 ## Next Steps
 
-- [State Tracking and Audit Trail](10-state-and-audit.md) — State file and audit trail details
-- [How a Stage Runs](04-phases-and-stages.md) — Stage execution and artifact production
-- [Glossary](glossary.md) — Definitions for artifact, phase boundary verification, question file
+- [状態の追跡と監査証跡](10-state-and-audit.md) — 状態ファイルと監査証跡の詳細
+- [ステージの実行方法](04-phases-and-stages.md) — ステージの実行と成果物の生成
+- [用語集](glossary.md) — 成果物、フェーズ境界の検証、質問ファイルの定義

@@ -1,34 +1,34 @@
 # Running on other harnesses
 
-AI-DLC is one harness-neutral core rendered onto the CLI you use. The
-methodology — the [phases and stages](../04-phases-and-stages.md), the
-[agents](../06-agents.md), the [scopes](../05-scopes-and-depth.md), the
-[approval gates](../07-interaction-modes.md) — is identical on every harness.
-What differs is the *shell*: how gates render, how subagents are dispatched,
-which session events fire, where config lives. Each chapter here covers one
-harness's install steps, prerequisites, and the handful of behaviours that
-differ from the neutral methodology.
+AI-DLC は、ハーネスに依存しない 1 つのコアを、あなたが使う CLI 向けに描画したものです。
+方法論 — [フェーズとステージ](../04-phases-and-stages.md)、
+[エージェント](../06-agents.md)、[スコープ](../05-scopes-and-depth.md)、
+[承認ゲート](../07-interaction-modes.md) — はどのハーネスでも同一です。
+異なるのは *外殻* の部分です: ゲートの表示方法、サブエージェントのディスパッチ方法、
+発火するセッションイベント、設定の置き場所などです。ここにある各章では、1 つの
+ハーネスについて、インストール手順、前提条件、そしてハーネスに依存しない方法論と
+異なるいくつかの振る舞いを説明します。
 
-Onboarding is installed in each harness's native instruction surface:
+オンボーディングは、各ハーネスのネイティブな指示ファイルの場所にインストールされます:
 
-| Harness | Onboarding file |
+| ハーネス | オンボーディングファイル |
 |---------|-----------------|
-| Claude Code | `.claude/CLAUDE.md` (full onboarding) |
-| Kiro CLI and Kiro IDE | `.kiro/steering/aidlc-onboarding.md` |
-| Codex CLI | `.codex/onboarding.md` (also injected through `developer_instructions` in `.codex/config.toml` when the project is trusted) |
+| Claude Code | `.claude/CLAUDE.md`（完全なオンボーディング） |
+| Kiro CLI と Kiro IDE | `.kiro/steering/aidlc-onboarding.md` |
+| Codex CLI | `.codex/onboarding.md`（プロジェクトが信頼済みの場合は、`.codex/config.toml` の `developer_instructions` からも注入されます） |
 | Cursor | `.cursor/rules/aidlc-onboarding.mdc` |
 | opencode | `.aidlc/onboarding.md` |
-| GitHub Copilot | Root `AGENTS.md` (full onboarding, including method imports) |
+| GitHub Copilot | ルートの `AGENTS.md`（メソッドのインポートを含む完全なオンボーディング） |
 
-Kiro, Kiro IDE, Codex, Cursor, and opencode share a harness-neutral root
-`AGENTS.md` block with other installed harnesses. Their native setup stays in
-the files above. Copilot's full root block remains exclusive; distinct harnesses
-also need distinct engine directories to coexist.
+Kiro、Kiro IDE、Codex、Cursor、opencode は、インストール済みの他のハーネスと、
+ハーネスに依存しないルートの `AGENTS.md` ブロックを共有します。それぞれのネイティブな
+設定は上記のファイルに残ります。Copilot の完全なルートブロックは引き続き専有です。また、
+異なるハーネスを共存させるには、それぞれ別のエンジンディレクトリも必要です。
 
 ## Install first
 
-The recommended first-run path for every harness is the checksum-verified native
-installer followed by `aidlc config`:
+どのハーネスでも、初回実行の推奨手順は、チェックサム検証付きのネイティブ
+インストーラーを実行し、続けて `aidlc config` を実行することです:
 
 ```bash
 tmp="$(mktemp -d)"
@@ -41,54 +41,54 @@ cd your-project
 aidlc config
 ```
 
-The installer always includes every harness runtime. `aidlc config --harness <name>` selects the project surface. Host prerequisites still apply: Codex requires
-the target project to be a Git repository for project hook discovery.
+インストーラーには常にすべてのハーネスのランタイムが含まれます。`aidlc config --harness <name>` でプロジェクト側の構成を選択します。ホスト側の前提条件は引き続き適用されます: Codex では、
+プロジェクトのフック検出のために、対象プロジェクトが Git リポジトリである必要があります。
 
-On Windows, download `install.ps1`, allow scripts in that PowerShell window
-with `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force`, and run
-`& $installer`. See [Windows installation](../18-install-and-lifecycle.md#windows-powershell)
-for account scope, automatic User PATH registration, and `-NoModifyPath`.
+Windows では、`install.ps1` をダウンロードし、その PowerShell ウィンドウで
+`Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force` によりスクリプトの実行を許可してから、
+`& $installer` を実行します。アカウントのスコープ、ユーザー PATH の自動登録、`-NoModifyPath` については
+[Windows でのインストール](../18-install-and-lifecycle.md#windows-powershell) を参照してください。
 
-Pick your harness:
+ハーネスを選んでください:
 
-| Harness | Invoke | Chapter |
+| ハーネス | 呼び出し | 章 |
 |---------|--------|---------|
-| **Claude Code** | `/aidlc` | Covered throughout the [User Guide](../00-introduction.md) (its examples run on Claude Code); install in [Getting Started](../01-getting-started.md). |
-| **Kiro IDE** (≥ 1.1.70) and **Kiro CLI** (≥ 2.24.1, v3 engine), listed in setup as Kiro (`--harness kiro`) | `/aidlc` | [Running AI-DLC on Kiro](kiro.md) — one tree for both surfaces: prerequisites (Opus 4.8), install, hooks, what's different on Kiro. |
-| **Kiro CLI** (≥ 2.6), listed in setup as Kiro CLI (V2) (`--harness kiro-v2`) | `/aidlc` | [Kiro CLI (V2)](kiro.md#kiro-cli-v2), a section of the same page — the harness that pins no engine: prerequisites, install, what's different on Kiro. For Kiro's v3 engine on Kiro CLI ≥ 2.24.1, use Kiro above. |
-| **Codex CLI** (≥ 0.145.0) | `$aidlc` | [AI-DLC on Codex CLI](codex-cli.md) — prerequisites, trust pre-seed, Bedrock config, the git-repo requirement. |
-| **Cursor** | `/aidlc` | [AI-DLC on Cursor](cursor.md) — one tree for the Cursor IDE and CLI, native subagents and skills, the hooks.json adapter, what's different on Cursor. |
-| **opencode** (1.18.29 or newer, or OpenCode 2) | `/aidlc` | [AI-DLC on opencode](opencode.md) — the split `.aidlc/` + `.opencode/` layout, the adapter plugin, what's different on opencode. |
-| **GitHub Copilot** (CLI ≥ 1.0.74 / VS Code ≥ 1.130) | `/aidlc` | [AI-DLC on GitHub Copilot](copilot.md) — one install for both surfaces, the `.github/` merge, folder trust, what's different on Copilot. |
+| **Claude Code** | `/aidlc` | [ユーザーガイド](../00-introduction.md) 全体で扱っています（例は Claude Code で実行しています）。インストールは [Getting Started](../01-getting-started.md) を参照。 |
+| **Kiro IDE**（≥ 1.1.70）と **Kiro CLI**（≥ 2.24.1、v3 エンジン）。セットアップでは Kiro（`--harness kiro`）として表示 | `/aidlc` | [Kiro で AI-DLC を実行する](kiro.md) — 両方の環境で共通の 1 つのツリー: 前提条件（Opus 4.8）、インストール、フック、Kiro での相違点。 |
+| **Kiro CLI**（≥ 2.6）。セットアップでは Kiro CLI (V2)（`--harness kiro-v2`）として表示 | `/aidlc` | 同じページ内のセクション [Kiro CLI (V2)](kiro.md#kiro-cli-v2) — エンジンを固定しないハーネス: 前提条件、インストール、Kiro での相違点。Kiro CLI ≥ 2.24.1 で Kiro の v3 エンジンを使う場合は、上の Kiro を使ってください。 |
+| **Codex CLI**（≥ 0.145.0） | `$aidlc` | [Codex CLI での AI-DLC](codex-cli.md) — 前提条件、信頼設定の事前投入、Bedrock の設定、Git リポジトリの要件。 |
+| **Cursor** | `/aidlc` | [Cursor での AI-DLC](cursor.md) — Cursor IDE と CLI で共通の 1 つのツリー、ネイティブのサブエージェントとスキル、hooks.json アダプター、Cursor での相違点。 |
+| **opencode**（1.18.29 以降、または OpenCode 2） | `/aidlc` | [opencode での AI-DLC](opencode.md) — `.aidlc/` + `.opencode/` に分かれたレイアウト、アダプタープラグイン、opencode での相違点。 |
+| **GitHub Copilot**（CLI ≥ 1.0.74 / VS Code ≥ 1.130） | `/aidlc` | [GitHub Copilot での AI-DLC](copilot.md) — 両方の環境に対する 1 回のインストール、`.github/` のマージ、フォルダーの信頼、Copilot での相違点。 |
 
-AI-DLC on Kiro (IDE or CLI) works best with **Claude Opus 4.8**, which requires a **paid Kiro plan**.
+Kiro（IDE または CLI）上の AI-DLC は **Claude Opus 4.8** で最もよく動作します。これには **Kiro の有料プラン** が必要です。
 
-For a manual copy, install Bun, download a specific release's
-`aidlc-copy-runtime-X.Y.Z.tar.gz`, extract it, copy the complete
-`runtime/<harness>/` directory, and run its own setup once (see
-[Copy Channel](../18-install-and-lifecycle.md#copy-channel)); the native `aidlc`
-executable is not required. A copy never replaces your `.gitignore` or
-`AGENTS.md`; AI-DLC adds its own lines to them.
-Do not copy generated trees from a repository checkout. Framework developers may instead run
-`bun scripts/package.ts` in a source checkout to materialize the ignored local
-`dist/` and `dist-release/` outputs. Each harness chapter keeps the manual-copy
-instructions under a clearly labeled alternative.
+手動でコピーする場合は、Bun をインストールし、特定リリースの
+`aidlc-copy-runtime-X.Y.Z.tar.gz` をダウンロードして展開し、
+`runtime/<harness>/` ディレクトリを丸ごとコピーしてから、そのセットアップを一度実行します（
+[Copy Channel](../18-install-and-lifecycle.md#copy-channel) を参照）。ネイティブの `aidlc`
+実行ファイルは不要です。コピーによってあなたの `.gitignore` や
+`AGENTS.md` が置き換えられることはありません。AI-DLC は独自の行をそれらに追加します。
+リポジトリのチェックアウトから生成済みツリーをコピーしないでください。フレームワーク開発者は代わりに、ソースのチェックアウトで
+`bun scripts/package.ts` を実行して、無視対象（ignored）のローカル出力
+`dist/` と `dist-release/` を生成できます。各ハーネスの章では、手動コピーの
+手順を、明示的にラベル付けされた代替手段として記載しています。
 
-After `aidlc update`, run `aidlc doctor` to see project/runtime version skew
-and refresh each project with `aidlc config`. A refresh while a workflow is open
-is done, says whether that work carries on, and names the command that goes
-back to the earlier release.
+`aidlc update` の後は、`aidlc doctor` を実行してプロジェクトとランタイムのバージョンのずれを確認し、
+`aidlc config` で各プロジェクトを更新してください。ワークフローが開いている間に更新を行っても
+更新は完了し、その作業が継続されるかどうかと、以前のリリースに
+戻すためのコマンドが表示されます。
 
-This set is open: a new harness gets its own chapter here, added from the same
-template. For *building* a new harness (the source contract — manifest, hook
-adapter, `emit.ts`), see the Harness Engineer Guide's
-[Porting to a New Harness](../../harness-engineering/09-porting-to-a-new-harness.md).
+このセットは開かれています: 新しいハーネスは、同じテンプレートから追加された独自の章を
+ここに持ちます。新しいハーネスを *構築する* 場合（ソース側の契約 — マニフェスト、フック
+アダプター、`emit.ts`）は、Harness Engineer Guide の
+[新しいハーネスへの移植](../../harness-engineering/09-porting-to-a-new-harness.md) を参照してください。
 
-Whichever harness you run, the methodology is the same — start with
-[Your First Workflow](../02-your-first-workflow.md) and the
-[Phases and Stages](../04-phases-and-stages.md) tour.
+どのハーネスを使う場合でも、方法論は同じです — まずは
+[最初のワークフロー](../02-your-first-workflow.md) と
+[フェーズとステージ](../04-phases-and-stages.md) のツアーから始めてください。
 
-Running a workshop or supporting a team? The
-[Facilitator Guide](../facilitator-guide.md#how-strongly-each-harness-enforces-the-workflow)
-compares how strongly each harness enforces the workflow, and gives a
-readiness check and a recovery playbook.
+ワークショップを運営したり、チームを支援したりしていますか？
+[ファシリテーターガイド](../facilitator-guide.md#how-strongly-each-harness-enforces-the-workflow)
+では、各ハーネスがワークフローをどの程度強く強制するかを比較し、
+準備状況のチェックと復旧のプレイブックを紹介しています。

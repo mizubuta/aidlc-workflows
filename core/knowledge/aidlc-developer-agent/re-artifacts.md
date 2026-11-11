@@ -2,19 +2,19 @@
 
 ## Output Structure
 
-All RE artifacts are created under `aidlc/spaces/<active-space>/codekb/<repo>/` — the durable per-repo code knowledge base shared across intents (the space-level directory the `codekb-path --repo <repo>` tool resolves).
+RE の成果物はすべて `aidlc/spaces/<active-space>/codekb/<repo>/` 配下に作成する。これはインテント間で共有される、リポジトリごとの永続的なコードナレッジベースである（`codekb-path --repo <repo>` ツールが解決するスペースレベルのディレクトリ）。
 
 ### Required Artifacts
 
-1. **business-overview.md** — Business domain context, purpose, key functionality
-2. **architecture.md** — System architecture, patterns, component relationships, Mermaid diagrams
-3. **code-structure.md** — Package/module organization, file classification, code patterns
-4. **api-documentation.md** — External and internal API surfaces, endpoints, contracts
-5. **component-inventory.md** — Complete component list with responsibilities and dependencies
-6. **technology-stack.md** — Languages, frameworks, libraries with versions
-7. **dependencies.md** — External dependencies, internal cross-package dependencies
-8. **code-quality-assessment.md** — Test coverage, linting, CI/CD, documentation quality, tech debt
-9. **reverse-engineering-timestamp.md** - Records when reverse engineering was performed (date, commit hash if available) in a Run Record section, plus the structured Scope of Analysis block (templates below). The scope block is machine-read by `codekb-scope-diff` on the next rerun, so its accuracy decides whether a future intent can reuse the verified coverage or must merge/replace it.
+1. **business-overview.md** — ビジネスドメインのコンテキスト、目的、主要な機能
+2. **architecture.md** — システムアーキテクチャ、パターン、コンポーネント間の関係、Mermaid 図
+3. **code-structure.md** — パッケージ/モジュールの構成、ファイルの分類、コードパターン
+4. **api-documentation.md** — 外部および内部の API サーフェス、エンドポイント、コントラクト
+5. **component-inventory.md** — 責務と依存関係を含む、完全なコンポーネント一覧
+6. **technology-stack.md** — 言語、フレームワーク、ライブラリとそのバージョン
+7. **dependencies.md** — 外部依存関係、内部のパッケージ間依存関係
+8. **code-quality-assessment.md** — テストカバレッジ、リンティング、CI/CD、ドキュメントの品質、技術的負債
+9. **reverse-engineering-timestamp.md** - リバースエンジニアリングを実施した日時（日付、可能ならコミットハッシュ）を Run Record セクションに記録し、加えて構造化された Scope of Analysis ブロックを含める（テンプレートは後述）。スコープブロックは次回の再実行時に `codekb-scope-diff` によって機械的に読まれるため、その正確さによって、将来のインテントが検証済みのカバレッジを再利用できるか、マージ/置換しなければならないかが決まる。
 
 ### Developer Code Scan Template
 
@@ -85,15 +85,15 @@ All RE artifacts are created under `aidlc/spaces/<active-space>/codekb/<repo>/` 
 [Mermaid sequence or flow diagrams showing how key business transactions are implemented across components]
 ```
 
-AI-DLC ships no Mermaid validator, so there is none to look for: check each
-diagram by reading it, keep to `flowchart` and `sequenceDiagram` syntax, and put
-the text fallback beneath it.
+AI-DLC には Mermaid のバリデーターが同梱されていないため、探す必要はない。各図は
+読んで確認し、`flowchart` と `sequenceDiagram` の構文にとどめ、図の下に
+テキストによる代替表現を置く。
 
 ### Run Record (reverse-engineering-timestamp.md)
 
-Start reverse-engineering-timestamp.md with this section, so a reader sees
-when the scan ran and against which commit before the Scope of Analysis block
-below:
+reverse-engineering-timestamp.md は次のセクションで始める。これにより読み手は、後述の
+Scope of Analysis ブロックより先に、スキャンがいつ、どのコミットに対して実行されたかを
+確認できる:
 
 ```markdown
 # Reverse Engineering Timestamp
@@ -106,9 +106,9 @@ below:
 
 ### Scope of Analysis Block (reverse-engineering-timestamp.md)
 
-End reverse-engineering-timestamp.md with exactly this fenced block, filled
-honestly from the Scan Coverage the developer reported - record what the run
-ACTUALLY covered deeply, not what the stage aspired to cover:
+reverse-engineering-timestamp.md の末尾は、必ず次のフェンス付きブロックそのもので終える。
+開発者が報告した Scan Coverage に基づいて正直に記入すること - ステージがカバーしようとした
+範囲ではなく、その実行で**実際に**深く分析した範囲を記録する:
 
 ````markdown
 ## Scope of Analysis
@@ -129,45 +129,44 @@ shallow:
 ```
 ````
 
-How the tools read this block (everything you need to fill it):
+ツールがこのブロックをどう読むか（記入に必要な情報はこれですべて）:
 
-- Mint the `fingerprint:` line with
+- `fingerprint:` 行は
   `{{INVOKE}} engine workspace codekb-scope-diff --repo <repo> --mint --paths <analyzed.paths, comma-separated>`
-  (omit `--repo` only for an unrecorded project-root repo) and paste its
-  output verbatim.
-- The fingerprint covers the files under `analyzed.paths` as they are on disk,
-  committed or not. It leaves out ignored files, .NET `bin/`, `obj/` and `out/`
-  beside a project file, and, when the repository is the workspace root,
-  AI-DLC's own workspace, install and settings. So `./` is right for a full
-  scan that left build output unopened.
-- `shallow.paths` is a record for people; no tool hashes or compares it. The
-  next run's coverage compare reads `analyzed.paths` and `components`. A list
-  with nothing in it is written `paths: []`.
-- `intent:` is shown back by the tools and checked by none; write the
-  `intent` that `{{INVOKE}} engine workspace codekb --repo <repo> --json` prints.
-- Publishing checks that the staging directory holds exactly the nine files,
-  that this block parses under the rules below, that the snapshot paths cover
-  `analyzed.paths`, and that `fingerprint:` equals a fresh mint over
-  `analyzed.paths`. It does not read the Run Record.
-- Check the finished block, in the staged
-  `reverse-engineering-timestamp.md`, with
+  で生成し（`--repo` を省略するのは、記録されていないプロジェクトルートのリポジトリの場合のみ）、
+  その出力を一字一句そのまま貼り付ける。
+- フィンガープリントは、コミット済みかどうかにかかわらず、`analyzed.paths` 配下のファイルを
+  ディスク上の状態のまま対象とする。無視ファイル、プロジェクトファイルと同じ階層にある .NET の
+  `bin/`、`obj/`、`out/`、さらにリポジトリがワークスペースのルートである場合は AI-DLC 自身の
+  ワークスペース、インストール、設定を除外する。したがって、ビルド出力を開かなかった
+  フルスキャンでは `./` が正しい。
+- `shallow.paths` は人間向けの記録であり、どのツールもこれをハッシュ化したり比較したりしない。
+  次回実行時のカバレッジ比較が読むのは `analyzed.paths` と `components` である。
+  空のリストは `paths: []` と書く。
+- `intent:` はツールが表示するだけで、どのツールも検査しない。
+  `{{INVOKE}} engine workspace codekb --repo <repo> --json` が出力する `intent` を書く。
+- 公開時には、ステージングディレクトリにちょうど 9 つのファイルがあること、このブロックが
+  後述のルールに従って解析できること、スナップショットのパスが `analyzed.paths` をカバーして
+  いること、`fingerprint:` が `analyzed.paths` に対して新たに生成した値と等しいことが検査される。
+  Run Record は読まれない。
+- ステージングされた `reverse-engineering-timestamp.md` 内の完成したブロックを
   `{{INVOKE}} engine workspace codekb-scope-diff --repo <repo> --check <that file>`
-  (same `--repo` rule as the mint). It prints `VALID`, what it read, and
-  whether the fingerprint matches the source now, or `INVALID` and what to
-  fix. That is the parser publication uses.
+  で検査する（`--repo` のルールは生成時と同じ）。`VALID` と読み取った内容、および
+  フィンガープリントが現在のソースと一致するかどうか、または `INVALID` と修正すべき点が
+  出力される。これは公開時に使われるのと同じパーサーである。
 
-Rules:
-- `kind: full` only when the scan genuinely covered the whole repo deeply; `analyzed.paths` MUST include the repo root (`./`). Anything less is `kind: partial`.
-- `kind: partial` MUST NOT include `./` in `analyzed.paths`.
-- `analyzed.paths` entries are repo-relative, directories end with `/`, no glob characters.
-- Component names must match `component-inventory.md` headings verbatim - the rerun guard compares them literally.
-- A folder the scan left out (the developer's **Left out** list, such as build output) does not go in `shallow.paths`: it stays out of the block.
-- A full rescan wholesale replaces all 9 artifacts and builds this block only from the new run.
-- For a focused scan of an existing store, read all 9 existing artifacts and the prior Scope of Analysis block first. Update or extend prose for the newly analyzed area and preserve prior prose outside it.
-- With a CURRENT store, merge `analyzed.paths` and `analyzed.components` as the union of the store and this run. A CURRENT `kind: full` store remains full and retains `./`; otherwise the merged block is partial and cannot claim `./`.
-- With a STALE or UNVERIFIED store, record only this run in `analyzed.paths` and `analyzed.components`, preserve the prior prose, and demote the store's prior analyzed paths into `shallow.paths`.
-- With an UNKNOWN_SCOPE legacy store, merge the prior prose best-effort but record only this run in the new scope block.
-- Mint `fingerprint` over the final `analyzed.paths` in the merged or replaced block.
-- Build all 9 candidate artifacts under the temporary `<record>/.aidlc-engine/codekb-stage-<repo>/` directory, the `stage` that the same command prints; run it again once they are written, and its `staged` must list exactly the nine names. Never write a cumulative merge directly into the shared CodeKB.
-- The pre-scan `codekb-snapshot` paths bound verified coverage. If the scan discovers a deep path outside that set, take a new snapshot and repeat the scan over the expanded set.
-- Publish only through `codekb-publish` with the snapshot's store generation and source fingerprint. A store-generation conflict requires re-reading and re-merging the winner's store; a source conflict requires a fresh scan.
+ルール:
+- `kind: full` にするのは、スキャンが本当にリポジトリ全体を深くカバーした場合のみであり、その場合 `analyzed.paths` には**必ず**リポジトリのルート（`./`）を含める。それに満たない場合は `kind: partial` とする。
+- `kind: partial` では、`analyzed.paths` に `./` を**決して**含めてはならない。
+- `analyzed.paths` のエントリはリポジトリ相対パスとし、ディレクトリは `/` で終え、glob 文字は使わない。
+- コンポーネント名は `component-inventory.md` の見出しと一字一句一致させなければならない - 再実行ガードは文字どおりに比較する。
+- スキャンで除外したフォルダー（ビルド出力など、開発者の **Left out** リストにあるもの）は `shallow.paths` に入れない。ブロックには含めない。
+- フル再スキャンでは 9 つの成果物すべてを丸ごと置き換え、このブロックは新しい実行の結果のみから構築する。
+- 既存のストアに対する絞り込みスキャンでは、まず既存の 9 つの成果物すべてと、以前の Scope of Analysis ブロックを読む。新たに分析した領域については記述を更新・拡充し、それ以外の領域の既存の記述は保持する。
+- ストアが CURRENT の場合、`analyzed.paths` と `analyzed.components` はストアと今回の実行の和集合としてマージする。CURRENT かつ `kind: full` のストアは full のままで `./` を保持する。それ以外の場合、マージ後のブロックは partial となり、`./` を主張できない。
+- ストアが STALE または UNVERIFIED の場合、`analyzed.paths` と `analyzed.components` には今回の実行分のみを記録し、既存の記述は保持し、ストアの以前の分析済みパスは `shallow.paths` に格下げする。
+- UNKNOWN_SCOPE のレガシーストアの場合、既存の記述はベストエフォートでマージするが、新しいスコープブロックには今回の実行分のみを記録する。
+- `fingerprint` は、マージ後または置換後のブロックにおける最終的な `analyzed.paths` に対して生成する。
+- 9 つの候補成果物はすべて、一時ディレクトリ `<record>/.aidlc-engine/codekb-stage-<repo>/`（同じコマンドが出力する `stage`）の下に作成する。書き終えたら同じコマンドを再度実行し、その `staged` にちょうど 9 つの名前が列挙されていなければならない。累積的なマージを共有 CodeKB に直接書き込んでは決してならない。
+- スキャン前の `codekb-snapshot` のパスが、検証済みカバレッジの範囲を規定する。スキャン中にその範囲外の深いパスが見つかった場合は、新しいスナップショットを取得し、拡張した範囲でスキャンをやり直す。
+- 公開は、スナップショットのストア世代とソースのフィンガープリントを指定した `codekb-publish` を通じてのみ行う。ストア世代の競合が起きた場合は、勝った側のストアを読み直して再マージする必要がある。ソースの競合が起きた場合は、新たにスキャンする必要がある。

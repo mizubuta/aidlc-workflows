@@ -1,120 +1,120 @@
 # Accessibility: WCAG 2.1 AA Guide
 
 ## Purpose
-Ensure digital products are usable by people with diverse abilities. WCAG 2.1 Level AA is the standard target for most applications and is legally required in many jurisdictions.
+デジタルプロダクトを、多様な能力をもつ人々が使えるようにする。WCAG 2.1 レベル AA はほとんどのアプリケーションにとって標準的な目標であり、多くの法域で法的に義務づけられている。
 
 ## Four Principles (POUR)
 
 ### 1. Perceivable
-Information and UI components must be presentable in ways users can perceive.
+情報と UI コンポーネントは、ユーザーが知覚できる方法で提示しなければならない。
 
-**Text Alternatives**
-- All non-decorative images must have descriptive `alt` text
-- Complex images (charts, diagrams) need long descriptions
-- Decorative images use `alt=""` (empty) to be ignored by screen readers
+**代替テキスト**
+- 装飾目的でないすべての画像には、内容を説明する `alt` テキストを必ず付ける
+- 複雑な画像（グラフ、図）には詳しい説明が必要
+- 装飾目的の画像は `alt=""`（空）にして、スクリーンリーダーに無視させる
 
-**Color Contrast**
-- Normal text (< 18px): minimum 4.5:1 contrast ratio against background
-- Large text (>= 18px bold or >= 24px regular): minimum 3:1 contrast ratio
-- UI components and graphical objects: minimum 3:1 contrast ratio
-- Never use color alone to convey meaning (add icons, text labels, or patterns)
+**色のコントラスト**
+- 通常のテキスト（< 18px）: 背景に対するコントラスト比は最低 4.5:1
+- 大きなテキスト（>= 18px 太字、または >= 24px 標準）: コントラスト比は最低 3:1
+- UI コンポーネントとグラフィカルオブジェクト: コントラスト比は最低 3:1
+- 意味を伝えるのに色だけを使ってはならない（アイコン、テキストラベル、パターンを加える）
 
-**Media**
-- Video must have captions (synchronized with audio)
-- Audio-only content needs text transcripts
-- No content that flashes more than 3 times per second
+**メディア**
+- 動画には字幕（音声と同期したもの）を必ず付ける
+- 音声のみのコンテンツにはテキストの書き起こしが必要
+- 1 秒間に 3 回を超えて点滅するコンテンツを置かない
 
 ### 2. Operable
-UI components and navigation must be operable by all users.
+UI コンポーネントとナビゲーションは、すべてのユーザーが操作できなければならない。
 
-**Keyboard Navigation**
-- All functionality must be accessible via keyboard alone
-- Visible focus indicator on every interactive element (minimum 2px outline, 3:1 contrast)
-- Logical tab order following visual layout (left-to-right, top-to-bottom)
-- No keyboard traps — users must be able to navigate away from any component
-- Skip-to-content link as the first focusable element on each page
+**キーボードナビゲーション**
+- すべての機能をキーボードだけで利用できなければならない
+- すべてのインタラクティブ要素に、目に見えるフォーカスインジケーターを付ける（最低 2px のアウトライン、コントラスト 3:1）
+- 視覚的なレイアウトに沿った論理的なタブ順序（左から右、上から下）
+- キーボードトラップを作らない — ユーザーがどのコンポーネントからも移動できなければならない
+- 各ページの最初のフォーカス可能要素として、本文へスキップするリンクを置く
 
-**Keyboard Patterns by Component**
-| Component | Keys |
+**コンポーネント別のキーボード操作パターン**
+| コンポーネント | キー |
 |-----------|------|
-| Buttons | Enter or Space to activate |
-| Links | Enter to follow |
-| Checkboxes | Space to toggle |
-| Radio buttons | Arrow keys to move between options |
-| Tabs | Arrow keys to switch, Tab to enter/exit tab panel |
-| Modals | Escape to close, trap focus within modal |
-| Dropdowns | Arrow keys to navigate, Enter to select, Escape to close |
+| ボタン | Enter または Space で実行 |
+| リンク | Enter で移動 |
+| チェックボックス | Space で切り替え |
+| ラジオボタン | 矢印キーで選択肢間を移動 |
+| タブ | 矢印キーで切り替え、Tab でタブパネルに出入り |
+| モーダル | Escape で閉じる、フォーカスをモーダル内に閉じ込める |
+| ドロップダウン | 矢印キーで移動、Enter で選択、Escape で閉じる |
 
-**Timing**
-- No time limits on interactions, or provide option to extend/disable
-- Auto-updating content can be paused, stopped, or hidden
+**タイミング**
+- 操作に時間制限を設けない。設ける場合は延長/無効化の手段を提供する
+- 自動更新されるコンテンツは、一時停止、停止、非表示にできるようにする
 
 ### 3. Understandable
-Information and UI operation must be understandable.
+情報と UI の操作は理解可能でなければならない。
 
-**Readability**
-- Page language declared in HTML (`lang` attribute)
-- Consistent navigation across pages
-- Consistent identification of repeated components
+**読みやすさ**
+- ページの言語を HTML で宣言する（`lang` 属性）
+- ページ間でナビゲーションを一貫させる
+- 繰り返し現れるコンポーネントの識別を一貫させる
 
-**Predictability**
-- No unexpected context changes on focus or input
-- Form submissions require explicit user action (button click, not auto-submit)
-- Navigation order is consistent across pages
+**予測可能性**
+- フォーカスや入力によって予期しないコンテキストの変化を起こさない
+- フォームの送信にはユーザーの明示的な操作を必要とする（ボタンのクリック。自動送信はしない）
+- ナビゲーションの順序をページ間で一貫させる
 
-**Error Handling**
-- Input errors are identified and described in text (not just red borders)
-- Labels and instructions are provided before input fields
-- Error suggestions offer specific correction guidance
-- Important submissions (financial, legal) are reversible, verified, or confirmed
+**エラー処理**
+- 入力エラーを特定し、テキストで説明する（赤い枠線だけにしない）
+- 入力フィールドの前にラベルと説明を置く
+- エラーの提案では、具体的な修正方法を示す
+- 重要な送信（金融、法的なもの）は、取り消し可能、検証済み、または確認済みにする
 
 ### 4. Robust
-Content must be robust enough for diverse user agents and assistive technologies.
+コンテンツは、多様なユーザーエージェントや支援技術に対応できるだけの堅牢さを備えなければならない。
 
-**Markup**
-- Valid, well-structured HTML with proper nesting
-- Unique IDs throughout the page
-- Complete start and end tags
+**マークアップ**
+- 正しく入れ子になった、妥当で構造化された HTML
+- ページ全体で一意な ID
+- 開始タグと終了タグがそろっている
 
 ## ARIA (Accessible Rich Internet Applications)
 
 ### When to Use ARIA
-- **First rule**: Use native HTML elements whenever possible. A `<button>` is always better than `<div role="button">`
-- Use ARIA only when native HTML cannot express the semantics
+- **第一のルール**: 可能な限りネイティブの HTML 要素を使う。`<button>` は常に `<div role="button">` より優れている
+- ARIA は、ネイティブの HTML でセマンティクスを表現できない場合にだけ使う
 
 ### Essential ARIA Attributes
-- `role` — Defines what the element is (e.g., `dialog`, `alert`, `tabpanel`, `navigation`)
-- `aria-label` — Provides accessible name when visible text is insufficient
-- `aria-labelledby` — Points to another element that labels this one
-- `aria-describedby` — Points to element providing additional description
-- `aria-expanded` — Indicates if a collapsible section is open (true/false)
-- `aria-hidden="true"` — Hides decorative elements from screen readers
-- `aria-live="polite"` — Announces dynamic content changes (toast messages, status updates)
-- `aria-required="true"` — Marks required form fields
+- `role` — その要素が何であるかを定義する（例: `dialog`、`alert`、`tabpanel`、`navigation`）
+- `aria-label` — 表示テキストだけでは不十分なときにアクセシブルな名前を与える
+- `aria-labelledby` — この要素のラベルとなる別の要素を指す
+- `aria-describedby` — 追加の説明を提供する要素を指す
+- `aria-expanded` — 折りたたみ可能なセクションが開いているかどうかを示す（true/false）
+- `aria-hidden="true"` — 装飾的な要素をスクリーンリーダーから隠す
+- `aria-live="polite"` — 動的なコンテンツの変化を読み上げる（トーストメッセージ、ステータスの更新）
+- `aria-required="true"` — 必須のフォームフィールドを示す
 
 ### ARIA Landmarks
-- `role="banner"` or `<header>` — Site-wide header
-- `role="navigation"` or `<nav>` — Navigation blocks
-- `role="main"` or `<main>` — Primary content area
-- `role="complementary"` or `<aside>` — Supporting content
-- `role="contentinfo"` or `<footer>` — Site-wide footer
+- `role="banner"` または `<header>` — サイト全体のヘッダー
+- `role="navigation"` または `<nav>` — ナビゲーションブロック
+- `role="main"` または `<main>` — 主要なコンテンツ領域
+- `role="complementary"` または `<aside>` — 補足的なコンテンツ
+- `role="contentinfo"` または `<footer>` — サイト全体のフッター
 
 ## Common Failures and Fixes
 
-| Failure | Impact | Fix |
+| よくある不備 | 影響 | 修正方法 |
 |---------|--------|-----|
-| Missing alt text on images | Screen readers say "image" with no context | Add descriptive alt text or `alt=""` for decorative |
-| Low color contrast | Unreadable for low vision users | Use contrast checker, meet 4.5:1 minimum |
-| No focus indicators | Keyboard users cannot see where they are | Add visible `:focus` styles, never use `outline: none` |
-| Form fields without labels | Screen readers cannot identify inputs | Associate `<label>` with every `<input>` via `for`/`id` |
-| Auto-playing media | Disorienting, interferes with screen readers | Require user action to play, provide pause/stop |
-| Mouse-only interactions | Keyboard/switch users cannot operate | Add keyboard event handlers for all mouse interactions |
-| Missing heading hierarchy | Navigation by headings fails | Use h1-h6 in logical order, never skip levels |
-| Dynamic content without announcements | Screen readers miss updates | Use `aria-live` regions for status messages |
+| 画像に代替テキストがない | スクリーンリーダーが文脈なしに「画像」とだけ読み上げる | 内容を説明する代替テキストを付ける。装飾目的なら `alt=""` |
+| 色のコントラストが低い | ロービジョンのユーザーが読めない | コントラストチェッカーを使い、最低 4.5:1 を満たす |
+| フォーカスインジケーターがない | キーボードユーザーが現在位置を把握できない | 目に見える `:focus` スタイルを追加し、`outline: none` は決して使わない |
+| ラベルのないフォームフィールド | スクリーンリーダーが入力欄を識別できない | `for`/`id` を使って、すべての `<input>` に `<label>` を関連付ける |
+| 自動再生されるメディア | 混乱を招き、スクリーンリーダーの妨げになる | 再生にはユーザーの操作を必要とし、一時停止/停止の手段を提供する |
+| マウス専用の操作 | キーボード/スイッチのユーザーが操作できない | すべてのマウス操作にキーボードのイベントハンドラーを追加する |
+| 見出しの階層がない | 見出しによるナビゲーションが機能しない | h1〜h6 を論理的な順序で使い、レベルを飛ばさない |
+| 読み上げのない動的コンテンツ | スクリーンリーダーが更新を見逃す | ステータスメッセージには `aria-live` 領域を使う |
 
 ## Testing Approach
-1. **Automated scan**: axe DevTools, Lighthouse accessibility audit (catches ~30% of issues)
-2. **Keyboard testing**: Unplug the mouse and navigate the entire application
-3. **Screen reader testing**: Test with VoiceOver (macOS), NVDA (Windows), or TalkBack (Android)
-4. **Zoom testing**: Verify layout at 200% and 400% browser zoom
-5. **Color testing**: Verify with simulated color blindness (protanopia, deuteranopia, tritanopia)
+1. **自動スキャン**: axe DevTools、Lighthouse のアクセシビリティ監査（問題の約 30% を検出）
+2. **キーボードテスト**: マウスを外し、アプリケーション全体を操作してみる
+3. **スクリーンリーダーテスト**: VoiceOver（macOS）、NVDA（Windows）、TalkBack（Android）でテストする
+4. **ズームテスト**: ブラウザのズーム 200% と 400% でレイアウトを確認する
+5. **色のテスト**: 色覚特性のシミュレーション（1 型、2 型、3 型色覚）で確認する

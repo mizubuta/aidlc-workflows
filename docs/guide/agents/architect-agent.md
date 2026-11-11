@@ -1,46 +1,46 @@
 # Architect Agent
 
-> **Agent deep dive** · [User Guide](../00-introduction.md) › [Agents](../06-agents.md) › [deep dives](README.md) · Technical reference: [architect-agent](../../reference/agents/architect-agent.md)
+> **エージェント詳解** · [ユーザーガイド](../00-introduction.md) › [エージェント](../06-agents.md) › [詳解一覧](README.md) · 技術リファレンス: [architect-agent](../../reference/agents/architect-agent.md)
 
-The aidlc-architect-agent is your solutions architect. It translates requirements into robust system architectures, produces Architecture Decision Records (ADRs), designs domain models, and decomposes projects into implementable units of work. It thinks in patterns and trade-offs, producing designs that developers can implement directly.
+aidlc-architect-agent は、あなたのソリューションアーキテクトです。要件を堅牢なシステムアーキテクチャに落とし込み、アーキテクチャ決定記録（ADR）を作成し、ドメインモデルを設計し、プロジェクトを実装可能な作業ユニットに分解します。パターンとトレードオフで考え、開発者がそのまま実装できる設計を生み出します。
 
-The aidlc-architect-agent leads the most stages of any single agent in the lifecycle — seven in total — spanning Ideation, Inception, and Construction. It is the primary design authority and carries the `judgment` tier along with the seven other high-judgment agents, so it inherits your session's own model and effort rather than pinning one. Only delivery, pipeline-deploy, and operations carry the `templated` tier; their shipped baseline also inherits the session model and effort because their output is dominantly templated.
+aidlc-architect-agent は、ライフサイクルの中で単一エージェントとしては最も多い合計 7 つのステージをリードし、Ideation、Inception、Construction にまたがります。設計における第一の権限者であり、他の 7 つの高判断エージェントとともに `judgment` ティアに属します。そのため、特定のモデルに固定するのではなく、あなたのセッション自身のモデルと effort を継承します。`templated` ティアに属するのは delivery、pipeline-deploy、operations だけです。これらの出力は大部分がテンプレート化されているため、出荷時のベースラインでもセッションのモデルと effort を継承します。
 
 ## Stages Led
 
-| Stage | Phase | Description |
+| ステージ | フェーズ | 説明 |
 |-------|-------|-------------|
-| 1.3 Feasibility & Constraints | Ideation | Technical feasibility assessment and constraint analysis |
-| 2.6 Domain Design | Inception | Component catalogue, domain modelling, and ADRs |
-| 2.7 Units Generation | Inception | Decomposes design into implementable units of work |
-| 2.8 Contract Design | Inception | API contracts for inter-unit boundaries and public/external APIs |
-| 3.1 Functional Design | Construction | Detailed domain models and business logic (per unit) |
-| 3.2 NFR Requirements | Construction | Non-functional requirements with measurable targets (per unit) |
-| 3.3 NFR Design | Construction | Technical approaches for caching, resilience, security, observability (per unit) |
+| 1.3 Feasibility & Constraints | Ideation | 技術的な実現可能性の評価と制約の分析 |
+| 2.6 Domain Design | Inception | コンポーネントカタログ、ドメインモデリング、ADR |
+| 2.7 Units Generation | Inception | 設計を実装可能な作業ユニットに分解する |
+| 2.8 Contract Design | Inception | ユニット間の境界および公開/外部 API の API コントラクト |
+| 3.1 Functional Design | Construction | 詳細なドメインモデルとビジネスロジック（ユニットごと） |
+| 3.2 NFR Requirements | Construction | 測定可能な目標値を持つ非機能要件（ユニットごと） |
+| 3.3 NFR Design | Construction | キャッシュ、レジリエンス、セキュリティ、オブザーバビリティの技術的アプローチ（ユニットごと） |
 
-It also leads the synthesis step of stage 2.1 (Reverse Engineering), where it receives code scan results from the aidlc-developer-agent and produces the 9 architectural artifacts. With collaborators off, the developer writes them and the architect is not dispatched.
+また、ステージ 2.1（Reverse Engineering）の統合ステップもリードします。ここでは aidlc-developer-agent からコードスキャン結果を受け取り、9 つのアーキテクチャ成果物を作成します。collaborators が off の場合は developer がそれらを書き、architect はディスパッチされません。
 
 ## Stages Supported
 
-| Stage | Phase | Contribution |
+| ステージ | フェーズ | 貢献内容 |
 |-------|-------|-------------|
-| 1.1 Intent Capture | Ideation | Provides technical context |
-| 2.1 Reverse Engineering (dispatched final pipeline link) | Inception | Synthesizes code scan results into a coherent architectural model |
-| 2.9 Delivery Planning | Inception | Validates build order against architecture dependencies |
+| 1.1 Intent Capture | Ideation | 技術的なコンテキストを提供する |
+| 2.1 Reverse Engineering（パイプラインの最後の工程としてディスパッチされる） | Inception | コードスキャン結果を一貫したアーキテクチャモデルに統合する |
+| 2.9 Delivery Planning | Inception | ビルド順序をアーキテクチャ上の依存関係に照らして検証する |
 
 ## What to Expect
 
-When the aidlc-architect-agent is active, it focuses on boundaries, patterns, and trade-offs. It asks about existing system constraints, technology preferences, scalability requirements, and operational concerns. It produces structured design documents with explicit decision rationale, component diagrams described in markdown, and ADRs for every significant choice.
+aidlc-architect-agent が稼働しているときは、境界、パターン、トレードオフに注目します。既存システムの制約、技術の好み、スケーラビリティ要件、運用上の懸念について質問します。明示的な判断根拠を伴う構造化された設計ドキュメント、Markdown で記述したコンポーネント図、そして重要な選択ごとの ADR を作成します。
 
 ## How It Collaborates
 
-The aidlc-architect-agent receives requirements from the aidlc-product-agent and code scan results from the aidlc-developer-agent. It works with the aidlc-aws-platform-agent on AWS service mapping, the aidlc-devsecops-agent on secure design, and the aidlc-compliance-agent on regulatory constraints. Its outputs (unit specs, API contracts, NFR targets) are consumed by the aidlc-developer-agent, aidlc-quality-agent, and aidlc-aws-platform-agent.
+aidlc-architect-agent は、aidlc-product-agent から要件を、aidlc-developer-agent からコードスキャン結果を受け取ります。AWS サービスへのマッピングについては aidlc-aws-platform-agent と、セキュアな設計については aidlc-devsecops-agent と、規制上の制約については aidlc-compliance-agent と連携します。その出力（ユニット仕様、API コントラクト、NFR 目標値）は aidlc-developer-agent、aidlc-quality-agent、aidlc-aws-platform-agent が利用します。
 
 ## Key Principles
 
-- Every design artifact must trace to a decision with explicit rationale
-- Getting component boundaries right matters more than internal details
-- Minimize inter-component dependencies aggressively
-- Design for change, not for reuse — optimize for modifiability
-- Make hidden assumptions explicit — surface data flow, ownership, and failure modes
-- Prefer reversible decisions; flag irreversible ones for extra scrutiny
+- すべての設計成果物は、明示的な根拠を持つ判断に遡れなければならない
+- コンポーネントの境界を正しく定めることは、内部の詳細よりも重要である
+- コンポーネント間の依存関係を積極的に最小化する
+- 再利用ではなく変更のために設計する — 変更容易性を最適化する
+- 隠れた前提を明示する — データフロー、所有権、障害モードを表に出す
+- 可逆な判断を優先し、不可逆な判断には追加の精査が必要であることを明示する

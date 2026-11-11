@@ -1,44 +1,44 @@
 # Developer Agent
 
-> **Agent deep dive** · [User Guide](../00-introduction.md) › [Agents](../06-agents.md) › [deep dives](README.md) · Technical reference: [developer-agent](../../reference/agents/developer-agent.md)
+> **エージェントの詳細** · [ユーザーガイド](../00-introduction.md) › [エージェント](../06-agents.md) › [エージェントの詳細](README.md) · 技術リファレンス: [developer-agent](../../reference/agents/developer-agent.md)
 
-The aidlc-developer-agent is your senior software developer. It translates architectural designs and unit specifications into production-quality code. During reverse engineering, it performs deep code scans that the aidlc-architect-agent synthesizes.
+aidlc-developer-agent は、あなたのシニアソフトウェア開発者です。アーキテクチャ設計とユニットの仕様を、本番品質のコードに落とし込みます。リバースエンジニアリングでは、aidlc-architect-agent が統合するための詳細なコードスキャンを行います。
 
-The aidlc-developer-agent leads the Reverse Engineering code scan and Code Generation, and is a dispatched collaborator in both Inception ensembles: it examines code-pattern evidence in the Practices Discovery hub-and-spoke and provides the implementability voice in the User Stories mob. Code Generation runs as a focused subagent. It is expected to use Bash for running build tools, package managers, and test commands.
+aidlc-developer-agent は Reverse Engineering のコードスキャンと Code Generation をリードし、Inception の 2 つのアンサンブルの両方にディスパッチされる協力者として参加します。Practices Discovery のハブ＆スポークではコードパターンの証拠を調べ、User Stories のモブでは実装可能性の観点から意見を述べます。Code Generation は 1 つのエージェントに絞ったサブエージェントとして実行されます。ビルドツール、パッケージマネージャー、テストコマンドの実行には Bash を使うことが想定されています。
 
-Initialization, Workspace Detection included, runs as a deterministic tool; the aidlc-developer-agent takes no part in it.
+Workspace Detection を含む Initialization は決定的なツールとして実行され、aidlc-developer-agent は関与しません。
 
 ## Stages Led
 
-| Stage | Phase | Description |
+| ステージ | フェーズ | 説明 |
 |-------|-------|-------------|
-| 2.1 Reverse Engineering (code scan) | Inception | Deep code scan producing structured analysis for architect synthesis; with collaborators off it also writes the 9 artifacts itself |
-| 3.5 Code Generation | Construction | Implements units of work from design specifications (per unit) |
+| 2.1 Reverse Engineering（コードスキャン） | Inception | アーキテクトが統合するための構造化された分析を生成する詳細なコードスキャン。協力者がオフの場合は、9 つの成果物も自ら作成します |
+| 3.5 Code Generation | Construction | 設計仕様からユニットを実装します（ユニットごと） |
 
 ## Stages Supported
 
-| Stage | Phase | Contribution |
+| ステージ | フェーズ | 貢献内容 |
 |-------|-------|-------------|
-| 2.2 Practices Discovery | Inception | Mutually blind code-pattern spoke when collaborators are on; writes its own contribution file |
-| 2.4 User Stories | Inception | Implementability voice in the mob ensemble when collaborators are on; writes its own contribution file |
-| 3.1 Functional Design | Construction | API contracts and data model input |
-| 4.3 Deployment Execution | Operation | Database migrations |
+| 2.2 Practices Discovery | Inception | 協力者がオンの場合、他と内容を共有しないコードパターンのスポークとして参加し、自身の貢献ファイルを書きます |
+| 2.4 User Stories | Inception | 協力者がオンの場合、モブのアンサンブルで実装可能性の観点から意見を述べ、自身の貢献ファイルを書きます |
+| 3.1 Functional Design | Construction | API コントラクトとデータモデルに関するインプット |
+| 4.3 Deployment Execution | Operation | データベースのマイグレーション |
 
 ## What to Expect
 
-During Code Generation, the aidlc-developer-agent runs as a subagent — you will not interact with it directly. You see a progress indicator and then the results when it completes. The orchestrator first presents a code generation plan for your approval, then the subagent implements each step.
+Code Generation の間、aidlc-developer-agent はサブエージェントとして実行されるため、あなたが直接やり取りすることはありません。進捗インジケーターが表示され、完了すると結果が表示されます。オーケストレーターはまずコード生成の計画を提示してあなたの承認を求め、その後サブエージェントが各ステップを実装します。
 
-Application code is written directly to the workspace root (not into the intent's record dir). The `code-summary.md` artifact in the intent's record dir documents what was created or modified.
+アプリケーションのコードは、（インテントの記録ディレクトリではなく）ワークスペースルートに直接書き込まれます。インテントの記録ディレクトリにある `code-summary.md` 成果物に、作成または変更された内容が記録されます。
 
 ## How It Collaborates
 
-The aidlc-developer-agent receives unit specifications and design patterns from the aidlc-architect-agent, and test requirements from the aidlc-quality-agent. It works with the aidlc-aws-platform-agent on CDK/infrastructure alignment and the aidlc-devsecops-agent on secure coding. Its code scan results feed the aidlc-architect-agent for synthesis, and its implemented code is handed off to the aidlc-quality-agent for testing.
+aidlc-developer-agent は、aidlc-architect-agent からユニットの仕様と設計パターンを、aidlc-quality-agent からテスト要件を受け取ります。CDK／インフラストラクチャの整合については aidlc-aws-platform-agent と、セキュアコーディングについては aidlc-devsecops-agent と協力します。コードスキャンの結果は統合のために aidlc-architect-agent に渡され、実装したコードはテストのために aidlc-quality-agent に引き渡されます。
 
 ## Key Principles
 
-- Deliver functional, tested implementations; refactor during the first generation when the Testing Contract includes that step (TDD, BDD, ATDD, or custom)
-- Follow the project's existing patterns and conventions
-- Write code that is easy to read and debug — avoid clever abstractions
-- Validate inputs early, throw meaningful errors, never swallow exceptions
-- Every generated unit includes at least a happy-path test
-- In reverse engineering, thoroughness of the scan determines quality of the synthesis
+- 動作し、テストされた実装を提供します。Testing Contract にリファクタリングのステップが含まれる場合（TDD、BDD、ATDD、またはカスタム）は、最初の生成の中でリファクタリングを行います
+- プロジェクトの既存のパターンと規約に従います
+- 読みやすくデバッグしやすいコードを書きます — 凝った抽象化は避けます
+- 入力を早い段階で検証し、意味のあるエラーを投げ、例外を決して握りつぶしません
+- 生成されるすべてのユニットには、少なくとも正常系のテストが含まれます
+- リバースエンジニアリングでは、スキャンの徹底度が統合の品質を左右します

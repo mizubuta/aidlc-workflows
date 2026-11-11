@@ -14,26 +14,26 @@ collaborators: on
 
 # enterprise scope
 
-Comprehensive depth for regulated work that needs the full audit trail.
-Every stage in the graph executes — no shortcuts. Ideation, inception,
-construction, and operation all run end to end, so the artifact chain
-(intent through deployment and feedback) is complete and traceable.
+監査証跡を完全に残す必要がある規制対象の作業向けの、Comprehensive の深さ。
+グラフ内のすべてのステージを実行し、近道はしない。Ideation、Inception、
+Construction、Operation のすべてを最初から最後まで実行するため、成果物の連鎖
+（インテントからデプロイ、フィードバックまで）が完全で、追跡可能になる。
 
-Guard Policy defaults to strict: changed inputs reopen approval and no fences are lowered, because the audit trail is the point of this scope.
+ガードポリシーの既定値は strict である。入力が変更されると承認が再び開かれ、フェンスは一切下げられない。監査証跡こそがこのスコープの目的だからである。
 
 ## Why every stage
 
-Enterprise work carries compliance, security-review, and sign-off
-obligations that the skipped-stage scopes (`mvp`, `poc`, `bugfix`) are
-willing to trade away for speed. Here the cost of an undocumented decision
-is higher than the cost of running the stage, so the scope keeps the whole
-spine: market-research and team-formation up front, the full design pass,
-and the operation stages (observability, incident-response,
-performance-validation) on the back end.
+エンタープライズの作業には、コンプライアンス、セキュリティレビュー、サインオフの
+義務が伴う。ステージを省略するスコープ（`mvp`、`poc`、`bugfix`）は、速度と引き換えに
+これらを手放すことをいとわない。ここでは、文書化されていない判断のコストが
+ステージを実行するコストよりも高いため、このスコープは背骨全体を維持する。
+すなわち、前段の market-research と team-formation、完全な設計パス、
+そして後段の Operation ステージ（observability、incident-response、
+performance-validation）である。
 
 ## Membership
 
-`enterprise` is the only scope that marks every one of the 33 stages
-EXECUTE. It is the reference column for the EXECUTE/SKIP grid — every other
-scope is a subset of this one. There are no keyword triggers; the scope is
-chosen deliberately, not inferred from a description.
+`enterprise` は、33 個のステージすべてを EXECUTE とする唯一のスコープである。
+EXECUTE/SKIP グリッドの基準となる列であり、他のすべてのスコープはこのスコープの
+部分集合である。キーワードトリガーはなく、このスコープは説明文から推定されるのではなく、
+意図的に選択される。

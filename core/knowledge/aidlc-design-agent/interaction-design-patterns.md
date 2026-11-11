@@ -1,146 +1,146 @@
 # Interaction Design Patterns
 
 ## Purpose
-Reusable solutions to common UI interaction problems. Applying established patterns reduces user learning curve and development effort.
+UI のインタラクションでよくある問題に対する、再利用可能な解決策。確立されたパターンを適用すると、ユーザーの学習コストと開発工数を減らせる。
 
 ## Navigation Patterns
 
 ### Top Navigation Bar
-- Best for: Applications with 3-7 top-level sections
-- Include: Logo (home link), primary nav items, user menu, search
-- On mobile: Collapse to hamburger menu or bottom tab bar
+- 適している場面: トップレベルのセクションが 3〜7 個のアプリケーション
+- 含めるもの: ロゴ（ホームへのリンク）、主要なナビゲーション項目、ユーザーメニュー、検索
+- モバイルでは: ハンバーガーメニューまたはボトムタブバーに折りたたむ
 
 ### Side Navigation
-- Best for: Applications with many sections, deep hierarchies, or admin interfaces
-- Collapsible to icons-only for more content space
-- Active section should be visually highlighted
-- Support nested items with expand/collapse
+- 適している場面: セクションが多い、階層が深い、または管理画面のアプリケーション
+- コンテンツ領域を広げるため、アイコンのみの表示に折りたためるようにする
+- アクティブなセクションは視覚的に強調表示する
+- 展開/折りたたみによる入れ子の項目をサポートする
 
 ### Breadcrumbs
-- Best for: Deep hierarchies (e-commerce, file systems, documentation)
-- Show the path from root to current page
-- Each segment is a clickable link except the current page
-- Do not use breadcrumbs as the only navigation method
+- 適している場面: 深い階層（EC サイト、ファイルシステム、ドキュメント）
+- ルートから現在のページまでのパスを表示する
+- 現在のページを除き、各セグメントはクリック可能なリンクにする
+- パンくずリストを唯一のナビゲーション手段にしない
 
 ### Bottom Tab Bar (Mobile)
-- Best for: Mobile apps with 3-5 primary sections
-- Maximum 5 tabs; more than 5 requires a "More" overflow
-- Active tab uses filled icon and label; inactive tabs use outlined icons
+- 適している場面: 主要セクションが 3〜5 個のモバイルアプリ
+- タブは最大 5 個。5 個を超える場合は「その他」によるオーバーフローが必要
+- アクティブなタブは塗りつぶしアイコンとラベルを使い、非アクティブなタブはアウトラインのアイコンを使う
 
 ## Form Patterns
 
 ### Inline Validation
-- Validate on blur (when the user leaves the field), not on every keystroke
-- Show success state for valid fields to build confidence
-- Place error messages directly below the relevant field
-- Use specific error messages: "Password must be at least 8 characters" not "Invalid input"
+- キーストロークごとではなく、blur 時（ユーザーがフィールドを離れたとき）に検証する
+- 有効なフィールドには成功状態を表示して、安心感を与える
+- エラーメッセージは該当フィールドの直下に配置する
+- 具体的なエラーメッセージを使う: 「無効な入力です」ではなく「パスワードは 8 文字以上にしてください」
 
 ### Multi-Step Forms (Wizards)
-- Show progress indicator (step 1 of 4) with step labels
-- Allow backward navigation to review previous steps
-- Save progress between steps (do not lose data on back-navigation)
-- Final step shows a summary for review before submission
-- Keep each step focused on one logical group of inputs
+- ステップのラベル付きで進捗インジケーター（4 ステップ中 1）を表示する
+- 前のステップを見直せるよう、戻る操作を許可する
+- ステップ間で進捗を保存する（戻ったときにデータを失わない）
+- 最後のステップでは、送信前に確認用のサマリーを表示する
+- 各ステップは、論理的に 1 つのまとまりの入力に絞る
 
 ### Autosave
-- Save drafts automatically at intervals or on field change
-- Show save status clearly: "Saved", "Saving...", "Unsaved changes"
-- Provide explicit save/discard actions for critical data
+- 一定間隔またはフィールドの変更時に、下書きを自動保存する
+- 保存状態を明確に表示する: 「保存済み」「保存中...」「未保存の変更あり」
+- 重要なデータについては、明示的な保存/破棄のアクションを用意する
 
 ## Modal and Dialog Patterns
 
 ### When to Use Modals
-- Confirming destructive actions ("Delete this item?")
-- Collecting small amounts of focused input (rename, quick settings)
-- Displaying critical alerts that require acknowledgment
+- 破壊的なアクションの確認（「この項目を削除しますか？」）
+- 焦点を絞った少量の入力の収集（名前の変更、クイック設定）
+- 確認が必要な重大なアラートの表示
 
 ### When NOT to Use Modals
-- Displaying large amounts of content (use a new page instead)
-- Nested modals (modal opening another modal — always avoid)
-- Optional information (use inline expansion or tooltips)
+- 大量のコンテンツの表示（代わりに新しいページを使う）
+- 入れ子のモーダル（モーダルから別のモーダルを開く — 常に避ける）
+- 任意の情報（インラインの展開やツールチップを使う）
 
 ### Modal Implementation Rules
-- Trap keyboard focus inside the modal while open
-- Close on Escape key press
-- Close on overlay/backdrop click (except for critical confirmations)
-- Return focus to the trigger element when closed
-- Prevent background scrolling while modal is open
+- モーダルが開いている間は、キーボードフォーカスをモーダル内に閉じ込める
+- Escape キーで閉じる
+- オーバーレイ/背景のクリックで閉じる（重大な確認を除く）
+- 閉じたときは、呼び出し元の要素にフォーカスを戻す
+- モーダルが開いている間は、背景のスクロールを防ぐ
 
 ## Progressive Disclosure
 
 ### Pattern
-Show only essential information initially; reveal detail on demand.
+最初は必要不可欠な情報だけを表示し、詳細は求めに応じて表示する。
 
 ### Applications
-- **Accordion sections**: Collapse secondary content; expand on click
-- **"Show more" links**: Truncate long lists/text with option to expand
-- **Advanced settings**: Hide behind a "Show advanced options" toggle
-- **Contextual help**: Show tips/explanations via info icons or tooltips, not inline clutter
+- **アコーディオンセクション**: 二次的なコンテンツは折りたたみ、クリックで展開する
+- **「もっと見る」リンク**: 長いリストやテキストは途中で切り、展開できるようにする
+- **詳細設定**: 「詳細オプションを表示」のトグルの裏に隠す
+- **コンテキストヘルプ**: ヒントや説明はインラインで散らかさず、情報アイコンやツールチップで表示する
 
 ### Rule
-Every screen should have a clear primary action. If users are overwhelmed, you are showing too much at once.
+すべての画面には明確な主要アクションが 1 つあるべきだ。ユーザーが圧倒されているなら、一度に見せすぎている。
 
 ## Infinite Scroll vs Pagination
 
 ### Infinite Scroll
-- Best for: Social feeds, media galleries, content discovery
-- Show loading indicator at bottom when fetching more
-- Provide "Back to top" button after scrolling
-- Caution: Breaks browser back button, makes footer unreachable, loses scroll position
+- 適している場面: ソーシャルフィード、メディアギャラリー、コンテンツの発見
+- 追加データの取得中は、下部に読み込みインジケーターを表示する
+- スクロール後は「トップへ戻る」ボタンを用意する
+- 注意: ブラウザの戻るボタンが機能しなくなり、フッターに到達できず、スクロール位置が失われる
 
 ### Pagination
-- Best for: Search results, data tables, e-commerce listings
-- Show total count and current position ("Showing 1-20 of 347")
-- Include: Previous, Next, first/last page, and 2-3 surrounding page numbers
-- Preserve filter/sort state across page changes
+- 適している場面: 検索結果、データテーブル、EC の商品一覧
+- 総件数と現在の位置を表示する（「347 件中 1〜20 件を表示」）
+- 含めるもの: 前へ、次へ、最初/最後のページ、前後 2〜3 個のページ番号
+- ページを切り替えてもフィルター/並び替えの状態を保持する
 
 ## Drag and Drop
 
 ### When Appropriate
-- Reordering lists, kanban boards, file uploads, layout builders
-- Always provide a non-drag alternative (move up/down buttons, keyboard shortcuts)
+- リストの並べ替え、カンバンボード、ファイルのアップロード、レイアウトビルダー
+- ドラッグ以外の代替手段（上へ/下へ移動ボタン、キーボードショートカット）を必ず用意する
 
 ### Implementation
-- Show a grab cursor on hover of draggable items
-- Provide a clear visual drop target (highlighted zone, insertion line)
-- Show a ghost/preview of the dragged item
-- Support undo immediately after drop (Ctrl+Z or undo toast)
+- ドラッグ可能な項目にホバーしたら、つかむカーソルを表示する
+- ドロップ先を視覚的に明確に示す（強調表示された領域、挿入線）
+- ドラッグ中の項目のゴースト/プレビューを表示する
+- ドロップ直後の取り消しをサポートする（Ctrl+Z または取り消し用のトースト）
 
 ## Micro-Interactions
 
 ### Definition
-Small, single-purpose animations or feedback moments that make the interface feel responsive.
+インターフェースが応答よく感じられるようにする、小さく単一目的のアニメーションやフィードバックの瞬間。
 
 ### Key Micro-Interactions
-- **Button feedback**: Subtle press/depress animation on click
-- **Toggle transitions**: Smooth state change (on/off) with color shift
-- **Success confirmation**: Brief checkmark animation after form submission
-- **Skeleton loading**: Content-shaped placeholders that pulse while loading
-- **Pull to refresh**: Resistance and spinner animation (mobile)
+- **ボタンのフィードバック**: クリック時の控えめな押し込み/戻りのアニメーション
+- **トグルの遷移**: 色の変化を伴う滑らかな状態変化（オン/オフ）
+- **成功の確認**: フォーム送信後の短いチェックマークのアニメーション
+- **スケルトンローディング**: 読み込み中に明滅する、コンテンツの形をしたプレースホルダー
+- **引っ張って更新**: 抵抗感とスピナーのアニメーション（モバイル）
 
 ### Rules
-- Keep animations under 300ms — longer feels sluggish
-- Use easing (ease-out for entrances, ease-in for exits) — linear motion feels robotic
-- Respect `prefers-reduced-motion` media query — disable animations for users who request it
+- アニメーションは 300ms 未満に抑える — それより長いと鈍く感じる
+- イージングを使う（登場には ease-out、退場には ease-in）— 線形の動きは機械的に感じる
+- `prefers-reduced-motion` メディアクエリを尊重する — 要望したユーザーにはアニメーションを無効にする
 
 ## Error Prevention Patterns
 
-- **Confirmation dialogs** for destructive actions (delete, overwrite, send)
-- **Undo** instead of confirmation when possible (Gmail's "Undo send" is superior to "Are you sure?")
-- **Constraints**: Disable invalid options rather than showing errors after selection
-- **Defaults**: Pre-fill with sensible defaults to reduce input errors
-- **Format hints**: Show expected format inline ("DD/MM/YYYY") not just in error messages
+- 破壊的なアクション（削除、上書き、送信）には**確認ダイアログ**を使う
+- 可能なら確認の代わりに**取り消し**を使う（Gmail の「Undo send」は「本当によろしいですか？」より優れている）
+- **制約**: 選択後にエラーを表示するのではなく、無効な選択肢を無効化する
+- **デフォルト値**: 妥当なデフォルト値をあらかじめ入力し、入力ミスを減らす
+- **形式のヒント**: 期待される形式（「DD/MM/YYYY」）はエラーメッセージだけでなく、インラインで表示する
 
 ## Responsive Breakpoint Strategy
 
 ### Standard Breakpoints
-- **Mobile**: 320px - 767px (single column, stacked layout)
-- **Tablet**: 768px - 1023px (two columns, collapsible side nav)
-- **Desktop**: 1024px - 1439px (full layout, side nav expanded)
-- **Large desktop**: 1440px+ (max-width container, avoid stretching content beyond ~1200px)
+- **モバイル**: 320px - 767px（1 カラム、縦積みのレイアウト）
+- **タブレット**: 768px - 1023px（2 カラム、折りたたみ可能なサイドナビゲーション）
+- **デスクトップ**: 1024px - 1439px（フルレイアウト、サイドナビゲーションは展開）
+- **大型デスクトップ**: 1440px 以上（最大幅のコンテナを使い、コンテンツを約 1200px を超えて引き伸ばさない）
 
 ### Design Approach
-- Design mobile-first: start with the smallest screen, add complexity as space allows
-- Use fluid grids and relative units (%, rem) not fixed pixels
-- Test at breakpoint boundaries AND mid-points (avoid layout breaking at 900px between 768 and 1024)
-- Touch targets: minimum 44x44px on mobile (Apple HIG), 48x48px (Material Design)
+- モバイルファーストで設計する: 最も小さい画面から始め、スペースに応じて複雑さを加える
+- 固定ピクセルではなく、流動的なグリッドと相対単位（%、rem）を使う
+- ブレークポイントの境界だけでなく中間点でもテストする（768 と 1024 の間の 900px でレイアウトが崩れないようにする）
+- タッチターゲット: モバイルでは最小 44x44px（Apple HIG）、48x48px（Material Design）

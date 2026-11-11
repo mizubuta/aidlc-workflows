@@ -10,25 +10,23 @@ disable-model-invocation: true
 
 # AI-DLC scope
 
-Set the scope through the same deterministic forwarding loop as `/aidlc`.
-The first argument is the scope name; pass every argument through verbatim
-after the baked-in `--scope` flag.
+`/aidlc` と同じ決定的な転送ループを通じてスコープを設定する。
+最初の引数はスコープ名である。組み込みの `--scope` フラグの後に、すべての引数を
+そのまま渡す。
 
-1. If `$ARGUMENTS` is empty, print
+1. `$ARGUMENTS` が空の場合は、
    `Usage: /aidlc-scope <scope> [description | --depth <level> | --test-strategy <level>]`
-   and stop. A missing scope must never degrade into a bare `next`.
+   を出力して停止する。スコープの欠落が、引数なしの `next` に格下げされることは決してあってはならない。
 
-2. Run:
+2. 次を実行する:
 
    ```bash
    {{INVOKE}} engine orchestrate next --scope $ARGUMENTS
    ```
 
-3. Act on the directive exactly as the `aidlc` skill's forwarding loop
-   describes. On an active workflow, the engine names the scope-change command
-   and the loop continues after it runs. On a fresh workspace, it names the
-   normal workflow creation command. Stop only when the directive or a human gate
-   says to stop.
+3. `aidlc` スキルの転送ループの説明どおりにディレクティブに従って動作する。
+   アクティブなワークフローでは、エンジンがスコープ変更コマンドを指名し、その実行後に
+   ループが継続する。新規のワークスペースでは、通常のワークフロー作成コマンドを指名する。
+   ディレクティブまたは人間によるゲートが停止を指示した場合にのみ停止する。
 
-The engine owns scope validation and all state changes. Do not edit the state
-file directly.
+スコープの検証とすべての状態変更はエンジンが担う。状態ファイルを直接編集してはならない。

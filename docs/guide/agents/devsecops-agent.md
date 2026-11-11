@@ -1,38 +1,38 @@
 # DevSecOps Agent
 
-> **Agent deep dive** · [User Guide](../00-introduction.md) › [Agents](../06-agents.md) › [deep dives](README.md) · Technical reference: [devsecops-agent](../../reference/agents/devsecops-agent.md)
+> **エージェント詳解** · [ユーザーガイド](../00-introduction.md) › [エージェント](../06-agents.md) › [詳解一覧](README.md) · 技術リファレンス: [devsecops-agent](../../reference/agents/devsecops-agent.md)
 
-The aidlc-devsecops-agent is your security engineer. It ensures that security is embedded into every phase of the lifecycle rather than bolted on at the end. It takes compliance requirements identified in Ideation and implements them as security controls, threat models, scanning pipelines, and runtime monitoring. It covers application security, cloud security, and pipeline security.
+aidlc-devsecops-agent は、あなたのセキュリティエンジニアです。セキュリティを最後に後付けするのではなく、ライフサイクルのすべてのフェーズに組み込むことを保証します。Ideation で特定されたコンプライアンス要件を受け取り、セキュリティコントロール、脅威モデル、スキャンパイプライン、ランタイム監視として実装します。アプリケーションセキュリティ、クラウドセキュリティ、パイプラインセキュリティを担当します。
 
-Like the aidlc-compliance-agent, the aidlc-devsecops-agent operates exclusively in a support role. It contributes security expertise across five stages spanning Inception, Construction, and Operation. It has Bash access for running security scanning tools.
+aidlc-compliance-agent と同様に、aidlc-devsecops-agent はもっぱら支援役として動作します。Inception、Construction、Operation にまたがる 5 つのステージでセキュリティの専門知識を提供します。セキュリティスキャンツールを実行するために Bash へのアクセス権を持ちます。
 
 ## Stages Led
 
-The aidlc-devsecops-agent does not lead any stages.
+aidlc-devsecops-agent がリードするステージはありません。
 
 ## Stages Supported
 
-| Stage | Phase | Contribution |
+| ステージ | フェーズ | 貢献内容 |
 |-------|-------|-------------|
-| 2.2 Practices Discovery | Inception | Mutually blind security-practice spoke when collaborators are on; writes its own contribution file |
-| 3.2 NFR Requirements | Construction | Security controls, threat model, STRIDE analysis |
-| 3.4 Infrastructure Design | Construction | IAM policy review, security group validation |
-| 3.6 Build and Test | Construction | SAST/DAST scans, dependency vulnerabilities, IaC linting |
-| 4.2 Environment Provisioning | Operation | Security posture validation (Security Hub, Inspector, GuardDuty) |
+| 2.2 Practices Discovery | Inception | collaborators が on のとき、互いの内容を見ない（mutually blind）セキュリティプラクティス担当のスポークとして参加し、自身の貢献ファイルを書く |
+| 3.2 NFR Requirements | Construction | セキュリティコントロール、脅威モデル、STRIDE 分析 |
+| 3.4 Infrastructure Design | Construction | IAM ポリシーのレビュー、セキュリティグループの検証 |
+| 3.6 Build and Test | Construction | SAST/DAST スキャン、依存関係の脆弱性、IaC の lint |
+| 4.2 Environment Provisioning | Operation | セキュリティ態勢の検証（Security Hub、Inspector、GuardDuty） |
 
 ## What to Expect
 
-When the aidlc-devsecops-agent is active (as a supporting agent), it focuses on attack surfaces, trust boundaries, and security controls. It reviews designs for security anti-patterns, validates that sensitive data flows are encrypted and access-controlled, and assesses third-party dependencies for known vulnerabilities.
+aidlc-devsecops-agent が（支援エージェントとして）稼働しているときは、攻撃対象領域、信頼境界、セキュリティコントロールに注目します。設計にセキュリティのアンチパターンがないかをレビューし、機密データのフローが暗号化されアクセス制御されていることを検証し、サードパーティの依存関係に既知の脆弱性がないかを評価します。
 
 ## How It Collaborates
 
-The aidlc-devsecops-agent receives regulatory requirements from the aidlc-compliance-agent and system designs from the aidlc-architect-agent. It works with the aidlc-developer-agent on secure coding practices, the aidlc-aws-platform-agent on infrastructure hardening, and the aidlc-quality-agent on security test requirements. Its security gates and scanning configurations are handed off to the aidlc-pipeline-deploy-agent.
+aidlc-devsecops-agent は、aidlc-compliance-agent から規制要件を、aidlc-architect-agent からシステム設計を受け取ります。セキュアコーディングのプラクティスについては aidlc-developer-agent と、インフラのハードニングについては aidlc-aws-platform-agent と、セキュリティテストの要件については aidlc-quality-agent と連携します。セキュリティゲートとスキャン設定は aidlc-pipeline-deploy-agent に引き渡されます。
 
 ## Key Principles
 
-- Defense in depth — no single security control should be a single point of failure
-- Least privilege everywhere — minimum permissions for every user, service, and process
-- Assume breach — internal components must authenticate and authorize each other
-- Default configurations must be secure
-- All input is hostile until validated; all external data is tainted until sanitized
-- Security is a requirement, not a feature that can be deferred
+- 多層防御 — 単一のセキュリティコントロールが単一障害点になってはならない
+- あらゆる場所で最小権限 — すべてのユーザー、サービス、プロセスに最小限の権限を与える
+- 侵害を前提とする — 内部コンポーネント同士も相互に認証・認可しなければならない
+- デフォルト設定は安全でなければならない
+- すべての入力は検証されるまで敵対的とみなし、すべての外部データはサニタイズされるまで汚染されているとみなす
+- セキュリティは要件であり、後回しにできる機能ではない

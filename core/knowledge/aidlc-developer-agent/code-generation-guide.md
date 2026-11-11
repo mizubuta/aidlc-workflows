@@ -2,85 +2,84 @@
 
 ## Implementation Pattern Selection
 
-Choose patterns based on the problem domain:
+問題領域に基づいてパターンを選ぶ:
 
-| Pattern | When to Use | Avoid When |
+| パターン | 使う場面 | 避ける場面 |
 |---------|-------------|------------|
-| **Repository** | Abstracting data access, multiple storage backends | Single database, simple CRUD only |
-| **Service Layer** | Coordinating business logic across multiple repositories | Logic fits in a single model method |
-| **Factory** | Complex object creation, conditional construction logic | Simple constructor suffices |
-| **Strategy** | Runtime behavior variation (e.g., payment processing, notifications) | Only one algorithm exists |
-| **Observer/Event** | Decoupling side effects from core logic (email, logging, cache invalidation) | Synchronous response required from all handlers |
-| **Middleware/Pipeline** | Cross-cutting concerns (auth, logging, validation, rate limiting) | Single-purpose request handling |
-| **Adapter** | Wrapping external APIs/SDKs behind a stable internal interface | Internal-only code with no external dependencies |
+| **Repository** | データアクセスの抽象化、複数のストレージバックエンド | 単一のデータベースで、単純な CRUD のみ |
+| **Service Layer** | 複数のリポジトリにまたがるビジネスロジックの調整 | ロジックが単一のモデルメソッドに収まる |
+| **Factory** | 複雑なオブジェクト生成、条件付きの構築ロジック | 単純なコンストラクタで十分 |
+| **Strategy** | 実行時の振る舞いの切り替え（例: 決済処理、通知） | アルゴリズムが 1 つしかない |
+| **Observer/Event** | 副作用（メール、ログ、キャッシュの無効化）をコアロジックから切り離す | すべてのハンドラーからの同期的な応答が必要 |
+| **Middleware/Pipeline** | 横断的関心事（認証、ログ、バリデーション、レート制限） | 単一目的のリクエスト処理 |
+| **Adapter** | 外部の API/SDK を安定した内部インターフェースの背後にラップする | 外部依存のない内部専用コード |
 
 ## Framework-Specific Generation Strategies
 
 ### General Principles (All Frameworks)
-1. Scan existing code for conventions before generating new code
-2. Match the project's import style (named vs. default, absolute vs. relative)
-3. Follow the project's directory structure conventions
-4. Use the project's established error handling pattern
-5. Match existing naming conventions (camelCase, snake_case, PascalCase)
+1. 新しいコードを生成する前に、既存コードを走査して規約を把握する
+2. プロジェクトの import スタイル（名前付き 対 デフォルト、絶対パス 対 相対パス）に合わせる
+3. プロジェクトのディレクトリ構成の規約に従う
+4. プロジェクトで確立されたエラー処理パターンを使う
+5. 既存の命名規約（camelCase、snake_case、PascalCase）に合わせる
 
 ### Web API Implementation Checklist
-For each endpoint, generate:
-- [ ] Route definition with HTTP method and path
-- [ ] Request validation (path params, query params, body schema)
-- [ ] Authentication/authorization middleware
-- [ ] Service call with error handling
-- [ ] Response serialization with correct status code
-- [ ] Error response formatting (consistent error envelope)
+各エンドポイントについて、次を生成する:
+- [ ] HTTP メソッドとパスを含むルート定義
+- [ ] リクエストのバリデーション（パスパラメータ、クエリパラメータ、ボディのスキーマ）
+- [ ] 認証／認可のミドルウェア
+- [ ] エラー処理を伴うサービス呼び出し
+- [ ] 正しいステータスコードでのレスポンスのシリアライズ
+- [ ] エラーレスポンスの整形（一貫したエラーエンベロープ）
 
 ### Database Model Checklist
-For each entity something upstream asks for or the approved plan names (any other goes into the plan first, never a checklist item added here), generate:
-- [ ] Model/schema definition with field types and constraints
-- [ ] Indexes for queried fields and foreign keys
-- [ ] Timestamps (created_at, updated_at) where appropriate
-- [ ] Soft delete support if specified in requirements
-- [ ] Migration file for schema changes
-- [ ] Seed data for development/testing if applicable
+上流が求めている、または承認済みの計画が名指ししている各エンティティについて（それ以外のエンティティはまず計画に追加する。ここでチェックリスト項目として追加することは決してしない）、次を生成する:
+- [ ] フィールドの型と制約を含むモデル／スキーマ定義
+- [ ] クエリ対象のフィールドと外部キーに対するインデックス
+- [ ] 必要に応じたタイムスタンプ（created_at、updated_at）
+- [ ] 要件で指定されている場合は論理削除のサポート
+- [ ] スキーマ変更のためのマイグレーションファイル
+- [ ] 該当する場合は開発／テスト用のシードデータ
 
 ## Brownfield Modification Best Practices
 
-When modifying existing codebases (most common scenario):
+既存のコードベースを変更する場合（最も一般的なシナリオ）:
 
 ### Before Writing Code
-1. **Map the change surface**: Identify all files that will be touched
-2. **Trace the call chain**: Follow the execution path from entry point to persistence
-3. **Check for tests**: Find existing tests that cover the area being modified
-4. **Identify conventions**: Note patterns used in surrounding code
+1. **変更範囲を洗い出す**: 手を入れることになるファイルをすべて特定する
+2. **呼び出しチェーンを追跡する**: エントリポイントから永続化までの実行経路をたどる
+3. **テストを確認する**: 変更対象の領域をカバーする既存のテストを見つける
+4. **規約を特定する**: 周辺のコードで使われているパターンを把握する
 
 ### Modification Rules
-- Match the surrounding code's style exactly, even if you prefer another style
-- Do not refactor unrelated code in the same change
-- Preserve existing function signatures when adding optional parameters
-- Add backward-compatible defaults for new configuration
-- Update existing tests to cover the changed behavior
-- Add new tests for new behavior
+- たとえ別のスタイルを好むとしても、周辺コードのスタイルに厳密に合わせる
+- 同じ変更の中で無関係なコードをリファクタリングしない
+- オプションのパラメータを追加するときは、既存の関数シグネチャを維持する
+- 新しい設定には後方互換性のあるデフォルト値を追加する
+- 変更した振る舞いをカバーするように既存のテストを更新する
+- 新しい振る舞いには新しいテストを追加する
 
 ### Common Pitfalls
-- Breaking existing imports by renaming or moving files
-- Changing a function's return type without updating all callers
-- Adding required parameters to public APIs
-- Modifying shared utility functions without checking all consumers
-- Forgetting to update database migrations for schema changes
+- ファイルの名前変更や移動によって既存の import を壊す
+- すべての呼び出し元を更新せずに関数の戻り値の型を変更する
+- 公開 API に必須パラメータを追加する
+- すべての利用箇所を確認せずに共有ユーティリティ関数を変更する
+- スキーマ変更に伴うデータベースマイグレーションの更新を忘れる
 
 ## Testing Patterns
 
 ### Coverage Exclusions
 
-Before adding coverage-ignore pragmas, read and apply
-[Coverage-Ignore Pragmas](../aidlc-quality-agent/testing-guide.md#coverage-ignore-pragmas).
-Verify each new or changed exclusion during the current work; do not assume a
-later verification stage is scheduled. Record the selected provider and
-rationale in the test instructions, and the coverage command you ran, its
-observed effect and the report location with the verification results. If
-coverage cannot be run, record the effect as unverified and follow the linked
-guidance for unresolved targets.
+カバレッジ除外のプラグマを追加する前に、
+[カバレッジ除外プラグマ](../aidlc-quality-agent/testing-guide.md#coverage-ignore-pragmas) を読んで適用する。
+新規または変更した除外は、現在の作業中にそれぞれ検証する。後続の検証ステージが
+予定されていると想定してはならない。選択したプロバイダーとその根拠をテスト手順に記録し、
+実行したカバレッジコマンド、観測された効果、レポートの場所を検証結果とともに記録する。
+カバレッジを実行できない場合は、効果を未検証として記録し、未解決の対象に関するリンク先の
+ガイダンスに従う。
 
 ### Unit Test Structure
-Follow the Arrange-Act-Assert (AAA) pattern:
+Arrange-Act-Assert（AAA）パターンに従う:
 ```
 // Arrange: Set up preconditions and inputs
 // Act: Execute the unit under test
@@ -89,60 +88,60 @@ Follow the Arrange-Act-Assert (AAA) pattern:
 
 ### What to Test per Unit
 
-| Unit Type | Test Focus |
+| ユニットの種類 | テストの重点 |
 |-----------|------------|
-| Service/Use Case | Business logic correctness, edge cases, error handling |
-| Controller/Handler | Request parsing, response format, status codes, auth checks |
-| Repository/DAO | Query correctness (use in-memory DB or test containers) |
-| Utility/Helper | Input/output mapping, boundary values, null/undefined handling |
-| Middleware | Pass-through behavior, rejection conditions, header manipulation |
+| Service/Use Case | ビジネスロジックの正しさ、エッジケース、エラー処理 |
+| Controller/Handler | リクエストの解析、レスポンス形式、ステータスコード、認証チェック |
+| Repository/DAO | クエリの正しさ（インメモリ DB またはテストコンテナを使う） |
+| Utility/Helper | 入出力の対応、境界値、null/undefined の扱い |
+| Middleware | 素通しの振る舞い、拒否条件、ヘッダーの操作 |
 
 ### Test Data Strategy
-- Build test data from the project's own types, schemas or contracts (model types, JSON Schema, OpenAPI, migrations, sample data): type each fixture or check it against the schema, so it fails when the real shape changes; a stub or mock returns the shape the real dependency returns, and data for an error-path test starts from a valid value and changes only the field under test
-- Use factories/builders for complex objects (avoid raw JSON literals)
-- Isolate test data per test (no shared mutable fixtures)
-- Use meaningful test data that reflects real scenarios
-- Name test variables to express their purpose (`expiredToken`, `adminUser`, `emptyCart`)
+- テストデータは、プロジェクト自身の型、スキーマ、契約（モデルの型、JSON Schema、OpenAPI、マイグレーション、サンプルデータ）から構築する。各フィクスチャに型を付けるかスキーマと照合し、実際の形が変わったら失敗するようにする。スタブやモックは実際の依存先が返すのと同じ形を返し、エラーパスのテスト用データは有効な値から始めて、テスト対象のフィールドだけを変更する
+- 複雑なオブジェクトにはファクトリ／ビルダーを使う（生の JSON リテラルは避ける）
+- テストデータはテストごとに分離する（共有されたミュータブルなフィクスチャを使わない）
+- 実際のシナリオを反映した意味のあるテストデータを使う
+- テスト用の変数には目的を表す名前を付ける（`expiredToken`、`adminUser`、`emptyCart`）
 
 ## Code Quality Standards
 
 ### Function Design
-- Maximum 30 lines per function (excluding tests)
-- Single responsibility: one function does one thing
-- Maximum 3 parameters; use an options object for more
-- Return early to avoid deep nesting (guard clauses)
-- Pure functions where possible (no side effects)
+- 1 関数あたり最大 30 行（テストを除く）
+- 単一責任: 1 つの関数は 1 つのことを行う
+- パラメータは最大 3 つ。それ以上はオプションオブジェクトを使う
+- 早期リターンで深いネストを避ける（ガード節）
+- 可能な限り純粋関数にする（副作用なし）
 
 ### Error Handling
-- Fail fast: validate inputs at function entry
-- Use typed/custom errors for domain-specific failures
-- Never swallow exceptions silently (at minimum, log them)
-- Propagate errors with context (wrap, do not replace)
-- Distinguish between recoverable errors (retry) and fatal errors (abort)
+- フェイルファスト: 関数の入口で入力を検証する
+- ドメイン固有の失敗には型付き／カスタムのエラーを使う
+- 例外を黙って握りつぶすことは決してしない（最低でもログに記録する）
+- エラーはコンテキストを付けて伝播させる（置き換えずにラップする）
+- 回復可能なエラー（リトライ）と致命的なエラー（中断）を区別する
 
 ### Naming Conventions
-- Functions: verb + noun (`createUser`, `validateInput`, `calculateTotal`)
-- Booleans: `is`/`has`/`should` prefix (`isActive`, `hasPermission`)
-- Collections: plural nouns (`users`, `orderItems`)
-- Constants: UPPER_SNAKE_CASE for true constants
-- Avoid abbreviations unless universally understood (`id`, `url`, `api`)
+- 関数: 動詞 + 名詞（`createUser`、`validateInput`、`calculateTotal`）
+- 真偽値: `is`/`has`/`should` 接頭辞（`isActive`、`hasPermission`）
+- コレクション: 複数形の名詞（`users`、`orderItems`）
+- 定数: 真の定数には UPPER_SNAKE_CASE
+- 広く理解されているもの（`id`、`url`、`api`）を除き、略語は避ける
 
 ### File Organization
-- One primary export per file (class, function, or component)
-- Group related files by feature/domain, not by technical layer
-- Keep test files adjacent to source files (or in a mirrored `__tests__` directory)
-- Index files only for public API re-exports, never for internal organization
+- 1 ファイルにつき主要なエクスポートは 1 つ（クラス、関数、またはコンポーネント）
+- 関連するファイルは技術レイヤーではなく機能／ドメインでまとめる
+- テストファイルはソースファイルの隣に置く（またはミラー構成の `__tests__` ディレクトリに置く）
+- index ファイルは公開 API の再エクスポートにのみ使い、内部の整理には決して使わない
 
 ## Automation-Friendly Code Rules
 
 ### data-testid Attributes
-Add `data-testid` attributes to all interactive elements to support automated testing (E2E, integration, accessibility audits):
+自動テスト（E2E、統合、アクセシビリティ監査）を支援するため、すべてのインタラクティブな要素に `data-testid` 属性を付ける:
 
-- **Required on**: buttons, inputs, links, form elements, modals, dropdowns, tabs, and other interactive containers
-- **Naming convention**: `{component}-{element-role}` (e.g., `login-form-submit-button`, `user-profile-edit-link`, `settings-modal-close`)
-- **Rules**:
-  - Use lowercase kebab-case
-  - Keep `data-testid` values stable across code changes — do not tie them to dynamic state or auto-generated IDs
-  - Avoid dynamic or auto-generated IDs (e.g., `button-${index}`) — use semantic names instead
-  - Group related elements under a container `data-testid` (e.g., `user-table` wrapping `user-table-row-{id}`)
-  - Apply to both visible and programmatically interactive elements (e.g., hidden file inputs triggered by a button)
+- **必須の対象**: ボタン、入力欄、リンク、フォーム要素、モーダル、ドロップダウン、タブ、その他のインタラクティブなコンテナ
+- **命名規約**: `{component}-{element-role}`（例: `login-form-submit-button`、`user-profile-edit-link`、`settings-modal-close`）
+- **ルール**:
+  - 小文字の kebab-case を使う
+  - `data-testid` の値はコード変更をまたいで安定させる — 動的な状態や自動生成された ID に結び付けない
+  - 動的な ID や自動生成された ID（例: `button-${index}`）を避け、代わりに意味のある名前を使う
+  - 関連する要素はコンテナの `data-testid` の下にまとめる（例: `user-table-row-{id}` をラップする `user-table`）
+  - 表示される要素と、プログラムから操作される要素の両方に適用する（例: ボタンからトリガーされる非表示のファイル入力）

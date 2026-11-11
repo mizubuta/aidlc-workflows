@@ -38,58 +38,58 @@ inputs: NFR requirements from nfr-requirements stage, NFR design from nfr-design
 outputs: load-test-plan.md, test-results.md, nfr-validation-matrix.md, performance-validation-questions.md (under this stage's record dir, engine-resolved)
 ---
 
+
 # Performance Validation & Load Testing
 
 ## Steps
 
 ### Step 1: Load Prior Context
 
-- Read NFR requirements from `<record>/construction/nfr-requirements/`
-- Read NFR design from `<record>/construction/nfr-design/`
-- Read observability configuration from `<record>/operation/observability-setup/`
+- `<record>/construction/nfr-requirements/` から NFR 要件を読み込む
+- `<record>/construction/nfr-design/` から NFR 設計を読み込む
+- `<record>/operation/observability-setup/` からオブザーバビリティ設定を読み込む
 
 ### Step 2: Generate Clarifying Questions
 
-Create questions file covering:
-- What are the expected traffic patterns (steady state, peak, burst)?
-- What are the target latency percentiles (p50, p95, p99)?
-- What throughput must the system sustain?
-- Where are the likely bottlenecks?
+次の内容を扱う質問ファイルを作成する:
+- 想定されるトラフィックパターン（定常状態、ピーク、バースト）は何か？
+- 目標とするレイテンシのパーセンタイル（p50、p95、p99）は何か？
+- システムが維持しなければならないスループットはどれくらいか？
+- ボトルネックになりそうな箇所はどこか？
 
-Follow stage-protocol.md question flow.
+stage-protocol.md の質問フローに従う。
 
 ### Step 3: Design and Execute Tests
 
-Design load test plan, execute performance tests against production-like environments, analyze results using CloudWatch/X-Ray evidence.
+負荷テスト計画を設計し、本番相当の環境に対してパフォーマンステストを実行し、CloudWatch/X-Ray のエビデンスを用いて結果を分析する。
 
 ### Step 4: Generate Artifacts
 
-Create load test plan, performance test results (latency, throughput, error rates), bottleneck analysis, auto-scaling validation report, capacity planning recommendations, and NFR validation matrix (target vs. actual).
+負荷テスト計画、パフォーマンステスト結果（レイテンシ、スループット、エラー率）、ボトルネック分析、オートスケーリングの検証レポート、キャパシティプランニングの推奨事項、NFR 検証マトリクス（目標値と実測値の比較）を作成する。
 
 ### Step 5: Completion Handoff
 
-Hand completion to `stage-protocol.md` via
-`{{INVOKE}} engine orchestrate report --stage performance-validation --result <outcome>`.
-That `report` call owns every lifecycle transition and advancement; never perform one in prose, and never narrate this bookkeeping to the user.
+`{{INVOKE}} engine orchestrate report --stage performance-validation --result <outcome>` を通じて、
+完了を `stage-protocol.md` に引き渡す。
+その `report` 呼び出しが、ライフサイクルの遷移と前進をすべて担う。散文の中で遷移を実行してはならず、この記録処理をユーザーに説明してもならない。
 
 ### Step 6: Present Completion & Request Approval
 
-Completion emoji: :zap:
-Review path: `<record>/operation/performance-validation/`
-Standard 2-option approval (Approve / Request Changes).
+完了時の絵文字: :zap:
+レビューパス: `<record>/operation/performance-validation/`
+標準の 2 択承認（Approve / Request Changes）。
 
 ## Sensors
 
-This stage's outputs are markdown artefacts under `<record>/operation/performance-validation/`.
+このステージの出力は `<record>/operation/performance-validation/` 配下の Markdown 成果物である。
 
-Imports: `required-sections`, `upstream-coverage`.
+インポート: `required-sections`, `upstream-coverage`.
 
-Upstream targets: `performance-requirements`, `scalability-requirements`, `performance-design`, `scalability-design`, `dashboards`.
+上流の対象: `performance-requirements`, `scalability-requirements`, `performance-design`, `scalability-design`, `dashboards`.
 
 ## Learn
 
-When `directive.protocol_modules` lists `learnings`, follow
-`stage-protocol-learnings.md`: keep the diary at `directive.memory_path` while
-working, and take the learnings step before the approval gate; that module says
-when it asks the person anything. When the module is absent, skip both the diary
-and the step.
+`directive.protocol_modules` に `learnings` が含まれている場合は、
+`stage-protocol-learnings.md` に従う。作業中は `directive.memory_path` に日誌を付け、
+承認ゲートの前に学習ステップを実施する。そのモジュールが、利用者に何かを尋ねるタイミングを定めている。
+モジュールがない場合は、日誌とステップの両方を省略する。

@@ -1,88 +1,88 @@
 # Delivery Planning Guide
 
-Domain-specific guidance for the Delivery Planning stage. Use this alongside `product-guide.md` when leading execution plan creation.
+Delivery Planning ステージ向けのドメイン固有のガイダンス。実行計画の作成を主導する際に、`product-guide.md` と併せて使う。
 
 ## Stage Configuration Heuristics
 
-Derive stage configuration from the work breakdown analysis. For each conditional stage, evaluate whether it adds value based on the identified work streams, their complexity, and dependencies.
+ステージ構成は作業分解の分析から導く。条件付きの各ステージについて、特定したワークストリーム、その複雑さ、依存関係に基づいて、そのステージが価値を生むかどうかを評価する。
 
 ### INCEPTION stages
 
 | Stage | EXECUTE when | SKIP when |
 |-------|-------------|-----------|
-| Domain Design | Work streams introduce new components/services, new architectural boundaries, greenfield projects | All streams modify existing components only, no new service boundaries |
-| Units Generation | Multiple independent work streams, cross-cutting concerns requiring sequenced delivery | Single stream or tightly coupled streams that form one natural unit |
-| Contract Design | More than one unit must integrate, or a unit exposes a public/external API to formalise before parallel build | Single self-contained unit with no inter-unit boundaries and no external API |
+| Domain Design | ワークストリームが新しいコンポーネント／サービス、新しいアーキテクチャ境界を導入する場合、グリーンフィールドプロジェクトの場合 | すべてのストリームが既存のコンポーネントを修正するだけで、新しいサービス境界がない場合 |
+| Units Generation | 独立したワークストリームが複数ある場合、順序立てた提供が必要な横断的関心事がある場合 | ストリームが 1 つだけの場合、または密結合で 1 つの自然なユニットを成すストリームの場合 |
+| Contract Design | 複数のユニットを統合する必要がある場合、またはユニットが並行構築の前に形式化すべき公開／外部 API を公開する場合 | ユニット間の境界も外部 API もない、自己完結した単一ユニットの場合 |
 
 ### CONSTRUCTION stages (per-unit)
 
 | Stage | EXECUTE when | SKIP when |
 |-------|-------------|-----------|
-| Functional Design | Streams involve complex business logic, state machines, multi-step workflows, domain modeling | Simple CRUD, config changes, straightforward data transformations |
-| NFR Requirements | Streams handle security-sensitive data, performance SLAs, public-facing APIs, regulatory compliance | Internal tools, prototypes, low-risk utility functions |
-| NFR Design | NFR Requirements produced non-trivial requirements | NFR Requirements skipped or produced only basic constraints |
-| Infrastructure Design | Streams require new deployment targets, CI/CD changes, infrastructure-as-code | Existing infrastructure unchanged, deploying to established pipeline |
+| Functional Design | ストリームが複雑なビジネスロジック、ステートマシン、複数ステップのワークフロー、ドメインモデリングを含む場合 | 単純な CRUD、設定変更、素直なデータ変換の場合 |
+| NFR Requirements | ストリームがセキュリティ上機微なデータ、パフォーマンス SLA、外部公開 API、規制へのコンプライアンスを扱う場合 | 社内ツール、プロトタイプ、低リスクのユーティリティ関数の場合 |
+| NFR Design | NFR Requirements が自明でない要件を生み出した場合 | NFR Requirements がスキップされたか、基本的な制約しか生み出さなかった場合 |
+| Infrastructure Design | ストリームが新しいデプロイ先、CI/CD の変更、Infrastructure as Code を必要とする場合 | 既存のインフラが変わらず、確立されたパイプラインにデプロイする場合 |
 
 ### Configuration rationale format
 
-For each stage decision, tie the rationale to specific work streams:
-- "EXECUTE — Streams 1 and 3 introduce new service boundaries requiring architectural design"
-- "SKIP — All streams modify existing components within established architecture"
+ステージごとの判断について、その根拠を具体的なワークストリームに結び付ける:
+- "EXECUTE — ストリーム 1 と 3 が、アーキテクチャ設計を要する新しいサービス境界を導入する"
+- "SKIP — すべてのストリームが、確立されたアーキテクチャ内の既存コンポーネントを修正するだけである"
 
 ## Work Stream Identification Patterns
 
 ### Grouping strategies
-- **By domain area**: Group requirements/stories that share domain entities and business rules
-- **By user persona**: Group requirements serving the same user type
-- **By dependency chain**: Group requirements where one enables another
-- **By risk profile**: Isolate high-risk work into its own stream for focused attention
-- **By delivery boundary**: Group work that can be independently delivered and tested
+- **ドメイン領域別**: ドメインエンティティとビジネスルールを共有する要件／ストーリーをまとめる
+- **ユーザーペルソナ別**: 同じ種類のユーザーに役立つ要件をまとめる
+- **依存チェーン別**: 一方が他方を可能にする要件同士をまとめる
+- **リスクプロファイル別**: 高リスクの作業を独自のストリームに切り出し、集中して対応する
+- **提供境界別**: 独立して提供・テストできる作業をまとめる
 
 ### Stream sizing guidance
-- **Simple projects** (1-2 streams): Single feature additions, bug fixes, focused refactoring
-- **Standard projects** (2-4 streams): Multi-feature work with some cross-cutting concerns
-- **Complex projects** (4-6 streams): Distributed changes, multiple integration points, significant architectural work
+- **シンプルなプロジェクト**（1〜2 ストリーム）: 単一機能の追加、バグ修正、焦点を絞ったリファクタリング
+- **標準的なプロジェクト**（2〜4 ストリーム）: いくらかの横断的関心事を伴う複数機能の作業
+- **複雑なプロジェクト**（4〜6 ストリーム）: 分散した変更、複数の統合ポイント、大規模なアーキテクチャ作業
 
 ### Sequencing strategies
-1. **Foundation first**: Infrastructure and shared services before dependent features
-2. **High-risk early**: Tackle uncertainty before investing in dependent work
-3. **Value delivery**: Arrange so partial delivery still provides user value
-4. **Test isolation**: Each stream should be independently testable where possible
-5. **Critical path optimization**: Identify the longest dependency chain and prioritize unblocking it
+1. **基盤を先に**: 依存する機能より先に、インフラと共有サービスを用意する
+2. **高リスクを早期に**: 依存する作業に投資する前に、不確実性に取り組む
+3. **価値の提供**: 部分的な提供でも利用者に価値をもたらすように並べる
+4. **テストの分離**: 可能な限り、各ストリームを独立してテストできるようにする
+5. **クリティカルパスの最適化**: 最長の依存チェーンを特定し、その阻害要因の解消を優先する
 
 ## Economic vs topological sequencing (for Bolt Planning in Stage 2.9)
 
-Unit dependency analysis (Stage 2.7) produces the DAG — topological order falls out of it mechanically. That's geometry: what the system is.
+ユニットの依存関係分析（ステージ 2.7）は DAG を生成し、トポロジカル順序はそこから機械的に導かれる。それは幾何学、つまりシステムが「何であるか」である。
 
-Bolt sequencing (Stage 2.9) is different work. It chooses a path through the DAG weighted by human value judgment — which Bolt ships first, which proves what, which surfaces the biggest risk early. AI can topologically sort; it cannot decide what validates the market hypothesis fastest.
+Bolt の順序付け（ステージ 2.9）は別の作業である。人間の価値判断で重み付けされた、DAG を通る経路を選ぶ — どの Bolt を最初に出荷するか、どの Bolt で何を証明するか、どの Bolt で最大のリスクを早期に表面化させるか。AI はトポロジカルソートはできるが、何が市場仮説を最も速く検証するかは決められない。
 
-Per the canonical Glossary (`stage-protocol.md` Terminology), a **Bolt** is the planned Construction delivery slice from 2.9: one or more Units with a Definition of Done, a confidence hypothesis, and ownership. Bolts are not MMFs and not sprints.
+正式な用語集（`stage-protocol.md` の Terminology）によれば、**Bolt** とは 2.9 で計画される Construction の提供単位であり、Definition of Done、確信度の仮説、オーナーシップを持つ 1 つ以上の Unit から成る。Bolt は MMF でもスプリントでもない。
 
-Heuristics for Bolt sequencing:
+Bolt の順序付けのヒューリスティクス:
 
-- **Walking skeleton first** (Cockburn, *Crystal Clear*) — the first Bolt is a minimal end-to-end implementation that proves the architecture works, before adding features.
-- **WSJF / Cost of Delay ÷ Duration** (Reinertsen, *Principles of Product Development Flow*; SAFe) — order Bolts by (value + time criticality + risk reduction) divided by job size.
-- **Risk-first** (Boehm, Spiral Model) — sequence the highest-uncertainty Bolts early so decisions are calibrated before dependent work commits.
-- **Value-first** — ship Bolts in value order when risk is low and value delivery is the dominant constraint.
+- **ウォーキングスケルトンを先に**（Cockburn, *Crystal Clear*）— 最初の Bolt は、機能を追加する前に、アーキテクチャが機能することを証明する最小限のエンドツーエンド実装とする。
+- **WSJF / 遅延コスト ÷ 所要期間**（Reinertsen, *Principles of Product Development Flow*; SAFe）— Bolt を（価値 + 時間的緊急性 + リスク低減）÷ ジョブサイズの順に並べる。
+- **リスク優先**（Boehm, スパイラルモデル）— 不確実性が最も高い Bolt を早期に配置し、依存する作業が確定する前に判断を較正する。
+- **価値優先** — リスクが低く、価値の提供が主要な制約である場合は、価値の順に Bolt を出荷する。
 
-The chosen heuristic is captured in `risk-and-sequencing-rationale.md`, alongside any deviation from 2.7's topological order.
+選んだヒューリスティクスは、2.7 のトポロジカル順序からの逸脱があればそれとともに、`risk-and-sequencing-rationale.md` に記録する。
 
 ## Execution Plan Structure
 
-Every execution plan MUST include these sections:
+すべての実行計画は、次のセクションを**必ず**含まなければならない:
 
-1. **Work Streams** — identified streams with scope, deliverables, complexity, dependencies, requirements coverage, review expertise
-2. **Implementation Sequence** — ordered stream execution with critical path
-3. **Detailed Analysis Summary** — scope metrics, change impact, component relationships
-4. **Risk Assessment** — risk register with likelihood, impact, and mitigation
-5. **Workflow Visualization** — Mermaid flowchart of stage execution flow
-6. **Stage Configuration** — checkbox list of stages with EXECUTE/SKIP decisions and rationale tied to work streams
-7. **Success Criteria** — measurable outcomes for project completion
+1. **Work Streams** — 特定したストリームと、そのスコープ、成果物、複雑さ、依存関係、要件のカバレッジ、レビューに必要な専門性
+2. **Implementation Sequence** — クリティカルパスを含む、順序付けたストリームの実行
+3. **Detailed Analysis Summary** — スコープの指標、変更の影響、コンポーネント間の関係
+4. **Risk Assessment** — 発生可能性、影響、緩和策を記したリスク登録簿
+5. **Workflow Visualization** — ステージ実行フローの Mermaid フローチャート
+6. **Stage Configuration** — EXECUTE/SKIP の判断と、ワークストリームに結び付けた根拠を記したステージのチェックボックスリスト
+7. **Success Criteria** — プロジェクト完了の測定可能な成果
 
-Optional sections (include when applicable):
-- **Transformation Scope** — for brownfield projects with significant refactoring
-- **Package Change Sequence** — for multi-unit projects with dependency ordering
-- **Multi-Module Coordination** — for brownfield projects touching multiple packages
+任意のセクション（該当する場合に含める）:
+- **Transformation Scope** — 大規模なリファクタリングを伴うブラウンフィールドプロジェクト向け
+- **Package Change Sequence** — 依存関係の順序付けを伴う複数ユニットのプロジェクト向け
+- **Multi-Module Coordination** — 複数のパッケージにまたがるブラウンフィールドプロジェクト向け
 
 ## Risk Assessment Criteria
 
@@ -90,58 +90,58 @@ Optional sections (include when applicable):
 
 | Level | Description | Indicators | Example |
 |-------|-------------|------------|---------|
-| **Low** | Well-understood, minimal dependencies | Standard patterns, established tech, isolated changes | Adding a new REST endpoint to an existing API |
-| **Medium** | Some unknowns, moderate dependencies | New library adoption, moderate cross-component impact | Integrating a third-party auth provider |
-| **High** | Significant unknowns, complex dependencies | New technology, data migration, multiple integration points | Migrating from SQL to NoSQL for a core domain |
-| **Critical** | Architectural changes, breaking changes | Fundamental pattern changes, data schema overhaul, API contract changes | Rewriting monolith services into microservices |
+| **Low** | よく理解されており、依存関係が最小限 | 標準的なパターン、確立された技術、局所的な変更 | 既存の API に新しい REST エンドポイントを追加する |
+| **Medium** | いくらかの未知数があり、依存関係は中程度 | 新しいライブラリの採用、コンポーネント間への中程度の影響 | サードパーティの認証プロバイダーを統合する |
+| **High** | 大きな未知数があり、依存関係が複雑 | 新しい技術、データ移行、複数の統合ポイント | コアドメインを SQL から NoSQL に移行する |
+| **Critical** | アーキテクチャの変更、破壊的変更 | 根本的なパターンの変更、データスキーマの全面的な見直し、API 契約の変更 | モノリスのサービスをマイクロサービスに書き直す |
 
 ### Risk Documentation Pattern
 
-For each identified risk, document:
-- **Risk**: What could go wrong
+特定した各リスクについて、次を記録する:
+- **Risk**: 何がうまくいかない可能性があるか
 - **Likelihood**: Low / Medium / High
 - **Impact**: Low / Medium / High / Critical
-- **Mitigation**: Specific actions to reduce likelihood or impact
+- **Mitigation**: 発生可能性または影響を下げるための具体的な対策
 
 ## Unit Decomposition Heuristics
 
 ### When to use single-unit delivery
-- Fewer than 5 user stories
-- All stories share the same components
-- No independent deploy/test boundaries
-- Simple feature addition or bug fix
+- ユーザーストーリーが 5 件未満
+- すべてのストーリーが同じコンポーネントを共有している
+- 独立したデプロイ／テストの境界がない
+- 単純な機能追加またはバグ修正
 
 ### When to use multi-unit delivery
-- 5+ user stories spanning different domains
-- Independent feature groups that can be delivered and tested separately
-- Different risk profiles across feature groups (ship low-risk first)
-- Cross-cutting concerns (e.g., auth, logging) that should be built before dependent features
+- 異なるドメインにまたがる 5 件以上のユーザーストーリー
+- 個別に提供・テストできる独立した機能グループ
+- 機能グループごとにリスクプロファイルが異なる（低リスクのものを先に出荷する）
+- 依存する機能より先に構築すべき横断的関心事（例: 認証、ロギング）
 
 ### Unit ordering principles
-1. **Foundation first**: Infrastructure and shared services before dependent features
-2. **High-risk early**: Tackle uncertainty before investing in dependent work
-3. **Value delivery**: Arrange so partial delivery still provides user value
-4. **Test isolation**: Each unit should be independently testable
+1. **基盤を先に**: 依存する機能より先に、インフラと共有サービスを用意する
+2. **高リスクを早期に**: 依存する作業に投資する前に、不確実性に取り組む
+3. **価値の提供**: 部分的な提供でも利用者に価値をもたらすように並べる
+4. **テストの分離**: 各ユニットを独立してテストできるようにする
 
 ## Depth Calibration
 
 ### Simple project indicators
-- Single page or single API endpoint
-- No external integrations
-- Single user role
-- Straightforward CRUD operations
-- Internal tool or prototype
+- 単一のページまたは単一の API エンドポイント
+- 外部との統合がない
+- ユーザーロールが 1 つ
+- 素直な CRUD 操作
+- 社内ツールまたはプロトタイプ
 
 ### Standard project indicators
-- Multi-page application or multi-endpoint API
-- 1-3 external integrations
-- 2-4 user roles with different permissions
-- Some business logic beyond CRUD
-- Production-grade with moderate traffic expectations
+- 複数ページのアプリケーションまたは複数エンドポイントの API
+- 1〜3 件の外部統合
+- 権限の異なる 2〜4 種類のユーザーロール
+- CRUD を超えるいくらかのビジネスロジック
+- 中程度のトラフィックが見込まれる本番品質のもの
 
 ### Complex project indicators
-- Distributed system or microservice architecture
-- 4+ external integrations or real-time data flows
-- Complex authorization model (RBAC, ABAC, multi-tenancy)
-- Domain-specific algorithms, state machines, or workflow engines
-- High availability requirements, data migration, regulatory compliance
+- 分散システムまたはマイクロサービスアーキテクチャ
+- 4 件以上の外部統合、またはリアルタイムのデータフロー
+- 複雑な認可モデル（RBAC、ABAC、マルチテナンシー）
+- ドメイン固有のアルゴリズム、ステートマシン、ワークフローエンジン
+- 高可用性の要件、データ移行、規制へのコンプライアンス

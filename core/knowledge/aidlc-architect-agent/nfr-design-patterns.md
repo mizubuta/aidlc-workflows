@@ -1,7 +1,7 @@
 # Non-Functional Requirement Design Patterns
 
 ## Purpose
-Patterns for achieving reliability, performance, and resilience in production systems. These patterns address the gap between "it works" and "it works reliably at scale."
+本番システムで信頼性、パフォーマンス、レジリエンスを実現するためのパターン集。これらのパターンは、「動く」と「スケールしても確実に動く」の間のギャップを埋める。
 
 ## Caching Strategies
 
@@ -10,66 +10,66 @@ Patterns for achieving reliability, performance, and resilience in production sy
 Read: Check cache -> if miss, read from DB -> populate cache -> return
 Write: Write to DB -> invalidate cache
 ```
-- Most common pattern; application manages cache explicitly
-- Risk: Cache miss thundering herd under cold start or cache failure
-- Mitigation: Use cache warming on startup and request coalescing
+- 最も一般的なパターン。アプリケーションがキャッシュを明示的に管理する
+- リスク: コールドスタート時やキャッシュ障害時に、キャッシュミスによるサンダリングハードが発生する
+- 緩和策: 起動時のキャッシュウォーミングとリクエストの集約（request coalescing）を使う
 
 ### Write-Through
 ```
 Write: Write to cache -> cache synchronously writes to DB
 Read: Always read from cache
 ```
-- Cache is always consistent with DB
-- Higher write latency (two writes on every mutation)
-- Best when reads vastly outnumber writes
+- キャッシュは常に DB と一貫している
+- 書き込みレイテンシが高くなる（変更のたびに 2 回書き込む）
+- 読み取りが書き込みより圧倒的に多い場合に最適
 
 ### Write-Behind (Write-Back)
 ```
 Write: Write to cache -> cache asynchronously writes to DB (batched)
 Read: Always read from cache
 ```
-- Lowest write latency (only cache write is synchronous)
-- Risk: Data loss if cache fails before async write completes
-- Best for high-write throughput where brief inconsistency is acceptable
+- 書き込みレイテンシが最も低い（同期で行うのはキャッシュへの書き込みのみ）
+- リスク: 非同期書き込みが完了する前にキャッシュが障害を起こすと、データが失われる
+- 短時間の不整合が許容される、書き込みスループットの高いケースに最適
 
 ### Cache Invalidation Rules
-- Set TTL (time-to-live) on every cached item — stale data is worse than a cache miss
-- Use explicit invalidation on writes when consistency matters
-- Never cache error responses (negative caching requires very short TTLs)
-- Monitor cache hit ratio — below 80% indicates the cache is not helping
+- キャッシュするすべての項目に TTL（time-to-live）を設定する — 古いデータはキャッシュミスより悪い
+- 一貫性が重要な場合は、書き込み時に明示的な無効化を行う
+- エラーレスポンスは決してキャッシュしない（ネガティブキャッシュには非常に短い TTL が必要）
+- キャッシュヒット率を監視する — 80% を下回る場合、キャッシュは役に立っていない
 
 ## Circuit Breaker
 
 ### Purpose
-Prevent cascading failures when a downstream service is unavailable.
+下流のサービスが利用できないときに、障害の連鎖を防ぐ。
 
 ### States
-1. **Closed** (normal): Requests flow through. Track failure count.
-2. **Open** (tripped): All requests fail immediately without calling downstream. Return fallback or error.
-3. **Half-Open** (testing): Allow a limited number of probe requests. If they succeed, return to Closed. If they fail, return to Open.
+1. **Closed**（通常）: リクエストはそのまま通過する。失敗回数を記録する。
+2. **Open**（作動中）: 下流を呼び出さずに、すべてのリクエストを即座に失敗させる。フォールバックまたはエラーを返す。
+3. **Half-Open**（試験中）: 限られた数のプローブリクエストを許可する。成功すれば Closed に戻り、失敗すれば Open に戻る。
 
 ### Configuration
-- **Failure threshold**: Number of consecutive failures before opening (e.g., 5)
-- **Open duration**: Time to wait before transitioning to half-open (e.g., 30 seconds)
-- **Probe count**: Number of test requests in half-open state (e.g., 3)
+- **失敗しきい値**: Open になるまでの連続失敗回数（例: 5）
+- **Open の持続時間**: Half-Open に遷移するまでの待ち時間（例: 30 秒）
+- **プローブ数**: Half-Open 状態でのテストリクエスト数（例: 3）
 
 ### Implementation Notes
-- Circuit breakers should be per-dependency, not global
-- Log state transitions for observability
-- Provide meaningful fallback behavior (cached data, degraded response, queue for retry)
+- サーキットブレーカーはグローバルではなく、依存先ごとに設ける
+- オブザーバビリティのために状態遷移をログに記録する
+- 意味のあるフォールバック動作（キャッシュ済みデータ、縮退したレスポンス、リトライ用のキュー）を提供する
 
 ## Bulkhead
 
 ### Purpose
-Isolate failures to prevent one failing component from consuming all system resources.
+障害を隔離し、1 つの障害コンポーネントがシステムのリソースをすべて消費するのを防ぐ。
 
 ### Approaches
-- **Thread pool isolation**: Each dependency gets its own thread pool with a fixed size. If dependency A exhausts its pool, dependency B is unaffected.
-- **Connection pool isolation**: Separate connection pools per downstream service.
-- **Process isolation**: Run critical and non-critical workloads in separate processes or containers.
+- **スレッドプールの分離**: 依存先ごとに固定サイズの専用スレッドプールを割り当てる。依存先 A がプールを使い果たしても、依存先 B は影響を受けない。
+- **コネクションプールの分離**: 下流のサービスごとにコネクションプールを分ける。
+- **プロセスの分離**: 重要なワークロードと重要でないワークロードを、別々のプロセスまたはコンテナで実行する。
 
 ### Sizing Rule
-Size each bulkhead based on the dependency's expected throughput plus a buffer. Too small causes unnecessary rejection; too large defeats the purpose.
+各バルクヘッドのサイズは、依存先の想定スループットにバッファを加えた値に基づいて決める。小さすぎると不要な拒否が発生し、大きすぎると目的が果たせない。
 
 ## Retry with Exponential Backoff
 
@@ -80,49 +80,49 @@ Example: 100ms, 200ms, 400ms, 800ms, 1600ms (+ jitter)
 ```
 
 ### Rules
-- **Always add jitter** — without it, retries from multiple clients synchronize and create thundering herd
-- **Set a maximum retry count** (typically 3-5) — infinite retries cause resource exhaustion
-- **Only retry transient failures** — do not retry 400 Bad Request or 403 Forbidden
-- **Retryable errors**: 429 (rate limited), 500, 502, 503, 504, connection timeout, connection reset
-- **Ensure idempotency** — retried operations must produce the same result (use idempotency keys)
+- **必ずジッターを加える** — ジッターがないと、複数のクライアントからのリトライが同期し、サンダリングハードが発生する
+- **最大リトライ回数を設定する**（通常 3〜5 回） — 無限のリトライはリソースの枯渇を招く
+- **一時的な障害のみリトライする** — 400 Bad Request や 403 Forbidden はリトライしない
+- **リトライ可能なエラー**: 429（レート制限）、500、502、503、504、接続タイムアウト、接続リセット
+- **冪等性を確保する** — リトライされた操作は同じ結果を生まなければならない（冪等性キーを使う）
 
 ## Rate Limiting
 
 ### Algorithms
-- **Token Bucket**: Accumulate tokens over time; each request consumes a token. Allows controlled bursts.
-- **Sliding Window**: Count requests in a rolling time window. Smoother than fixed windows (avoids boundary bursts).
-- **Fixed Window**: Count requests per time interval. Simplest but allows 2x burst at window boundaries.
+- **Token Bucket**: 時間とともにトークンを蓄積し、各リクエストがトークンを 1 つ消費する。制御されたバーストを許容する。
+- **Sliding Window**: ローリングする時間枠内のリクエストを数える。固定枠より滑らか（境界でのバーストを回避する）。
+- **Fixed Window**: 時間間隔ごとのリクエストを数える。最も単純だが、枠の境界で 2 倍のバーストを許してしまう。
 
 ### Application
-- Apply at API gateway level for external consumers
-- Apply per-user or per-tenant for fair usage
-- Return HTTP 429 with `Retry-After` header
-- Communicate rate limits in response headers (`X-RateLimit-Remaining`, `X-RateLimit-Reset`)
+- 外部の利用者に対しては API ゲートウェイのレベルで適用する
+- 公平な利用のためにユーザー単位またはテナント単位で適用する
+- `Retry-After` ヘッダー付きで HTTP 429 を返す
+- レスポンスヘッダー（`X-RateLimit-Remaining`、`X-RateLimit-Reset`）でレート制限を伝える
 
 ## Load Balancing
 
 ### Algorithms
-- **Round Robin**: Distribute evenly across instances. Simple, works when instances are homogeneous.
-- **Least Connections**: Route to the instance with fewest active connections. Better when requests have variable duration.
-- **Weighted**: Assign weights based on instance capacity. Use when instances have different sizes.
-- **Consistent Hashing**: Route based on request key (user ID, session). Maintains affinity for caching benefits.
+- **Round Robin**: インスタンス間に均等に分散する。単純で、インスタンスが均質な場合に機能する。
+- **Least Connections**: アクティブな接続が最も少ないインスタンスにルーティングする。リクエストの所要時間がまちまちな場合に適している。
+- **Weighted**: インスタンスの能力に基づいて重みを割り当てる。インスタンスのサイズが異なる場合に使う。
+- **Consistent Hashing**: リクエストのキー（ユーザー ID、セッション）に基づいてルーティングする。キャッシュの効果を得るためにアフィニティを維持する。
 
 ### Health Checks
-- **Shallow**: TCP or HTTP 200 check (is the process running?)
-- **Deep**: Check downstream dependencies (can the service actually serve requests?)
-- Use shallow checks for load balancer routing; deep checks for alerting
+- **Shallow**: TCP または HTTP 200 のチェック（プロセスは動いているか？）
+- **Deep**: 下流の依存先をチェックする（サービスは実際にリクエストを処理できるか？）
+- ロードバランサーのルーティングには shallow チェックを、アラートには deep チェックを使う
 
 ## Connection Pooling
 
 ### Purpose
-Reuse expensive connections (database, HTTP, gRPC) instead of creating new ones per request.
+リクエストごとに新しい接続を作成する代わりに、コストの高い接続（データベース、HTTP、gRPC）を再利用する。
 
 ### Configuration
-- **Minimum pool size**: Connections kept warm during idle periods (e.g., 5)
-- **Maximum pool size**: Upper bound to prevent resource exhaustion (e.g., 20)
-- **Connection timeout**: How long to wait for a connection from the pool (e.g., 5 seconds)
-- **Idle timeout**: Close connections unused for this duration (e.g., 10 minutes)
-- **Max lifetime**: Close connections after this age regardless of use (e.g., 30 minutes) to prevent stale connections
+- **最小プールサイズ**: アイドル期間中もウォーム状態で保持する接続数（例: 5）
+- **最大プールサイズ**: リソースの枯渇を防ぐための上限（例: 20）
+- **接続タイムアウト**: プールから接続を取得するまでの待ち時間（例: 5 秒）
+- **アイドルタイムアウト**: この期間使われなかった接続を閉じる（例: 10 分）
+- **最大存続期間**: 古くなった接続を防ぐため、使用状況にかかわらずこの期間を過ぎた接続を閉じる（例: 30 分）
 
 ### Sizing Formula
 ```
@@ -132,18 +132,18 @@ Pool size = (Requests per second) x (Average request duration in seconds) x 1.5 
 ## Graceful Degradation
 
 ### Principle
-When a dependency fails, reduce functionality rather than failing entirely.
+依存先が障害を起こしたときは、全体を失敗させるのではなく、機能を縮小する。
 
 ### Strategies
-- **Feature flags**: Disable non-critical features when their backing service is down
-- **Cached fallback**: Serve stale cached data with a "data may be outdated" indicator
-- **Default values**: Use sensible defaults when personalization service is unavailable
-- **Queue for later**: Accept writes into a queue when the write path is degraded
-- **Read-only mode**: Disable writes but keep reads functioning
+- **フィーチャーフラグ**: 裏付けとなるサービスが停止しているときは、重要でない機能を無効にする
+- **キャッシュによるフォールバック**: 「データが古い可能性がある」という表示を付けて、古いキャッシュデータを提供する
+- **デフォルト値**: パーソナライズサービスが利用できないときは、妥当なデフォルト値を使う
+- **後で処理するためのキュー**: 書き込み経路が縮退しているときは、書き込みをキューで受け付ける
+- **読み取り専用モード**: 書き込みを無効にし、読み取りは機能させ続ける
 
 ### Priority Tiers
-1. **Critical path**: Must always work (authentication, core transaction)
-2. **Important**: Degrade gracefully (recommendations, analytics, notifications)
-3. **Nice to have**: Disable entirely under pressure (social features, cosmetic enhancements)
+1. **クリティカルパス**: 常に動作しなければならない（認証、中核となるトランザクション）
+2. **重要**: 段階的に縮退する（レコメンド、分析、通知）
+3. **あれば望ましい**: 負荷が高いときは完全に無効にする（ソーシャル機能、見た目の改善）
 
-Map every dependency to a tier and define the degradation strategy per tier before production launch.
+本番リリース前に、すべての依存先をいずれかの階層に割り当て、階層ごとの縮退戦略を定義する。

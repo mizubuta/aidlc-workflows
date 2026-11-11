@@ -1,41 +1,41 @@
 # Product Agent
 
-> **Agent deep dive** · [User Guide](../00-introduction.md) › [Agents](../06-agents.md) › [deep dives](README.md) · Technical reference: [product-agent](../../reference/agents/product-agent.md)
+> **エージェント詳解** · [ユーザーガイド](../00-introduction.md) › [エージェント](../06-agents.md) › [詳解一覧](README.md) · 技術リファレンス: [product-agent](../../reference/agents/product-agent.md)
 
-The aidlc-product-agent is your product manager and business analyst. It transforms raw business needs, user requests, and domain knowledge into structured requirements, prioritized user stories, and well-defined scope boundaries. It ensures that every downstream artifact traces back to a validated requirement, bridging the gap between what stakeholders want and what developers build.
+aidlc-product-agent は、あなたのプロダクトマネージャー兼ビジネスアナリストです。生のビジネスニーズ、ユーザーの要望、ドメイン知識を、構造化された要件、優先順位付けされたユーザーストーリー、明確に定義されたスコープ境界へと変換します。下流のすべての成果物が検証済みの要件にたどれるようにし、ステークホルダーが望むものと開発者が作るものとの隔たりを埋めます。
 
-The aidlc-product-agent leads five stages spanning Ideation and Inception. It is the primary agent you interact with early in a workflow, asking clarifying questions about your intent, defining what is in and out of scope, and producing the requirements and stories that drive all subsequent design and implementation.
+aidlc-product-agent は、Ideation と Inception にまたがる 5 つのステージを主導します。ワークフローの初期にあなたが主にやり取りするエージェントであり、インテントについて確認の質問をし、何がスコープ内で何がスコープ外かを定め、以降のすべての設計と実装を駆動する要件とストーリーを作成します。
 
 ## Stages Led
 
-| Stage | Phase | Description |
+| ステージ | フェーズ | 説明 |
 |-------|-------|-------------|
-| 1.1 Intent Capture & Framing | Ideation | Captures your project intent and stakeholder context |
-| 1.2 Market Research | Ideation | Competitive analysis and build-vs-buy assessment |
-| 1.4 Scope Definition | Ideation | Defines scope boundaries and prioritized intent backlog |
-| 2.3 Requirements Analysis | Inception | Produces structured functional and non-functional requirements |
-| 2.4 User Stories | Inception | Creates user stories with acceptance criteria from personas |
+| 1.1 Intent Capture & Framing | Ideation | プロジェクトのインテントとステークホルダーの状況を把握します |
+| 1.2 Market Research | Ideation | 競合分析と、自社開発か購入かの評価を行います |
+| 1.4 Scope Definition | Ideation | スコープ境界と、優先順位付けされたインテントのバックログを定義します |
+| 2.3 Requirements Analysis | Inception | 構造化された機能要件と非機能要件を作成します |
+| 2.4 User Stories | Inception | ペルソナから受け入れ基準付きのユーザーストーリーを作成します |
 
 ## Stages Supported
 
-| Stage | Phase | Contribution |
+| ステージ | フェーズ | 貢献内容 |
 |-------|-------|-------------|
-| 1.6 Rough Mockups | Ideation | Validates mockups against captured intent |
-| 1.7 Approval & Handoff | Ideation | Validates initiative brief completeness |
-| 2.5 Refined Mockups | Inception | Validates mockups against user stories |
+| 1.6 Rough Mockups | Ideation | 把握したインテントに照らしてモックアップを検証します |
+| 1.7 Approval & Handoff | Ideation | イニシアチブブリーフの完全性を検証します |
+| 2.5 Refined Mockups | Inception | ユーザーストーリーに照らしてモックアップを検証します |
 
 ## What to Expect
 
-When the aidlc-product-agent is active, expect structured questions about your project goals, target users, priorities, and constraints. It uses the tri-mode question flow (Guide Me, Edit File, or Chat) and asks targeted questions to surface ambiguities and fill gaps. It prioritizes ruthlessly — helping you distinguish must-have from nice-to-have.
+aidlc-product-agent が動作しているときは、プロジェクトの目標、対象ユーザー、優先順位、制約について構造化された質問が来ると考えてください。3 モードの質問フロー（Guide Me、Edit File、Chat）を使い、曖昧さを浮き彫りにして不足を埋めるために的を絞った質問をします。容赦なく優先順位を付け、必須のものとあれば望ましいものを区別する手助けをします。
 
 ## How It Collaborates
 
-The aidlc-product-agent works closely with the aidlc-architect-agent on feasibility and dependencies, the aidlc-design-agent on UX alignment, and the aidlc-delivery-agent on capacity and scope validation. Its outputs (requirements, stories, scope) are consumed by nearly every downstream agent.
+aidlc-product-agent は、実現可能性と依存関係については aidlc-architect-agent と、UX の整合については aidlc-design-agent と、キャパシティとスコープの検証については aidlc-delivery-agent と緊密に連携します。その出力（要件、ストーリー、スコープ）は、下流のほぼすべてのエージェントが利用します。
 
 ## Key Principles
 
-- Every requirement must trace to a stakeholder need — no invented requirements
-- If a requirement cannot be verified through a test, it is not a requirement
-- Ambiguity is the enemy — when something seems obvious, confirm it
-- Value over volume — fewer well-defined stories beat a large vague backlog
-- Stories should cut vertically through all layers, not horizontally
+- すべての要件はステークホルダーのニーズにたどれなければなりません。作り出した要件は認めません
+- テストで検証できない要件は、要件ではありません
+- 曖昧さは敵です。自明に思えることこそ確認します
+- 量より価値。漠然とした大量のバックログより、よく定義された少数のストーリーのほうが優れています
+- ストーリーは水平ではなく、すべてのレイヤーを垂直に貫くべきです

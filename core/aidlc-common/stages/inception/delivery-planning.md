@@ -54,190 +54,187 @@ outputs: bolt-plan.md, team-allocation.md, risk-and-sequencing-rationale.md, ext
 
 ### Step 1: Load Prior Context
 
-Read all Inception phase artifacts:
-- Requirements from `<record>/inception/requirements-analysis/`
-- User stories from `<record>/inception/user-stories/`
-- Domain design (component catalogue) from `<record>/inception/domain-design/components.md`
-- Units from `<record>/inception/units-generation/`
-- Inter-unit contracts from `<record>/inception/contract-design/contract-summary.md` (if produced) — contract ownership and open contract questions map onto Bolt sequencing and the walking skeleton
-- Team formation from `<record>/ideation/team-formation/` (if exists)
+Inception フェーズのすべての成果物を読み込む:
+- `<record>/inception/requirements-analysis/` から要件
+- `<record>/inception/user-stories/` からユーザーストーリー
+- `<record>/inception/domain-design/components.md` からドメイン設計（コンポーネントカタログ）
+- `<record>/inception/units-generation/` からユニット
+- `<record>/inception/contract-design/contract-summary.md` からユニット間の契約（作成されている場合）— 契約のオーナーシップと未解決の契約上の質問は、Bolt の順序付けとウォーキングスケルトンに対応付けられる
+- `<record>/ideation/team-formation/` からチーム編成（存在する場合）
 
-**If practices-discovery executed**, resolve three sections from
-`aidlc/spaces/<active-space>/memory/{project,team,org}.md` using the
-most-specific non-empty statement:
-- `## Way of Working` — base/target branch and merge strategy for Construction worktrees
-- `## Walking Skeleton` — whether the first Bolt should be a minimal end-to-end slice (gated, separate user approval) or a regular Bolt
-- `## Deployment` — parallel-vs-serial Bolt execution stance and approval-gate preferences
+**practices-discovery が実行された場合**は、
+`aidlc/spaces/<active-space>/memory/{project,team,org}.md` から、最も具体的な
+空でない記述を使って 3 つのセクションを解決する:
+- `## Way of Working` — Construction のワークツリーのベース／ターゲットブランチとマージ戦略
+- `## Walking Skeleton` — 最初の Bolt を最小限のエンドツーエンドのスライス（ゲート付きで、利用者の承認を別途得る）にするか、通常の Bolt にするか
+- `## Deployment` — Bolt を並列と直列のどちらで実行するかの方針と、承認ゲートの好み
 
-Use these affirmed practices when populating `bolt-plan.md`. If no narrower
-statement exists (including when practices-discovery was skipped), use the
-active space's `memory/org.md` defaults.
+`bolt-plan.md` を作成する際は、これらの確認済みのプラクティスを使う。より限定的な
+記述がない場合（practices-discovery がスキップされた場合を含む）は、
+アクティブなスペースの `memory/org.md` のデフォルトを使う。
 
 ### Step 2: Generate Clarifying Questions
 
-This stage plans the Bolt sequence — the order in which Units of Work are executed through Construction. 2.7 produces the dependency DAG (topology); this stage (2.9) chooses a path through it. Economic value cannot be derived from the DAG — that's a human value judgment.
+このステージは Bolt の順序、つまり Units of Work を Construction でどの順に実行するかを計画する。2.7 は依存関係の DAG（トポロジー）を生成し、このステージ（2.9）はその中を通る経路を選ぶ。経済的な価値は DAG からは導けない — それは人間の価値判断である。
 
-**Definitions for this stage:**
-- **Bolt** — per `stage-protocol.md` Glossary: the planned Construction delivery slice from this stage (2.9): one or more Units with a Definition of Done, a confidence hypothesis, and ownership. The engine does not consume `bolt-plan.md` for Unit grouping or walk order; runtime batches come from `unit-of-work-dependency.md`. A **Batch** is the group of Units that build concurrently (runtime; from that 2.7 artifact).
+**このステージでの定義:**
+- **Bolt** — `stage-protocol.md` の Glossary による: このステージ（2.9）で計画される Construction の提供単位であり、Definition of Done、確信度の仮説、オーナーシップを持つ 1 つ以上の Unit から成る。エンジンは Unit のグループ化や実行順序に `bolt-plan.md` を使わない。ランタイムのバッチは `unit-of-work-dependency.md` から決まる。**Batch** とは、同時に構築される Unit のグループである（ランタイム。2.7 のその成果物から決まる）。
 
-These definitions are for YOU. They are not written to be read out, and the user
-has not seen them. Every one of them names something that is about to appear in
-the questions you ask and the artifacts you write, so the first time a term
-reaches the user it carries its own one-clause definition, in the sentence that
-uses it rather than as a separate glossary. "Bolt" is the one that matters most,
-because it is the vocabulary of the whole next phase: its first user-facing
-mention reads as a Bolt plus what a Bolt is (one build pass over a piece of the
-work, ending in something that runs), and later mentions read as just "Bolt".
-Same treatment for a scoring model you propose by name and for the walking
-skeleton. A term whose definition would not survive being compressed to a clause
-is a term to replace with plain words instead.
-- **Confidence hypothesis** — the observable behaviour that shipping the Bolt validates or falsifies (e.g., "latency stays under 200ms under 1k-rps load," "users complete signup without support tickets," "the event pipeline survives a 10x burst").
-- **WSJF** (Reinertsen / SAFe) — Weighted Shortest Job First. Sequence score = (user-business value + time criticality + risk-reduction value) ÷ job size. Higher score ships first.
-- **Walking skeleton** (Cockburn) — the first DAG Unit delivers the smallest working end-to-end slice through the relevant integration points. Its applicable design stages and Code Generation finish before later Units; a real integrated check and human checkpoint approval demonstrate the result.
+これらの定義は**あなた**のためのものである。読み上げるために書かれたものではなく、利用者は
+それを見ていない。どの定義も、これから行う質問や書く成果物に現れようとしている
+ものを指しているので、ある用語が初めて利用者に届くときは、別の用語集としてではなく、
+それを使う文の中で、一節の定義を伴わせる。最も重要なのは "Bolt" である。
+次のフェーズ全体の語彙だからである: 利用者向けに初めて言及するときは、Bolt に加えて
+Bolt とは何か（作業の一部を 1 回通して構築し、動くものを作って終わる単位）を述べ、
+以降の言及は単に "Bolt" とする。名前を挙げて提案するスコアリングモデルと、ウォーキング
+スケルトンも同様に扱う。一節に縮めると定義が成り立たない用語は、
+代わりに平易な言葉に置き換えるべき用語である。
+- **確信度の仮説（Confidence hypothesis）** — その Bolt を出荷することで検証または反証される、観測可能な振る舞い（例: "latency stays under 200ms under 1k-rps load," "users complete signup without support tickets," "the event pipeline survives a 10x burst"）。
+- **WSJF**（Reinertsen / SAFe）— Weighted Shortest Job First。順序スコア =（ユーザー／ビジネス価値 + 時間的緊急性 + リスク低減価値）÷ ジョブサイズ。スコアの高いものから出荷する。
+- **ウォーキングスケルトン（Walking skeleton）**（Cockburn）— DAG の最初の Unit が、関連する統合ポイントを通る、最小限の動作するエンドツーエンドのスライスを提供する。その Unit の該当する設計ステージと Code Generation は、後続の Unit より先に完了する。実際の統合チェックと人間によるチェックポイントの承認によって、その結果を実証する。
 
-Create `<record>/inception/delivery-planning/delivery-planning-questions.md` with questions. Strategic questions (one answer per project):
+質問を含む `<record>/inception/delivery-planning/delivery-planning-questions.md` を作成する。戦略的な質問（プロジェクトごとに 1 つの回答）:
 
-- What should we build first: the riskiest parts, the most valuable parts, a thin end-to-end slice that proves the whole thing hangs together, or some mix? If a mix, say which approach applies where.
-- Should we score and rank the work with a formal model (WSJF-style: value and urgency against size)? If so, how much weight goes on risk, on value, and on size?
-- How big should one Bolt be: a single Unit of Work, several related Units bundled together, or thin slices that cut across Units?
-- Can several Bolts be built at the same time, or do they need to go one after another?
-- Is anything outside this team going to hold us up (APIs, data, approvals, another team's hand-off)? For each one, capture who owns it, how long it takes, which Bolt it blocks, and what we do if it slips.
-- What worries you most about this build, so we tackle it early?
+- 最初に何を作るべきか: 最もリスクの高い部分、最も価値の高い部分、全体がつながることを証明する薄いエンドツーエンドのスライス、またはその組み合わせ？ 組み合わせの場合は、どの方針をどこに適用するかを示してほしい。
+- 正式なモデル（WSJF 型: 価値と緊急度をサイズと比較する）で作業をスコア付けして順位付けすべきか？ そうする場合、リスク、価値、サイズにそれぞれどれだけの重みを置くか？
+- 1 つの Bolt の大きさはどうするか: 単一の Unit of Work、関連する複数の Unit をまとめたもの、または Unit を横断する薄いスライス？
+- 複数の Bolt を同時に構築できるか、それとも 1 つずつ順に進める必要があるか？
+- このチームの外にあるもので、作業を止める可能性があるものはあるか（API、データ、承認、他チームからの引き渡し）？ それぞれについて、誰がオーナーか、どれくらい時間がかかるか、どの Bolt をブロックするか、遅れた場合にどうするかを記録する。
+- この構築で最も心配なことは何か？ それに早めに取り組むために聞きたい。
 
-Per-Bolt questions (the aidlc-delivery-agent loops these during artifact generation, one set of answers per Bolt in the plan):
+Bolt ごとの質問（aidlc-delivery-agent が成果物の生成中にこれらを繰り返し、プラン内の Bolt ごとに 1 組の回答を得る）:
 
-- Which Units of Work does this Bolt bundle?
-- Is this Bolt the thin end-to-end slice (the walking skeleton)? If yes, which parts of the architecture does it prove out?
-- What has to be true for this Bolt to count as done?
-- What will shipping this Bolt tell us that we do not know yet?
-- Which mob is planned to build this Bolt? (References teams from 1.5 when 1.5 ran; when 1.5 was SKIP — mvp, classic — plan aidlc-developer-agent for all Bolts.) Who builds the Units is not this stage's question.
+- この Bolt はどの Units of Work をまとめるか？
+- この Bolt は薄いエンドツーエンドのスライス（ウォーキングスケルトン）か？ そうであれば、アーキテクチャのどの部分を実証するか？
+- この Bolt が完了とみなされるには、何が成り立っている必要があるか？
+- この Bolt を出荷することで、まだわかっていない何がわかるか？
+- この Bolt を構築するのはどのモブの予定か？（1.5 が実行された場合は 1.5 のチームを参照する。1.5 が SKIP の場合 — mvp、classic — はすべての Bolt に aidlc-developer-agent を割り当てる。）誰が Unit を構築するかは、このステージの問いではない。
 
-NOTE: Bolt sequencing records the economic rationale, while the engine consumes
-the actual Unit DAG and iteration choice. When skeleton-on applies, confirm that
-the first resolved DAG Unit is the smallest working integrated slice, name its
-expected demo and the real project check that will prove it end to end, and make
-its prerequisites explicit. If the decomposition cannot support that slice,
-revisit Units Generation before Construction. Reordering only `bolt-plan.md`
-does not change the Unit the engine builds first; never describe the first
-design-stage review as a shipped skeleton.
+NOTE: Bolt の順序付けは経済的な根拠を記録するものであり、エンジンが使うのは
+実際の Unit の DAG とイテレーションの選択である。スケルトンが有効な場合は、
+解決された DAG の最初の Unit が最小限の動作する統合スライスであることを確認し、期待される
+デモと、それをエンドツーエンドで証明する実際のプロジェクトのチェックを明示し、
+その前提条件を明確にする。分解がそのスライスを支えられない場合は、
+Construction の前に Units Generation に立ち返る。`bolt-plan.md` だけを並べ替えても、
+エンジンが最初に構築する Unit は変わらない。最初の設計ステージの
+レビューを、出荷済みのスケルトンとして説明してはならない。
 
-NOTE: This stage plans the Bolt sequence. It does NOT decide which AIDLC stages to run or at what depth — that is handled by the `/aidlc` skill's scope selection.
+NOTE: このステージは Bolt の順序を計画する。どの AIDLC ステージをどの深度で実行するかは決めない — それは `/aidlc` スキルのスコープ選択が扱う。
 
-Follow stage-protocol.md question flow.
+stage-protocol.md の質問フローに従う。
 
 ### Step 3: Collect and Analyze Answers
 
-Validate the chosen Bolt sequence respects 2.7's dependency DAG (with aidlc-architect-agent input). Flag any deviation from topological order so it can be justified in the rationale artifact.
+選んだ Bolt の順序が 2.7 の依存関係の DAG を守っていることを（aidlc-architect-agent の意見を得て）検証する。トポロジカル順序からの逸脱があれば指摘し、根拠の成果物でその正当性を説明できるようにする。
 
 ### Step 4: Generate Artifacts
 
-Create four artifacts in `<record>/inception/delivery-planning/`. These are
-documents the user opens and reads at the gate, so the same rule the questions
-follow applies to the prose inside them: a term of art carries a one-clause
-definition at its first appearance in that file, and each file stands alone (the
-reader may open `team-allocation.md` without having read `bolt-plan.md`). "Bolt",
-"mob", "walking skeleton", "Program Board", and any scoring model named by
-initials all qualify. Gloss and move on; do not restructure the artifact around
-the explanation.
+`<record>/inception/delivery-planning/` に 4 つの成果物を作成する。これらは
+利用者がゲートで開いて読む文書なので、質問が従うのと同じルールが
+その中の散文にも適用される: 専門用語は、そのファイル内で初めて現れるときに一節の
+定義を伴わせ、各ファイルは単独で読めるようにする（読者は
+`bolt-plan.md` を読まずに `team-allocation.md` を開くかもしれない）。"Bolt"、
+"mob"、"walking skeleton"、"Program Board"、そして頭字語で呼ぶスコアリングモデルは
+すべて該当する。短く説明して先に進む。説明を中心に成果物を
+組み立て直さない。
 
-- `bolt-plan.md` — the ordered sequence of Bolts. Each Bolt entry: included Unit(s) of Work, walking-skeleton marker if applicable, Definition of Done for that Bolt, confidence hypothesis ("what will shipping this Bolt prove?"), expected demo.
-- `team-allocation.md` — the planned Bolt-to-mob assignment. References teams from 1.5 when 1.5 ran (enterprise, feature). When 1.5 is SKIP (mvp, classic), plans aidlc-developer-agent (AI) for every Bolt. When team count > 1, this is the Program Board analog.
-- `risk-and-sequencing-rationale.md` — the why behind the Bolt ordering: WSJF-style scoring, risk-first argument, walking-skeleton-first argument, or value-first argument. References the heuristic used (Cohn, Reinertsen CD3, or SAFe WSJF).
-- `external-dependency-map.md` — gated items (external APIs, data availability windows, approval lead times, external-team hand-offs) mapped to the Bolts that consume them. Lightweight or empty when fully AI-contained.
+- `bolt-plan.md` — Bolt の順序付きの並び。各 Bolt の項目: 含まれる Unit(s) of Work、該当する場合はウォーキングスケルトンの印、その Bolt の Definition of Done、確信度の仮説（"what will shipping this Bolt prove?"）、期待されるデモ。
+- `team-allocation.md` — 計画した Bolt とモブの割り当て。1.5 が実行された場合（enterprise、feature）は 1.5 のチームを参照する。1.5 が SKIP の場合（mvp、classic）は、すべての Bolt に aidlc-developer-agent（AI）を割り当てる。チームが 2 つ以上の場合、これは Program Board に相当する。
+- `risk-and-sequencing-rationale.md` — Bolt の順序の理由: WSJF 型のスコアリング、リスク優先の論拠、ウォーキングスケルトン優先の論拠、または価値優先の論拠。使用したヒューリスティクス（Cohn、Reinertsen CD3、SAFe WSJF）を示す。
+- `external-dependency-map.md` — ゲートとなる項目（外部 API、データが利用可能になる時期、承認のリードタイム、外部チームからの引き渡し）を、それを使う Bolt に対応付けたもの。完全に AI 内で完結する場合は、簡素または空でよい。
 
 ### Step 5: Phase Boundary Verification
 
-Run the Inception → Construction completeness audit. Read every
-`traceability.json` produced by the Inception stages that executed:
+Inception → Construction の完全性の監査を実行する。実行された Inception ステージが生成した
+すべての `traceability.json` を読む:
 
 - `<record>/inception/user-stories/traceability.json`
 - `<record>/inception/domain-design/traceability.json`
 - `<record>/inception/units-generation/traceability.json`
 
-(Contract Design produces no `traceability.json` — it owns formal contracts,
-not requirement coverage — so it does not contribute to this phase-boundary
-check.) Confirm there are no unresolved findings, including `GAP`, `ORPHAN`, invalid
-targets, or missing upstream IDs. Consolidate the tables into
-`<record>/verification/phase-check-inception.md` with a pass/fail verdict at
-the top. If any finding remains, stop the transition and revisit the owning
-stage before Construction begins.
+（Contract Design は `traceability.json` を生成しない — 担うのは正式な契約であり、
+要件のカバレッジではない — ため、このフェーズ境界の
+チェックには寄与しない。）`GAP`、`ORPHAN`、無効な
+ターゲット、欠落した上流 ID を含め、未解決の指摘がないことを確認する。表を
+`<record>/verification/phase-check-inception.md` に統合し、先頭に合否の判定を
+記す。指摘が残っている場合は、遷移を止め、Construction の開始前に
+その指摘を担うステージに立ち返る。
 
 ### Step 6: Completion Handoff
 
-Hand completion to `stage-protocol.md` via
-`{{INVOKE}} engine orchestrate report --stage delivery-planning --result <outcome>`.
-That `report` call owns every lifecycle transition and advancement; never perform one in prose, and never narrate this bookkeeping to the user.
+`{{INVOKE}} engine orchestrate report --stage delivery-planning --result <outcome>` を通じて、
+完了を `stage-protocol.md` に引き渡す。
+その `report` 呼び出しが、ライフサイクルの遷移と前進をすべて担う。散文の中で遷移を実行してはならず、この記録処理をユーザーに説明してもならない。
 
-**Construction iteration.** Read the recorded choice before you recommend
-an order. New workflows start with `Construction Checkpoints: enabled` and
-`Construction Iteration: unit-major` with `Construction Execution: serial`:
-each Unit's applicable design stages and Code Generation run serially, followed
-by its verified completion checkpoint.
-An explicit stage-major choice remains valid. To enable later Code Generation
-batches, obtain the human's execution choice, set iteration to stage-major, then
-run `{{INVOKE}} engine state set-construction-execution swarm`. This works with
-either gated or autonomous completion approval; the autonomy answer never changes
-execution order. Unit-major stays serial and refuses a contradictory swarm
-setting; select serial before returning to unit-major. For checkpoint-enabled work,
-skeleton-on always completes the first DAG Unit's full integrated slice before
-later Units, under either iteration order.
+**Construction のイテレーション。** 順序を推奨する前に、記録済みの選択を読む。
+新しいワークフローは `Construction Checkpoints: enabled` と
+`Construction Iteration: unit-major`、`Construction Execution: serial` で始まる:
+各 Unit の該当する設計ステージと Code Generation が直列に実行され、
+その後に検証済みの完了チェックポイントが続く。
+明示的な stage-major の選択は引き続き有効である。後の Code Generation の
+バッチを有効にするには、人間の実行方式の選択を得て、イテレーションを stage-major に設定し、その後
+`{{INVOKE}} engine state set-construction-execution swarm` を実行する。これは
+ゲート付きと自律的のどちらの完了承認でも機能する。自律性の回答が
+実行順序を変えることは決してない。unit-major は直列のままであり、矛盾する swarm の
+設定を拒否する。unit-major に戻る前に serial を選択する。チェックポイントが有効な作業では、
+スケルトンが有効な場合、どちらのイテレーション順序でも、DAG の最初の Unit の統合スライス全体を、
+後続の Unit より先に必ず完了させる。
 
-Preserve an existing explicit choice. When the person asks to change the order
-("let's do each stage for both units together first"), run
-`{{INVOKE}} engine state set-construction-iteration <unit-major|stage-major>` in
-that turn and say its `notice` line word for word; do not ask them to confirm it.
-Do not silently migrate a legacy workflow: without the checkpoint field it keeps
-its prior first-stage review, and its late stage approvals come as one question.
-Team-owned work keeps
-its own per-stage or unit-end `unit_gate` policy. Plan Approval, summary
-confirmation, and verification command selection remain human decisions under
-either order and autonomy choice.
+既存の明示的な選択は維持する。利用者が順序の変更を求めた場合
+（"let's do each stage for both units together first"）は、そのターンで
+`{{INVOKE}} engine state set-construction-iteration <unit-major|stage-major>` を実行し、
+その `notice` 行を一字一句そのまま伝える。利用者に確認を求めない。
+レガシーなワークフローを黙って移行しない: チェックポイントのフィールドがない場合、
+以前の最初のステージのレビューが維持され、後のステージの承認は 1 つの質問としてまとめて届く。
+チーム所有の作業は、
+独自のステージごと、またはユニット終了時の `unit_gate` ポリシーを維持する。Plan Approval、サマリー
+確認、検証コマンドの選択は、どちらの順序と自律性の選択の下でも、
+人間の判断のままである。
 
-**Construction verification command.** For checkpoint-enabled work, preserve an
-existing human-authorized command. Otherwise propose a real project check from
-the project scan (`bun test`, `pytest`, `make check`, or the project's equivalent)
-alongside the iteration/execution settings. This intent-level command is reused
-at every Unit/batch checkpoint; it must check completed Units' working results
-and, with skeleton-on, demonstrate the integrated slice end to end. It must run
-every test level the project's testing rules require (the Testing Contract that
-Code Generation renders from the memory's Testing Posture: unit, integration,
-end-to-end as applicable) and the coverage check. When a required level cannot
-run on this machine (no container runtime, no running service), say so in the
-question: add to the Approve option's description the tests the command will not
-run and why, for example "Runs typecheck and unit tests. Does not run the
-integration tests: they need Docker, which is not installed." Never pick a
-narrower command to avoid a missing runtime without saying so, and never answer
-the gap with "CI runs them" when the plan skips CI Pipeline or the repository has
-no CI configuration. If no runnable check
-exists yet (greenfield), the human may defer selection; leave the field
-unset and explain that the first checkpoint will ask before verification. Never
-invent a placeholder or treat deferral as approval.
+**Construction の検証コマンド。** チェックポイントが有効な作業では、人間が承認した
+既存のコマンドを維持する。そうでなければ、イテレーション／実行方式の設定とあわせて、
+プロジェクトのスキャンから実際のプロジェクトのチェック（`bun test`、`pytest`、`make check`、またはプロジェクトでの同等のもの）
+を提案する。このインテント単位のコマンドは、
+すべての Unit／バッチのチェックポイントで再利用される。完了した Unit の動作結果をチェックし、
+スケルトンが有効な場合は統合スライスをエンドツーエンドで実証しなければならない。プロジェクトの
+テストルールが要求するすべてのテストレベル（Code Generation がメモリの Testing Posture から
+生成する Testing Contract: 該当に応じて unit、integration、
+end-to-end）とカバレッジのチェックを実行しなければならない。必要なレベルが
+このマシンで実行できない場合（コンテナランタイムがない、サービスが動いていない）は、
+質問の中でそれを伝える: Approve の選択肢の説明に、コマンドが実行しないテストと
+その理由を加える。例: "Runs typecheck and unit tests. Does not run the
+integration tests: they need Docker, which is not installed." 欠けているランタイムを避けるために、
+そう伝えずにより狭いコマンドを選んではならない。また、プランが CI Pipeline をスキップしている場合や
+リポジトリに CI の設定がない場合に、その欠落に "CI runs them" と答えてはならない。実行可能なチェックが
+まだ存在しない場合（グリーンフィールド）は、人間が選択を先送りしてよい。その場合はフィールドを
+未設定のままにし、最初のチェックポイントで検証の前に尋ねることを説明する。
+プレースホルダを作り上げたり、先送りを承認とみなしたりしてはならない。
 
-Only one protected question may be open per session. Ask protected questions
-one at a time and wait for the answer before anything else.
+1 つのセッションで同時に開いていてよい保護された質問は 1 つだけである。保護された質問は
+1 つずつ尋ね、他の何よりも先に回答を待つ。
 
-Use one nonblank line of at most 1024 characters after trimming leading/trailing
-whitespace. The tools refuse control characters (including newline, CR, tab, or
-NUL) and display-spoofing characters: Unicode format characters (including
-zero-width and bidi controls), line/paragraph separators, and no-break space
-(U+00A0). The trimmed command is recorded, hashed, and executed unchanged. Put
-multiline checks in a script and record its invocation. Before presenting the command, write it as
-UTF-8 text to `<record>/verification-command.txt` using the harness's
-file-write tool (Write/edit), never a shell `echo` or heredoc. Repo-derived
-command text must never be interpolated into a shell line: shell substitutions
-could execute before the human approves. Pass only the record-relative file path
-below; the command finds the session it runs in by itself, so pass no session
-and never look one up:
+前後の空白を取り除いた後で、空白でない最大 1024 文字の 1 行を使う。
+ツールは制御文字（改行、CR、タブ、
+NUL を含む）と表示を偽装する文字を拒否する: Unicode の書式文字（ゼロ幅文字や
+双方向制御文字を含む）、行／段落区切り文字、ノーブレークスペース
+（U+00A0）。空白を取り除いたコマンドは、変更されずに記録、ハッシュ化、実行される。
+複数行のチェックはスクリプトにまとめ、その呼び出しを記録する。コマンドを提示する前に、
+ハーネスのファイル書き込みツール（Write/edit）を使って、それを UTF-8 テキストとして
+`<record>/verification-command.txt` に書き込む。シェルの `echo` やヒアドキュメントは決して使わない。リポジトリ由来の
+コマンドテキストを、シェルの行に決して埋め込んではならない: シェルの置換が
+人間の承認前に実行されるおそれがある。渡すのは下記の記録相対のファイルパスだけである。
+コマンドは自分が実行されるセッションを自分で見つけるので、セッションを渡したり
+調べたりしてはならない:
 
 ```bash
 {{INVOKE}} engine log decision --stage "<directive.stage>" --checkpoint verification-command --command-file verification-command.txt --decision "Use this command to verify each completed Unit?" --options "Approve,Request Changes"
 ```
 
-Copy the complete canonical command exactly from the `command` field in the
-`log decision` tool's JSON output into the structured question's code span; never
-abbreviate or substitute a summary, prefix, or digest. Use a code-span delimiter
-long enough to preserve any backticks in the command. The human can also open
-`<record>/verification-command.txt`. Wait for the human:
+`log decision` ツールの JSON 出力の `command` フィールドから、正規のコマンド全体を
+正確にコピーして、構造化された質問のコードスパンに入れる。決して
+省略したり、要約、接頭辞、ダイジェストで代用したりしない。コマンド内のバッククォートを保持できるだけの
+長さのコードスパン区切りを使う。人間は
+`<record>/verification-command.txt` を開くこともできる。人間の回答を待つ:
 
 ```question
 prompt: "Use this command to verify each completed Unit? `<full command>`"
@@ -250,42 +247,42 @@ options:
     description: Propose a different project check before running verification.
 ```
 
-Read the person's reply and record the choice they made. The
-human-turn hook keeps that they replied to this question and their exact words;
-a reply typed in a new chat is kept for it while it is the newest question
-asked, and a reply to another question does not count. When they
-approve, record their answer, and set the command with the matching tool-owned
-receipt:
+利用者の返信を読み、利用者が行った選択を記録する。
+人間のターンのフックが、利用者がこの質問に返信したことと、その正確な言葉を保持する。
+新しいチャットで入力された返信も、それが最新の質問である間はこの質問への返信として保持され、
+別の質問への返信は数に入らない。利用者が
+承認したら、その回答を記録し、対応するツール所有の
+レシートを使ってコマンドを設定する:
 
 ```bash
 {{INVOKE}} engine log answer --stage "<directive.stage>" --checkpoint verification-command --command-file verification-command.txt --details "Approve"
 {{INVOKE}} engine state set-construction-verification-command --command-file verification-command.txt
 ```
 
-For **Request Changes**, record the same `log answer` with
-`--details "Request Changes"`, leave the state unchanged, and propose another
-command. Never auto-approve, write the state field without the receipt, or use
-generic `state set`. A later change requires a new human decision/answer receipt
-and the typed setter; an autonomy grant does not authorize command selection.
+**Request Changes** の場合は、同じ `log answer` を
+`--details "Request Changes"` で記録し、状態は変更せずに、別の
+コマンドを提案する。自動承認したり、レシートなしで状態フィールドを書き込んだり、
+汎用の `state set` を使ったりしてはならない。後で変更するには、新たな人間の判断／回答のレシートと
+型付きの設定コマンドが必要である。自律性の付与は、コマンドの選択を許可するものではない。
 
 ### Step 7: Present Completion & Request Approval
 
-Completion emoji: :calendar:
-Review path: `<record>/inception/delivery-planning/`
-Approval gate: Approve (Continue to `<directive.next_stage>`, the stage the engine names) / Request Changes.
+完了時の絵文字: :calendar:
+レビュー対象のパス: `<record>/inception/delivery-planning/`
+承認ゲート: Approve（エンジンが指定するステージ `<directive.next_stage>` に進む）/ Request Changes。
 
 ## Sensors
 
-This stage's outputs are markdown artefacts under `<record>/inception/delivery-planning/`.
+このステージの出力は `<record>/inception/delivery-planning/` 配下の Markdown 成果物である。
 
-Imports: `required-sections`, `upstream-coverage`.
+インポート: `required-sections`, `upstream-coverage`.
 
-Upstream targets: `requirements`, `stories`, `mockups`, `components`, `unit-of-work`, `unit-of-work-dependency`, `unit-of-work-story-map`, `contract-summary`, `team-practices`.
+上流の対象: `requirements`, `stories`, `mockups`, `components`, `unit-of-work`, `unit-of-work-dependency`, `unit-of-work-story-map`, `contract-summary`, `team-practices`.
 
 ## Learn
 
-When `directive.protocol_modules` lists `learnings`, follow
-`stage-protocol-learnings.md`: keep the diary at `directive.memory_path` while
-working, and take the learnings step before the approval gate; that module says
-when it asks the person anything. When the module is absent, skip both the diary
-and the step.
+`directive.protocol_modules` に `learnings` が挙げられている場合は、
+`stage-protocol-learnings.md` に従う: 作業中は `directive.memory_path` に日誌を付け、
+承認ゲートの前に学びのステップを行う。そのモジュールが、
+利用者にいつ何を尋ねるかを定めている。モジュールがない場合は、日誌と
+そのステップの両方をスキップする。

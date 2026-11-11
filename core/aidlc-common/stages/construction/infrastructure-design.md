@@ -66,99 +66,99 @@ outputs: "infrastructure-specification.md (deployment + services + shared, tabul
 
 ## Constraints
 
-This is a design stage — artifacts describe what infrastructure is needed and why, not implementation-ready code. Complete IaC (CDK constructs, Terraform modules, CloudFormation), full Lambda handlers, and IAM policy documents belong in code-generation, which runs after this stage in every scope that runs it (including `infra`) and writes them under Plan Approval. Limit code to short illustrative snippets (pseudocode or interface-level, ≤15 lines) that clarify a design decision.
+これは設計ステージである。成果物は、どのようなインフラストラクチャがなぜ必要かを記述するものであり、そのまま実装できるコードではない。完全な IaC（CDK コンストラクト、Terraform モジュール、CloudFormation）、完全な Lambda ハンドラー、IAM ポリシードキュメントは code-generation に属する。code-generation は、このステージを実行するすべてのスコープ（`infra` を含む）でこのステージの後に実行され、Plan Approval のもとでそれらを書き込む。コードは、設計上の判断を明確にする短い例示用スニペット（擬似コードまたはインターフェースレベル、15 行以下）に限る。
 
 ## Steps
 
 ### Execution Modes
 
-This stage supports two execution modes, controlled by the orchestrator:
+このステージは、オーケストレーターが制御する 2 つの実行モードをサポートする:
 
-**QUESTION-ONLY mode** (invoked by orchestrator during a Bolt's question phase):
-Execute Steps 1–3 only (read artifacts, generate questions, collect answers).
-Do NOT proceed to design or artifact generation. Return control to the orchestrator.
+**QUESTION-ONLY モード**（Bolt の質問フェーズ中にオーケストレーターが呼び出す）:
+ステップ 1〜3 のみを実行する（成果物の読み込み、質問の生成、回答の収集）。
+設計や成果物の生成に進んではならない。制御をオーケストレーターに返す。
 
-**ARTIFACT-ONLY mode** (invoked by orchestrator during a Bolt's design phase):
-Skip Steps 1–3 (questions already collected and approved).
-Read the answered questions file from the per-unit directory.
-Execute Steps 4–7 only (design infrastructure, generate artifacts, update state, completion).
+**ARTIFACT-ONLY モード**（Bolt の設計フェーズ中にオーケストレーターが呼び出す）:
+ステップ 1〜3 をスキップする（質問は収集・承認済み）。
+ユニットごとのディレクトリから回答済みの質問ファイルを読み込む。
+ステップ 4〜7 のみを実行する（インフラストラクチャの設計、成果物の生成、状態の更新、完了）。
 
-**Full mode** (default — single-unit projects or direct stage invocation):
-Execute all steps sequentially as written.
+**Full モード**（既定 — 単一ユニットのプロジェクト、またはステージの直接呼び出し）:
+すべてのステップを記載どおり順に実行する。
 
 ### Step 1: Read Prior Artifacts
 
-Read all prior design artifacts for context:
-- NFR design from `<record>/construction/{unit-name}/nfr-design/` (if exists)
-- Functional design from `<record>/construction/{unit-name}/functional-design/` (if exists)
-- Domain design (component catalogue) from `<record>/inception/domain-design/components.md` (if exists)
-- Inter-unit contracts from `<record>/inception/contract-design/contract-summary.md` (if produced) — boundary integration mechanisms (sync/async/shared store) inform networking, messaging, and shared-resource provisioning
-- NFR requirements from `<record>/construction/{unit-name}/nfr-requirements/` (if exists)
+コンテキストとして、これまでの設計成果物をすべて読み込む:
+- `<record>/construction/{unit-name}/nfr-design/` から NFR 設計（存在する場合）
+- `<record>/construction/{unit-name}/functional-design/` から機能設計（存在する場合）
+- `<record>/inception/domain-design/components.md` からドメイン設計（コンポーネントカタログ）（存在する場合）
+- `<record>/inception/contract-design/contract-summary.md` からユニット間の契約（作成されている場合）— 境界の連携方式（同期/非同期/共有ストア）は、ネットワーク、メッセージング、共有リソースのプロビジョニングの判断材料になる
+- `<record>/construction/{unit-name}/nfr-requirements/` から NFR 要件（存在する場合）
 
-Incremental scopes (infra) skip the domain-design and functional-design chain by design. When those inputs are absent, derive the component topology from the NFR requirements and, on brownfield, the reverse-engineered code knowledge base at `aidlc/spaces/<active-space>/codekb/<repo>/` — never invent the content of a missing artifact.
+インクリメンタルなスコープ（infra）は、設計上、domain-design と functional-design の連鎖をスキップする。それらの入力がない場合は、NFR 要件と、ブラウンフィールドであれば `aidlc/spaces/<active-space>/codekb/<repo>/` にあるリバースエンジニアリング済みのコードナレッジベースから、コンポーネントのトポロジーを導き出す。欠けている成果物の内容を決して捏造しない。
 
 ### Step 2: Generate Infrastructure Questions
 
-Create a questions file at `<record>/construction/{unit-name}/infrastructure-design/infrastructure-design-questions.md` with context-appropriate questions using [Answer]: tags.
+`<record>/construction/{unit-name}/infrastructure-design/infrastructure-design-questions.md` に、[Answer]: タグを使ったコンテキストに即した質問を含む質問ファイルを作成する。
 
-Focus areas:
-- Deployment strategy (containerized, serverless, hybrid, multi-region)
-- Compute/storage/networking (sizing, topology, latency requirements)
-- Monitoring approach (metrics, logging, tracing, alerting thresholds)
-- CI/CD pipeline (build stages, deployment strategy, rollback procedures)
-- Secrets management (vault, environment variables, rotation policy)
-- Scaling policy (auto-scaling triggers, capacity limits, cost constraints)
+重点領域:
+- デプロイ戦略（コンテナ、サーバーレス、ハイブリッド、マルチリージョン）
+- コンピュート/ストレージ/ネットワーク（サイジング、トポロジー、レイテンシー要件）
+- 監視のアプローチ（メトリクス、ログ、トレーシング、アラートのしきい値）
+- CI/CD パイプライン（ビルドステージ、デプロイ戦略、ロールバック手順）
+- シークレット管理（Vault、環境変数、ローテーションポリシー）
+- スケーリングポリシー（オートスケーリングのトリガー、キャパシティの上限、コストの制約）
 
 ### Step 3: Collect and Analyze Answers
 
-Collect answers following stage-protocol.md §3 question flow (offer interaction mode choice, collect answers, write back to file). After collecting answers, perform MANDATORY ambiguity analysis:
-- Identify vague answers ("cloud-based", "auto-scale", "standard monitoring")
-- Check for contradictions between answers
-- Flag missing details needed for artifact generation
+stage-protocol.md §3 の質問フローに従って回答を収集する（対話モードの選択肢を提示し、回答を収集し、ファイルに書き戻す）。回答の収集後、**必須**の曖昧さ分析を行う:
+- 曖昧な回答を特定する（"cloud-based"、"auto-scale"、"standard monitoring"）
+- 回答間の矛盾を確認する
+- 成果物の生成に必要だが欠けている詳細を指摘する
 
-If ANY ambiguity found: create follow-up questions and resolve before proceeding.
+曖昧さが 1 つでも見つかった場合: フォローアップの質問を作成し、解消してから先に進む。
 
 ### Step 4: Design Infrastructure
 
-Design infrastructure across four areas:
+インフラストラクチャを 4 つの領域にわたって設計する:
 
-- **Deployment Architecture**: Compute model (containers, serverless, VMs), networking topology, storage strategy, environment layout (dev/staging/prod)
-- **Infrastructure Services**: Databases (type, sizing, replication), caches (strategy, eviction), message queues, search services, CDN, DNS, load balancers
-- **Monitoring & Observability**: Metrics collection, log aggregation, distributed tracing, alerting rules, dashboards, SLI/SLO tracking
-- **CI/CD Pipeline**: Build stages, test stages, deployment stages, environment promotion, rollback strategy, feature flags, artifact management
+- **デプロイアーキテクチャ**: コンピュートモデル（コンテナ、サーバーレス、VM）、ネットワークトポロジー、ストレージ戦略、環境構成（dev/staging/prod）
+- **インフラストラクチャサービス**: データベース（種類、サイジング、レプリケーション）、キャッシュ（戦略、エビクション）、メッセージキュー、検索サービス、CDN、DNS、ロードバランサー
+- **監視とオブザーバビリティ**: メトリクス収集、ログ集約、分散トレーシング、アラートルール、ダッシュボード、SLI/SLO の追跡
+- **CI/CD パイプライン**: ビルドステージ、テストステージ、デプロイステージ、環境の昇格、ロールバック戦略、フィーチャーフラグ、成果物の管理
 
 ### Step 5: Generate Artifacts
 
-Generate the following in `<record>/construction/{unit-name}/infrastructure-design/`. Keep the content **tabular** — the deployment, services, and shared sections are tables, and monitoring is tabular wherever it can be. Prose is for rationale only, not for data a table can hold.
+`<record>/construction/{unit-name}/infrastructure-design/` に以下を生成する。内容は**表形式**に保つ。デプロイ、サービス、共有のセクションは表とし、監視も可能な限り表形式にする。散文は根拠の説明にのみ使い、表で保持できるデータには使わない。
 
-**1. `infrastructure-specification.md`** — the core infrastructure design: deployment, infrastructure services, and any shared resources, folded into one document. Structure it as:
+**1. `infrastructure-specification.md`** — 中核となるインフラストラクチャ設計。デプロイ、インフラストラクチャサービス、共有リソースを 1 つの文書にまとめる。次の構成にする:
 
-- **Deployment** — a table of deployment facets:
+- **Deployment** — デプロイの観点の表:
   `| Facet | Choice | Rationale |`
-  with rows for compute model (containers/serverless/VMs/hybrid), networking topology (ingress/egress, VPC/subnet), storage strategy, environments (dev/staging/prod), IaC approach, and resource sizing.
-- **Infrastructure Services** — a table keyed by service:
+  コンピュートモデル（コンテナ/サーバーレス/VM/ハイブリッド）、ネットワークトポロジー（イングレス/エグレス、VPC/サブネット）、ストレージ戦略、環境（dev/staging/prod）、IaC のアプローチ、リソースのサイジングの各行を含める。
+- **Infrastructure Services** — サービスをキーとする表:
   `| Service | Role | Configuration | Notes |`
-  (role = database / cache / queue / search / cdn / dns / load-balancer; configuration = sizing, replication, eviction, etc.).
-- **Shared Infrastructure** (CONDITIONAL — only when multiple units share resources) — a table:
+  （role = database / cache / queue / search / cdn / dns / load-balancer、configuration = サイジング、レプリケーション、エビクションなど）。
+- **Shared Infrastructure**（CONDITIONAL — 複数のユニットがリソースを共有する場合のみ）— 次の表:
   `| Shared Resource | Owner Unit | Consumer Units | Access Boundary |`
 
-**2. `monitoring-design.md`** — the platform-specific monitoring that implements the `observability-design` strategy from NFR Design, tabular wherever possible:
+**2. `monitoring-design.md`** — NFR Design の `observability-design` 戦略を実装する、プラットフォーム固有の監視。可能な限り表形式にする:
 
 - **Metrics & KPIs** — `| Metric | Source | Threshold | Why it matters |`
 - **Alerts** — `| Alert | Condition | Severity | Routes to |`
 - **SLIs / SLOs** — `| SLI | SLO target | Measurement window |`
-- **Logs & Tracing** — log aggregation strategy and tracing configuration (short prose or a small table); dashboard specifications.
+- **Logs & Tracing** — ログ集約の戦略とトレーシングの設定（短い散文または小さな表）、ダッシュボードの仕様。
 
-**3. `cicd-pipeline.md`** — the delivery pipeline: build stages, test-automation integration, deployment strategy (blue-green / canary / rolling), rollback procedures, environment promotion, and secrets management in CI/CD. Steps are inherently sequential, so prose or an ordered list is fine here; use a table for the stage→gate mapping where it helps.
+**3. `cicd-pipeline.md`** — デリバリーパイプライン。ビルドステージ、テスト自動化との統合、デプロイ戦略（blue-green / canary / rolling）、ロールバック手順、環境の昇格、CI/CD におけるシークレット管理。ステップは本質的に順序を持つので、ここでは散文や順序付きリストでよい。役立つ場合は、ステージ→ゲートの対応に表を使う。
 
-Create
-`<record>/construction/{unit-name}/infrastructure-design/traceability.json` by running
-`{{INVOKE}} engine sensor-traceability --stage infrastructure-design --output-path <that path> --write-upstream`:
-it lists every `NFRx.y` of this Unit's NFR design (if NFR Design did not run,
-of NFR Requirements; if NFR Requirements did not run, every `NFRn`
-Requirements Analysis recorded), each with a `GAP` row. Map each design decision
-that requires infrastructure to the concrete resource or configuration, and
-mark one that needs none `N/A` with the reason:
+次のコマンドを実行して
+`<record>/construction/{unit-name}/infrastructure-design/traceability.json` を作成する:
+`{{INVOKE}} engine sensor-traceability --stage infrastructure-design --output-path <that path> --write-upstream`
+このコマンドは、このユニットの NFR 設計にあるすべての `NFRx.y`（NFR Design が実行されなかった場合は
+NFR Requirements のもの、NFR Requirements も実行されなかった場合は Requirements Analysis が記録したすべての `NFRn`）を、
+それぞれ `GAP` 行として列挙する。インフラストラクチャを必要とする各設計判断を
+具体的なリソースまたは設定に対応付け、何も必要としないものは
+理由を添えて `N/A` とする:
 
 ```json
 {
@@ -174,42 +174,41 @@ mark one that needs none `N/A` with the reason:
 
 ### Step 6: Completion Handoff
 
-Hand completion to `stage-protocol.md` via
-`{{INVOKE}} engine orchestrate report --stage infrastructure-design --result <outcome>`.
-That `report` call owns every lifecycle transition and advancement; never perform one in prose, and never narrate this bookkeeping to the user.
+`{{INVOKE}} engine orchestrate report --stage infrastructure-design --result <outcome>` を通じて、
+完了を `stage-protocol.md` に引き渡す。
+その `report` 呼び出しが、ライフサイクルの遷移と前進をすべて担う。散文の中で遷移を実行してはならず、この記録処理をユーザーに説明してもならない。
 
 ### Step 7: Completion
 
-Present completion message and approval gate:
+完了メッセージと承認ゲートを提示する:
 
 ```
 # :cloud: Infrastructure Design Complete — {unit-name}
 ```
 
-Summary of infrastructure decisions and service selections, then:
+インフラストラクチャに関する判断とサービス選定のサマリーを示し、続けて:
 
 ```
 **Review:** `<record>/construction/{unit-name}/infrastructure-design/`
 ```
 
-Approval gate: strictly 2-option (Approve / Request Changes).
+承認ゲート: 厳密に 2 択（Approve / Request Changes）。
 
 ## Sensors
 
-This stage's outputs are markdown design artefacts under `<record>/construction/{unit-name}/infrastructure-design/`. Some sections include code samples that the code-shape sensors can also flag.
+このステージの出力は `<record>/construction/{unit-name}/infrastructure-design/` 配下の Markdown の設計成果物である。一部のセクションにはコードサンプルが含まれ、コード形状のセンサーがそれを指摘することもある。
 
-Imports: `required-sections`, `upstream-coverage`, `linter`, `type-check`, `traceability`.
+インポート: `required-sections`, `upstream-coverage`, `linter`, `type-check`, `traceability`.
 
-Upstream targets: `performance-design`, `security-design`, `scalability-design`, `reliability-design`, `observability-design`, `logical-components`, `components`, `functional-spec`, `contract-summary`.
+上流の対象: `performance-design`, `security-design`, `scalability-design`, `reliability-design`, `observability-design`, `logical-components`, `components`, `functional-spec`, `contract-summary`.
 
-`linter` and `type-check` inspect matching TypeScript/JavaScript snippets.
-`traceability` verifies that every infrastructure-relevant `NFRx.y` design
-decision is declared and covered.
+`linter` と `type-check` は、該当する TypeScript/JavaScript のスニペットを検査する。
+`traceability` は、インフラストラクチャに関係するすべての `NFRx.y` の設計判断が
+宣言され、カバーされていることを検証する。
 
 ## Learn
 
-When `directive.protocol_modules` lists `learnings`, follow
-`stage-protocol-learnings.md`: keep the diary at `directive.memory_path` while
-working, and take the learnings step before the approval gate; that module says
-when it asks the person anything. When the module is absent, skip both the diary
-and the step.
+`directive.protocol_modules` に `learnings` が含まれている場合は、
+`stage-protocol-learnings.md` に従う。作業中は `directive.memory_path` に日誌を付け、
+承認ゲートの前に学習ステップを実施する。そのモジュールが、利用者に何かを尋ねるタイミングを定めている。
+モジュールがない場合は、日誌とステップの両方を省略する。

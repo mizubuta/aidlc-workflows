@@ -1,30 +1,30 @@
 # Automatic Verification — Element-Level Traceability
 
-`<record>` below is the active workflow record:
-`aidlc/spaces/<active-space>/intents/<active-intent>`, selected by
-`aidlc/active-space` (default `default`) and
-`aidlc/spaces/<active-space>/intents/active-intent`.
+以下の `<record>` はアクティブなワークフローの記録
+`aidlc/spaces/<active-space>/intents/<active-intent>` を指し、
+`aidlc/active-space`（デフォルトは `default`）と
+`aidlc/spaces/<active-space>/intents/active-intent` によって選択される。
 
 ## Per-Stage Coverage
 
-Stages that transform requirements, stories, designs, or code produce a
-declared `traceability.json` artifact. The `traceability` sensor validates each
-file when it is written and the stage artifact contract makes omission visible
-to the normal directive, review, and completion evidence paths.
+要件、ストーリー、設計、またはコードを変換するステージは、宣言された
+`traceability.json` 成果物を生成する。`traceability` センサーは各ファイルが
+書き込まれた時点でそれを検証し、ステージの成果物コントラクトによって、その欠落は
+通常のディレクティブ、レビュー、完了エビデンスの経路で可視化される。
 
-Every file uses stable IDs:
+すべてのファイルは安定した ID を使用する:
 
 | Prefix | Meaning | Example |
 |--------|---------|---------|
-| `FR{n}` / `FR{n}.{m}` | Functional requirement | `FR1`, `FR1.2` |
-| `NFR{n}` | Inception non-functional requirement | `NFR2` |
-| `US{n}.{m}` | User story | `US1.3` |
-| `AC{n}.{m}.{seq}` | Acceptance criterion | `AC1.3.2` |
-| `U{n}` / `u{n}-{description}` | Unit ID / Unit name (its construction directory) | `U1`, `u1-auth` |
-| `BR{group}.{seq}` | Business rule | `BR1.1` |
-| `NFRx.y` | Detailed NFR requirement | `NFR2.1` |
+| `FR{n}` / `FR{n}.{m}` | 機能要件 | `FR1`, `FR1.2` |
+| `NFR{n}` | Inception の非機能要件 | `NFR2` |
+| `US{n}.{m}` | ユーザーストーリー | `US1.3` |
+| `AC{n}.{m}.{seq}` | 受け入れ基準 | `AC1.3.2` |
+| `U{n}` / `u{n}-{description}` | ユニット ID / ユニット名（その construction ディレクトリ） | `U1`, `u1-auth` |
+| `BR{group}.{seq}` | ビジネスルール | `BR1.1` |
+| `NFRx.y` | 詳細な NFR 要件 | `NFR2.1` |
 
-The JSON shape is:
+JSON の形式は次のとおり:
 
 ```json
 {
@@ -40,39 +40,39 @@ The JSON shape is:
 }
 ```
 
-Valid statuses are `OK`, `GAP`, `ORPHAN`, `Deferred`, and `N/A`. `OK`,
-`Deferred`, and `N/A` require a non-empty target or justification. Every
-upstream ID goes in `upstream_ids` and `coverage`, `N/A` there with the reason
-it does not apply as its target; `reverse` lists only what the stage produced
-that traces to nothing upstream. A requirement with sub-requirements is traced
-through its `FR{n}.{m}` IDs and needs no row of its own. The sensor
-cross-checks upstream IDs from source artifacts, verifies deterministic targets
-where possible, and derives functional-design business-rule orphans.
+有効なステータスは `OK`、`GAP`、`ORPHAN`、`Deferred`、`N/A` である。`OK`、
+`Deferred`、`N/A` には、空でないターゲットまたは根拠が必要である。上流の
+すべての ID は `upstream_ids` と `coverage` に入れ、該当しないものはそこで `N/A` とし、
+該当しない理由をターゲットとして記す。`reverse` には、ステージが生成したもののうち、
+上流の何にも辿れないものだけを列挙する。サブ要件を持つ要件は、その
+`FR{n}.{m}` ID を通じてトレースされ、それ自体の行は不要である。センサーは
+ソース成果物から上流 ID を照合し、可能な場合は決定的なターゲットを検証し、
+functional-design のビジネスルールの孤立項目（orphan）を導出する。
 
 ## When Verification Runs
 
 | Trigger | What's Checked |
 |---------|---------------|
-| **Ideation → Inception** | Intent → Scope → Intent Backlog consistency; all scope items have feasibility backing |
-| **Inception → Construction** | Requirements → Stories → Architecture alignment; all stories trace to requirements; architecture covers all stories |
-| **Construction → Operation** | Architecture → Code → Tests alignment; all code traces to design; test coverage against acceptance criteria |
-| **On demand** | Human can request verification at any point |
-| **Stage output write** | Validate the stage's element-level coverage and targets |
+| **Ideation → Inception** | インテント → スコープ → インテントバックログの一貫性。すべてのスコープ項目に実現可能性の裏付けがあること |
+| **Inception → Construction** | 要件 → ストーリー → アーキテクチャの整合。すべてのストーリーが要件にトレースされること。アーキテクチャがすべてのストーリーをカバーすること |
+| **Construction → Operation** | アーキテクチャ → コード → テストの整合。すべてのコードが設計にトレースされること。受け入れ基準に対するテストカバレッジ |
+| **On demand** | 人間はいつでも検証を要求できる |
+| **Stage output write** | ステージの要素レベルのカバレッジとターゲットを検証する |
 
 ## Phase Check Output
 
-Each phase boundary check produces `<record>/verification/phase-check-<phase>.md`:
-- Coverage percentages (requirements with stories, stories with components, etc.)
-- Warnings (incomplete mappings)
-- Consistency checks (no contradictions between phases)
-- Human approval checkbox
+各フェーズ境界のチェックは `<record>/verification/phase-check-<phase>.md` を生成する:
+- カバレッジの割合（ストーリーを持つ要件、コンポーネントを持つストーリーなど）
+- 警告（不完全なマッピング）
+- 一貫性チェック（フェーズ間に矛盾がないこと）
+- 人間による承認のチェックボックス
 
 ## Verification Process
 
-1. Read every declared traceability artifact from the completed phase
-2. Rebuild the traceability chain from stable IDs
-3. Identify gaps, invalid targets, derived orphans, and contradictions
-4. Generate the verification report
-5. Present the result for review
-6. Let the engine record `PHASE_VERIFIED` in the active record's
-   `audit/<host>-<clone-id>.md` shard; do not append it manually
+1. 完了したフェーズから、宣言されたすべてのトレーサビリティ成果物を読み込む
+2. 安定した ID からトレーサビリティチェーンを再構築する
+3. ギャップ、無効なターゲット、導出された孤立項目、矛盾を特定する
+4. 検証レポートを生成する
+5. 結果をレビューのために提示する
+6. アクティブな記録の `audit/<host>-<clone-id>.md` シャードへの `PHASE_VERIFIED` の記録は
+   エンジンに任せる。手作業で追記しない

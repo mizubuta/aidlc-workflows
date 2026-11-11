@@ -1,16 +1,16 @@
 # Reviewer Repair Protocol Module
 
-Load this module when the engine lists `reviewer-repair` in `directive.protocol_modules`: an `adversarial` review, Guard Policy `strict`, a Unit checkpoint's re-check, and every `invoke-swarm`. It adds to the reviewer module's §12a, at the step each part names.
+エンジンが `directive.protocol_modules` に `reviewer-repair` を挙げたとき、すなわち `adversarial` レビュー、Guard Policy `strict`、ユニットのチェックポイントによる再チェック、およびすべての `invoke-swarm` で、このモジュールを読み込む。このモジュールはレビュアーモジュールの §12a に、各パートが指定するステップで追加される。
 
-**Step 3, a write that voided the terminal receipt, under `strict`.** Under `strict`, the first request after that stale terminal evidence is exactly one recovery review at the next ordinal, even when an adversarial stage had unused normal iterations. The logger marks it `Recovery: stale-receipt`; the reviewed-output freeze stays on throughout (the reviewer writes its review beside the artifact, never inside it). Record either verdict as terminal, then stop editing reviewed outputs, `source-manifest.json`, and claimed source paths. Any human gate after that recovery verdict uses the required Review brief of the reviewer module. If that recovery receipt is invalidated again, request no further review. On an interactive stage, present the recovery-spent refusal to the human; only Request Changes (`GATE_REJECTED`) resets the attempt.
+**ステップ 3、`strict` の下で終端レシートを無効にした書き込み。** `strict` の下では、その古くなった終端の証跡の後の最初のリクエストは、次の序数でのちょうど 1 回の回復レビューとなる。これは adversarial ステージに未使用の通常イテレーションが残っている場合でも同じである。ロガーはそれを `Recovery: stale-receipt` と記録する。レビュー済み出力の凍結は全体を通して有効なままである（レビュアーはレビューを成果物の中ではなく、その隣に書く）。どちらの判定も終端として記録し、その後はレビュー済みの出力、`source-manifest.json`、申告済みのソースパスの編集をやめる。その回復判定の後の人間によるゲートでは、必ずレビュアーモジュールで必須とされる Review brief を使う。その回復レシートが再び無効になった場合は、それ以上のレビューを要求しない。対話型のステージでは、回復を使い切ったことによる拒否を人間に提示する。試行をリセットできるのは Request Changes（`GATE_REJECTED`）だけである。
 
-**Step 3, branching on the verdict.**
+**ステップ 3、判定に基づく分岐。**
 
-**On an `adversarial` review**, branch on the verdict:
-- **READY** → the receipt is terminal (the reviewer module); run the §13 learnings ritual only when `directive.protocol_modules` lists `learnings`, then present the approval gate using the reviewer module's required Review brief
-- **NOT-READY** and `reviewIterations < reviewer_max_iterations` (default 2):
-  - Increment review iteration counter
-  - Re-invoke the stage's lead agent ALONE, dispatched per `directive.mode` (inline in your context, or as a subagent on the dispatched modes). On an ensemble stage (pipeline/mob) the room or chain is NOT re-convened - review findings are artifact defects and the lead owns the artifacts; the repair loop is lead-reviewer ping-pong (`stage-protocol-ensemble.md` §5). The builder addresses the findings and updates the artifact.
-  - Return to step 1 (re-invoke reviewer)
-- **NOT-READY** and iterations exhausted:
-  - Proceed to the approval gate using the reviewer module's required Review brief, with the unresolved findings table. The separate SAY sentence for exhausted rounds remains the only narration before that gate.
+**`adversarial` レビューでは**、判定に基づいて分岐する:
+- **READY** → レシートは終端である（レビュアーモジュール）。`directive.protocol_modules` に `learnings` が挙げられている場合にのみ §13 の学びのリチュアルを実行し、その後レビュアーモジュールで必須とされる Review brief を使って承認ゲートを提示する
+- **NOT-READY** かつ `reviewIterations < reviewer_max_iterations`（デフォルト 2）:
+  - レビューイテレーションのカウンターを増やす
+  - ステージのリードエージェントだけを、`directive.mode` に従ってディスパッチして再度呼び出す（自分のコンテキスト内でインラインに、またはディスパッチ型のモードではサブエージェントとして）。アンサンブルステージ（pipeline/mob）では、ルームやチェーンを再招集しない。レビューの指摘は成果物の欠陥であり、成果物はリードが所有するからである。修復ループはリードとレビュアーの間のやり取りである（`stage-protocol-ensemble.md` §5）。ビルダーは指摘に対応し、成果物を更新する。
+  - ステップ 1 に戻る（レビュアーを再度呼び出す）
+- **NOT-READY** かつイテレーションを使い切った場合:
+  - レビュアーモジュールで必須とされる Review brief を使い、未解決の指摘の表を添えて承認ゲートに進む。ラウンドを使い切ったことを伝える別個の SAY 文が、そのゲートの前に行う唯一の説明である。

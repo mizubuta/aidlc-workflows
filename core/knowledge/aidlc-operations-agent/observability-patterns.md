@@ -1,62 +1,62 @@
 # Observability Patterns
 
-Building visibility into system behaviour through metrics, logs, and traces to enable fast diagnosis and proactive detection.
+メトリクス、ログ、トレースによってシステムの挙動を可視化し、迅速な診断とプロアクティブな検知を可能にする。
 
 ## The Three Pillars of Observability
 
 ### 1. Metrics
-Numeric measurements aggregated over time. Low cardinality, low cost, ideal for alerting and dashboards.
-- **Types**: Counters (always increase), Gauges (can go up/down), Histograms (distribution of values).
-- **AWS**: CloudWatch Metrics, CloudWatch Embedded Metric Format (EMF) for custom metrics from Lambda/ECS.
-- Emit custom business metrics: orders placed per minute, payment failures per hour, sign-ups per day.
+時間ごとに集計される数値計測値。カーディナリティが低く、コストも低いため、アラートやダッシュボードに最適である。
+- **種類**: カウンター（常に増加する）、ゲージ（増減しうる）、ヒストグラム（値の分布）。
+- **AWS**: CloudWatch Metrics。Lambda/ECS からのカスタムメトリクスには CloudWatch Embedded Metric Format（EMF）を使う。
+- カスタムのビジネスメトリクスを出力する: 1 分あたりの注文数、1 時間あたりの決済失敗数、1 日あたりのサインアップ数など。
 
 ### 2. Logs
-Timestamped records of discrete events. High cardinality, high volume.
-- Use structured logging (JSON) with consistent fields: `timestamp`, `level`, `requestId`, `service`, `message`.
-- Correlate logs across services using a shared `requestId` or `traceId` propagated through headers.
-- **AWS**: CloudWatch Logs, with Log Groups per service and environment.
+個々のイベントを記録した、タイムスタンプ付きのレコード。カーディナリティが高く、量も多い。
+- 一貫したフィールド（`timestamp`、`level`、`requestId`、`service`、`message`）を持つ構造化ログ（JSON）を使う。
+- ヘッダーを通じて伝播される共通の `requestId` または `traceId` を使い、サービス間でログを相関させる。
+- **AWS**: CloudWatch Logs。サービスと環境ごとに Log Group を分ける。
 
 ### 3. Traces
-End-to-end path of a request through multiple services. Shows latency breakdown and dependency relationships.
-- **AWS**: X-Ray for distributed tracing. Auto-instruments SDK calls to AWS services.
-- Instrument custom segments for business logic, database queries, and external HTTP calls.
-- Use trace maps to visualize service dependencies and identify latency bottlenecks.
+複数のサービスを通過するリクエストのエンドツーエンドの経路。レイテンシの内訳と依存関係を示す。
+- **AWS**: 分散トレーシングには X-Ray を使う。AWS サービスへの SDK 呼び出しは自動で計装される。
+- ビジネスロジック、データベースクエリ、外部 HTTP 呼び出しには、カスタムセグメントを計装する。
+- トレースマップを使ってサービスの依存関係を可視化し、レイテンシのボトルネックを特定する。
 
 ## The Four Golden Signals (Google SRE)
 
-Monitor these four signals for every service:
+すべてのサービスについて、次の 4 つのシグナルを監視する:
 
-1. **Latency**: Time to serve a request. Measure as percentiles (p50, p95, p99). Track separately for successful and failed requests.
-2. **Traffic**: Demand on the system. Requests per second for APIs, messages per second for queues, active connections for WebSocket.
-3. **Errors**: Rate of failed requests. Include both explicit errors (5xx) and implicit errors (wrong responses, timeouts, retries).
-4. **Saturation**: How full the system is. CPU utilization, memory usage, disk I/O, connection pool usage, Lambda concurrent executions vs reserved concurrency.
+1. **レイテンシ（Latency）**: リクエストの処理にかかる時間。パーセンタイル（p50、p95、p99）で計測する。成功したリクエストと失敗したリクエストは分けて追跡する。
+2. **トラフィック（Traffic）**: システムにかかる需要。API なら 1 秒あたりのリクエスト数、キューなら 1 秒あたりのメッセージ数、WebSocket ならアクティブな接続数。
+3. **エラー（Errors）**: 失敗したリクエストの割合。明示的なエラー（5xx）と暗黙的なエラー（誤った応答、タイムアウト、リトライ）の両方を含める。
+4. **飽和度（Saturation）**: システムがどれだけ逼迫しているか。CPU 使用率、メモリ使用量、ディスク I/O、コネクションプールの使用率、予約済み同時実行数に対する Lambda の同時実行数。
 
 ## CloudWatch Dashboards and Alarms
 
 ### Dashboard Design
-- One dashboard per service with golden signals at the top.
-- Include dependency health: downstream service latency, database connections, queue depth.
-- Use CloudWatch Metrics Math for derived metrics: error rate = errors / (errors + successes) * 100.
-- Standardize dashboard layouts across services for consistency.
+- サービスごとに 1 つのダッシュボードを用意し、ゴールデンシグナルを最上部に配置する。
+- 依存先の健全性を含める: 下流サービスのレイテンシ、データベース接続数、キューの深さ。
+- 派生メトリクスには CloudWatch Metrics Math を使う: エラーレート = errors / (errors + successes) * 100。
+- 一貫性のため、サービス間でダッシュボードのレイアウトを標準化する。
 
 ### Alarm Configuration
-- Alarm on symptoms, not causes. Alert on "error rate > 1%" not "CPU > 80%".
-- Use composite alarms to reduce noise: only alert when multiple conditions are true simultaneously.
-- Set appropriate evaluation periods: avoid single-datapoint alarms that fire on transient spikes. Use `3 out of 5 datapoints` for stability.
-- Define alarm actions: SNS notification, Lambda remediation, OpsCenter item creation.
-- Severity tiers: P1 (page on-call), P2 (Slack alert, fix within hours), P3 (ticket, fix within sprint).
+- 原因ではなく症状に対してアラームを設定する。"CPU > 80%" ではなく "error rate > 1%" でアラートを出す。
+- 複合アラームを使ってノイズを減らす: 複数の条件が同時に成立したときだけアラートを出す。
+- 適切な評価期間を設定する: 一時的なスパイクで発火する単一データポイントのアラームは避ける。安定性のために `3 out of 5 datapoints` を使う。
+- アラームのアクションを定義する: SNS 通知、Lambda による自動修復、OpsCenter アイテムの作成。
+- 重大度の階層: P1（オンコール担当者を呼び出す）、P2（Slack でアラートし、数時間以内に修正）、P3（チケット化し、スプリント内に修正）。
 
 ## X-Ray Distributed Tracing
 
-- Enable X-Ray tracing on API Gateway, Lambda, ECS, and SQS.
-- Use the X-Ray SDK to create custom subsegments for application logic.
-- Add annotations (indexed, searchable) for key dimensions: `customerId`, `orderStatus`, `region`.
-- Add metadata (not indexed) for debugging detail: request/response bodies, query parameters.
-- Use X-Ray groups and filter expressions to find traces matching specific criteria: `service("payment-service") AND responsetime > 3`.
+- API Gateway、Lambda、ECS、SQS で X-Ray トレーシングを有効にする。
+- X-Ray SDK を使って、アプリケーションロジック用のカスタムサブセグメントを作成する。
+- 主要なディメンションにはアノテーション（インデックス化され、検索可能）を付ける: `customerId`、`orderStatus`、`region`。
+- デバッグ用の詳細にはメタデータ（インデックス化されない）を付ける: リクエスト/レスポンスのボディ、クエリパラメータ。
+- X-Ray グループとフィルター式を使って、特定の条件に一致するトレースを見つける: `service("payment-service") AND responsetime > 3`。
 
 ## CloudWatch Logs Insights Queries
 
-Useful query patterns for operational troubleshooting:
+運用上のトラブルシューティングに役立つクエリパターン:
 
 ```
 # Error rate over time
@@ -79,22 +79,22 @@ filter @type = "REPORT"
 
 ## Anomaly Detection
 
-- CloudWatch Anomaly Detection uses ML to establish a baseline and alert on deviations.
-- Enable on latency and error rate metrics that have stable patterns.
-- Set the detection band width based on acceptable variance (2 standard deviations is a common starting point).
-- Combine anomaly detection with static thresholds: anomaly detection catches gradual drift, static thresholds catch acute failures.
+- CloudWatch Anomaly Detection は ML を使ってベースラインを確立し、そこからの逸脱に対してアラートを出す。
+- 安定したパターンを持つレイテンシやエラーレートのメトリクスで有効にする。
+- 検知バンドの幅は、許容できるばらつきに基づいて設定する（標準偏差 2 つ分が一般的な出発点）。
+- 異常検知と静的しきい値を組み合わせる: 異常検知は緩やかなドリフトを捉え、静的しきい値は急性の障害を捉える。
 
 ## Log Aggregation and Retention
 
-- Route all logs to CloudWatch Logs with consistent naming: `/aws/lambda/{service}`, `/ecs/{cluster}/{service}`.
-- Set retention policies per log group: 30 days for development, 90 days for staging, 1-3 years for production (or per compliance requirements).
-- Archive to S3 for long-term retention and cost optimization. Use Glacier for logs older than 90 days.
-- Consider CloudWatch cross-account log aggregation for multi-account setups.
+- すべてのログを一貫した命名で CloudWatch Logs にルーティングする: `/aws/lambda/{service}`、`/ecs/{cluster}/{service}`。
+- ロググループごとに保持ポリシーを設定する: 開発は 30 日、ステージングは 90 日、本番は 1〜3 年（またはコンプライアンス要件に従う）。
+- 長期保持とコスト最適化のために S3 にアーカイブする。90 日より古いログには Glacier を使う。
+- マルチアカウント構成では、CloudWatch のクロスアカウントログ集約を検討する。
 
 ## Synthetic Monitoring
 
-- CloudWatch Synthetics canaries: run scripted checks on a schedule (every 1-5 minutes).
-- Test critical user journeys: login, place order, view dashboard.
-- Canaries run from AWS-managed infrastructure; detect issues before real users report them.
-- Alert on canary failure with P1 severity; it means the user-facing path is broken.
-- Use visual monitoring (screenshot comparison) for UI-heavy applications.
+- CloudWatch Synthetics の canary: スクリプト化されたチェックを定期的に（1〜5 分ごとに）実行する。
+- 重要なユーザージャーニーをテストする: ログイン、注文、ダッシュボードの表示。
+- canary は AWS が管理するインフラストラクチャから実行され、実際のユーザーから報告される前に問題を検知する。
+- canary の失敗には P1 の重大度でアラートを出す。それはユーザー向けの経路が壊れていることを意味するからである。
+- UI の比重が大きいアプリケーションには、ビジュアルモニタリング（スクリーンショットの比較）を使う。

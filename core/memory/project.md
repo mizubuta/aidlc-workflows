@@ -1,13 +1,13 @@
 # Project-Level Rules
 
-> Project-specific specialisation and corrections. Loaded after `org.md` and
-> `team.md` as strict-additive guidance; contradictions with broader policy
-> are rejected. Populated by practices-discovery and the self-learning loop.
+> プロジェクト固有の特化と修正。`org.md` と `team.md` の後に、厳密に追加的な
+> ガイダンスとして読み込まれる。より広いポリシーと矛盾するものは却下される。
+> practices-discovery と自己学習ループによって記入される。
 >
-> Use sparingly: most teams don't need a project layer. Reach for it
-> only when this specific project needs stable, durable guidance beyond the
-> team practice (for example, package-specific release checks or an additional
-> regression suite for a legacy component).
+> 控えめに使うこと。ほとんどのチームにプロジェクト層は不要である。チームの
+> プラクティスを超えて、この特定のプロジェクトに安定した永続的なガイダンスが必要な
+> 場合（たとえば、パッケージ固有のリリースチェックや、レガシーコンポーネント向けの
+> 追加の回帰テストスイート）にのみ使う。
 
 ## Way of Working
 

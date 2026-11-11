@@ -1,40 +1,40 @@
 # Quality Agent
 
-> **Agent deep dive** · [User Guide](../00-introduction.md) › [Agents](../06-agents.md) › [deep dives](README.md) · Technical reference: [quality-agent](../../reference/agents/quality-agent.md)
+> **エージェント詳細解説** · [ユーザーガイド](../00-introduction.md) › [エージェント](../06-agents.md) › [詳細解説](README.md) · 技術リファレンス: [quality-agent](../../reference/agents/quality-agent.md)
 
-The aidlc-quality-agent is your QA engineer and performance specialist. It defines test strategy, generates test suites (unit, integration, contract, security), validates coverage against acceptance criteria, designs and executes load tests, and validates non-functional requirement targets. It ensures every implemented unit meets its acceptance criteria and the overall system meets quality gates.
+aidlc-quality-agent は、QA エンジニア兼パフォーマンスのスペシャリストです。テスト戦略を定義し、テストスイート（ユニット、統合、コントラクト、セキュリティ）を生成し、受け入れ基準に照らしてカバレッジを検証し、負荷テストを設計・実行し、非機能要件の目標値を検証します。実装されたすべてのユニットが受け入れ基準を満たし、システム全体が品質ゲートを満たすことを保証します。
 
-The aidlc-quality-agent leads two stages — one in Construction and one in Operation — and supports three additional stages. It has Bash access for running build tools, test commands, and performance testing utilities.
+aidlc-quality-agent は 2 つのステージ（Construction で 1 つ、Operation で 1 つ）をリードし、さらに 3 つのステージを支援します。ビルドツール、テストコマンド、パフォーマンステスト用ユーティリティを実行するための Bash アクセス権を持っています。
 
 ## Stages Led
 
-| Stage | Phase | Description |
+| ステージ | フェーズ | 説明 |
 |-------|-------|-------------|
-| 3.6 Build and Test | Construction | Runs build, generates and executes test suites, validates quality gates |
-| 4.6 Performance Validation | Operation | Load testing, NFR validation matrix, capacity planning |
+| 3.6 Build and Test | Construction | ビルドを実行し、テストスイートを生成・実行し、品質ゲートを検証する |
+| 4.6 Performance Validation | Operation | 負荷テスト、NFR 検証マトリクス、キャパシティプランニング |
 
 ## Stages Supported
 
-| Stage | Phase | Contribution |
+| ステージ | フェーズ | 貢献内容 |
 |-------|-------|-------------|
-| 2.2 Practices Discovery | Inception | Mutually blind testing-posture spoke when collaborators are on; writes its own contribution file |
-| 2.4 User Stories | Inception | Testability and acceptance-criteria voice in the mob when collaborators are on; writes its own contribution file |
-| 3.2 NFR Requirements | Construction | Defines testable quality attribute scenarios |
+| 2.2 Practices Discovery | Inception | コラボレーターが有効な場合、互いの内容を見ない（mutually blind）テスト方針のスポークとして参加し、自身の貢献ファイルを書く |
+| 2.4 User Stories | Inception | コラボレーターが有効な場合、モブの中でテスト容易性と受け入れ基準の観点を担い、自身の貢献ファイルを書く |
+| 3.2 NFR Requirements | Construction | テスト可能な品質特性シナリオを定義する |
 
 ## What to Expect
 
-When the aidlc-quality-agent is active, it generates build instructions and test suites, then executes them against the implemented code. During Build and Test, it runs the project's build system, executes unit tests, integration tests, and any additional test types appropriate for the project. It reports pass/fail results, coverage metrics, and quality gate status.
+aidlc-quality-agent が有効になると、ビルド手順とテストスイートを生成し、実装済みのコードに対して実行します。Build and Test では、プロジェクトのビルドシステムを実行し、ユニットテスト、統合テスト、およびプロジェクトに適したその他のテスト種別を実行します。合否結果、カバレッジ指標、品質ゲートの状態を報告します。
 
-During Performance Validation in the Operation phase, it designs and executes load tests, validates NFR targets (latency percentiles, throughput, availability), and produces an NFR validation matrix comparing targets to actuals.
+Operation フェーズの Performance Validation では、負荷テストを設計・実行し、NFR の目標値（レイテンシのパーセンタイル、スループット、可用性）を検証し、目標値と実測値を比較する NFR 検証マトリクスを作成します。
 
 ## How It Collaborates
 
-The aidlc-quality-agent receives user stories with acceptance criteria from the aidlc-product-agent, NFR targets from the aidlc-architect-agent, and implemented code from the aidlc-developer-agent. It works with the aidlc-devsecops-agent on security test requirements and the aidlc-pipeline-deploy-agent on CI integration. Its test results and performance baselines are handed off to the aidlc-operations-agent.
+aidlc-quality-agent は、aidlc-product-agent から受け入れ基準付きのユーザーストーリーを、aidlc-architect-agent から NFR の目標値を、aidlc-developer-agent から実装済みのコードを受け取ります。セキュリティテストの要件については aidlc-devsecops-agent と、CI への統合については aidlc-pipeline-deploy-agent と連携します。テスト結果とパフォーマンスのベースラインは aidlc-operations-agent に引き継がれます。
 
 ## Key Principles
 
-- Test the requirement, not the implementation
-- Follow the test pyramid: many fast unit tests, fewer integration tests, minimal end-to-end tests
-- When a defect is found, write a test that reproduces it before fixing
-- Tests must not depend on execution order or shared state
-- Coverage is a guide, not a goal — 70% with thoughtful tests beats 100% with meaningless assertions
+- 実装ではなく要件をテストする
+- テストピラミッドに従う: 高速なユニットテストを多く、統合テストは少なめに、エンドツーエンドテストは最小限に
+- 欠陥を見つけたら、修正する前にそれを再現するテストを書く
+- テストは実行順序や共有状態に依存してはならない
+- カバレッジは目安であって目標ではない — 意味のないアサーションで 100% にするより、よく考えたテストで 70% のほうが優れている

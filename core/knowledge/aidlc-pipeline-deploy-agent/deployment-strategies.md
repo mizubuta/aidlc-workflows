@@ -1,100 +1,100 @@
 # Deployment Strategies
 
-Patterns for releasing software safely with minimal risk to users and the ability to roll back quickly.
+利用者へのリスクを最小限に抑え、すばやくロールバックできるようにして、ソフトウェアを安全にリリースするためのパターン。
 
 ## Blue/Green Deployment
 
-**How it works**: Maintain two identical environments (blue = current, green = new). Deploy the new version to green. Switch traffic from blue to green at the load balancer or DNS level. Keep blue running as an instant rollback target.
+**仕組み**: 同一の環境を 2 つ維持する（blue = 現行、green = 新規）。新バージョンを green にデプロイする。ロードバランサーまたは DNS のレベルで、トラフィックを blue から green に切り替える。blue は即時ロールバック先として稼働させたままにする。
 
-**AWS Implementation**:
-- ECS: Use CodeDeploy with `ECS` deployment type. Two target groups on an ALB; CodeDeploy shifts traffic.
-- Lambda: Use aliases with weighted traffic shifting (`AWS::Lambda::Alias` with `RoutingConfig`).
-- Elastic Beanstalk: Swap environment URLs.
+**AWS での実装**:
+- ECS: `ECS` デプロイタイプで CodeDeploy を使用する。ALB に 2 つのターゲットグループを置き、CodeDeploy がトラフィックを移行する。
+- Lambda: 重み付きトラフィック移行を備えたエイリアスを使用する（`RoutingConfig` を持つ `AWS::Lambda::Alias`）。
+- Elastic Beanstalk: 環境の URL をスワップする。
 
-**Advantages**: Instant rollback (repoint to blue), full environment validation before switch.
-**Drawbacks**: Double infrastructure cost during deployment window. Database schema must be backward-compatible.
+**利点**: 即時ロールバック（blue に向け直す）、切り替え前に環境全体を検証できる。
+**欠点**: デプロイ期間中はインフラコストが 2 倍になる。データベーススキーマは後方互換でなければならない。
 
 ## Canary Releases
 
-**How it works**: Route a small percentage of traffic (1-5%) to the new version. Monitor error rates, latency, and business metrics. Gradually increase traffic if healthy; roll back if anomalies are detected.
+**仕組み**: トラフィックのごく一部（1〜5%）を新バージョンに流す。エラー率、レイテンシ、ビジネス指標を監視する。正常であれば段階的にトラフィックを増やし、異常が検出されればロールバックする。
 
-**AWS Implementation**:
-- CodeDeploy with Lambda or ECS: Built-in canary configurations (`Canary10Percent5Minutes`, `Linear10PercentEvery1Minute`).
-- API Gateway: Canary release on stage with percentage-based traffic split.
-- CloudWatch alarms trigger automatic rollback on metric breaches.
+**AWS での実装**:
+- Lambda または ECS での CodeDeploy: 組み込みのカナリア設定（`Canary10Percent5Minutes`、`Linear10PercentEvery1Minute`）。
+- API Gateway: ステージでのカナリアリリースにより、割合ベースでトラフィックを分割する。
+- CloudWatch アラームが、指標の閾値超過時に自動ロールバックを発動する。
 
-**Advantages**: Limits blast radius. Detects issues with real traffic before full rollout.
-**Drawbacks**: Requires robust monitoring. Stateful services need careful handling.
+**利点**: 影響範囲（blast radius）を限定できる。全面展開の前に、実際のトラフィックで問題を検出できる。
+**欠点**: 堅牢な監視が必要。ステートフルなサービスには慎重な扱いが必要。
 
 ## Rolling Updates
 
-**How it works**: Replace instances/tasks in batches. New version replaces a subset while the rest continue serving. Repeat until all instances run the new version.
+**仕組み**: インスタンス／タスクをバッチ単位で置き換える。新バージョンが一部を置き換える間、残りは引き続きリクエストを処理する。すべてのインスタンスが新バージョンで動くまで繰り返す。
 
-**AWS Implementation**:
-- ECS: Default deployment strategy. Configure `minimumHealthyPercent` and `maximumPercent`.
-- EC2 Auto Scaling: Rolling update policy with `MinInstancesInService`.
+**AWS での実装**:
+- ECS: デフォルトのデプロイ戦略。`minimumHealthyPercent` と `maximumPercent` を設定する。
+- EC2 Auto Scaling: `MinInstancesInService` を指定したローリング更新ポリシー。
 
-**Advantages**: No extra infrastructure cost. Gradual rollout.
-**Drawbacks**: Mixed versions during deployment (ensure backward compatibility). Slower rollback (redeploy the previous version).
+**利点**: 追加のインフラコストがかからない。段階的に展開できる。
+**欠点**: デプロイ中は複数のバージョンが混在する（後方互換性を確保すること）。ロールバックが遅い（前のバージョンを再デプロイする）。
 
 ## A/B Testing
 
-**How it works**: Route specific user segments to different versions based on attributes (user ID, region, account type). Measure business outcomes (conversion, engagement) to decide which version wins.
+**仕組み**: 属性（ユーザー ID、リージョン、アカウント種別）に基づいて、特定のユーザーセグメントを異なるバージョンに振り分ける。ビジネス成果（コンバージョン、エンゲージメント）を計測して、どちらのバージョンが優れているかを決める。
 
-**Distinction from canary**: A/B testing serves different experiences intentionally for experimentation; canary is a deployment safety mechanism.
+**カナリアとの違い**: A/B テストは実験のために意図的に異なる体験を提供するものであり、カナリアはデプロイの安全機構である。
 
-**AWS Implementation**: CloudWatch Evidently for feature experiments with statistical analysis. CloudFront + Lambda@Edge for routing based on cookies or headers.
+**AWS での実装**: 統計分析付きの機能実験には CloudWatch Evidently。Cookie やヘッダーに基づくルーティングには CloudFront + Lambda@Edge。
 
 ## Feature Flags
 
-**How it works**: Deploy code with features wrapped in conditional flags. Toggle features on/off without redeployment.
+**仕組み**: 機能を条件付きフラグで囲んだコードをデプロイする。再デプロイせずに機能のオン／オフを切り替える。
 
-**AWS Implementation**:
-- **AppConfig**: Feature flags with validation, gradual rollout, and automatic rollback.
-- **CloudWatch Evidently**: Feature flags with built-in A/B testing and metric tracking.
+**AWS での実装**:
+- **AppConfig**: 検証、段階的展開、自動ロールバックを備えたフィーチャーフラグ。
+- **CloudWatch Evidently**: 組み込みの A/B テストと指標追跡を備えたフィーチャーフラグ。
 
-**Best Practices**:
-- Use feature flags for incomplete features merged to main (trunk-based development enabler).
-- Clean up flags after full rollout; stale flags become technical debt.
-- Categorize flags: release flags (temporary), ops flags (kill switches), experiment flags (A/B tests).
-- Never put secrets or sensitive config in feature flags.
+**ベストプラクティス**:
+- main にマージされた未完成の機能にはフィーチャーフラグを使う（トランクベース開発を可能にする）。
+- 全面展開後はフラグを片付ける。放置されたフラグは技術的負債になる。
+- フラグを分類する: リリースフラグ（一時的）、運用フラグ（キルスイッチ）、実験フラグ（A/B テスト）。
+- シークレットや機密性の高い設定を決してフィーチャーフラグに入れない。
 
 ## Rollback Strategies
 
 ### Automated Rollback
-- Configure CloudWatch alarms on error rate, latency p99, and 5xx count.
-- CodeDeploy automatically rolls back when alarms trigger during deployment.
-- Lambda: Revert alias to the previous version instantly.
-- ECS: CodeDeploy reroutes traffic back to the original target group.
+- エラー率、レイテンシ p99、5xx の件数に CloudWatch アラームを設定する。
+- デプロイ中にアラームが発動すると、CodeDeploy が自動的にロールバックする。
+- Lambda: エイリアスを直ちに前のバージョンに戻す。
+- ECS: CodeDeploy がトラフィックを元のターゲットグループに戻す。
 
 ### Manual Rollback
-- Keep the previous artifact (Docker image, Lambda ZIP) tagged and deployable.
-- Document the rollback procedure as a runbook: which commands, in what order, who approves.
-- Practice rollbacks regularly; an untested rollback is not a rollback plan.
+- 前の成果物（Docker イメージ、Lambda の ZIP）をタグ付けしてデプロイ可能な状態で保持する。
+- ロールバック手順をランブックとして文書化する: どのコマンドを、どの順序で、誰が承認するか。
+- ロールバックを定期的に練習する。テストされていないロールバックはロールバック計画ではない。
 
 ## Database Migration During Deployment
 
-The hardest part of zero-downtime deployment is schema changes. Follow the **expand-contract** pattern:
+ゼロダウンタイムデプロイで最も難しいのはスキーマ変更である。**expand-contract** パターンに従う:
 
-1. **Expand**: Add new columns/tables/indexes. Do not remove or rename existing ones. Deploy application code that writes to both old and new schemas.
-2. **Migrate**: Backfill data from old schema to new schema.
-3. **Contract**: After all application versions use the new schema, remove old columns/tables in a later release.
+1. **Expand（拡張）**: 新しいカラム／テーブル／インデックスを追加する。既存のものを削除したり名前を変更したりしない。旧スキーマと新スキーマの両方に書き込むアプリケーションコードをデプロイする。
+2. **Migrate（移行）**: 旧スキーマから新スキーマにデータをバックフィルする。
+3. **Contract（縮小）**: すべてのアプリケーションバージョンが新スキーマを使うようになった後、後のリリースで旧カラム／テーブルを削除する。
 
-Never run destructive schema changes (DROP COLUMN, rename) in the same deployment as the application change.
+破壊的なスキーマ変更（DROP COLUMN、名前変更）を、アプリケーションの変更と同じデプロイで決して実行しない。
 
 ## Zero-Downtime Deployment Checklist
 
-- [ ] Load balancer health checks configured with appropriate thresholds
-- [ ] Connection draining enabled (deregistration delay: 30-120 seconds)
-- [ ] Graceful shutdown handling in application (finish in-flight requests, close DB connections)
-- [ ] Database schema changes are backward-compatible
-- [ ] Rollback plan tested and documented
-- [ ] Monitoring and alarms in place before deployment starts
-- [ ] Pre-deployment smoke tests pass in staging
+- [ ] ロードバランサーのヘルスチェックが適切な閾値で設定されている
+- [ ] コネクションドレイニングが有効になっている（登録解除の遅延: 30〜120 秒）
+- [ ] アプリケーションでグレースフルシャットダウンを処理している（処理中のリクエストを完了し、DB 接続を閉じる）
+- [ ] データベーススキーマの変更が後方互換である
+- [ ] ロールバック計画がテストされ、文書化されている
+- [ ] デプロイ開始前に監視とアラームが整っている
+- [ ] デプロイ前のスモークテストがステージング環境で合格している
 
 ## Deployment Windows and Freeze Periods
 
-- Define standard deployment windows (e.g., Tuesday-Thursday 10:00-16:00 local time) when the team is available to monitor.
-- Enforce code freeze periods during high-traffic events (Black Friday, product launches) or compliance windows (end of fiscal quarter).
-- Emergency hotfixes bypass freeze periods but require incident commander approval and post-deployment review.
-- Automate freeze enforcement in the pipeline (reject deployments outside approved windows unless override flag is set).
+- チームが監視できる標準のデプロイ時間帯を定める（例: 火曜〜木曜の現地時間 10:00〜16:00）。
+- 高トラフィックのイベント（ブラックフライデー、製品ローンチ）やコンプライアンス上の期間（会計四半期末）には、コードフリーズ期間を適用する。
+- 緊急のホットフィックスはフリーズ期間を回避できるが、インシデントコマンダーの承認とデプロイ後のレビューが必要である。
+- パイプラインでフリーズの適用を自動化する（オーバーライドフラグが設定されていない限り、承認された時間帯外のデプロイを拒否する）。

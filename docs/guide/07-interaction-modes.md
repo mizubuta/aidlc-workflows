@@ -1,20 +1,20 @@
 # Interaction Modes
 
-AI-DLC provides three ways to interact with agents during stages, plus approval gates that keep you in control at every decision point.
+AI-DLC では、ステージ中にエージェントとやり取りする 3 つの方法と、あらゆる意思決定ポイントであなたが主導権を握り続けるための承認ゲートが用意されています。
 
-> **Harness note.** Gates and questions render differently per harness. Claude
-> Code uses its native question picker; Codex uses its picker when enabled.
-> Kiro, opencode, and GitHub Copilot render numbered-prose options (Copilot's
-> picker results do not fire the trusted human-presence event). The questions
-> file remains the source of truth. The *semantics* — when a gate fires, what
-> it asks, that you stay in control — are identical, since they live in the
-> engine. See [Running on other harnesses](harnesses/README.md).
+> **ハーネスに関する注記。** ゲートと質問の表示方法はハーネスごとに異なります。Claude
+> Code はネイティブの質問ピッカーを使い、Codex は有効化されていればピッカーを使います。
+> Kiro、opencode、GitHub Copilot は番号付きの文章で選択肢を表示します（Copilot の
+> ピッカーの結果は、信頼された人間の在席イベントを発生させません）。質問ファイルは
+> 引き続き信頼できる唯一の情報源です。*セマンティクス* — いつゲートが発生し、何を
+> 尋ね、あなたが主導権を握り続けること — はエンジンに実装されているため同一です。
+> [他のハーネスでの実行](harnesses/README.md) を参照してください。
 
 ---
 
 ## Tri-Mode Question Flow
 
-When a stage gathers your input, the agent writes its questions to a file and offers three interaction modes. You choose the one that suits you; later stages reuse that choice (see [Asked Once, Then Reused](#asked-once-then-reused)). From the run in [Getting Started](01-getting-started.md):
+ステージがあなたの入力を集めるとき、エージェントは質問をファイルに書き出し、3 つのインタラクションモードを提示します。自分に合ったものを選んでください。後続のステージはその選択を再利用します（[一度だけ尋ね、以降は再利用](#asked-once-then-reused) を参照）。[はじめに](01-getting-started.md) の実行例から:
 
 ```text
  Answer mode
@@ -31,69 +31,70 @@ When a stage gathers your input, the agent writes its questions to a file and of
    5. Chat about this
 ```
 
-In a questions file the agent creates, each ordinary question names who would
-usually answer it, such as `[Product owner]` or `[Developer]`, and questions for
-the same person are kept together, unless one of them has to wait for another
-person's answer. A team can split the questions that way, and on your own you
-can see which are about what the product does and which about how it is built.
-Anyone can still answer any question. When the agent asks you one of these
-questions, in the chat or its question picker, the label comes in front of its
-text too. A question added later goes at the end with its own label. The
-confirmation, change-request and approval sections carry no label. A file that
-already existed keeps its questions as they were, unless you ask to redo the
-stage from scratch, which replaces it with a new one.
+エージェントが作成する質問ファイルでは、通常の質問ごとに、ふつう誰が回答するか
+（`[Product owner]` や `[Developer]` など）が示されます。同じ人向けの質問はまとめて配置されます。
+ただし、そのうちの 1 つが別の人の回答を待つ必要がある場合は例外です。チームではこの方法で
+質問を分担でき、1 人で作業する場合も、どれがプロダクトが何をするかについての質問で、
+どれがどう構築するかについての質問かを見分けられます。それでも、誰がどの質問に回答しても
+構いません。エージェントがチャットや質問ピッカーでこれらの質問の 1 つを尋ねるときも、
+そのラベルが質問文の前に付きます。後から追加された質問は、独自のラベルを付けて末尾に置かれます。
+確認、変更リクエスト、承認のセクションにはラベルが付きません。すでに存在していたファイルは、
+質問がそのまま維持されます。ただし、ステージを最初からやり直すよう依頼した場合は、
+新しいファイルに置き換えられます。
 
 ### Guide Me
 
-The agent walks you through each question interactively using structured prompts. Best when you want the agent to lead the conversation and ensure nothing is missed.
+エージェントが構造化されたプロンプトを使って、各質問を対話的に案内します。エージェントに会話を主導してもらい、漏れがないようにしたい場合に最適です。
 
-- Agent presents questions one at a time (or in batches)
-- You answer each question directly
-- Answers are recorded in the stage's questions file for traceability
+- エージェントが質問を 1 つずつ（またはまとめて）提示します
+- あなたは各質問に直接回答します
+- 回答はトレーサビリティのためにステージの質問ファイルに記録されます
 
 ### Edit File
 
-The agent creates (or opens) the questions file and you edit it directly. Best when you already know what you want and prefer to write it down rather than answer questions.
+エージェントが質問ファイルを作成（またはオープン）し、あなたがそれを直接編集します。何をしたいかがすでに明確で、質問に答えるより書き出したい場合に最適です。
 
-- The questions file appears in the intent's record dir with blank answer fields
-- You fill in answers at your own pace
-- The agent reads the completed file and proceeds
+- 質問ファイルは、回答欄が空の状態でインテントの記録ディレクトリに作成されます
+- あなたは自分のペースで回答を記入します
+- エージェントは記入済みのファイルを読み込んで先に進みます
 
 ### Chat
 
-Freeform conversation with the agent. Best for exploring ideas or when your requirements are not yet well-defined.
+エージェントとの自由形式の会話です。アイデアを探りたいときや、要件がまだ明確でないときに最適です。
 
-- You discuss freely with the agent
-- The agent extracts decisions from the conversation
-- Extracted decisions are written back to the questions file as the source of truth
+- あなたはエージェントと自由に議論します
+- エージェントが会話から意思決定を抽出します
+- 抽出された意思決定は、信頼できる唯一の情報源として質問ファイルに書き戻されます
 
 ### Switching Modes Mid-Stage
 
-You can switch between modes at any point during a stage. All three modes converge on the questions file as the canonical record of decisions. Switching does not lose progress — answers already captured remain in the file.
+ステージ中はいつでもモードを切り替えられます。3 つのモードはいずれも、意思決定の正式な記録である質問ファイルに集約されます。切り替えても進捗は失われません — すでに記録された回答はファイルに残ります。
 
 ### Asked Once, Then Reused
 
-You choose the mode once per piece of work: the first stage with questions asks,
-and later stages reuse your choice without asking again. Each of those stages
-still tells you, in one line, which mode it is using:
+モードは作業ごとに一度だけ選びます。質問のある最初のステージで尋ねられ、
+後続のステージはもう一度尋ねずにその選択を再利用します。それらの各ステージでは、
+どのモードを使っているかが 1 行で伝えられます:
 
 ```
 Answering the way you chose earlier: Guide me. Say if you'd rather edit the file or chat.
 ```
 
-To change it, just say so ("let me edit the file this time"). The agent switches
-and later stages use your new choice. However you word your answer, the agent
-records the mode you meant, so you are not asked again because of the wording.
+（訳: 先ほど選んだ方法で回答します: Guide me。ファイルを編集したい、またはチャットしたい場合はお知らせください。）
+
+変更したい場合は、そう伝えるだけです（「今回はファイルを編集させて」など）。エージェントが切り替え、
+後続のステージは新しい選択を使います。どのような言い方で回答しても、エージェントは
+あなたが意図したモードを記録するため、言い回しのせいで再度尋ねられることはありません。
 
 ---
 
 ## Approval Gates
 
-Every stage (except the 3 Initialization stages) ends with an approval gate. This is your checkpoint to review the agent's work before the workflow advances. In Construction, the gates can come per Unit instead, and the ones you chose to let run automatically are recorded without a question (see [Phases and Stages](04-phases-and-stages.md#what-runs-in-order-and-what-runs-in-parallel)).
+すべてのステージ（3 つの Initialization ステージを除く）は承認ゲートで終わります。これは、ワークフローが先に進む前にエージェントの作業をレビューするためのチェックポイントです。Construction では、ゲートがユニットごとに発生することもあり、自動実行を許可したゲートは質問なしで記録されます（[フェーズとステージ](04-phases-and-stages.md#what-runs-in-order-and-what-runs-in-parallel) を参照）。
 
 ### Standard Gate
 
-The default approval gate presents two options. From the same run:
+デフォルトの承認ゲートは 2 つの選択肢を提示します。同じ実行例から:
 
 ```text
  Approval
@@ -106,76 +107,76 @@ The default approval gate presents two options. From the same run:
    4. Chat about this
 ```
 
-The Approve line names the actual next stage the workflow will run (for example "Continue to NFR Requirements"), or "Complete workflow" on the final stage; the engine computes it, so it is always correct rather than a guess.
+Approve の行には、ワークフローが実際に次に実行するステージの名前（例: "Continue to NFR Requirements"）、または最終ステージでは "Complete workflow" が表示されます。これはエンジンが算出するため、推測ではなく常に正確です。
 
-- **Approve** reports the outcome; the engine marks the stage completed, updates
-  `aidlc-state.md`, shows a progress line, and advances to the next stage
-- **Request Changes** lets you provide specific feedback; the agent revises its work and re-presents the approval gate
+- **Approve** は結果を報告します。エンジンがステージを完了済みにし、
+  `aidlc-state.md` を更新し、進捗行を表示して、次のステージに進みます
+- **Request Changes** では具体的なフィードバックを伝えられます。エージェントが作業を修正し、承認ゲートを再提示します
 
-Answer in your own words, the way you would answer a colleague. You drive: the
-agent reads your reply and does what you said, at every question (this gate, the
-summary confirmation, a verification command, a Construction checkpoint, Plan
-Approval, and a recovery question). You never retype an option label or say the
-same thing twice:
+同僚に答えるように、自分の言葉で回答してください。主導するのはあなたです。
+エージェントはあなたの返答を読み、あなたが言ったとおりに動作します。これはすべての質問（このゲート、
+サマリー確認、検証コマンド、Construction のチェックポイント、Plan
+Approval、復旧の質問）に当てはまります。選択肢のラベルを打ち直したり、同じことを
+2 回言ったりする必要はありません:
 
-- `1`, `a` (where the options are lettered), `approved`, `looks good`, or
-  `aprove` all approve.
-- A change request is Request Changes, and your words are the feedback:
-  `rename the handler`, `no, split the tests`.
-- An approval with an instruction is both: `looks fine but rename the handler`
-  approves, the agent renames it and says so in one line ("Renamed
-  processOrder to handleOrder in 3 files"), and the work carries on.
-- An approval that also asks to stop for now approves and parks the workflow:
-  `Approve, but let's stop there for today`. `/aidlc --resume` picks it up later.
-- A question gets an answer, and your next reply decides.
-- Only a reply that is genuinely unclear (`hmm`, `not sure`) gets one short
-  question back.
+- `1`、`a`（選択肢がアルファベットの場合）、`approved`、`looks good`、
+  `aprove` はいずれも承認になります。
+- 変更の依頼は Request Changes となり、あなたの言葉がフィードバックになります:
+  `rename the handler`、`no, split the tests`。
+- 指示付きの承認はその両方です: `looks fine but rename the handler`
+  は承認となり、エージェントは名前を変更してそのことを 1 行で伝え（"Renamed
+  processOrder to handleOrder in 3 files"）、作業が続行されます。
+- いったん止めることも求める承認は、承認してワークフローを中断状態にします:
+  `Approve, but let's stop there for today`。後で `/aidlc --resume` で再開できます。
+- 質問には回答が返され、次のあなたの返答で決まります。
+- 本当に不明瞭な返答（`hmm`、`not sure`）に対してだけ、短い質問が 1 つ
+  返されます。
 
-AI-DLC records gate, Plan Approval, checkpoint, verification-command, and
-Construction setting changes with your words beside them (`Person Reply` in
-the audit trail), as your harness passed them and trimmed. At a stage gate that
-is every message since the last decision and since the stage started, except one
-already recorded as your answer to another question, unless it is your latest: if one of
-them is over 8000 characters or no longer on record, none of them is attached
-and the row names the latest message instead, and a change request records the
-agent's `--reason`; at Plan Approval, your latest 8
-replies, each cut to 8000 characters; at a checkpoint or verification-command
-question, your replies joined in order, keeping the last 8000 characters; for a
-Construction setting you asked to change, the message that asked. The summary confirmation records the
-choice the agent read and, for a change request, what you asked to change. A
-decision needs a reply from you after the question was shown (at a stage gate,
-one since the stage started that the agent names as your answer counts too,
-such as an approval you gave at the learnings question, when you sent it after
-the stage's output was last written). The agent cannot answer for you.
+AI-DLC は、ゲート、Plan Approval、チェックポイント、検証コマンド、
+Construction の設定変更を、あなたの言葉を添えて記録します（監査証跡の `Person Reply`）。
+言葉はハーネスが渡したものをトリミングして記録します。ステージゲートでは、
+直前の意思決定以降かつステージ開始以降のすべてのメッセージが対象です。ただし、他の質問への回答として
+すでに記録されたメッセージは、それが最新のものでない限り除外されます。それらのうち
+1 つでも 8000 文字を超えるか、記録に残っていない場合は、どれも添付されず、
+行には代わりに最新のメッセージが示されます。変更リクエストではエージェントの
+`--reason` が記録されます。Plan Approval では、直近 8 件の
+返答をそれぞれ 8000 文字に切り詰めて記録します。チェックポイントや検証コマンドの
+質問では、返答を順に連結し、末尾の 8000 文字を残します。
+変更を依頼した Construction の設定については、その依頼メッセージを記録します。サマリー確認では、
+エージェントが読み取った選択と、変更リクエストの場合は変更を求めた内容を記録します。
+意思決定には、質問が表示された後のあなたからの返答が必要です（ステージゲートでは、
+ステージ開始以降のもので、エージェントがあなたの回答として指名したものも有効です。
+たとえば、ステージの出力が最後に書き込まれた後に学びの質問で伝えた承認などです）。
+エージェントがあなたの代わりに回答することはできません。
 
-When you ask for changes at a stage gate, the audit trail records, as the
-revision feedback, the words your harness passed to the human-turn hook for
-your chat since the last decision, exactly as they arrived (except a message
-already recorded as your answer to another question, unless it is your latest),
-and the agent revises from what you asked for. If you picked Request Changes and then
-answered "What should change?", both are the feedback. When the agent's own summary of your request
-differs, it is kept beside your words as the `Conductor Summary`. This needs a
-harness that passes your typed prompt and chat session to the human-turn hook;
-where it does not, the feedback is what the agent reports, as before. Like the
-human turn itself, this records what the prompt seam received, not who typed
-it.
+ステージゲートで変更を依頼すると、監査証跡には修正フィードバックとして、
+直前の意思決定以降のチャットについてハーネスが human-turn フックに渡した言葉が、
+届いたとおりそのまま記録されます（他の質問への回答としてすでに記録されたメッセージは、
+それが最新のものでない限り除く）。エージェントはあなたが求めた内容に基づいて修正します。
+Request Changes を選んだ後に "What should change?"（何を変更すべきですか？）に回答した場合は、その両方がフィードバックになります。
+エージェント自身による依頼内容の要約があなたの言葉と異なる場合は、
+`Conductor Summary` としてあなたの言葉の横に保持されます。これには、
+入力したプロンプトとチャットセッションを human-turn フックに渡すハーネスが必要です。
+そうでないハーネスでは、従来どおりエージェントが報告した内容がフィードバックになります。
+human turn そのものと同様に、これはプロンプトの接点が受け取った内容を記録するものであり、
+誰が入力したかを記録するものではありません。
 
-The gate requires an observed human-interaction seam: typing a prompt or answering a native question picker records a human turn (a `HUMAN_TURN` event) in the audit ledger, and approve (and any clarifying-question answer) refuses unless one was recorded since the last gate resolution, and a stage gate's approval or change request needs one sent since the stage started and after the gate was shown, or the message the agent names as your answer (for an approval, one you sent after the stage's output was last written: an earlier one did not see what you approve). This proves presence and ordering, not authorship of the later caller-supplied decision text; some harnesses expose no trusted prompt/widget content. On a harness whose picker does not record a human turn, type a short message once (for example "approve") so one is on record.
+ゲートには、観測された人間とのインタラクションの接点が必要です。プロンプトを入力するか、ネイティブの質問ピッカーに回答すると、監査台帳に human turn（`HUMAN_TURN` イベント）が記録されます。承認（および確認のための質問への回答）は、直前のゲート解決以降に human turn が記録されていなければ拒否されます。また、ステージゲートの承認や変更リクエストには、ステージ開始以降かつゲート表示後に送られたもの、またはエージェントがあなたの回答として指名したメッセージが必要です（承認の場合は、ステージの出力が最後に書き込まれた後に送ったもの。それより前のものは、承認する内容を見ていません）。これが証明するのは在席と順序であり、後から呼び出し元が渡す意思決定テキストの作成者ではありません。信頼できるプロンプトやウィジェットの内容を公開しないハーネスもあります。ピッカーが human turn を記録しないハーネスでは、記録が残るように一度短いメッセージ（例: "approve"）を入力してください。
 
-The human-turn hook is activated only through the dispatcher's hook route;
-it does not authenticate who launched the dispatcher. Hooks and tool calls run
-as the same user, and no harness gives a hook an identity a same-user process
-cannot copy. The runtime-integrity check refuses recognized tool-call routes
-to the hook and its records as defense in depth. The harness's permission model
-and your review of what the agent runs are the outer boundary.
+human-turn フックは、ディスパッチャーのフックルートを通じてのみ有効化されます。
+ディスパッチャーを誰が起動したかは認証しません。フックとツール呼び出しは
+同じユーザーとして実行され、同一ユーザーのプロセスがコピーできないアイデンティティをフックに与える
+ハーネスはありません。ランタイム整合性チェックは、多層防御として、フックとその記録に向かう
+既知のツール呼び出しルートを拒否します。ハーネスの権限モデルと、
+エージェントが実行する内容に対するあなたのレビューが、外側の境界になります。
 
-Automation that submits prompts without a person present must set
-`AIDLC_UNATTENDED=1` in the driving process. The declaration is opt-in because
-only the driver knows whether a prompt is unattended; without it, prompt-submit
-events retain interactive behavior. With it set, every harness withholds the
-authority-bearing `HUMAN_TURN`, so approval and interview gates continue to
-wait. When a person takes over, unset `AIDLC_UNATTENDED` and submit a fresh
-response. Presence-related refusal messages name the flag when it is still set.
+人が不在のままプロンプトを送信する自動化では、駆動するプロセスで
+`AIDLC_UNATTENDED=1` を設定しなければなりません。プロンプトが無人かどうかを知っているのは
+駆動側だけなので、この宣言はオプトインです。設定しない場合、プロンプト送信
+イベントは対話的な振る舞いを維持します。設定すると、すべてのハーネスが権限を伴う
+`HUMAN_TURN` を出さないため、承認ゲートとインタビューゲートは待機し続けます。
+人が引き継ぐときは、`AIDLC_UNATTENDED` の設定を解除して新たに
+応答を送信してください。在席に関する拒否メッセージは、フラグがまだ設定されている場合にそれを名指しします。
 
 ### Approval Gate Flow
 
@@ -237,27 +238,27 @@ flowchart TD
 
 ## The 3-Strike Revision Escape Hatch
 
-If you have requested changes 3 or more times on the same stage, a third option appears:
+同じステージで 3 回以上変更を依頼すると、3 つ目の選択肢が表示されます:
 
-After three rounds of **Request Changes** on the same stage, the question says which revision cycle it is and adds a third option, **Accept as-is** (described as "Approve it as it is and move on").
+同じステージで **Request Changes** を 3 回繰り返すと、質問に何回目の修正サイクルかが示され、3 つ目の選択肢 **Accept as-is**（説明は "Approve it as it is and move on"、つまり「現状のまま承認して先に進む」）が追加されます。
 
-**Accept as-is** approves the stage with its documents as they are and advances the workflow. This prevents infinite revision loops when perfect is the enemy of good.
+**Accept as-is** は、ドキュメントを現状のままにしてステージを承認し、ワークフローを進めます。完璧を求めるあまり良いものが進まなくなる場合に、修正の無限ループを防ぎます。
 
 ### How It Activates
 
-| Revision Cycle | What Happens |
+| 修正サイクル | 何が起こるか |
 |----------------|-------------|
-| 1st | Standard 2-option gate |
-| 2nd | Standard 2-option gate, plus a note: "After one more revision, an 'Accept as-is' option will become available." |
-| 3rd and beyond | 3-option gate with Accept as-is |
+| 1 回目 | 標準の 2 択ゲート |
+| 2 回目 | 標準の 2 択ゲートに加え、注記: "After one more revision, an 'Accept as-is' option will become available."（あと 1 回修正すると、'Accept as-is' の選択肢が利用可能になります。） |
+| 3 回目以降 | Accept as-is を含む 3 択ゲート |
 
-The revision count resets when you move to the next stage. AI-DLC keeps it in its record of the work, not in the chat, so stopping and resuming, or continuing in a new chat, keeps it too.
+修正回数は次のステージに移るとリセットされます。AI-DLC はこれをチャットではなく作業の記録に保持するため、中断して再開した場合や、新しいチャットで続けた場合も維持されます。
 
 ---
 
 ## Add Skipped Stage Option
 
-During **Ideation** and **Inception** phases, the approval gate may include a conditional option to add a previously skipped stage back into the workflow:
+**Ideation** と **Inception** フェーズでは、承認ゲートに、以前スキップしたステージをワークフローに戻すための条件付きの選択肢が含まれることがあります:
 
 ```
 ▸ How would you like to proceed?
@@ -266,72 +267,72 @@ During **Ideation** and **Inception** phases, the approval gate may include a co
   (3) Add Market Research — Include Market Research which was skipped
 ```
 
-This option appears only when:
-- The current stage is in Ideation or Inception
-- A stage ahead was skipped during scope routing
-- The skipped stage is relevant to the current context
+この選択肢が表示されるのは、次の場合だけです:
+- 現在のステージが Ideation または Inception にある
+- スコープのルーティング中に、先にあるステージがスキップされた
+- スキップされたステージが現在のコンテキストに関連している
 
-Selecting this option inserts the skipped stage into the workflow plan. The workflow continues normally through the added stage.
+この選択肢を選ぶと、スキップされたステージがワークフロー計画に挿入されます。ワークフローは追加されたステージを経由して通常どおり続行します。
 
 ---
 
 ## Skipping and Navigating Stages
 
-Beyond the approval gate, you have additional navigation options:
+承認ゲート以外にも、次のナビゲーション手段があります:
 
-| Command | Effect |
+| コマンド | 効果 |
 |---------|--------|
-| `/aidlc --stage <name>` | Jump to a specific stage (intervening stages marked `[S]`) |
-| `/aidlc --phase <name>` | Jump to the start of a phase |
+| `/aidlc --stage <name>` | 特定のステージにジャンプする（間のステージは `[S]` とマークされる） |
+| `/aidlc --phase <name>` | フェーズの先頭にジャンプする |
 
-See [Session Management](11-session-management.md) and [CLI Commands](12-cli-commands.md) for details.
+詳細は [セッション管理](11-session-management.md) と [CLI コマンド](12-cli-commands.md) を参照してください。
 
 ---
 
 ## Editing Files Yourself
 
-You can edit any artifact by hand. What happens next depends on where you are:
+どの成果物も手作業で編集できます。その後どうなるかは、どこにいるかによって異なります:
 
-| When you edit | What you do | What you see |
+| 編集するとき | あなたがすること | 表示される内容 |
 |---|---|---|
-| Answers to a stage's questions | Choose **I'll edit the file**, fill in the `[Answer]:` lines, then tell the agent you are done | The agent reads your answers and carries on from them; when summary confirmation is on, you confirm the summary first |
-| A code plan waiting for approval | Choose **I'll edit the files**, change the plan or test instructions (or write your answer in `code-generation-questions.md`), then tell the agent you are done | Your edited plan is approved as you left it and the build starts. The agent cannot write those files while you edit. If your edit broke the plan's Testing Contract block, the agent repairs it and asks you once to build |
-| An artifact already reviewed in the stage you are on, before its gate | Edit the file, then carry on | Under Guard Policy `relaxed` or `off` (most scopes), you hear one line saying the file changed, the edit is recorded once in the audit trail as `CHANGE_ACCEPTED`, and the run continues. Under `strict`, the old review no longer covers the edited file, so it is reviewed once more, as it is now, before the gate. That extra review happens once: if you edit the file again after it, the agent stops and tells you, and you choose **Request Changes** to start the review over |
-| An artifact from a stage that is already finished | Edit the file, then carry on | Nothing re-runs by itself, and later stages read the file as you left it. See [After a stage is finished](#after-a-stage-is-finished) |
-| Between sessions | Edit the files, then resume with `/aidlc` | The same rules apply the next time the file is checked |
+| ステージの質問への回答 | **I'll edit the file** を選び、`[Answer]:` 行を記入してから、完了したことをエージェントに伝える | エージェントが回答を読み込み、それに基づいて続行する。サマリー確認が有効な場合は、先にサマリーを確認する |
+| 承認待ちのコード計画 | **I'll edit the files** を選び、計画またはテスト手順を変更して（または `code-generation-questions.md` に回答を書いて）から、完了したことをエージェントに伝える | 編集した計画がそのままの状態で承認され、ビルドが始まる。編集中、エージェントはそれらのファイルに書き込めない。編集によって計画の Testing Contract ブロックが壊れた場合は、エージェントが修復し、ビルドしてよいか一度だけ確認する |
+| 現在のステージでレビュー済みの成果物（ゲートの前） | ファイルを編集して続行する | Guard Policy が `relaxed` または `off`（ほとんどのスコープ）の場合、ファイルが変更されたことを伝える 1 行が表示され、編集は監査証跡に `CHANGE_ACCEPTED` として一度記録され、実行が続く。`strict` の場合、以前のレビューは編集後のファイルをカバーしなくなるため、ゲートの前に現在の状態でもう一度レビューされる。この追加レビューは一度だけ行われる。その後さらにファイルを編集すると、エージェントは停止してそれを伝えるので、**Request Changes** を選んでレビューをやり直す |
+| すでに完了したステージの成果物 | ファイルを編集して続行する | 自動的に再実行されるものはなく、後続のステージは編集後のファイルを読み込む。[ステージ完了後](#after-a-stage-is-finished) を参照 |
+| セッションとセッションの間 | ファイルを編集してから `/aidlc` で再開する | 次にファイルがチェックされるときに同じルールが適用される |
 
-When you are told a file changed and the run is continuing, that is the whole record: there is nothing to log by hand. See [Guard Policy](13-customization.md#guard-policy) for what `strict`, `relaxed`, and `off` do, and [Plan approval](13-customization.md#plan-approval) for the plan stop itself.
+ファイルが変更されたことが伝えられ、実行が続いている場合は、それで記録は完結しています。手作業で記録すべきものはありません。`strict`、`relaxed`、`off` の動作については [Guard Policy](13-customization.md#guard-policy) を、計画での停止そのものについては [計画の承認](13-customization.md#plan-approval) を参照してください。
 
 ### After a stage is finished
 
-An edit to a finished stage's files is not reviewed or approved again unless you ask for it:
+完了したステージのファイルを編集しても、あなたが求めない限り、再びレビューや承認が行われることはありません:
 
-- **What warns you.** Under Guard Policy `strict`, when you edit one of the stage documents AIDLC tracks for a finished stage, the next step says once which finished stage is now behind and what to say to redo it; under `relaxed` and `off` (the default in most plans) an edit is taken as yours: the next step raises no stage as behind, and you are told once only when the file you edited was a reviewed document or a confirmed questions file. A tracked document that has gone missing is raised under every policy. `/aidlc --status` lists the stages affected downstream. Moving, renaming or copying the project folder changes none of those documents, so it brings no warning (see the [Artifacts Reference](14-artifacts-reference.md) for when it still can). The warning is advice, not a stop. A stage finished without a validation record (for example, by an older AIDLC release) gets no warning, and `/aidlc --status` does not list it.
-- **What does not.** Your application code is not tracked this way, so changing it after Code Generation raises no warning.
-- **Getting it checked again.** Jump back with `/aidlc --stage <name>` to the earliest affected stage (Code Generation for application code). That reopens it and every later stage in your plan. The files stay, so each reopened stage that finds its earlier files asks you to **Keep** them, **Modify** them, or **Redo from scratch**. Keep skips regenerating the files, not the checks: any review or approval the stage needs still happens. Choose Modify or Redo where your change should be carried through. Code Generation's review covers only the application files listed in a Unit's source manifest, so a file you added or moved by hand is not reviewed until it is listed there. When you choose Modify, name the files you added or moved and the Unit they belong to. Work without Units (for example a bugfix or refactor scope) has no source manifest, so check hand edits to application code yourself before you approve. Construction checkpoints you set to run automatically stay automatic.
+- **警告されるもの。** Guard Policy が `strict` の場合、完了したステージについて AIDLC が追跡しているステージドキュメントの 1 つを編集すると、次のステップで、どの完了済みステージが遅れた状態になったか、またやり直すには何と言えばよいかが一度だけ伝えられます。`relaxed` と `off`（ほとんどの計画でのデフォルト）では、編集はあなたの意図によるものとして扱われます。次のステップではどのステージも遅れているとは示されず、編集したファイルがレビュー済みのドキュメントか確認済みの質問ファイルだった場合にのみ、一度だけ伝えられます。追跡対象のドキュメントが見つからなくなった場合は、どのポリシーでも示されます。`/aidlc --status` は、下流で影響を受けるステージを一覧表示します。プロジェクトフォルダーの移動、名前変更、コピーはそれらのドキュメントを一切変更しないため、警告は出ません（それでも警告が出る場合については [成果物リファレンス](14-artifacts-reference.md) を参照）。警告は助言であり、停止ではありません。検証記録なしで完了したステージ（たとえば古い AIDLC リリースによるもの）には警告が出ず、`/aidlc --status` にも表示されません。
+- **警告されないもの。** アプリケーションコードはこの方法では追跡されないため、Code Generation の後に変更しても警告は出ません。
+- **再チェックを受けるには。** `/aidlc --stage <name>` で、影響を受ける最も早いステージ（アプリケーションコードの場合は Code Generation）に戻ります。そのステージと、計画内のそれ以降のすべてのステージが再オープンされます。ファイルは残るため、以前のファイルを見つけた各再オープンステージでは、それらを **Keep**、**Modify**、**Redo from scratch** のどれにするか尋ねられます。Keep で省略されるのはファイルの再生成であり、チェックではありません。ステージに必要なレビューや承認は引き続き行われます。変更を後続に反映させたい場合は Modify か Redo を選んでください。Code Generation のレビューは、ユニットのソースマニフェストに記載されたアプリケーションファイルだけを対象とするため、手作業で追加・移動したファイルは、そこに記載されるまでレビューされません。Modify を選ぶときは、追加・移動したファイルと、それが属するユニットを指定してください。ユニットを使わない作業（たとえば bugfix や refactor のスコープ）にはソースマニフェストがないため、承認する前に、アプリケーションコードへの手作業の編集を自分で確認してください。自動実行に設定した Construction のチェックポイントは、自動のまま維持されます。
 
 ---
 
 ## Progress Tracking
 
-After an approval that moves on to another stage, a progress line appears. From the same run:
+別のステージに進む承認の後、進捗行が表示されます。同じ実行例から:
 
 ```text
 Progress: 1 of 19 stages done. Next: Feasibility & Constraints.
 ```
 
-This shows:
-- Progress across the stages your plan runs after Initialization (the count you
-  were shown when the work started)
-- The name of the next stage
+これには次の内容が表示されます:
+- 計画が Initialization の後に実行するステージ全体での進捗（作業開始時に
+  示された数）
+- 次のステージの名前
 
-On a shorter plan the numbers are that plan's own.
+より短い計画では、その計画自体の数が表示されます。
 
 ---
 
 ## Next Steps
 
-- [Your First Workflow](02-your-first-workflow.md) — see interaction modes in context
-- [State and Audit](10-state-and-audit.md) — how decisions are tracked
-- [Session Management](11-session-management.md) — resume, redo, jump
-- [Glossary](glossary.md) — terminology reference
+- [最初のワークフロー](02-your-first-workflow.md) — 実際の流れの中でインタラクションモードを確認する
+- [状態と監査](10-state-and-audit.md) — 意思決定がどのように追跡されるか
+- [セッション管理](11-session-management.md) — 再開、やり直し、ジャンプ
+- [用語集](glossary.md) — 用語のリファレンス

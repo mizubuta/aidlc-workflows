@@ -1,45 +1,44 @@
 # Writing a Vision Document
 
-A vision document says **what to build, for whom, and why**, and where the
-first release stops. It is the main input to a new workflow: Intent Capture,
-Scope Definition and Requirements Analysis plan from it, so the questions they
-ask become quick checks of what you already wrote.
+ビジョンドキュメントは、**何を、誰のために、なぜ構築するのか**、そして
+最初のリリースがどこまでかを示すものです。新しいワークフローへの主要な入力です。Intent Capture、
+Scope Definition、Requirements Analysis はこれをもとに計画を立てるため、各ステージが
+尋ねる質問は、あなたがすでに書いた内容の簡単な確認になります。
 
-You do not need one to start. `/aidlc Build a REST API for inventory
-management` is a complete request. A vision document pays off when several
-people need to agree on the goal first, when the scope is larger than a few
-sentences, or when you are running a workshop and want the first hour spent on
-decisions rather than on questions.
+開始するのにビジョンドキュメントは必須ではありません。`/aidlc Build a REST API for inventory
+management` だけでも完全なリクエストです。ビジョンドキュメントが効果を発揮するのは、複数の
+人がまず目標について合意する必要がある場合、スコープが数文に収まらないほど大きい場合、
+あるいはワークショップを運営していて、最初の 1 時間を質問ではなく
+意思決定に使いたい場合です。
 
-The technical counterpart, the stack, the tools and what is not allowed, is the
-[technical environment document](technical-environment-guide.md).
+技術面の対になるドキュメント（技術スタック、ツール、禁止事項）は、
+[技術環境ドキュメント](technical-environment-guide.md) です。
 
 ---
 
 ## Giving it to AI-DLC
 
-Save the document in the project (Markdown or plain text works best) and name
-it in your first request:
+ドキュメントをプロジェクト内に保存し（Markdown またはプレーンテキストが最適です）、
+最初のリクエストでその名前を指定します:
 
 ```text
 /aidlc Read ./vision.md and build what it describes
 ```
 
-Codex CLI uses `$aidlc` instead of `/aidlc`. Relative paths resolve from the
-project root. You can also paste the content into the request between
-`<document>` and `</document>`, or name a PDF or Word file. See
-[Starting from an existing document](../02-your-first-workflow.md#starting-from-an-existing-document)
-for how each one is read and what happens when the name matches more than one
-file.
+Codex CLI では `/aidlc` の代わりに `$aidlc` を使います。相対パスは
+プロジェクトルートから解決されます。内容をリクエストに貼り付けて
+`<document>` と `</document>` で囲むことも、PDF や Word ファイルを指定することもできます。それぞれの読み込み方法と、名前が複数の
+ファイルに一致した場合の動作については、
+[既存のドキュメントから始める](../02-your-first-workflow.md#starting-from-an-existing-document)
+を参照してください。
 
-The workflow treats the document as data, not as instructions: it plans from
-it, and every approval stays yours to give. Intent Capture asks its questions
-anyway; the ones your document already answers are quick to confirm, and its
-open questions come up early. In a Claude Code run on a short vision document
-whose only open question was about per-warehouse counts, Intent Capture added a
-question of its own for it (shortened, drawing characters shown as plain text,
-and `[Product owner]` added in front of the question text to show where the
-label goes):
+ワークフローは、ドキュメントを指示ではなくデータとして扱います。ドキュメントをもとに計画を立てますが、
+すべての承認を与えるのは引き続きあなたです。Intent Capture はいずれにしても質問を行います。
+ドキュメントですでに回答されている質問はすぐに確認でき、ドキュメント内の
+未解決の質問は早い段階で取り上げられます。短いビジョンドキュメントを使った Claude Code での実行で、
+唯一の未解決の質問が倉庫ごとの在庫数に関するものだったとき、Intent Capture はそれについて
+独自の質問を追加しました（短縮し、罫線文字はプレーンテキストで表示し、
+ラベルが入る位置を示すために質問文の前に `[Product owner]` を加えています）:
 
 ```text
  Warehouses
@@ -55,7 +54,7 @@ label goes):
 
 ## The short version
 
-If you write nothing else, write these four things:
+ほかに何も書かないとしても、次の 4 つは書いてください:
 
 ```text
 1. One paragraph saying what you are building and for whom
@@ -64,9 +63,9 @@ If you write nothing else, write these four things:
 4. Open questions: things you already know are uncertain or undecided
 ```
 
-Open questions are optional but valuable. Intent Capture and Requirements
-Analysis turn them into questions early, instead of the gaps surfacing as
-surprises during design.
+未解決の質問は任意ですが、価値があります。Intent Capture と Requirements
+Analysis はそれらを早い段階で質問にします。そうしなければ、設計中に
+抜けが想定外の問題として表面化することになります。
 
 ### For work on an existing codebase
 
@@ -79,9 +78,9 @@ surprises during design.
 6. Open questions
 ```
 
-"What must not change" matters most. Reverse Engineering reads your existing
-code, but only you know which parts are off limits; saying so keeps the plan
-away from them.
+最も重要なのは「変更してはならないもの」です。Reverse Engineering は既存の
+コードを読みますが、どの部分に手を触れてはならないかを知っているのはあなただけです。それを明記することで、計画が
+それらに近づかないようになります。
 
 ---
 
@@ -89,8 +88,8 @@ away from them.
 
 ### 1. Executive Summary
 
-Three to five sentences. Anyone who reads only this section should know what
-the project is, who it serves, and why it exists.
+3〜5 文で書きます。このセクションだけを読んだ人でも、
+プロジェクトが何であり、誰のためのもので、なぜ存在するのかがわかるようにします。
 
 ```markdown
 ## Executive Summary
@@ -100,7 +99,7 @@ the project is, who it serves, and why it exists.
 [approach or difference]. The expected outcome is [measurable result].
 ```
 
-Example:
+例:
 
 ```markdown
 ## Executive Summary
@@ -141,9 +140,9 @@ negotiable.]
 
 ### 3. Full Scope Vision
 
-Everything the product could become at maturity. This part is deliberately
-aspirational: it helps the workflow see where the first release is heading,
-without committing to build it.
+製品が成熟したときになりうるすべての姿です。この部分は意図的に
+理想を描くものです。構築を約束することなく、最初のリリースがどこへ向かっているのかを
+ワークフローが把握する助けになります。
 
 ```markdown
 ## Full Scope Vision
@@ -176,8 +175,8 @@ product is fully realised.]
 
 ### 4. First Release (MVP) Scope
 
-The smallest set of features that delivers measurable value. If a feature is
-not listed here, it is not in the first release.
+測定可能な価値を提供する、最小限の機能のセットです。ここに記載されていない機能は、
+最初のリリースには含まれません。
 
 ```markdown
 ## MVP Scope
@@ -239,42 +238,42 @@ sentences.]
 
 ## Writing guidelines
 
-Do:
+すべきこと:
 
-- Be specific and measurable. "Cut order processing time by 30%" beats "make
-  it faster".
-- Keep the full vision and the first release apart. Mixing them is how scope
-  creeps.
-- Write the out-of-scope list. It is worth as much as the in-scope list.
-- Write for the team, not for a sales deck.
-- State assumptions so they can be challenged.
-- Give success criteria someone can actually test.
+- 具体的かつ測定可能にする。「注文処理時間を 30% 短縮する」は「もっと
+  速くする」より優れています。
+- 完全なビジョンと最初のリリースを分けておく。両者を混ぜることが、スコープが
+  膨らむ原因です。
+- スコープ外のリストを書く。スコープ内のリストと同じだけの価値があります。
+- 営業資料のためではなく、チームのために書く。
+- 異議を唱えられるよう、前提を明記する。
+- 実際にテストできる成功基準を示す。
 
-Do not:
+すべきでないこと:
 
-- Use words like "world-class", "seamless" or "intuitive" without a number
-  behind them.
-- List technologies or implementation details. They belong in the
-  [technical environment document](technical-environment-guide.md).
-- Skip the first-release section. Every project needs a starting boundary.
-- Assume the reader knows the business. Write the problem statement even when
-  it feels obvious.
+- 「世界クラスの」「シームレスな」「直感的な」といった言葉を、裏付けとなる数値なしに
+  使う。
+- 技術や実装の詳細を列挙する。それらは
+  [技術環境ドキュメント](technical-environment-guide.md) に書くべきものです。
+- 最初のリリースのセクションを省略する。どのプロジェクトにも開始時の境界が必要です。
+- 読み手がビジネスを知っていると想定する。自明に思えるときでも、
+  問題記述は書いてください。
 
 ---
 
 ## Where each section is used
 
-| Section | Stage | How it is used |
+| セクション | ステージ | 使われ方 |
 |---------|-------|----------------|
-| Executive Summary | Intent Capture & Framing | The problem, the users and the expected outcome |
-| Business Context | Intent Capture & Framing, Requirements Analysis | The questions asked and how deep the requirements go |
-| Full Scope Vision | Scope Definition, User Stories, Domain Design | Where the product is heading; personas and components |
-| First Release Scope | Scope Definition, Requirements Analysis | The boundary of this piece of work |
-| Features In / Out | Requirements Analysis, Units Generation, Code Generation | What gets built in this piece of work |
-| Risks and Dependencies | Feasibility & Constraints, NFR Requirements | Risk and constraint assessment |
-| Open Questions | Intent Capture & Framing, Requirements Analysis | Asked early as clarifying questions |
+| Executive Summary | Intent Capture & Framing | 問題、ユーザー、期待される成果 |
+| Business Context | Intent Capture & Framing, Requirements Analysis | 尋ねる質問と、要件をどこまで深く掘り下げるか |
+| Full Scope Vision | Scope Definition, User Stories, Domain Design | 製品の向かう先、ペルソナとコンポーネント |
+| First Release Scope | Scope Definition, Requirements Analysis | 今回の作業の境界 |
+| Features In / Out | Requirements Analysis, Units Generation, Code Generation | 今回の作業で何を構築するか |
+| Risks and Dependencies | Feasibility & Constraints, NFR Requirements | リスクと制約の評価 |
+| Open Questions | Intent Capture & Framing, Requirements Analysis | 明確化のための質問として早い段階で尋ねられる |
 
-Which of these stages run depends on the plan you approve: an Express or
-Bugfix plan runs only a few of them. See
-[Phases and Stages](../04-phases-and-stages.md) for every stage and
-[Workflow Profiles](../workflow-profiles.md) for the plans.
+これらのステージのうちどれが実行されるかは、あなたが承認する計画によって決まります。Express や
+Bugfix の計画では、そのうちのごく一部しか実行されません。すべてのステージについては
+[フェーズとステージ](../04-phases-and-stages.md) を、計画については
+[ワークフロープロファイル](../workflow-profiles.md) を参照してください。

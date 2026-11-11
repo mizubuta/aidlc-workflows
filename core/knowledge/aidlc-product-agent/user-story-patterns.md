@@ -1,54 +1,54 @@
 # User Story Patterns
 
 ## Purpose
-Write user stories that are small enough to deliver quickly, valuable enough to justify the work, and clear enough to test without ambiguity.
+素早くデリバリーできるほど小さく、作業を正当化できるほど価値があり、曖昧さなくテストできるほど明確なユーザーストーリーを書く。
 
 ## Standard Format
 ```
 As a [role], I want to [action], so that [benefit].
 ```
 
-The "so that" clause is the most important part — it forces articulation of value. If you cannot state the benefit, question whether the story is needed.
+「so that」節が最も重要な部分である — 価値を言語化することを強制するからだ。便益を述べられないなら、そのストーリーが必要かどうかを疑う。
 
 ## INVEST Criteria
 
-Every story should satisfy all six criteria:
+すべてのストーリーは 6 つの基準をすべて満たすべきである:
 
-- **Independent** — Can be developed and delivered without depending on other stories
-- **Negotiable** — Details are open to discussion; the story is not a contract
-- **Valuable** — Delivers value to the user or business (not "set up database")
-- **Estimable** — Team can reasonably estimate the effort required
-- **Small** — Completable within a single sprint (ideally 1-3 days of work)
-- **Testable** — Clear acceptance criteria define "done" without ambiguity
+- **Independent（独立している）** — 他のストーリーに依存せずに開発・デリバリーできる
+- **Negotiable（交渉可能である）** — 詳細は議論の余地がある。ストーリーは契約ではない
+- **Valuable（価値がある）** — ユーザーまたはビジネスに価値をもたらす（「データベースをセットアップする」ではない）
+- **Estimable（見積もり可能である）** — 必要な工数をチームが妥当に見積もれる
+- **Small（小さい）** — 1 スプリント内で完了できる（理想は 1〜3 日分の作業）
+- **Testable（テスト可能である）** — 明確な受け入れ基準が「完了」を曖昧さなく定義している
 
 ## Story Splitting Patterns
 
-When a story is too large, split it using one of these patterns:
+ストーリーが大きすぎる場合は、次のいずれかのパターンで分割する:
 
 ### 1. Workflow Steps
-Split a multi-step process into individual steps.
-- "User completes checkout" becomes: add to cart, enter shipping, enter payment, confirm order, receive confirmation
+複数ステップのプロセスを個々のステップに分割する。
+- 「ユーザーがチェックアウトを完了する」は次のようになる: カートに追加、配送先の入力、支払い情報の入力、注文の確定、確認通知の受け取り
 
 ### 2. Business Rule Variations
-Isolate each business rule into its own story.
-- "Calculate shipping cost" becomes: flat rate domestic, weight-based domestic, international shipping, free shipping threshold
+各ビジネスルールをそれぞれ独立したストーリーに切り出す。
+- 「送料を計算する」は次のようになる: 国内一律料金、国内重量制、国際配送、送料無料のしきい値
 
 ### 3. Data Variations
-Split by the type or complexity of data handled.
-- "Import customer data" becomes: import from CSV, import from API, import with deduplication, import with validation errors
+扱うデータの種類や複雑さで分割する。
+- 「顧客データをインポートする」は次のようになる: CSV からのインポート、API からのインポート、重複排除付きのインポート、バリデーションエラーを伴うインポート
 
 ### 4. Interface Variations
-Split by platform or interaction mode.
-- "User views dashboard" becomes: desktop layout, mobile responsive layout, keyboard-accessible version
+プラットフォームや操作モードで分割する。
+- 「ユーザーがダッシュボードを閲覧する」は次のようになる: デスクトップ向けレイアウト、モバイル対応のレスポンシブレイアウト、キーボード操作に対応した版
 
 ### 5. Operations / CRUD
-Split create, read, update, and delete into separate stories.
-- Start with Read (simplest, immediate value), then Create, then Update, then Delete
+作成、参照、更新、削除を別々のストーリーに分割する。
+- 参照（最も単純で、すぐに価値が出る）から始め、次に作成、更新、削除の順に進める
 
 ### 6. Performance / Scale
-Separate "make it work" from "make it fast."
-- Story 1: "User searches products (basic query, < 1000 results)"
-- Story 2: "User searches products with sub-200ms response across 1M+ catalog"
+「動くようにする」と「速くする」を分ける。
+- ストーリー 1: 「ユーザーが商品を検索する（基本的なクエリ、結果 1000 件未満）」
+- ストーリー 2: 「ユーザーが 100 万件以上のカタログ全体を対象に、200ms 未満の応答で商品を検索する」
 
 ## Acceptance Criteria: Given/When/Then
 
@@ -80,44 +80,44 @@ Then I see a validation error and the password is not changed
 ```
 
 ### Tips
-- Write 3-6 acceptance criteria per story — fewer means ambiguity, more means the story is too large
-- Always include the sad path (error, edge case, timeout) not just the happy path
-- Acceptance criteria are testable assertions — QA should be able to automate them directly
+- 受け入れ基準はストーリーごとに 3〜6 個書く — 少なすぎれば曖昧さが残り、多すぎればストーリーが大きすぎることを意味する
+- ハッピーパスだけでなく、必ずサッドパス（エラー、エッジケース、タイムアウト）も含める
+- 受け入れ基準はテスト可能なアサーションである — QA がそのまま自動化できるようにする
 
 ## Anti-Patterns to Avoid
 
 ### Too Large (Epic in Disguise)
-- **Symptom**: "As a user, I want a complete reporting system"
-- **Fix**: Split into individual reports, then split each report by filter/export/schedule
+- **症状**: 「ユーザーとして、完全なレポーティングシステムがほしい」
+- **対処**: 個々のレポートに分割し、さらに各レポートをフィルター／エクスポート／スケジュールで分割する
 
 ### Too Technical (Implementation Story)
-- **Symptom**: "As a developer, I want to migrate the database to PostgreSQL"
-- **Fix**: Reframe around user value: "As a user, I want search results in under 200ms" (which requires the migration)
+- **症状**: 「開発者として、データベースを PostgreSQL に移行したい」
+- **対処**: ユーザー価値を軸に捉え直す: 「ユーザーとして、検索結果を 200ms 未満で得たい」（その実現に移行が必要になる）
 
 ### No Value Statement
-- **Symptom**: "As a user, I want to click the submit button" — no "so that"
-- **Fix**: Ask "why does the user care?" until you reach a meaningful benefit
+- **症状**: 「ユーザーとして、送信ボタンをクリックしたい」 — 「so that」がない
+- **対処**: 意味のある便益にたどり着くまで「なぜユーザーはそれを気にするのか？」と問い続ける
 
 ### Compound Stories (AND in the Title)
-- **Symptom**: "As a user, I want to search AND filter AND sort results"
-- **Fix**: Split into three stories — search, filter, sort — each independently deliverable
+- **症状**: 「ユーザーとして、結果を検索し、かつ絞り込み、かつ並べ替えたい」
+- **対処**: 検索、絞り込み、並べ替えの 3 つのストーリーに分割し、それぞれを独立してデリバリー可能にする
 
 ### Solution-Prescriptive
-- **Symptom**: "As a user, I want a dropdown menu with checkboxes"
-- **Fix**: Describe the need, not the UI: "As a user, I want to select multiple categories to narrow results"
+- **症状**: 「ユーザーとして、チェックボックス付きのドロップダウンメニューがほしい」
+- **対処**: UI ではなくニーズを記述する: 「ユーザーとして、結果を絞り込むために複数のカテゴリを選択したい」
 
 ## Story Mapping
 
-Organize stories into a two-dimensional map:
-- **Horizontal axis**: User journey steps (left to right)
-- **Vertical axis**: Priority (top = essential, bottom = nice-to-have)
+ストーリーを 2 次元のマップに整理する:
+- **横軸**: ユーザージャーニーのステップ（左から右へ）
+- **縦軸**: 優先度（上 = 必須、下 = あれば望ましい）
 
-Draw a horizontal line across the map to define your MVP — everything above the line ships first. This reveals gaps in the journey that individual story lists miss.
+マップを横切る水平線を引いて MVP を定義する — 線より上にあるものすべてを最初にリリースする。これにより、個々のストーリーの一覧では見落とされるジャーニー上の抜けが明らかになる。
 
 ## Definition of Ready Checklist
-- [ ] Story follows standard format with clear value statement
-- [ ] INVEST criteria satisfied
-- [ ] 3-6 acceptance criteria written in Given/When/Then
-- [ ] Dependencies identified and resolved or accepted
-- [ ] UX design reviewed (if UI-facing)
-- [ ] Team has estimated the story
+- [ ] ストーリーが明確な価値記述を含む標準フォーマットに従っている
+- [ ] INVEST 基準を満たしている
+- [ ] Given/When/Then 形式で 3〜6 個の受け入れ基準が書かれている
+- [ ] 依存関係が特定され、解消済みまたは受容済みである
+- [ ] UX デザインがレビュー済みである（UI に関わる場合）
+- [ ] チームがストーリーを見積もり済みである

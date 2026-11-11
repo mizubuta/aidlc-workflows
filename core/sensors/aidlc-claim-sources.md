@@ -22,107 +22,98 @@ timeout_seconds: 300
 
 # claim-sources sensor
 
-Checks the existing Intent Capture deliverables as a set when they are handed
-to their review, and again when the stage enters its approval gate.
+既存の Intent Capture の成果物を、レビューに引き渡されるときに1つのまとまりとして検査し、
+ステージが承認ゲートに入るときにも再度検査する。
 
-For each deliverable, the sensor verifies:
+各成果物について、センサーは次を検証する:
 
-- a `## Assumptions & Open Questions` section exists
-- every substantive paragraph, list item, and table data row has an inline
-  `[desc]`, `[scope]`, `[Q<n>]`, `[memory:<id>]`, or `[assumption]` tag
-- source-register entries are visible Markdown list items; `[desc]` exactly
-  matches the authoritative directions derived from committed
-  `project-description.json` (or the legacy state field), `[scope]` exactly
-  matches `aidlc-state.md`, and memory entries name the active space's
-  stage-loaded `org.md`, `team.md`, or `project.md` and exactly match a visible
-  rule under the cited H2
-- question tags resolve to visible filled answers in the sibling
-  `intent-capture-questions.md`
-- when the initial description carries a pasted document (any `<document>` or
-  `</document>` marker), deliverables cannot use `[desc]`; request and document
-  claims require confirmed `[Q<n>]`
-- `[scope]` grounds claims only in a workflow-selected Initial Scope Signal
-- `[assumption]` appears only in the assumptions section
-- retained assumptions exactly match entries under an
-  `## Assumption Confirmation` the person accepted: the answer the agent
-  recorded to that question (`log answer` after `log decision
-  --question-kind assumption-confirmation`), never the file's answer line;
-  with no such question on record, nothing is said about acceptance
+- `## Assumptions & Open Questions` セクションが存在すること
+- 実質的な段落、リスト項目、表のデータ行のすべてに、インラインの
+  `[desc]`、`[scope]`、`[Q<n>]`、`[memory:<id>]`、`[assumption]` のいずれかのタグがあること
+- ソース登録簿の項目が目に見える Markdown のリスト項目であること。`[desc]` は、コミット済みの
+  `project-description.json`（またはレガシーの状態フィールド）から導かれた正式な指示と完全に一致し、`[scope]` は
+  `aidlc-state.md` と完全に一致し、メモリの項目はアクティブなスペースの、ステージで読み込まれた
+  `org.md`、`team.md`、`project.md` のいずれかを指定し、引用された H2 の下にある目に見える
+  ルールと完全に一致すること
+- 質問タグが、同じ場所にある `intent-capture-questions.md` の、目に見える記入済みの回答に
+  解決されること
+- 初期の説明に貼り付けられたドキュメント（`<document>` または
+  `</document>` のマーカー）が含まれる場合、成果物は `[desc]` を使えないこと。依頼とドキュメントに由来する
+  主張には、確認済みの `[Q<n>]` が必要であること
+- `[scope]` が主張の根拠となるのは、ワークフローで選択された Initial Scope Signal に限られること
+- `[assumption]` が前提のセクションにのみ現れること
+- 保持された前提が、利用者が受け入れた
+  `## Assumption Confirmation` の下の項目と完全に一致すること。基準は、エージェントがその質問に対して
+  記録した回答（`log decision
+  --question-kind assumption-confirmation` の後の `log answer`）であり、ファイルの回答行では決してない。
+  そのような質問が記録されていない場合、受け入れについては何も言わない
 
-Contract headings (`Sources`, `Q<n>`, `Assumption Confirmation`,
-`Assumptions & Open Questions`, `Initial Scope Signal`) are recognised by this
-sensor with or without a leading decoration: a run of fully-qualified emoji,
-optionally joined by U+200D, followed by whitespace, so `## ℹ️ Sources` names
-the `Sources` section. A bare text-presentation symbol such as `©`, `™` or `▶`
-is not decoration. Findings quote the heading as written. Two headings keep
-exact matching because decoration must never widen what passes: `## Review`,
-whose content the sensor skips, and the H2 a `[memory:<id>]` source cites,
-which names the memory file's exact heading. The Consolidated Summary
-Confirmation digest reads its `Q<n>` and `Assumption Confirmation` headings
-through the same rule, before and after its checkpoint.
+契約上の見出し（`Sources`、`Q<n>`、`Assumption Confirmation`、
+`Assumptions & Open Questions`、`Initial Scope Signal`）は、先頭の装飾の有無にかかわらず、この
+センサーに認識される。装飾とは、完全修飾された絵文字の並び（U+200D で結合されていてもよい）に
+空白が続くものであり、したがって `## ℹ️ Sources` は `Sources` セクションを指す。`©`、`™`、`▶` のような
+テキスト表示の記号単体は装飾ではない。検出事項では見出しを書かれたとおりに引用する。2つの見出しは
+完全一致のままとする。装飾によって合格する範囲が広がってはならないからである。1つは `## Review` で、
+その内容はセンサーが読み飛ばす。もう1つは `[memory:<id>]` ソースが引用する H2 で、
+これはメモリファイルの見出しを正確に指定する。Consolidated Summary
+Confirmation のダイジェストは、その `Q<n>` と `Assumption Confirmation` の見出しを、
+チェックポイントの前後で同じ規則によって読む。
 
-The sensor reads block structure and link reference definitions through the
-built-in `Bun.markdown` CommonMark/GFM parser. Where that parser accepts a link
-reference destination CommonMark rejects (an unbalanced parenthesis or one
-nested more than 32 deep, `<` inside angle brackets, an ASCII control
-character, a backslash before anything but ASCII punctuation, or text after the
-destination that cannot open a title), the line stays claim text, because a
-conforming renderer shows it. It excludes scaffolding, fenced code, code spans
-(at the parser's exact columns), HTML comments, and any legacy reviewer-added
-`## Review` content still embedded in an artifact.
-Indented code remains inspected as claim text by sensor policy, and a nonblank
-line the parser cannot place is read as its own claim.
-Paragraph continuations stay
-in the same claim block; a new list item starts a new block. Each GFM table data
-row is a separate claim, while its header and delimiter are scaffolding.
-It validates citation shape and resolution only; the stage's adversarial
-reviewer judges whether the cited source actually supports the claim.
+センサーは、組み込みの `Bun.markdown` CommonMark/GFM パーサーによってブロック構造とリンク参照定義を読む。
+CommonMark が拒否するリンク参照先をそのパーサーが受け入れる場合（対応の取れない括弧、または
+32 段より深く入れ子になった括弧、山括弧内の `<`、ASCII 制御文字、ASCII の句読点以外の前に置かれた
+バックスラッシュ、参照先の後にタイトルを開始できないテキストがある場合）、その行は主張のテキストのままとなる。
+準拠したレンダラーはそれを表示するからである。足場（scaffolding）、フェンス付きコード、コードスパン
+（パーサーが示す正確な列範囲）、HTML コメント、そして成果物にまだ埋め込まれている、レガシーのレビュアーが追加した
+`## Review` の内容は除外する。
+インデントされたコードは、センサーの方針により主張のテキストとして検査され、パーサーが配置できない
+空でない行は、それ自体が1つの主張として読まれる。
+段落の継続行は同じ主張ブロックにとどまり、新しいリスト項目は新しいブロックを開始する。GFM の表の各データ
+行はそれぞれ別の主張であり、ヘッダー行と区切り行は足場である。
+このセンサーが検証するのは引用の形式と解決だけである。引用されたソースが実際に主張を裏付けているかどうかは、
+ステージの敵対的レビュアーが判断する。
 
-Every HTML block (CommonMark kinds 1 to 7) supplies the text it renders, as raw
-HTML text rather than Markdown headings, definitions, links, or code. Comments,
-processing instructions, declarations, CDATA, and hidden elements (`script`,
-`style`, `pre`, `template`, `code`, a `hidden` or `aria-hidden` attribute, or a
-`display:none` or `visibility:hidden` style, quoted or not) render nothing, so a
-block made only of them is not a claim; text after a comment or closing tag on
-the block's last line is visible and is a claim. Fence, comment, and
-code-span syntax inside those blocks cannot change their Markdown extent:
-backticks are literal, while actual HTML comments and hidden elements or
-attributes still cannot ground a claim. A visible literal `[Q1]` in a `div`
-can ground its claim; `[Q1]: /url` in that block never defines a Markdown link.
-Raw HTML content cannot open a control section or supply an answer tag in the
-questions file.
+すべての HTML ブロック（CommonMark の種類 1〜7）は、レンダリングされるテキストを、Markdown の見出し、定義、
+リンク、コードとしてではなく、生の HTML テキストとして提供する。コメント、
+処理命令、宣言、CDATA、および非表示の要素（`script`、
+`style`、`pre`、`template`、`code`、`hidden` または `aria-hidden` 属性、あるいはクォートの有無を問わず
+`display:none` または `visibility:hidden` のスタイル）は何もレンダリングしないため、
+それらだけからなるブロックは主張ではない。ブロックの最終行でコメントや閉じタグの後に続くテキストは
+表示されるため、主張である。それらのブロック内のフェンス、コメント、
+コードスパンの構文は、Markdown としての範囲を変えられない。
+バッククォートは文字どおりに扱われる一方、実際の HTML コメントや非表示の要素・属性は
+引き続き主張の根拠にはなれない。`div` 内の目に見える文字どおりの `[Q1]` は
+その主張の根拠となり得る。そのブロック内の `[Q1]: /url` は決して Markdown のリンクを定義しない。
+生の HTML の内容は、質問ファイルで制御セクションを開始したり回答タグを提供したりできない。
 
-Under a deliverable's `## Sources`, the exact single-line declaration
-``- [scope] Workflow-selected scope: `<scope>`.`` is metadata only when its
-scope matches the validated questions register and authoritative workflow state.
-The `[scope]` label must remain visible literal text, not a Markdown link.
-This exception applies only to that complete declaration: wrong values,
-malformed or unregistered declarations, appended text, neighboring claims, and
-other source tags still receive the normal checks. A `Sources` heading never
-exempts an entire section or makes unsupported content valid.
+成果物の `## Sources` の下で、正確に1行の宣言
+``- [scope] Workflow-selected scope: `<scope>`.`` は、その scope が検証済みの質問登録簿と
+正式なワークフローの状態に一致する場合に限り、メタデータとして扱われる。
+`[scope]` ラベルは、Markdown のリンクではなく、目に見える文字どおりのテキストのままでなければならない。
+この例外は、その宣言全体にのみ適用される。誤った値、
+不正な形式や未登録の宣言、追記されたテキスト、隣接する主張、
+その他のソースタグは、引き続き通常の検査を受ける。`Sources` の見出しが、セクション全体を
+検査対象外にしたり、裏付けのない内容を有効にしたりすることは決してない。
 
-A tag counts when the rendered document shows it as literal text. Bracket pairs
-resolve as Markdown links only against a definition parsed from the original
-document, including definitions nested in containers and multiline definitions.
-Thus `[Q1][Q2]` remains two visible tags when neither reference resolves, while
-`[Q1]` in Markdown prose with a matching `[Q1]: /url` definition is a link and
-grounds nothing. Definition-shaped lines that the parser identifies as prose
-remain claim text: a definition cannot interrupt a paragraph, and a nested
-ordered list not starting at `1` cannot interrupt it either.
+タグが数えられるのは、レンダリングされたドキュメントでそれが文字どおりのテキストとして表示される場合である。
+括弧の組が Markdown のリンクとして解決されるのは、元のドキュメントから解析された定義に対してのみであり、
+コンテナ内に入れ子になった定義や複数行の定義も含まれる。
+したがって `[Q1][Q2]` は、どちらの参照も解決されない場合は2つの目に見えるタグのままである一方、
+Markdown の散文中の `[Q1]` に対応する `[Q1]: /url` の定義がある場合、それはリンクであり、
+何の根拠にもならない。定義の形をしていても、パーサーが散文と判断した行は
+主張のテキストのままである。定義は段落を中断できず、
+`1` から始まらない入れ子の番号付きリストも段落を中断できない。
 
-Accepted assumptions use the same parser-backed claim blocks within
-`## Assumption Confirmation`. Only list-item entries carrying `[assumption]`
-count; the two fixed option lines and `[Answer]:` are scaffolding. Wrapped or
-lazy-continuation text belongs to the whole entry, so a shorter confirmation
-cannot accept a longer retained assumption.
+受け入れられた前提には、`## Assumption Confirmation` 内で同じパーサーに基づく主張ブロックを用いる。
+数えられるのは `[assumption]` を持つリスト項目の項目だけであり、2つの固定の選択肢の行と `[Answer]:` は足場である。
+折り返しや遅延継続（lazy continuation）のテキストは項目全体に属するため、より短い確認によって
+より長い保持された前提を受け入れることはできない。
 
-Where this reading cannot afford full CommonMark, the divergence must land as a
-false failure and never as a false pass: the sensor may ask for a citation the
-document did not owe, but it must not let unsourced or invisible-tag content
-through.
+この読み取りで完全な CommonMark に対応しきれない箇所では、その差異は必ず誤った不合格として表れなければならず、
+誤った合格として表れてはならない。センサーはドキュメントが本来不要な引用を求めることはあっても、
+出典のない内容や目に見えないタグの内容を通過させてはならない。
 
 ## Failure mode
 
-Emits `SENSOR_FAILED` and writes detail listing missing sections, untagged
-claim blocks, unresolved source ids, misplaced assumption tags, or an
-unconfirmed assumption set.
+`SENSOR_FAILED` を出力し、欠けているセクション、タグのない主張ブロック、解決できないソース ID、
+誤った位置にある前提タグ、または確認されていない前提の集合を列挙した詳細を書き込む。

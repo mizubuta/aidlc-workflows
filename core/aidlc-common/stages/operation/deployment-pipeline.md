@@ -46,58 +46,57 @@ outputs: cd-config.md, deployment-strategy.md, rollback-runbook.md, deployment-p
 
 ### Step 1: Load Prior Context
 
-- Read CI pipeline config from `<record>/construction/ci-pipeline/` (if exists)
-- Read infrastructure design from `<record>/construction/infrastructure-design/` (if exists)
-- Read NFR design (deployment-related NFRs) from `<record>/construction/nfr-design/` (if exists)
+- `<record>/construction/ci-pipeline/` から CI パイプラインの設定を読み込む（存在する場合）
+- `<record>/construction/infrastructure-design/` からインフラストラクチャ設計を読み込む（存在する場合）
+- `<record>/construction/nfr-design/` から NFR 設計（デプロイ関連の NFR）を読み込む（存在する場合）
 
-Incremental scopes (`bugfix`, `refactor`, and `security-patch`) and `express`
-skip CI Pipeline and Infrastructure Design by design. On brownfield, inspect
-the workspace's existing pipeline and infrastructure configuration plus the
-code knowledge base. On Express greenfield, use the approved requirements,
-Build and Test results, and deployment artifacts generated in the workspace
-(for example a Dockerfile, service manifest, or IaC); if no deployable target
-exists, this CONDITIONAL stage reports skipped. Design only against evidence
-that exists - never invent a missing CI or infrastructure artifact.
+増分型のスコープ（`bugfix`、`refactor`、`security-patch`）と `express` は、
+設計上 CI Pipeline と Infrastructure Design をスキップする。brownfield では、
+ワークスペースの既存のパイプライン設定とインフラストラクチャ設定、および
+コードナレッジベースを調査する。Express の greenfield では、承認済みの要件、
+Build and Test の結果、ワークスペースで生成されたデプロイ用成果物
+（たとえば Dockerfile、サービスマニフェスト、IaC）を使う。デプロイ可能な対象が
+存在しない場合、この CONDITIONAL ステージは skipped を報告する。実在する根拠に対してのみ
+設計する — 欠けている CI やインフラストラクチャの成果物を決して捏造しない。
 
 ### Step 2: Generate Clarifying Questions
 
-Create questions file covering:
-- What deployment strategy (blue/green, canary, rolling)?
-- What environment promotion gates (dev → staging → prod)?
-- What approval workflows for production?
-- What rollback procedure?
-- What feature flag strategy (CloudWatch Evidently, AppConfig)?
+次の内容を扱う質問ファイルを作成する:
+- どのデプロイ戦略にするか（blue/green、canary、rolling）？
+- どの環境昇格ゲートを設けるか（dev → staging → prod）？
+- 本番環境ではどの承認ワークフローにするか？
+- どのロールバック手順にするか？
+- どのフィーチャーフラグ戦略にするか（CloudWatch Evidently、AppConfig）？
 
-Follow stage-protocol.md question flow.
+stage-protocol.md の質問フローに従う。
 
 ### Step 3: Generate Artifacts
 
-Create CD pipeline configuration, deployment strategy document, rollback runbook, feature flag configuration, and environment promotion matrix.
+CD パイプラインの設定、デプロイ戦略ドキュメント、ロールバックランブック、フィーチャーフラグの設定、環境昇格マトリクスを作成する。
 
 ### Step 4: Completion Handoff
 
-Hand completion to `stage-protocol.md` via
-`{{INVOKE}} engine orchestrate report --stage deployment-pipeline --result <outcome>`.
-That `report` call owns every lifecycle transition and advancement; never perform one in prose, and never narrate this bookkeeping to the user.
+`{{INVOKE}} engine orchestrate report --stage deployment-pipeline --result <outcome>` を通じて、
+完了を `stage-protocol.md` に引き渡す。
+その `report` 呼び出しが、ライフサイクルの遷移と前進をすべて担う。散文の中で遷移を実行してはならず、この記録処理をユーザーに説明してもならない。
 
 ### Step 5: Present Completion & Request Approval
 
-Completion emoji: :rocket:
-Review path: `<record>/operation/deployment-pipeline/`
-Standard 2-option approval (Approve / Request Changes).
+完了時の絵文字: :rocket:
+レビュー対象のパス: `<record>/operation/deployment-pipeline/`
+標準の 2 択承認（Approve / Request Changes）。
 
 ## Sensors
 
-This stage's outputs are markdown artefacts under `<record>/operation/deployment-pipeline/`.
+このステージの出力は、`<record>/operation/deployment-pipeline/` 配下の Markdown 成果物である。
 
-Imports: `required-sections`, `upstream-coverage`.
+インポート: `required-sections`, `upstream-coverage`.
 
-Upstream targets: `ci-config`, `quality-gates`, `infrastructure-specification`, `cicd-pipeline`.
+上流の対象: `ci-config`, `quality-gates`, `infrastructure-specification`, `cicd-pipeline`.
 
 ## Learn
 
-When `directive.protocol_modules` lists `learnings`, follow
-`stage-protocol-learnings.md`: keep the diary at `directive.memory_path` while
-working, and take the learnings step before the approval gate; that module says
-when it asks the person anything. When the module is absent, skip both the diary
-and the step.
+`directive.protocol_modules` に `learnings` が含まれている場合は、
+`stage-protocol-learnings.md` に従う。作業中は `directive.memory_path` に日誌を付け、
+承認ゲートの前に学びのステップを実施する。そのモジュールが、利用者に何かを尋ねるタイミングを定めている。
+モジュールがない場合は、日誌とステップの両方を省略する。

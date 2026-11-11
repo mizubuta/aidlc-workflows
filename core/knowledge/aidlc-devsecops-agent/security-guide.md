@@ -2,76 +2,76 @@
 
 ## OWASP Top 10 (Application Security Checklist)
 
-For every application, verify defenses against each category:
+すべてのアプリケーションについて、各カテゴリへの防御を検証する:
 
-1. **Broken Access Control**: Enforce authorization on every endpoint. Deny by default. Verify object-level access (IDOR prevention). Disable directory listing. Invalidate sessions on logout.
+1. **Broken Access Control（アクセス制御の不備）**: すべてのエンドポイントで認可を強制する。デフォルトは拒否とする。オブジェクトレベルのアクセスを検証する（IDOR の防止）。ディレクトリ一覧表示を無効にする。ログアウト時にセッションを無効化する。
 
-2. **Cryptographic Failures**: Use TLS 1.2+ for all data in transit. Encrypt sensitive data at rest (AES-256). Never store passwords in plaintext (use bcrypt/argon2 with salt). Do not roll custom crypto. Classify data sensitivity and protect accordingly.
+2. **Cryptographic Failures（暗号化の失敗）**: 転送中のすべてのデータに TLS 1.2 以上を使う。機密データは保存時に暗号化する（AES-256）。パスワードを決して平文で保存しない（ソルト付きの bcrypt/argon2 を使う）。独自の暗号を自作しない。データの機密度を分類し、それに応じて保護する。
 
-3. **Injection**: Parameterize all database queries (no string concatenation). Use ORM methods for queries. Validate and sanitize all input. Apply Content Security Policy headers. Encode output contextually (HTML, URL, JavaScript, CSS).
+3. **Injection（インジェクション）**: すべてのデータベースクエリをパラメータ化する（文字列連結を使わない）。クエリには ORM のメソッドを使う。すべての入力を検証・サニタイズする。Content Security Policy ヘッダーを適用する。出力はコンテキストに応じてエンコードする（HTML、URL、JavaScript、CSS）。
 
-4. **Insecure Design**: Threat model during design, not after. Limit resource consumption per user. Use secure design patterns (see below). Separate business logic from security controls.
+4. **Insecure Design（安全でない設計）**: 脅威モデリングは設計後ではなく設計中に行う。ユーザーごとのリソース消費を制限する。安全な設計パターンを使う（後述）。ビジネスロジックとセキュリティ制御を分離する。
 
-5. **Security Misconfiguration**: Remove default accounts and passwords. Disable unnecessary features and services. Set security headers (HSTS, CSP, X-Frame-Options, X-Content-Type-Options). Keep dependencies patched. Review cloud service configurations (S3 bucket policies, security groups).
+5. **Security Misconfiguration（セキュリティの設定ミス）**: デフォルトのアカウントとパスワードを削除する。不要な機能やサービスを無効にする。セキュリティヘッダー（HSTS、CSP、X-Frame-Options、X-Content-Type-Options）を設定する。依存関係にパッチを当て続ける。クラウドサービスの設定（S3 バケットポリシー、セキュリティグループ）をレビューする。
 
-6. **Vulnerable Components**: Maintain a software bill of materials (SBOM). Scan dependencies weekly. Pin dependency versions. Have a process for emergency patching of critical CVEs. Remove unused dependencies.
+6. **Vulnerable Components（脆弱なコンポーネント）**: ソフトウェア部品表（SBOM）を維持する。依存関係を毎週スキャンする。依存関係のバージョンを固定する。重大な CVE に対する緊急パッチ適用のプロセスを用意する。使われていない依存関係を削除する。
 
-7. **Authentication Failures**: Implement rate limiting on login (5 attempts per minute). Enforce password complexity (12+ characters, no common passwords). Support MFA. Use secure session management (HttpOnly, Secure, SameSite cookies). Implement account lockout with notification.
+7. **Authentication Failures（認証の失敗）**: ログインにレート制限を実装する（1 分あたり 5 回まで）。パスワードの複雑さを強制する（12 文字以上、よく使われるパスワードは不可）。MFA をサポートする。安全なセッション管理を使う（HttpOnly、Secure、SameSite の Cookie）。通知付きのアカウントロックアウトを実装する。
 
-8. **Data Integrity Failures**: Verify integrity of software updates and CI/CD pipelines. Use signed artifacts. Validate data from untrusted sources. Protect deserialization (avoid accepting serialized objects from users).
+8. **Data Integrity Failures（データ整合性の失敗）**: ソフトウェア更新と CI/CD パイプラインの完全性を検証する。署名付きの成果物を使う。信頼できないソースからのデータを検証する。デシリアライズを保護する（ユーザーからシリアライズ済みオブジェクトを受け付けない）。
 
-9. **Logging & Monitoring Failures**: Log authentication events (success and failure). Log access control failures. Log input validation failures. Do NOT log sensitive data (passwords, tokens, PII). Ship logs to centralized, tamper-resistant storage. Set up alerts for suspicious patterns.
+9. **Logging & Monitoring Failures（ログ記録と監視の失敗）**: 認証イベント（成功と失敗）をログに記録する。アクセス制御の失敗をログに記録する。入力検証の失敗をログに記録する。機密データ（パスワード、トークン、PII）は**決して**ログに記録しない。ログを改ざん耐性のある一元的なストレージに送る。疑わしいパターンに対するアラートを設定する。
 
-10. **SSRF (Server-Side Request Forgery)**: Validate and whitelist URLs for server-side requests. Block requests to internal networks (169.254.x.x, 10.x.x.x, 172.16-31.x.x). Disable HTTP redirects for server-initiated requests. Do not expose raw error messages from server-side requests.
+10. **SSRF (Server-Side Request Forgery)**: サーバーサイドのリクエストでは URL を検証し、ホワイトリスト化する。内部ネットワーク（169.254.x.x、10.x.x.x、172.16-31.x.x）へのリクエストをブロックする。サーバーが発行するリクエストでは HTTP リダイレクトを無効にする。サーバーサイドリクエストの生のエラーメッセージを公開しない。
 
 ## STRIDE Threat Modeling
 
-For each component and data flow, assess:
+各コンポーネントとデータフローについて評価する:
 
-| Threat | Question | Example Mitigation |
+| 脅威 | 問い | 緩和策の例 |
 |--------|----------|-------------------|
-| **S**poofing | Can an attacker impersonate a user or service? | Authentication, mutual TLS, API keys |
-| **T**ampering | Can data be modified in transit or at rest? | Input validation, checksums, signed tokens |
-| **R**epudiation | Can a user deny performing an action? | Audit logging, non-repudiation controls |
-| **I**nformation Disclosure | Can sensitive data leak? | Encryption, access controls, data masking |
-| **D**enial of Service | Can the system be made unavailable? | Rate limiting, autoscaling, circuit breakers |
-| **E**levation of Privilege | Can a user gain unauthorized permissions? | Least privilege, RBAC enforcement, input validation |
+| **S**poofing（なりすまし） | 攻撃者がユーザーやサービスになりすませるか？ | 認証、相互 TLS、API キー |
+| **T**ampering（改ざん） | 転送中または保存中のデータを改変できるか？ | 入力検証、チェックサム、署名付きトークン |
+| **R**epudiation（否認） | ユーザーが操作を行ったことを否認できるか？ | 監査ログ、否認防止の制御 |
+| **I**nformation Disclosure（情報漏えい） | 機密データが漏えいしうるか？ | 暗号化、アクセス制御、データマスキング |
+| **D**enial of Service（サービス拒否） | システムを利用不能にできるか？ | レート制限、オートスケーリング、サーキットブレーカー |
+| **E**levation of Privilege（権限昇格） | ユーザーが許可されていない権限を得られるか？ | 最小権限、RBAC の強制、入力検証 |
 
 ## Authentication & Authorization Patterns
 
 ### Authentication
-- **Session-based**: Server-side sessions with HttpOnly/Secure/SameSite cookies. Best for server-rendered web apps.
-- **JWT**: Stateless tokens with short expiry (15 min access, 7 day refresh). Best for SPAs and APIs. Store access token in memory, refresh token in HttpOnly cookie.
-- **API Keys**: For service-to-service communication. Rotate regularly. Scope to minimum permissions.
-- **OAuth2/OIDC**: For third-party authentication delegation. Use authorization code flow with PKCE. Never use implicit flow.
+- **セッションベース**: HttpOnly/Secure/SameSite の Cookie を使ったサーバーサイドセッション。サーバーレンダリングの Web アプリに最適。
+- **JWT**: 有効期限の短いステートレスなトークン（アクセストークン 15 分、リフレッシュトークン 7 日）。SPA と API に最適。アクセストークンはメモリに、リフレッシュトークンは HttpOnly Cookie に保存する。
+- **API キー**: サービス間通信向け。定期的にローテーションする。権限は最小限にスコープを絞る。
+- **OAuth2/OIDC**: サードパーティへの認証の委譲向け。PKCE 付きの認可コードフローを使う。インプリシットフローは決して使わない。
 
 ### Authorization
-- **RBAC (Role-Based)**: Assign permissions to roles, roles to users. Good for well-defined hierarchies.
-- **ABAC (Attribute-Based)**: Evaluate rules based on user, resource, action, and environment attributes. Good for complex, context-dependent policies.
-- **Object-Level**: Always verify the requesting user has access to the specific resource being requested. Never trust client-provided ownership claims.
+- **RBAC（ロールベース）**: 権限をロールに、ロールをユーザーに割り当てる。明確に定義された階層に適している。
+- **ABAC（属性ベース）**: ユーザー、リソース、アクション、環境の属性に基づいてルールを評価する。複雑でコンテキストに依存するポリシーに適している。
+- **オブジェクトレベル**: リクエストしているユーザーが、要求された特定のリソースにアクセスできるかを必ず検証する。クライアントが提示する所有権の主張を決して信用しない。
 
 ## Data Protection Requirements
 
-Classify data into tiers and apply controls:
+データを階層に分類し、制御を適用する:
 
-| Tier | Examples | At Rest | In Transit | Access | Retention |
+| 階層 | 例 | 保存時 | 転送時 | アクセス | 保持期間 |
 |------|----------|---------|------------|--------|-----------|
-| Public | Marketing content | None required | HTTPS preferred | Open | Indefinite |
-| Internal | Business docs | Encrypted volume | HTTPS required | Authenticated | Per policy |
-| Confidential | PII, financial | AES-256, key rotation | TLS 1.2+ required | Role-restricted | Minimized |
-| Restricted | Passwords, keys | HSM/KMS, separate storage | mTLS | Named individuals | Shortest possible |
+| Public | マーケティングコンテンツ | 不要 | HTTPS 推奨 | 公開 | 無期限 |
+| Internal | 業務文書 | 暗号化ボリューム | HTTPS 必須 | 認証済み | ポリシーに従う |
+| Confidential | PII、財務情報 | AES-256、鍵のローテーション | TLS 1.2 以上必須 | ロールで制限 | 最小限 |
+| Restricted | パスワード、鍵 | HSM/KMS、分離されたストレージ | mTLS | 指名された個人 | 可能な限り短く |
 
 ## Secure Coding Practices Checklist
 
-For code review, verify:
-- [ ] All user input validated (type, length, range, format)
-- [ ] SQL queries parameterized (no string interpolation)
-- [ ] Output encoded for context (HTML, URL, JS)
-- [ ] Authentication checked on every protected endpoint
-- [ ] Authorization checked for the specific resource being accessed
-- [ ] Sensitive data not logged (passwords, tokens, PII)
-- [ ] Error messages do not reveal internal details (stack traces, SQL errors)
-- [ ] File uploads validated (type, size, scanned for malware)
-- [ ] CORS configured to allow only expected origins
-- [ ] Rate limiting applied to authentication and expensive operations
-- [ ] Secrets loaded from environment/secrets manager, never hardcoded
+コードレビューでは、次を検証する:
+- [ ] すべてのユーザー入力が検証されている（型、長さ、範囲、形式）
+- [ ] SQL クエリがパラメータ化されている（文字列補間を使っていない）
+- [ ] 出力がコンテキストに応じてエンコードされている（HTML、URL、JS）
+- [ ] 保護されたすべてのエンドポイントで認証がチェックされている
+- [ ] アクセス対象の特定のリソースについて認可がチェックされている
+- [ ] 機密データ（パスワード、トークン、PII）がログに記録されていない
+- [ ] エラーメッセージが内部の詳細（スタックトレース、SQL エラー）を明かさない
+- [ ] ファイルアップロードが検証されている（種類、サイズ、マルウェアスキャン）
+- [ ] CORS が想定されたオリジンのみを許可するよう設定されている
+- [ ] 認証と高コストな操作にレート制限が適用されている
+- [ ] シークレットは環境変数／シークレットマネージャーから読み込まれ、決してハードコードされていない

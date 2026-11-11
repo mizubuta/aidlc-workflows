@@ -2,76 +2,76 @@
 
 ## Nielsen's 10 Usability Heuristics (Applied)
 
-Use these as a review checklist for every user-facing specification:
+ユーザー向けのすべての仕様に対するレビューのチェックリストとして、これらを使う:
 
-1. **Visibility of system status**: Show loading indicators, progress bars, success confirmations. Users must always know what is happening.
-2. **Match between system and real world**: Use domain language the user understands. Avoid technical jargon in UI labels.
-3. **User control and freedom**: Provide undo, cancel, and back. Never trap users in a flow without an exit.
-4. **Consistency and standards**: Same action = same label = same position across all screens. Follow platform conventions.
-5. **Error prevention**: Disable invalid actions, use type-appropriate inputs (date pickers, dropdowns), confirm destructive operations.
-6. **Recognition rather than recall**: Show options, recent items, defaults. Minimize what users must remember between screens.
-7. **Flexibility and efficiency of use**: Support keyboard shortcuts, bulk actions, and saved preferences for expert users without cluttering the novice experience.
-8. **Aesthetic and minimalist design**: Every element must earn its place. Remove decorative elements that do not aid task completion.
-9. **Help users recognize, diagnose, and recover from errors**: Error messages must say what went wrong, why, and what to do next. Never show raw error codes.
-10. **Help and documentation**: Provide contextual help (tooltips, inline hints) at the point of need, not in a separate help section.
+1. **システム状態の可視性**: 読み込みインジケーター、プログレスバー、成功の確認を表示する。ユーザーは常に何が起きているかを把握できなければならない。
+2. **システムと現実世界の一致**: ユーザーが理解できるドメインの言葉を使う。UI のラベルに技術的な専門用語を使わない。
+3. **ユーザーの主導権と自由**: 元に戻す（undo）、キャンセル、戻るを提供する。出口のないフローにユーザーを決して閉じ込めない。
+4. **一貫性と標準**: すべての画面で、同じアクション = 同じラベル = 同じ位置とする。プラットフォームの慣例に従う。
+5. **エラーの防止**: 無効なアクションは無効化し、型に適した入力（日付ピッカー、ドロップダウン）を使い、破壊的な操作は確認する。
+6. **記憶より認識**: 選択肢、最近の項目、デフォルト値を表示する。画面間でユーザーが覚えておかなければならないことを最小限にする。
+7. **柔軟性と使用効率**: 初心者の体験を煩雑にすることなく、熟練ユーザー向けにキーボードショートカット、一括操作、保存された設定をサポートする。
+8. **美的でミニマルなデザイン**: すべての要素は、そこにある理由がなければならない。タスクの完了に役立たない装飾的な要素は取り除く。
+9. **ユーザーによるエラーの認識・診断・回復を助ける**: エラーメッセージでは、何が問題で、なぜ起きたのか、次に何をすべきかを必ず伝える。生のエラーコードを決して表示しない。
+10. **ヘルプとドキュメント**: 別のヘルプセクションではなく、必要とされる場所で文脈に応じたヘルプ（ツールチップ、インラインのヒント）を提供する。
 
 ## WCAG 2.1 AA Key Requirements
 
 ### Perceivable
-- Text contrast ratio: minimum 4.5:1 for normal text, 3:1 for large text (18px+ bold or 24px+)
-- Non-text content has text alternatives (alt text, ARIA labels)
-- Content does not rely solely on color to convey meaning (use icons, patterns, or text too)
-- Media has captions or transcripts
+- テキストのコントラスト比: 通常のテキストは最低 4.5:1、大きなテキスト（18px 以上の太字または 24px 以上）は 3:1
+- テキスト以外のコンテンツには代替テキストがある（alt テキスト、ARIA ラベル）
+- 意味を伝えるのに色だけに頼らない（アイコン、パターン、テキストも併用する）
+- メディアにはキャプションまたは書き起こしがある
 
 ### Operable
-- All functionality available via keyboard (Tab, Enter, Space, Arrow keys, Escape)
-- Focus order follows a logical reading sequence
-- Focus indicators are visible (never `outline: none` without replacement)
-- No content flashes more than 3 times per second
-- Touch targets are minimum 44x44 CSS pixels
+- すべての機能がキーボード（Tab、Enter、Space、矢印キー、Escape）で利用できる
+- フォーカス順序が論理的な読み順に従っている
+- フォーカスインジケーターが見える（代替なしに `outline: none` を決して使わない）
+- 1 秒間に 3 回を超えて点滅するコンテンツがない
+- タッチターゲットは最低 44x44 CSS ピクセル
 
 ### Understandable
-- Language of page is declared in HTML
-- Form inputs have visible labels (not just placeholders)
-- Error identification is specific ("Email is invalid" not "Error in field 3")
-- Consistent navigation across pages
+- ページの言語が HTML で宣言されている
+- フォームの入力欄に目に見えるラベルがある（プレースホルダだけではない）
+- エラーの特定が具体的である（"Error in field 3"（フィールド 3 でエラー）ではなく "Email is invalid"（メールアドレスが無効です））
+- ページ間でナビゲーションが一貫している
 
 ### Robust
-- Valid HTML semantics (headings in order, lists for lists, tables for tabular data)
-- ARIA roles used correctly (not overused; native HTML elements preferred)
-- Content works across browsers and assistive technologies
+- 正しい HTML セマンティクス（見出しは順番どおり、リストにはリスト、表形式のデータには表）
+- ARIA ロールが正しく使われている（使いすぎない。ネイティブの HTML 要素を優先する）
+- コンテンツがブラウザーや支援技術を問わず動作する
 
 ## Interaction Patterns Reference
 
 ### Forms
-- Labels above inputs (not beside, not inside as placeholder-only)
-- Inline validation on blur, not on every keystroke
-- Submit button disabled until required fields are valid (with visual explanation)
-- Group related fields with fieldset/legend
-- Mark optional fields, not required ones (most fields should be required)
+- ラベルは入力欄の上に置く（横に置かない。プレースホルダだけで内側に置かない）
+- インラインのバリデーションはキー入力ごとではなく、blur 時に行う
+- 必須フィールドが有効になるまで送信ボタンを無効にする（視覚的な説明を添える）
+- 関連するフィールドは fieldset/legend でグループ化する
+- 必須のフィールドではなく、任意のフィールドに印を付ける（ほとんどのフィールドは必須であるべき）
 
 ### Data Tables
-- Sortable columns with sort indicator (arrow direction)
-- Filterable with clear filter indicators and reset option
-- Pagination with page size selector and total count
-- Row selection with bulk action toolbar
-- Empty state message with guidance ("No results. Try adjusting your filters.")
+- ソートインジケーター（矢印の向き）付きのソート可能な列
+- 明確なフィルターインジケーターとリセットの選択肢を備えたフィルター機能
+- ページサイズの選択と総件数を備えたページネーション
+- 一括操作ツールバーを備えた行選択
+- ガイダンス付きの空状態メッセージ（"No results. Try adjusting your filters."（結果がありません。フィルターを調整してみてください。））
 
 ### Navigation
-- Primary navigation: persistent, max 7 items, current page highlighted
-- Breadcrumbs for hierarchical content (3+ levels deep)
-- Search: globally accessible, auto-suggest after 3 characters, recent searches shown
+- 主ナビゲーション: 常に表示し、最大 7 項目、現在のページを強調表示する
+- 階層構造のコンテンツ（3 階層以上）にはパンくずリスト
+- 検索: どこからでもアクセスでき、3 文字入力後に自動候補を表示し、最近の検索を表示する
 
 ### Feedback & States
-- **Loading**: Skeleton screens for initial load, spinners for actions (with timeout message after 5s)
-- **Success**: Inline confirmation near the action, auto-dismiss after 5s, do not redirect immediately
-- **Error**: Inline near the cause, red but with icon (not color-only), actionable message
-- **Empty**: Illustration + explanation + primary action ("No items yet. Create your first item.")
-- **Confirmation**: Required for delete, bulk operations, and irreversible actions. Include what will happen and an undo option if possible.
+- **読み込み中**: 初回の読み込みにはスケルトンスクリーン、操作にはスピナー（5 秒後にタイムアウトのメッセージを表示）
+- **成功**: 操作の近くにインラインで確認を表示し、5 秒後に自動で閉じ、すぐにリダイレクトしない
+- **エラー**: 原因の近くにインラインで表示し、赤色だがアイコン付きで（色だけに頼らない）、対処可能なメッセージにする
+- **空状態**: イラスト + 説明 + 主要アクション（"No items yet. Create your first item."（まだ項目がありません。最初の項目を作成しましょう。））
+- **確認**: 削除、一括操作、取り消せない操作では必須。何が起きるかを示し、可能であれば元に戻す選択肢を含める。
 
 ## User Flow Documentation Format
 
-For each user flow, specify:
+各ユーザーフローについて、次の内容を記述する:
 ```
 Flow: [name]
 Persona: [who performs this]
@@ -88,52 +88,52 @@ Error paths:
 ## Information Architecture
 
 ### Navigation Hierarchy Principles
-- Maximum 3 levels of nesting for primary navigation
-- Flat is better than deep — prefer broad categories with fewer sub-levels
-- Every page must be reachable within 3 clicks from the home/dashboard
-- Use progressive disclosure: show summary first, detail on demand
+- 主ナビゲーションの入れ子は最大 3 階層
+- 深いよりフラットなほうがよい — 下位階層が少ない幅広いカテゴリーを優先する
+- すべてのページは、ホーム/ダッシュボードから 3 クリック以内に到達できなければならない
+- 段階的開示を使う: まず概要を表示し、詳細は必要に応じて表示する
 
 ### Content Grouping Strategies
-- Group by user task (what they want to do), not by system structure (how it is built)
-- Card sorting reference: use open card sort for new IA, closed card sort to validate existing
-- Related actions should be visually proximate (Gestalt principle of proximity)
+- システムの構造（どう作られているか）ではなく、ユーザーのタスク（何をしたいか）でグループ化する
+- カードソーティングの参考: 新しい IA にはオープンカードソート、既存の検証にはクローズドカードソートを使う
+- 関連するアクションは視覚的に近くに置く（ゲシュタルトの近接の原則）
 
 ### Labeling Taxonomy
-- Labels must use the user's language, not internal jargon
-- Consistent verb forms across navigation (all nouns or all verbs, not mixed)
-- Test labels with 5+ representative users before finalizing
+- ラベルには社内の専門用語ではなく、ユーザーの言葉を必ず使う
+- ナビゲーション全体で品詞をそろえる（すべて名詞かすべて動詞にし、混在させない）
+- 確定する前に、5 人以上の代表的なユーザーでラベルをテストする
 
 ### Sitemap Structure Patterns
-- Hub-and-spoke: central dashboard with links to feature areas (suits task-based apps)
-- Hierarchical: nested tree (suits content-heavy sites, documentation)
-- Sequential: linear flow (suits onboarding, checkout, wizards)
-- Choose the pattern that matches the primary user workflow
+- ハブアンドスポーク: 機能領域へのリンクを持つ中央のダッシュボード（タスクベースのアプリに適する）
+- 階層型: 入れ子のツリー（コンテンツの多いサイトやドキュメントに適する）
+- 逐次型: 直線的なフロー（オンボーディング、チェックアウト、ウィザードに適する）
+- 主要なユーザーのワークフローに合ったパターンを選ぶ
 
 ## Responsive and Adaptive Design
 
 ### Breakpoint Strategy (Mobile-First)
-- Design for smallest screen first, then enhance for larger screens
-- Common breakpoints: 320px (mobile), 768px (tablet), 1024px (desktop), 1440px (large desktop)
-- Content dictates breakpoints, not device names — add breakpoints where the layout breaks
+- まず最小の画面向けに設計し、その後より大きな画面向けに拡張する
+- 一般的なブレークポイント: 320px（モバイル）、768px（タブレット）、1024px（デスクトップ）、1440px（大型デスクトップ）
+- ブレークポイントはデバイス名ではなくコンテンツが決める — レイアウトが崩れる位置にブレークポイントを追加する
 
 ### Layout Adaptation Patterns
-- **Fluid**: Percentage-based widths, content reflows naturally (default approach)
-- **Adaptive**: Distinct fixed layouts per breakpoint (use when fluid is insufficient)
-- **Responsive**: Combination of fluid grids, flexible images, and media queries (recommended)
+- **Fluid**: パーセントベースの幅で、コンテンツが自然に再配置される（デフォルトのアプローチ）
+- **Adaptive**: ブレークポイントごとに異なる固定レイアウト（Fluid で不十分な場合に使う）
+- **Responsive**: フルイドグリッド、柔軟な画像、メディアクエリの組み合わせ（推奨）
 
 ### Touch Target Sizing
-- Minimum 44x44 CSS pixels for all interactive elements (WCAG 2.1 AA)
-- 8px minimum spacing between adjacent touch targets
-- Increase to 48x48 px for primary actions on mobile
+- すべてのインタラクティブ要素は最低 44x44 CSS ピクセル（WCAG 2.1 AA）
+- 隣接するタッチターゲット間は最低 8px の間隔を空ける
+- モバイルの主要アクションは 48x48 px に拡大する
 
 ### Content Priority Shifting
-- Stack columns vertically on mobile (most important content first)
-- Hide secondary navigation behind a menu icon on small screens
-- Collapse data tables into card views on mobile
-- Defer non-critical images and media on slow connections
+- モバイルでは列を縦に積み重ねる（最も重要なコンテンツを先頭に）
+- 小さな画面では、副次的なナビゲーションをメニューアイコンの裏に隠す
+- モバイルではデータテーブルをカードビューに折りたたむ
+- 低速な回線では、重要でない画像やメディアの読み込みを後回しにする
 
 ### Performance Considerations for Mobile
-- Target < 3s load time on 3G connections
-- Lazy-load images and below-the-fold content
-- Minimize JavaScript payload (< 200KB compressed for initial load)
-- Use responsive images (srcset) to serve appropriately sized assets
+- 3G 回線で読み込み時間 3 秒未満を目標とする
+- 画像とファーストビューより下のコンテンツを遅延読み込みする
+- JavaScript のペイロードを最小限にする（初回読み込みで圧縮後 200KB 未満）
+- レスポンシブ画像（srcset）を使い、適切なサイズのアセットを配信する

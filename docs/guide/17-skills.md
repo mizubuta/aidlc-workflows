@@ -1,38 +1,38 @@
 # Skills and Runner Commands
 
-**AI-DLC is a family of commands.** Alongside the `/aidlc` orchestrator you get a set of typeable one-word runner commands: one per scope, one per stage, and one for setup. They are convenience doors onto slices the orchestrator already exposes, so you can reach the whole framework from `/aidlc` alone, or skip the flags and type the door you want.
+**AI-DLC はコマンドのファミリーです。** `/aidlc` オーケストレーターに加えて、1 語で入力できるランナーコマンドのセットが用意されています。スコープごとに 1 つ、ステージごとに 1 つ、そしてセットアップ用に 1 つです。これらはオーケストレーターがすでに公開している機能の一部への便利な入り口なので、`/aidlc` だけでフレームワーク全体を利用することも、フラグを省いて目的の入り口を直接入力することもできます。
 
-> **Harness note.** This chapter uses Claude Code's surfaces — skills under
-> `.claude/skills/`, typed with a leading `/` from the picker. Kiro ships the same
-> runner set under `.kiro/skills/` (also `/`-typed); Codex ships them to
-> `.agents/skills/` and types them with `$` (`$aidlc-bugfix`). The runner *set* and
-> what each does are identical across harnesses — only the directory and prefix
-> differ. See [Running on other harnesses](harnesses/README.md).
+> **ハーネスに関する注記。** この章では Claude Code の操作面を使います — スキルは
+> `.claude/skills/` 配下にあり、ピッカーから先頭の `/` を付けて入力します。Kiro は同じ
+> ランナーのセットを `.kiro/skills/` 配下に提供します（こちらも `/` で入力）。Codex はそれらを
+> `.agents/skills/` に配置し、`$` を付けて入力します（`$aidlc-bugfix`）。ランナーの*セット*と
+> それぞれの動作はハーネス間で同一で、異なるのはディレクトリとプレフィックスだけです。
+> [他のハーネスでの実行](harnesses/README.md)を参照してください。
 
 ---
 
 ## Many skills, one engine
 
-Every command this implementation ships is a skill under `.claude/skills/`. They all drive the same deterministic engine — they differ only in what they bake in before they start:
+この実装が提供するコマンドはすべて、`.claude/skills/` 配下のスキルです。いずれも同じ決定論的なエンジンを動かし、違いは開始前に何を組み込んでいるかだけです:
 
-- **`/aidlc`** - the full orchestrator. No flags baked in: you describe what you want, the agent proposes a plan for it and you confirm it, then it drives every stage in the plan to completion. This is the one you reach for most.
-- **Scope-runners** - `/aidlc-bugfix`, `/aidlc-express`, `/aidlc-feature`, `/aidlc-mvp`, `/aidlc-security-patch`. Same full workflow, with a scope fixed and no plan to propose.
-- **Stage-runners** - `/aidlc-domain-design`, `/aidlc-code-generation`, and 28 more. Run one stage in isolation, never touching your main workflow. Plugin-owned stages use their bare plugin-prefixed command name, such as `/test-pro-integration`.
-- **`/aidlc-init`** - start a piece of work. With `--scope <name>` and a description it creates the intent (runs the whole Initialization phase) in one step and stops. With `--scope <name>` alone it creates nothing yet: it asks what the work is for, and your answer starts it. With only a description it first shows the same plan offer as `/aidlc`, then continues like `/aidlc`. Unlike `/aidlc`, a description that starts with a scope name ("feature flags for billing") is still read as a description. Work already in progress is left as it is, and the new work starts beside it.
-- **Session skills** — `/aidlc-session-cost`, `/aidlc-replay`, `/aidlc-outcomes-pack`. Read-only views over a workflow; covered in [Session Management](11-session-management.md).
-- **`/aidlc-compose`** - the adaptive composer: it reads your task, proposes the stages that fit it, and after you approve runs it as a plan of its own. Same as `/aidlc compose`; see [The Adaptive Composer](05-scopes-and-depth.md#the-adaptive-composer).
-- **`/aidlc-knowledge`** - the DocumentKB: index the team's own documents (PDFs, Word files, Markdown, plain text) into a per-space catalog agents can cite. Standalone like the session skills, but read-write: it changes the catalog and emits document audit events (never workflow state). Same surface as `/aidlc knowledge <verb>`; see [CLI Commands](12-cli-commands.md) for the verbs.
-- **`/aidlc-issue-report`** - when a run went wrong, even when you cannot quite say how: it gathers what AI-DLC and your AI tool left on this machine (every row of the audit record, the state, hook health, doctor's findings, and the events of the tool's own chat log for this project) into one folder to send to the AI-DLC team, who analyse it. Your names, your company's and your project's details, and what you or an agent wrote are replaced by labels (a repeat keeps its label, so the team still sees it). It does not diagnose anything; it checks the folder before handing it over (refusing a value that still looks like it could identify a person, a company or a machine), asks you to read its cover once and to say it can go, and never sends anything itself. On Codex, type `$aidlc-issue-report`; elsewhere you can also just ask for an issue report. See [Troubleshooting](15-troubleshooting.md).
+- **`/aidlc`** - 完全なオーケストレーターです。フラグは何も組み込まれていません。やりたいことを説明すると、エージェントがそのための計画を提案し、あなたが確認すると、計画内のすべてのステージを完了まで進めます。最もよく使うのはこれです。
+- **スコープランナー** - `/aidlc-bugfix`、`/aidlc-express`、`/aidlc-feature`、`/aidlc-mvp`、`/aidlc-security-patch`。同じ完全なワークフローを、スコープを固定し、計画の提案なしで実行します。
+- **ステージランナー** - `/aidlc-domain-design`、`/aidlc-code-generation` ほか 28 個。1 つのステージを単独で実行し、メインのワークフローには一切触れません。プラグインが所有するステージは、`/test-pro-integration` のように、プラグインのプレフィックスが付いたそのままのコマンド名を使います。
+- **`/aidlc-init`** - 作業を開始します。`--scope <name>` と説明を指定すると、1 ステップでインテントを作成し（Initialization フェーズ全体を実行し）、停止します。`--scope <name>` だけを指定すると、まだ何も作成しません。作業の目的を尋ね、その回答で作業を開始します。説明だけを指定すると、まず `/aidlc` と同じ計画の提案を表示し、その後は `/aidlc` と同じように続行します。`/aidlc` と異なり、スコープ名で始まる説明（"feature flags for billing"）も説明として読み取られます。すでに進行中の作業はそのまま残され、新しい作業はその横で開始されます。
+- **セッションスキル** — `/aidlc-session-cost`、`/aidlc-replay`、`/aidlc-outcomes-pack`。ワークフローに対する読み取り専用のビューです。[セッション管理](11-session-management.md)で説明しています。
+- **`/aidlc-compose`** - 適応型コンポーザーです。タスクを読み取り、それに合うステージを提案し、承認後はそれを独自の計画として実行します。`/aidlc compose` と同じです。[適応型コンポーザー](05-scopes-and-depth.md#the-adaptive-composer)を参照してください。
+- **`/aidlc-knowledge`** - DocumentKB です。チーム独自のドキュメント（PDF、Word ファイル、Markdown、プレーンテキスト）を、エージェントが引用できるスペースごとのカタログにインデックスします。セッションスキルと同様に単独で動作しますが、読み書き可能です。カタログを変更し、ドキュメントの監査イベントを出力します（ワークフローの状態は決して変更しません）。`/aidlc knowledge <verb>` と同じ操作面です。動詞については [CLI コマンド](12-cli-commands.md)を参照してください。
+- **`/aidlc-issue-report`** - 実行がうまくいかなかったとき、どう問題なのかをうまく説明できない場合でも使えます。AI-DLC と AI ツールがこのマシンに残したもの（監査記録のすべての行、状態、フックの健全性、doctor の検出結果、このプロジェクトに関するツール自身のチャットログのイベント）を 1 つのフォルダーに集め、分析を行う AI-DLC チームに送れるようにします。あなたの名前、会社やプロジェクトの詳細、あなたやエージェントが書いた内容はラベルに置き換えられます（同じものが繰り返し現れても同じラベルが保たれるため、チームはそれを把握できます）。何かを診断することはありません。引き渡す前にフォルダーを確認し（人物、会社、マシンを特定できそうな値が残っていれば拒否します）、カバーを一度読んで送ってよいと伝えるよう求め、自分から何かを送信することは決してありません。Codex では `$aidlc-issue-report` と入力します。それ以外の環境では、単に issue レポートを依頼することもできます。[トラブルシューティング](15-troubleshooting.md)を参照してください。
 
-Everything a runner does is reachable from `/aidlc` with a flag. The runners are packaging — typing `/aidlc-bugfix` and seeing it in your `/` menu is good ergonomics, nothing more. Delete every runner and the shortcuts go; the capability stays, reachable through `/aidlc` flags.
+ランナーが行うことはすべて、`/aidlc` にフラグを付ければ実行できます。ランナーはパッケージングにすぎません — `/aidlc-bugfix` と入力でき、`/` メニューに表示されるのは使い勝手が良いというだけで、それ以上のものではありません。ランナーをすべて削除するとショートカットはなくなりますが、機能は残り、`/aidlc` のフラグで利用できます。
 
-Generated runners are **explicit-only** wherever the host allows it: on Claude Code, Cursor, and GitHub Copilot (VS Code and the CLI) each runner carries `disable-model-invocation: true` (on Codex, `allow_implicit_invocation: false` in its `agents/openai.yaml`), so the agent never starts one on its own and its description stays out of the skill listing the model reads every turn. You start a runner by typing it. A headless `copilot -p "/aidlc-bugfix ..."` still runs the runner: Copilot hands the typed line to the agent as text, and the shipped `AGENTS.md` tells the agent to read that runner's file. Kiro CLI, Kiro IDE, and opencode have no such setting, so there the agent can still start a runner by itself. `/aidlc` is not a runner and stays available to the agent.
+生成されたランナーは、ホストが許す限り**明示的な呼び出し専用**です。Claude Code、Cursor、GitHub Copilot（VS Code と CLI）では、各ランナーに `disable-model-invocation: true` が付いています（Codex では、その `agents/openai.yaml` 内の `allow_implicit_invocation: false`）。そのため、エージェントが自分からランナーを開始することはなく、その説明はモデルが毎ターン読むスキル一覧に含まれません。ランナーは入力することで開始します。ヘッドレスの `copilot -p "/aidlc-bugfix ..."` でもランナーは実行されます。Copilot は入力された行をテキストとしてエージェントに渡し、同梱の `AGENTS.md` がそのランナーのファイルを読むようエージェントに指示するためです。Kiro CLI、Kiro IDE、opencode にはこのような設定がないため、これらの環境ではエージェントが自らランナーを開始することがあります。`/aidlc` はランナーではなく、エージェントからも引き続き利用できます。
 
 ---
 
 ## Scope-runners — a named door per problem class
 
-A scope-runner drives the full workflow with one scope locked in. Use it when you already know what kind of work you're doing and want to skip the plan proposal.
+スコープランナーは、1 つのスコープを固定して完全なワークフローを実行します。どのような種類の作業を行うかがすでに分かっていて、計画の提案を省略したいときに使います。
 
 ```
 /aidlc-bugfix          Fix a specific bug
@@ -42,7 +42,7 @@ A scope-runner drives the full workflow with one scope locked in. Use it when yo
 /aidlc-security-patch  CVE response
 ```
 
-Each is identical to passing `--scope` to the orchestrator:
+それぞれ、オーケストレーターに `--scope` を渡すのと同じです:
 
 ```
 /aidlc-bugfix          ==  /aidlc --scope bugfix
@@ -50,27 +50,27 @@ Each is identical to passing `--scope` to the orchestrator:
 /aidlc-feature         ==  /aidlc --scope feature
 ```
 
-You can pass a description and flags straight through, exactly as you would to `/aidlc`:
+`/aidlc` に渡すのとまったく同じように、説明やフラグをそのまま渡せます:
 
 ```
 /aidlc-bugfix The profile API returns 500 when display_name is null
 /aidlc-feature --status
 ```
 
-**Five core scopes ship a runner** — the high-traffic ones marked `runner: true` in their scope files. The framework defines 11 scopes total (see [Scopes, Depth, and Test Strategy](05-scopes-and-depth.md)); every other one — `enterprise`, `poc`, `infra`, `refactor`, `classic`, `workshop` — is always reachable through the orchestrator. Plugin-owned scopes can also set `runner: true`; their runner uses the bare plugin-prefixed scope name, such as `/test-pro-validation`.
+**ランナーが用意されているのは 5 つのコアスコープです** — スコープファイルで `runner: true` が付いている、よく使われるものです。フレームワークは全部で 11 のスコープを定義しています（[スコープ、深さ、テスト戦略](05-scopes-and-depth.md)を参照）。それ以外のスコープ — `enterprise`、`poc`、`infra`、`refactor`、`classic`、`workshop` — は、常にオーケストレーター経由で利用できます。プラグインが所有するスコープも `runner: true` を設定できます。そのランナーは、`/test-pro-validation` のように、プラグインのプレフィックスが付いたそのままのスコープ名を使います。
 
 ```
 /aidlc --scope enterprise
 /aidlc --scope poc
 ```
 
-Once a workflow has started, its scope is fixed in `aidlc-state.md`, so re-running the same runner resumes the workflow rather than restarting it. To run under a different scope, use `/aidlc --scope <name>`.
+ワークフローが開始されると、そのスコープは `aidlc-state.md` に固定されるため、同じランナーを再実行するとワークフローを最初からやり直すのではなく再開します。別のスコープで実行するには、`/aidlc --scope <name>` を使います。
 
 ---
 
 ## Stage-runners — run one stage, leave your workflow alone
 
-A stage-runner runs a **single stage in isolation**. It uses the stage's configured agents and reviewer, records a synthetic completion, and stops without workflow learnings or an approval gate. It never advances your main workflow's `Current Stage`; the tool itself enforces that isolation.
+ステージランナーは、**1 つのステージを単独で**実行します。そのステージに設定されたエージェントとレビュアーを使い、合成の完了を記録し、ワークフローの学びも承認ゲートもなしに停止します。メインのワークフローの `Current Stage` を進めることは決してありません。この分離はツール自体が強制します。
 
 ```
 /aidlc-domain-design
@@ -79,7 +79,7 @@ A stage-runner runs a **single stage in isolation**. It uses the stage's configu
 /aidlc-reverse-engineering
 ```
 
-Each one packages `/aidlc --stage <slug> --single`:
+それぞれが `/aidlc --stage <slug> --single` をパッケージ化したものです:
 
 ```
 /aidlc-code-generation    ==  /aidlc --stage code-generation --single
@@ -87,22 +87,22 @@ Each one packages `/aidlc --stage <slug> --single`:
 
 ### When you'd use one
 
-- **Apply one piece of methodology without committing to a workflow.** You want a requirements analysis on a problem, but you're not ready to drive a whole lifecycle. Run `/aidlc-requirements-analysis`, get the artifact, stop.
-- **You're the orchestrator.** You're sequencing the work by hand and want the framework to run just the stage in front of you — the human drives, the framework supplies one stage of methodology.
-- **Re-run a stage in isolation** while your main workflow sits parked at a different point. The run does not move your workflow; it writes the stage's documents where your work keeps them, after keeping a copy of the files already there.
+- **ワークフローに乗らずに、方法論の一部だけを適用する。** ある問題について要件分析をしたいが、ライフサイクル全体を進める準備はできていない。`/aidlc-requirements-analysis` を実行し、成果物を受け取ったら終わりです。
+- **あなた自身がオーケストレーターになる。** 作業の順序を手作業で決めていて、目の前のステージだけをフレームワークに実行させたい場合です — 人間が主導し、フレームワークは方法論の 1 ステージ分を提供します。
+- **ステージを単独で再実行する。** メインのワークフローは別の地点で止めたままにしておけます。この実行はワークフローを動かしません。そこにすでにあるファイルのコピーを保存したうえで、作業がドキュメントを保管する場所にそのステージのドキュメントを書き込みます。
 
 ### Why it's safe
 
-The `--single` invariant is tool-enforced. `next --single` records the isolated
-start before work begins; `report --single` can only close that same synthetic
-attempt and refuses a direct completion with no start. Neither operation writes
-your main workflow's `Current Stage`. If a runner ever tried to advance the main
-pointer, the engine returns an error instead. When your work's record already
-holds files for the stage, `next --single` copies them to
-`archive/<time>-<stage>/` in that record before the run starts, and one line
-names the folder.
+`--single` の不変条件はツールによって強制されます。`next --single` は作業開始前に
+分離された開始を記録し、`report --single` はその同じ合成の試行だけを閉じることができ、
+開始のない直接の完了は拒否します。どちらの操作も、
+メインのワークフローの `Current Stage` には書き込みません。ランナーがメインの
+ポインターを進めようとした場合、エンジンは代わりにエラーを返します。作業の記録に
+そのステージのファイルがすでにある場合、`next --single` は実行開始前にそれらを
+その記録内の `archive/<time>-<stage>/` にコピーし、1 行で
+そのフォルダーを示します。
 
-The three bootstrap **initialization** stages ship no stage-runner - creating half an intent has no standalone meaning. Instead the whole initialization phase is packaged as one command:
+ブートストラップ用の 3 つの **initialization** ステージにはステージランナーがありません — インテントを中途半端に作成しても単独では意味がないためです。代わりに、initialization フェーズ全体が 1 つのコマンドとしてパッケージ化されています:
 
 ```
 /aidlc-init --scope <name> <description>   create the intent in one step, then stop
@@ -114,18 +114,18 @@ The three bootstrap **initialization** stages ship no stage-runner - creating ha
 
 ## The runner families at a glance
 
-| Family | Examples | What it does | Orchestrator equivalent |
+| ファミリー | 例 | 動作 | 同等のオーケストレーター操作 |
 |---|---|---|---|
-| Orchestrator | `/aidlc` | Full workflow, the plan proposed for you to confirm | - |
-| Scope-runner | `/aidlc-bugfix`, `/aidlc-express`, `/aidlc-feature`, `/aidlc-mvp`, `/aidlc-security-patch` | Full workflow, scope fixed, no plan to confirm | `/aidlc --scope <name>` |
-| Stage-runner | `/aidlc-domain-design`, `/aidlc-code-generation`, ... (30 total) | One stage in isolation, never advances your workflow | `/aidlc --stage <slug> --single` |
-| Init wrapper | `/aidlc-init` | Start a piece of work: with `--scope` and a description, create it in one step; with `--scope` alone, ask what it is for first; with only a description, the plan offer first | `/aidlc --scope <name>`, or `/aidlc <description>` on a fresh workspace (except a leading scope name) |
-| Session views | `/aidlc-session-cost`, `/aidlc-replay`, `/aidlc-outcomes-pack` | Read-only workflow reports | see [Session Management](11-session-management.md) |
-| Composer | `/aidlc-compose` | Propose a plan made for your task, then run it after you approve | `/aidlc compose` |
-| Document knowledge | `/aidlc-knowledge` | Index and read the team's own documents (per-space DocumentKB) | `/aidlc knowledge <verb>` |
-| Issue report | `/aidlc-issue-report` | A run's records, with sensitive details removed, to send to the AI-DLC team | builds on `/aidlc --doctor --export` |
+| オーケストレーター | `/aidlc` | 完全なワークフロー。計画を提案し、あなたが確認する | - |
+| スコープランナー | `/aidlc-bugfix`, `/aidlc-express`, `/aidlc-feature`, `/aidlc-mvp`, `/aidlc-security-patch` | 完全なワークフロー。スコープは固定で、確認する計画はない | `/aidlc --scope <name>` |
+| ステージランナー | `/aidlc-domain-design`, `/aidlc-code-generation`, ...（全 30 個） | 1 つのステージを単独で実行し、ワークフローを決して進めない | `/aidlc --stage <slug> --single` |
+| Init ラッパー | `/aidlc-init` | 作業を開始する。`--scope` と説明があれば 1 ステップで作成し、`--scope` だけなら先に目的を尋ね、説明だけなら先に計画を提案する | `/aidlc --scope <name>`、または新しいワークスペースでの `/aidlc <description>`（先頭のスコープ名を除く） |
+| セッションビュー | `/aidlc-session-cost`, `/aidlc-replay`, `/aidlc-outcomes-pack` | 読み取り専用のワークフローレポート | [セッション管理](11-session-management.md)を参照 |
+| コンポーザー | `/aidlc-compose` | タスクに合わせた計画を提案し、承認後に実行する | `/aidlc compose` |
+| ドキュメントナレッジ | `/aidlc-knowledge` | チーム独自のドキュメントをインデックスし、読み取る（スペースごとの DocumentKB） | `/aidlc knowledge <verb>` |
+| Issue レポート | `/aidlc-issue-report` | 機密情報を取り除いた実行記録を、AI-DLC チームに送るためにまとめる | `/aidlc --doctor --export` を基盤とする |
 
-There's one stage-runner for every runnable stage in the lifecycle. To see the full set, list your skills directory. In a project set up for Claude Code with `aidlc config` (shortened):
+ライフサイクル内の実行可能なステージごとに、ステージランナーが 1 つあります。全体を確認するには、スキルディレクトリを一覧表示してください。`aidlc config` で Claude Code 用にセットアップしたプロジェクトでは次のようになります（一部省略）:
 
 ```text
 $ ls .claude/skills/
@@ -143,43 +143,43 @@ aidlc-units-generation
 aidlc-user-stories
 ```
 
-That is 43 entries: `/aidlc`, the 30 stage-runners, the 5 scope-runners, `/aidlc-init`, `/aidlc-compose`, `/aidlc-knowledge`, `/aidlc-issue-report` and the 3 session skills.
+合計 43 エントリーです: `/aidlc`、30 個のステージランナー、5 個のスコープランナー、`/aidlc-init`、`/aidlc-compose`、`/aidlc-knowledge`、`/aidlc-issue-report`、3 つのセッションスキル。
 
 ---
 
 ## Author your own runner — write a stage file
 
-Here's the part that matters if you're customizing the framework: **you don't write runners by hand.** They're generated from the compiled stage graph and your scope files.
+フレームワークをカスタマイズする場合に重要なのはここです: **ランナーを手で書く必要はありません。** ランナーは、コンパイルされたステージグラフとスコープファイルから生成されます。
 
-To add a stage-runner, add a stage. Write the stage file, recompile the graph, and regenerate:
+ステージランナーを追加するには、ステージを追加します。ステージファイルを書き、グラフを再コンパイルし、再生成します:
 
 ```bash
 aidlc engine gen runners
 ```
 
-The generator reads the compiled stage list (the one source of truth) and emits a runner shell per runnable stage. Your new stage's `/aidlc-<your-stage>` command appears automatically — no runner file to author, no boilerplate to copy. Scope-runners work the same way for scopes whose frontmatter declares `runner: true`; `scopes --all` emits runners for every scope file.
+ジェネレーターはコンパイルされたステージ一覧（唯一の信頼できる情報源）を読み取り、実行可能なステージごとにランナーの殻を出力します。新しいステージの `/aidlc-<your-stage>` コマンドは自動的に現れます — 書くべきランナーファイルも、コピーすべき定型コードもありません。スコープランナーも同じ仕組みで、frontmatter に `runner: true` を宣言したスコープに対して生成されます。`scopes --all` はすべてのスコープファイルに対してランナーを出力します。
 
 ```bash
 aidlc engine gen runner-scopes      # generate scope-runners
 ```
 
-Because the runner set is derived rather than hand-maintained, it can't drift from the stages and scopes it covers. Two checks fail CI the moment the on-disk set diverges from the source of truth:
+ランナーのセットは手作業で保守するのではなく導出されるため、対象のステージやスコープとずれることがありません。ディスク上のセットが信頼できる情報源から乖離した時点で、2 つのチェックが CI を失敗させます:
 
 ```bash
 aidlc engine gen runners --check             # stage-runner drift
 aidlc engine gen runner-scopes --check       # scope-runner drift
 ```
 
-In a project where nothing has drifted, the stage-runner check prints:
+何もずれていないプロジェクトでは、ステージランナーのチェックは次のように出力します:
 
 ```text
 $ aidlc engine gen runners --check
 stage-runner set is in sync with the compiled stage graph (30 runners).
 ```
 
-A stage added to the graph without a regenerated runner — or an orphan runner for a stage that's gone — fails loudly with a diff. Adding a stage file and regenerating is the whole authoring path; the runner follows as a consequence the generator maintains for you.
+ランナーを再生成せずにグラフにステージを追加した場合や、なくなったステージの孤立したランナーが残っている場合は、差分とともに明確に失敗します。ステージファイルを追加して再生成することが作成手順のすべてです。ランナーはその結果として生まれ、ジェネレーターが保守してくれます。
 
-For the mechanics of writing a stage file, see [Customization](13-customization.md) and [Phases and Stages](04-phases-and-stages.md). For the engine, the directive contract, and how a runner shell drives `next`/`report` under the hood, see the reference chapter on the [Skill System](../reference/17-skill-system.md).
+ステージファイルの書き方については、[カスタマイズ](13-customization.md)と[フェーズとステージ](04-phases-and-stages.md)を参照してください。エンジン、ディレクティブの契約、ランナーの殻が内部で `next`/`report` をどう動かすかについては、リファレンスの [Skill System](../reference/17-skill-system.md) の章を参照してください。
 
 ---
 
@@ -206,4 +206,4 @@ aidlc engine gen runners
 aidlc engine gen runner-scopes
 ```
 
-See also: [CLI Commands](12-cli-commands.md) · [Scopes, Depth, and Test Strategy](05-scopes-and-depth.md) · [Customization](13-customization.md)
+関連項目: [CLI コマンド](12-cli-commands.md) · [スコープ、深さ、テスト戦略](05-scopes-and-depth.md) · [カスタマイズ](13-customization.md)

@@ -1,74 +1,74 @@
 # Test Strategy Patterns
 
-Comprehensive guidance for building a test strategy that balances confidence, speed, and maintainability.
+確信度、速度、保守性のバランスがとれたテスト戦略を構築するための包括的なガイダンス。
 
 ## The Test Pyramid
 
-Structure tests in layers, with volume decreasing as scope and cost increase:
+テストを層構造にし、スコープとコストが大きくなるほど数を減らす:
 
-1. **Unit Tests (base, ~70%)** — Test individual functions, classes, or modules in isolation. Fast, deterministic, run on every commit. Mock external dependencies.
-2. **Integration Tests (middle, ~20%)** — Test interactions between components: service-to-database, service-to-service, message producer-to-consumer. Use real dependencies where practical (testcontainers, localstack).
-3. **End-to-End Tests (top, ~10%)** — Test complete user workflows through the full stack. Slowest and most brittle; keep the count small and focused on critical paths.
+1. **ユニットテスト（土台、約 70%）** — 個々の関数、クラス、モジュールを分離してテストする。高速かつ決定的で、コミットごとに実行する。外部依存はモックにする。
+2. **統合テスト（中間、約 20%）** — コンポーネント間の相互作用をテストする: サービスとデータベース、サービス同士、メッセージのプロデューサーとコンシューマー。現実的な範囲で本物の依存を使う（testcontainers、localstack）。
+3. **E2E テスト（頂点、約 10%）** — フルスタックを通じてユーザーのワークフロー全体をテストする。最も遅く壊れやすいため、数は少なく抑え、重要な経路に絞る。
 
-Anti-pattern: the **ice cream cone** (mostly manual/e2e tests, few unit tests) leads to slow feedback and flaky pipelines.
+アンチパターン: **アイスクリームコーン**（手動/E2E テストが大半で、ユニットテストが少ない）は、フィードバックの遅さと不安定なパイプラインを招く。
 
 ## Test Doubles
 
-| Type | Purpose | Example |
+| 種類 | 目的 | 例 |
 |------|---------|---------|
-| **Mock** | Verify interactions (was method X called with args Y?) | `jest.fn()`, `unittest.mock.Mock` |
-| **Stub** | Return predetermined data; no interaction verification | Hard-coded return values |
-| **Fake** | Working implementation with shortcuts (in-memory DB) | SQLite for integration tests |
-| **Spy** | Wraps real object; records calls while executing real logic | `jest.spyOn()`, Sinon spies |
+| **Mock** | 相互作用を検証する（メソッド X が引数 Y で呼ばれたか？） | `jest.fn()`, `unittest.mock.Mock` |
+| **Stub** | 決められたデータを返す。相互作用は検証しない | ハードコードした戻り値 |
+| **Fake** | 近道を使った動作する実装（インメモリ DB） | 統合テスト用の SQLite |
+| **Spy** | 本物のオブジェクトをラップし、本物のロジックを実行しながら呼び出しを記録する | `jest.spyOn()`, Sinon の spy |
 
-Guidelines:
-- Prefer stubs over mocks to keep tests less coupled to implementation.
-- Use fakes (LocalStack, testcontainers) for integration tests to increase realism.
-- Avoid mocking what you do not own; wrap third-party libraries behind an interface and mock the interface.
+指針:
+- テストが実装に結合しすぎないよう、モックよりスタブを優先する。
+- 統合テストではフェイク（LocalStack、testcontainers）を使って現実性を高める。
+- 自分が所有していないものはモックにしない。サードパーティのライブラリはインターフェースの背後にラップし、そのインターフェースをモックにする。
 
 ## Test Data Management
 
-- Build test data from the project's own types, schemas or contracts, or check it against them, so a fixture or stub never has a shape the real code or service does not produce. Data for an error-path test starts from a valid value and changes only the field under test.
-- Use **factories** or **builders** to construct test data programmatically (factory_boy, fishery, @faker-js/faker).
-- Each test should set up its own data; avoid shared mutable state across tests.
-- For integration tests, use database transactions that roll back after each test, or truncate tables in setup.
-- Maintain a **seed data** script for local development and CI that populates reference data consistently.
-- Mask or synthesize PII for test environments; never copy production data without anonymization.
+- テストデータはプロジェクト自身の型、スキーマ、契約から構築するか、それらと照合する。そうすれば、フィクスチャやスタブが実際のコードやサービスが生成しない形になることはない。エラー経路のテスト用データは有効な値から始め、テスト対象のフィールドだけを変更する。
+- **ファクトリ**や**ビルダー**を使ってテストデータをプログラムで構築する（factory_boy、fishery、@faker-js/faker）。
+- 各テストは自分のデータを自分で準備する。テスト間で可変の状態を共有しない。
+- 統合テストでは、各テスト後にロールバックするデータベーストランザクションを使うか、セットアップでテーブルを truncate する。
+- 参照データを一貫して投入する、ローカル開発と CI 用の**シードデータ**スクリプトを保守する。
+- テスト環境では PII をマスクするか合成する。匿名化せずに本番データをコピーしてはならない。
 
 ## Contract Testing
 
-- Use Pact or similar tools to verify that a consumer's expectations match the provider's actual API.
-- Consumer writes a contract (expected request/response pairs); provider verifies it independently.
-- Decouple consumer and provider deployments: each team runs contract tests in their own pipeline.
-- Essential for microservice architectures where integration tests across all services are impractical.
+- Pact などのツールを使い、コンシューマーの期待がプロバイダーの実際の API と一致することを検証する。
+- コンシューマーが契約（期待するリクエスト/レスポンスの組）を書き、プロバイダーがそれを独立に検証する。
+- コンシューマーとプロバイダーのデプロイを分離する: 各チームが自分のパイプラインで契約テストを実行する。
+- 全サービスにまたがる統合テストが現実的でないマイクロサービスアーキテクチャでは不可欠である。
 
 ## Property-Based Testing
 
-- Instead of specific input/output examples, define properties that must hold for all valid inputs.
-- Tools: Hypothesis (Python), fast-check (TypeScript), QuickCheck (Haskell-inspired).
-- Example properties: "serializing then deserializing returns the original value", "sorting is idempotent", "output list length equals input list length".
-- Excellent for finding edge cases that example-based tests miss (empty strings, negative numbers, Unicode).
+- 具体的な入出力の例ではなく、すべての有効な入力で成り立つべき性質を定義する。
+- ツール: Hypothesis（Python）、fast-check（TypeScript）、QuickCheck（Haskell 由来）。
+- 性質の例: 「シリアライズしてからデシリアライズすると元の値に戻る」「ソートは冪等である」「出力リストの長さは入力リストの長さに等しい」。
+- 例ベースのテストが見逃すエッジケース（空文字列、負の数、Unicode）の発見に非常に有効である。
 
 ## Mutation Testing
 
-- Introduces small changes (mutations) to source code and checks whether tests catch them.
-- A surviving mutant means a gap in test assertions.
-- Tools: Stryker (JS/TS), mutmut (Python), pitest (Java).
-- Use selectively on critical modules; full-codebase mutation testing is expensive.
+- ソースコードに小さな変更（ミューテーション）を加え、テストがそれを検出するかを確認する。
+- 生き残ったミュータントは、テストのアサーションに抜けがあることを意味する。
+- ツール: Stryker（JS/TS）、mutmut（Python）、pitest（Java）。
+- 重要なモジュールに絞って使う。コードベース全体へのミューテーションテストはコストが高い。
 
 ## Coverage Metrics and Targets
 
-- **Line coverage**: Percentage of lines executed. Baseline target: 80%.
-- **Branch coverage**: Percentage of conditional branches taken. More meaningful than line coverage.
-- **Mutation score**: Percentage of mutants killed. Gold standard but costly.
-- Coverage is a necessary but not sufficient quality signal. 100% coverage with weak assertions catches nothing.
-- Enforce coverage in CI as a gate: fail the build if coverage drops below the threshold.
+- **行カバレッジ**: 実行された行の割合。基準となる目標値: 80%。
+- **分岐カバレッジ**: 通過した条件分岐の割合。行カバレッジより意味がある。
+- **ミューテーションスコア**: 殺されたミュータントの割合。最も信頼できる指標だがコストが高い。
+- カバレッジは品質のシグナルとして必要条件だが十分条件ではない。アサーションが弱ければ、カバレッジ 100% でも何も検出できない。
+- CI でカバレッジをゲートとして強制する: カバレッジがしきい値を下回ったらビルドを失敗させる。
 
 ## CI Integration
 
-- Run unit tests on every push; gate merges on green status.
-- Run integration tests on pull request creation and nightly.
-- Run e2e tests nightly or on release branches; do not block every PR.
-- Parallelize test suites across CI workers to keep feedback under 10 minutes.
-- Report test results as PR annotations (JUnit XML, GitHub Actions test reporter).
-- Track flaky tests explicitly; quarantine or fix within one sprint.
+- ユニットテストはプッシュごとに実行し、グリーンであることをマージの条件にする。
+- 統合テストはプルリクエスト作成時と夜間に実行する。
+- E2E テストは夜間またはリリースブランチで実行する。すべての PR をブロックしない。
+- テストスイートを CI ワーカー間で並列化し、フィードバックを 10 分以内に保つ。
+- テスト結果を PR のアノテーションとして報告する（JUnit XML、GitHub Actions のテストレポーター）。
+- 不安定なテスト（flaky test）を明示的に追跡し、1 スプリント以内に隔離または修正する。

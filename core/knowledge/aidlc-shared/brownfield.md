@@ -1,30 +1,30 @@
 # Brownfield Safeguards
 
-For any stage that modifies existing code or infrastructure, these safeguards apply.
+既存のコードやインフラストラクチャを変更するステージには、以下のセーフガードを適用する。
 
 ## Safeguard Matrix
 
-| Safeguard | What It Does | When Applied |
+| セーフガード | 内容 | 適用タイミング |
 |-----------|-------------|--------------|
-| **Blast Radius Analysis** | Identifies affected files/components and their downstream dependents | Before code generation (stage `code-generation`, 3.5) |
-| **Diff Preview** | Shows exact proposed changes before applying | Before any file modification |
-| **Test Baseline** | Runs existing tests BEFORE changes to establish baseline | Before code generation (stage `code-generation`, 3.5) |
-| **Test Validation** | Runs existing tests AFTER changes to confirm nothing broke | After code generation (stage `build-and-test`, 3.6) |
-| **Impact Analysis** | Documents affected APIs, components, and dependencies | During reverse engineering (stage `reverse-engineering`, 2.1) and code generation (3.5) |
-| **Rollback Plan** | Documents how to undo changes if needed | Before deployment (stage `deployment-execution`, 4.3) |
+| **影響範囲分析（Blast Radius Analysis）** | 影響を受けるファイル/コンポーネントと、その下流の依存先を特定する | コード生成の前（ステージ `code-generation`、3.5） |
+| **差分プレビュー（Diff Preview）** | 適用前に、提案する変更内容を正確に示す | ファイルを変更する前すべて |
+| **テストベースライン（Test Baseline）** | 変更の前に既存テストを実行し、ベースラインを確立する | コード生成の前（ステージ `code-generation`、3.5） |
+| **テスト検証（Test Validation）** | 変更の後に既存テストを実行し、何も壊れていないことを確認する | コード生成の後（ステージ `build-and-test`、3.6） |
+| **影響分析（Impact Analysis）** | 影響を受ける API、コンポーネント、依存関係を文書化する | リバースエンジニアリング中（ステージ `reverse-engineering`、2.1）およびコード生成中（3.5） |
+| **ロールバック計画（Rollback Plan）** | 必要に応じて変更を元に戻す方法を文書化する | デプロイの前（ステージ `deployment-execution`、4.3） |
 
 ## Blast Radius Analysis Template
 
-Before modifying existing code:
-1. List all files that will be changed
-2. For each file, identify: imports/consumers, test files, configuration references
-3. Classify impact: low (isolated change), medium (affects 2-3 dependents), high (cross-cutting)
-4. Present impact summary to user before proceeding
+既存のコードを変更する前に:
+1. 変更するすべてのファイルを列挙する
+2. 各ファイルについて、インポート元/利用側、テストファイル、設定からの参照を特定する
+3. 影響度を分類する: low（局所的な変更）、medium（2〜3 個の依存先に影響）、high（横断的な影響）
+4. 作業を進める前に、影響の概要をユーザーに提示する
 
 ## Test Baseline Protocol
 
-1. Run full test suite before ANY code changes
-2. Record: total tests, passing, failing, skipped, coverage %
-3. After code generation, re-run full test suite
-4. Compare: new failures = regressions introduced by changes
-5. If regressions found, fix before proceeding
+1. **いかなる**コード変更の前にも、テストスイート全体を実行する
+2. 記録する項目: テスト総数、成功数、失敗数、スキップ数、カバレッジ %
+3. コード生成の後、テストスイート全体を再実行する
+4. 比較する: 新たな失敗 = 変更によって持ち込まれたリグレッション
+5. リグレッションが見つかった場合は、作業を進める前に修正する

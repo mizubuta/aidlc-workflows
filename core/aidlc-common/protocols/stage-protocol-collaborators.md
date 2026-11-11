@@ -1,27 +1,27 @@
 # Collaborators Protocol Module
 
-Load this module when the engine lists `collaborators` in `directive.protocol_modules`: on a stage that dispatches support agents (`directive.support_agents` is not empty and `directive.mode` is not `inline`). It adds to the ensemble module's §5 and §11.
+エンジンが `directive.protocol_modules` に `collaborators` を挙げたとき、すなわちサポートエージェントをディスパッチするステージ（`directive.support_agents` が空でなく、かつ `directive.mode` が `inline` でない）で、このモジュールを読み込む。このモジュールはアンサンブルモジュールの §5 と §11 を補完する。
 
-**Who writes what (mirrors a real working session — everyone writes; the owner collates and edits):**
+**誰が何を書くか（実際の作業セッションと同じく、全員が書き、オーナーが取りまとめて編集する）:**
 
-- Each dispatched support agent WRITES its own **contribution file** at `<record>/<phase>/<stage>/contributions/<agent-slug>.md` (per-unit stages: under the unit's stage dir). Separate files per agent, so parallel dispatch never conflicts. The file's FIRST line is the identity marker verbatim: `**Collaborator:** <agent-slug>`, followed by `## Contribution` (the substantive content, written to be integrable) and `## Positions` (`AGREE:` / `OBJECT:` bullets with one-line rationales; `None` = full agreement).
-- The LEAD integrates contributions into the stage's `produces[]` artifacts and owns their final state. Contribution files are part of the stage's permanent record — dissent stays on disk, not in ephemeral return text.
-- On `pipeline`, the chain collectively authors the artifacts directly (serialized, so no conflict) and the conductor mints a durable link receipt after every return — see the topology bullet.
+- ディスパッチされた各サポートエージェントは、自身の**コントリビューションファイル**を `<record>/<phase>/<stage>/contributions/<agent-slug>.md` に**書き込む**（ユニットごとのステージでは、ユニットのステージディレクトリ配下）。エージェントごとにファイルが分かれているため、並列ディスパッチでも競合しない。ファイルの**1 行目**は、一字一句そのままの識別マーカー `**Collaborator:** <agent-slug>` とし、その後に `## Contribution`（統合可能なように書いた実質的な内容）と `## Positions`（1 行の根拠を添えた `AGREE:` / `OBJECT:` の箇条書き。`None` = 全面的に同意）を続ける。
+- **リード**は、コントリビューションをステージの `produces[]` 成果物に統合し、その最終状態に責任を持つ。コントリビューションファイルはステージの恒久的な記録の一部である — 反対意見は一時的な戻り値のテキストではなく、ディスク上に残る。
+- `pipeline` では、チェーン全体が成果物を直接共同で作成し（直列なので競合しない）、コンダクターは各戻りの後に永続的なリンクの受領記録を作成する — トポロジーの項目を参照。
 
-- **`mode: mob`** — mesh, run as bounded rounds. Round 1: dispatch all support agents in parallel against the lead's draft, mutually blind; each writes its contribution file. The lead integrates. Then TRIAGE unresolved objections by kind:
-  - **Judgment calls** (both positions legitimate — scope, risk appetite, priority tradeoffs): surface to the HUMAN mid-stage as a structured question per §3 (write it to the stage's questions file with a blank `[Answer]:` tag BEFORE presenting, as §3 requires), then continue integration with the human's ruling. The human is a mob participant, not a post-hoc approver. Skipped under autonomous Construction — there the objection is recorded and surfaces at the final-batch gate.
-  - **Knowledge disputes** (an expert can settle it): round 2 — re-dispatch each objecting agent with the revised draft and the other participants' recorded positions, to confirm or maintain (the agent updates its contribution file's Positions). Two rounds maximum.
-  - Maintained dissent after triage is quoted verbatim in the completion summary at the gate; under autonomous Construction it is recorded in the artifact and audit and surfaces at the final-batch gate instead of halting.
+- **`mode: mob`** — メッシュ型で、回数を区切ったラウンドとして実行する。ラウンド 1: すべてのサポートエージェントを、リードのドラフトに対して互いに見えない状態で並列にディスパッチする。各エージェントは自身のコントリビューションファイルを書く。リードがそれらを統合する。その後、未解決の異議を種類ごとに**トリアージ**する:
+  - **判断事項**（どちらの立場も正当なもの — スコープ、リスク許容度、優先度のトレードオフ）: §3 に従い、ステージの途中で構造化された質問として**利用者**に提示する（§3 が求めるとおり、提示する**前に**、空の `[Answer]:` タグを付けてステージの質問ファイルに書き込む）。その後、利用者の裁定に基づいて統合を続ける。利用者は事後承認者ではなく、モブの参加者である。自律的な Construction ではスキップする — その場合、異議は記録され、最終バッチのゲートで提示される。
+  - **知識上の論争**（専門家が決着をつけられるもの）: ラウンド 2 — 異議を唱えた各エージェントを、改訂後のドラフトと他の参加者の記録済みの立場とともに再ディスパッチし、立場を確認または維持させる（エージェントは自身のコントリビューションファイルの Positions を更新する）。ラウンドは最大 2 回。
+  - トリアージ後も維持された反対意見は、ゲートでの完了サマリーにそのまま引用する。自律的な Construction では、停止せずに成果物と監査に記録し、最終バッチのゲートで提示する。
 
-On a harness that cannot dispatch in parallel, `subagent` spokes and `mob` round-1 dispatches run sequentially with UNCHANGED briefs — each participant still sees only what the topology grants it, never a sibling's contribution. The topology's who-sees-what contract is the invariant; concurrency is not.
+並列ディスパッチができないハーネスでは、`subagent` のスポークと `mob` のラウンド 1 のディスパッチを、ブリーフを**変更せずに**順次実行する — 各参加者が見るのは、トポロジーが許可したものだけであり、兄弟エージェントのコントリビューションは決して見ない。不変条件はトポロジーの「誰が何を見るか」の契約であって、並行性ではない。
 
 ### Collaborator contribution files (ensemble topologies)
 
-A support agent dispatched on a `subagent` or `mob` stage (§5 "Multi-agent
-stages") WRITES its work as a contribution file at
-`<record>/<phase>/<stage>/contributions/<agent-slug>.md` (per-unit stages:
-under the unit's stage dir) and returns the standard summary (§11) with the
-file listed under "Produced". The file's shape:
+`subagent` または `mob` のステージ（§5 "Multi-agent
+stages"）でディスパッチされたサポートエージェントは、作業内容をコントリビューションファイルとして
+`<record>/<phase>/<stage>/contributions/<agent-slug>.md` に**書き込み**（ユニットごとのステージでは、
+ユニットのステージディレクトリ配下）、そのファイルを "Produced" の下に挙げた
+標準のサマリー（§11）を返す。ファイルの形式:
 
 ```markdown
 **Collaborator:** [agent-slug]
@@ -35,13 +35,13 @@ lead can integrate it into the artifacts directly]
 - OBJECT: [aspect disputed or missing] — [one-line rationale]
 ```
 
-The identity-marker first line is verbatim and mandatory — the completion
-evidence check (§5) verifies it. Positions are the raw material for the mob's
-objection triage (§5): judgment calls go to the human mid-stage, knowledge
-disputes to round 2 (the objecting agent updates its own file), and
-maintained dissent is quoted verbatim at the gate. `None` under Positions
-means full agreement. Contribution files never write outside
-`contributions/`; the lead alone edits the stage's `produces[]` artifacts.
-On `pipeline` stages there are no contribution files — chain links advance
-the artifacts directly per the stage body, and the conductor records each
-returned link with its command in `directive.pipeline.record` before continuing.
+識別マーカーの 1 行目は一字一句そのままとし、必須である — 完了の
+証拠チェック（§5）がそれを検証する。Positions は、モブの
+異議トリアージ（§5）の素材となる: 判断事項はステージの途中で利用者に、知識上の
+論争はラウンド 2 に回され（異議を唱えたエージェントが自身のファイルを更新する）、
+維持された反対意見はゲートでそのまま引用される。Positions の下の `None` は
+全面的な同意を意味する。コントリビューションファイルは
+`contributions/` の外には決して書き込まない。ステージの `produces[]` 成果物を編集するのはリードだけである。
+`pipeline` のステージにはコントリビューションファイルはない — チェーンの各リンクは
+ステージ本文に従って成果物を直接進め、コンダクターは返された各リンクを
+そのコマンドとともに `directive.pipeline.record` に記録してから先に進む。

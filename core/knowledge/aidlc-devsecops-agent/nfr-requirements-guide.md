@@ -3,42 +3,42 @@
 ## Performance Requirement Benchmarking
 
 ### How to Define Performance Requirements
-Every performance requirement must specify:
-- **Metric**: What is being measured (response time, throughput, resource usage)
-- **Target**: The quantitative threshold
-- **Percentile**: Which percentile the target applies to (p50, p95, p99)
-- **Load condition**: Under what concurrency/traffic the target must hold
-- **Measurement method**: How and where the metric is captured
+すべてのパフォーマンス要件は、次の項目を必ず指定しなければならない:
+- **メトリクス**: 何を測定するか（応答時間、スループット、リソース使用量）
+- **目標値**: 定量的なしきい値
+- **パーセンタイル**: 目標値をどのパーセンタイルに適用するか（p50、p95、p99）
+- **負荷条件**: どの程度の同時実行数/トラフィックのもとで目標値を満たす必要があるか
+- **測定方法**: メトリクスをどのように、どこで取得するか
 
 ### Common Performance Targets by Application Type
 
-| Application Type | Metric | Target | Percentile | Notes |
+| アプリケーションの種類 | メトリクス | 目標値 | パーセンタイル | 備考 |
 |-----------------|--------|--------|------------|-------|
-| Web application (interactive) | Page load time | < 2s | p95 | First contentful paint |
-| REST API (synchronous) | Response time | < 200ms | p99 | Excludes network transit |
-| Search query | Result delivery | < 500ms | p95 | Including ranking |
-| Batch processing | Throughput | N records/min | Average | Define minimum acceptable rate |
-| Real-time messaging | End-to-end latency | < 100ms | p99 | From send to delivery |
-| File upload | Processing time | < 5s per MB | p95 | Post-upload processing |
+| Web アプリケーション（対話型） | ページ読み込み時間 | < 2s | p95 | First Contentful Paint |
+| REST API（同期） | 応答時間 | < 200ms | p99 | ネットワーク転送時間を除く |
+| 検索クエリ | 結果の返却 | < 500ms | p95 | ランキング処理を含む |
+| バッチ処理 | スループット | N レコード/分 | 平均 | 許容できる最低レートを定義する |
+| リアルタイムメッセージング | エンドツーエンドのレイテンシ | < 100ms | p99 | 送信から配信まで |
+| ファイルアップロード | 処理時間 | 1MB あたり < 5s | p95 | アップロード後の処理 |
 
 ### Performance Anti-Requirements
-Explicitly exclude unreasonable expectations:
-- "The system should be fast" (not measurable)
-- "All pages load instantly" (no target, no percentile)
-- "Handle unlimited users" (no capacity boundary)
+不合理な期待は明示的に除外する:
+- 「システムは高速であるべき」（測定できない）
+- 「すべてのページが瞬時に読み込まれる」（目標値もパーセンタイルもない）
+- 「無制限のユーザーに対応する」（キャパシティの境界がない）
 
-Replace with: "The dashboard page loads in < 3 seconds at p95 under 500 concurrent users."
+次のように置き換える: 「ダッシュボードページは、同時接続ユーザー 500 人の条件下で、p95 で 3 秒未満で読み込まれる。」
 
 ## Scalability Assessment Frameworks
 
 ### Capacity Planning Template
 
-| Dimension | Current | 6-Month Target | 12-Month Target | Scaling Mechanism |
+| 観点 | 現在 | 6か月後の目標 | 12か月後の目標 | スケーリングの仕組み |
 |-----------|---------|---------------|-----------------|-------------------|
-| Concurrent users | N | N * X | N * Y | Horizontal auto-scaling |
-| Data volume | N GB | N * X GB | N * Y GB | Partitioning strategy |
-| Requests per second | N | N * X | N * Y | Load balancer + replicas |
-| Storage growth rate | N GB/month | N * X GB/month | N * Y GB/month | Tiered storage policy |
+| 同時接続ユーザー数 | N | N * X | N * Y | 水平オートスケーリング |
+| データ量 | N GB | N * X GB | N * Y GB | パーティショニング戦略 |
+| 秒間リクエスト数 | N | N * X | N * Y | ロードバランサー + レプリカ |
+| ストレージ増加率 | N GB/月 | N * X GB/月 | N * Y GB/月 | 階層型ストレージポリシー |
 
 ### Scalability Requirement Format
 ```
@@ -53,72 +53,72 @@ Degradation policy: [what degrades first when approaching capacity limits]
 
 ### Scaling Decision Matrix
 
-| Signal | Scale Up | Scale Out | Optimize First |
+| シグナル | スケールアップ | スケールアウト | まず最適化 |
 |--------|----------|-----------|----------------|
-| CPU consistently > 70% | Single-instance workloads | Stateless services | Check for inefficient algorithms |
-| Memory pressure | In-memory processing | Distributed cache | Check for memory leaks |
-| I/O wait > 30% | Faster storage tier | Read replicas, sharding | Query optimization, indexing |
-| Queue depth growing | Faster consumers | More consumer instances | Batch size tuning |
-| Connection pool exhausted | Larger pool size | Connection multiplexing | Connection leak investigation |
+| CPU が常時 > 70% | 単一インスタンスのワークロード | ステートレスなサービス | 非効率なアルゴリズムがないか確認する |
+| メモリ逼迫 | インメモリ処理 | 分散キャッシュ | メモリリークがないか確認する |
+| I/O 待ち > 30% | より高速なストレージ階層 | リードレプリカ、シャーディング | クエリ最適化、インデックス作成 |
+| キュー深度が増加 | より高速なコンシューマー | コンシューマーインスタンスの追加 | バッチサイズの調整 |
+| コネクションプールの枯渇 | プールサイズの拡大 | コネクションの多重化 | コネクションリークの調査 |
 
 ## Reliability Target-Setting
 
 ### SLA/SLO/SLI Hierarchy
 
-| Term | Definition | Example | Who Defines |
+| 用語 | 定義 | 例 | 定義する人 |
 |------|-----------|---------|-------------|
-| **SLI** (Indicator) | The metric being measured | Successful requests / total requests | Engineering |
-| **SLO** (Objective) | Internal target for the SLI | 99.95% success rate over 30 days | Engineering + Product |
-| **SLA** (Agreement) | External contractual commitment | 99.9% uptime with financial penalties | Business + Legal |
+| **SLI**（指標） | 測定対象のメトリクス | 成功したリクエスト数 / 全リクエスト数 | エンジニアリング |
+| **SLO**（目標） | SLI に対する内部目標 | 30 日間で成功率 99.95% | エンジニアリング + プロダクト |
+| **SLA**（合意） | 外部への契約上のコミットメント | 金銭的ペナルティ付きの稼働率 99.9% | ビジネス + 法務 |
 
-**Rule**: SLO must be stricter than SLA. If SLA is 99.9%, set SLO at 99.95% to provide an internal buffer.
+**ルール**: SLO は必ず SLA より厳しくしなければならない。SLA が 99.9% なら、内部のバッファを確保するため SLO を 99.95% に設定する。
 
 ### Availability Targets and Their Implications
 
-| Availability | Downtime / Year | Downtime / Month | Requires |
+| 可用性 | 年間ダウンタイム | 月間ダウンタイム | 必要なもの |
 |-------------|-----------------|-------------------|----------|
-| 99% (two nines) | 3.65 days | 7.3 hours | Basic monitoring, manual recovery |
-| 99.9% (three nines) | 8.76 hours | 43.8 minutes | Auto-restart, health checks, alerting |
-| 99.95% | 4.38 hours | 21.9 minutes | Multi-AZ, automated failover, load balancing |
-| 99.99% (four nines) | 52.6 minutes | 4.38 minutes | Multi-region active-active, zero-downtime deploys |
-| 99.999% (five nines) | 5.26 minutes | 26.3 seconds | Fully automated everything, extensive redundancy |
+| 99%（ツーナイン） | 3.65 日 | 7.3 時間 | 基本的な監視、手動での復旧 |
+| 99.9%（スリーナイン） | 8.76 時間 | 43.8 分 | 自動再起動、ヘルスチェック、アラート |
+| 99.95% | 4.38 時間 | 21.9 分 | マルチ AZ、自動フェイルオーバー、負荷分散 |
+| 99.99%（フォーナイン） | 52.6 分 | 4.38 分 | マルチリージョンのアクティブ-アクティブ構成、ゼロダウンタイムデプロイ |
+| 99.999%（ファイブナイン） | 5.26 分 | 26.3 秒 | あらゆるものの完全自動化、広範な冗長性 |
 
 ### Recovery Objectives
 
-| Objective | Definition | How to Set |
+| 目標 | 定義 | 設定方法 |
 |-----------|-----------|------------|
-| **RTO** (Recovery Time Objective) | Maximum acceptable time to restore service | Based on business impact per hour of downtime |
-| **RPO** (Recovery Point Objective) | Maximum acceptable data loss window | Based on cost of recreating or losing data |
-| **MTTR** (Mean Time to Recovery) | Average time to restore from failure | Measured operationally; target should be < RTO |
-| **MTBF** (Mean Time Between Failures) | Average time between failures | Measured operationally; drives reliability investment |
+| **RTO**（Recovery Time Objective、目標復旧時間） | サービス復旧までに許容できる最大時間 | ダウンタイム 1 時間あたりのビジネス影響に基づく |
+| **RPO**（Recovery Point Objective、目標復旧時点） | 許容できるデータ損失の最大期間 | データの再作成または損失のコストに基づく |
+| **MTTR**（Mean Time to Recovery、平均復旧時間） | 障害から復旧するまでの平均時間 | 運用の中で測定する。目標値は RTO 未満であるべき |
+| **MTBF**（Mean Time Between Failures、平均故障間隔） | 障害と障害の間の平均時間 | 運用の中で測定する。信頼性への投資判断の根拠となる |
 
 ## Observability Requirements
 
 ### Three Pillars Specification
 
 #### Metrics Requirements
-Define for each component:
-- **Business metrics**: Conversion rate, revenue processed, active users
-- **Application metrics**: Request rate, error rate, latency (RED method)
-- **Infrastructure metrics**: CPU, memory, disk, network (USE method)
-- **Retention**: How long to keep each metric tier (1 min granularity for 7 days, 5 min for 30 days, 1 hour for 1 year)
+コンポーネントごとに次を定義する:
+- **ビジネスメトリクス**: コンバージョン率、処理された売上、アクティブユーザー数
+- **アプリケーションメトリクス**: リクエストレート、エラーレート、レイテンシ（RED メソッド）
+- **インフラストラクチャメトリクス**: CPU、メモリ、ディスク、ネットワーク（USE メソッド）
+- **保持期間**: メトリクスの各階層をどれだけ保持するか（1 分粒度は 7 日間、5 分粒度は 30 日間、1 時間粒度は 1 年間）
 
 #### Logging Requirements
-| Log Level | When to Use | Retention | Indexing |
+| ログレベル | 使用する場面 | 保持期間 | インデックス |
 |-----------|------------|-----------|---------|
-| ERROR | Unrecoverable failures requiring attention | 90 days | Full-text indexed |
-| WARN | Recoverable issues, degraded behavior | 30 days | Full-text indexed |
-| INFO | Significant business events, state transitions | 30 days | Structured fields only |
-| DEBUG | Diagnostic detail for troubleshooting | 7 days | Not indexed (stored only) |
+| ERROR | 対応が必要な回復不能の障害 | 90 日 | 全文インデックス |
+| WARN | 回復可能な問題、劣化した振る舞い | 30 日 | 全文インデックス |
+| INFO | 重要なビジネスイベント、状態遷移 | 30 日 | 構造化フィールドのみ |
+| DEBUG | トラブルシューティング用の診断詳細 | 7 日 | インデックスなし（保存のみ） |
 
 #### Tracing Requirements
-- Distributed traces across all service boundaries
-- Trace context propagation via W3C Trace Context headers
-- Sampling strategy: 100% for errors, 10% for normal traffic (adjust for volume)
-- Trace retention: 7 days at full detail, 30 days for trace metadata
+- すべてのサービス境界をまたぐ分散トレース
+- W3C Trace Context ヘッダーによるトレースコンテキストの伝播
+- サンプリング戦略: エラーは 100%、通常のトラフィックは 10%（量に応じて調整する）
+- トレースの保持期間: 完全な詳細は 7 日間、トレースのメタデータは 30 日間
 
 ### Alerting Requirements Template
-For each alert:
+アラートごとに:
 ```
 Alert: [descriptive name]
 SLI: [which service level indicator]
@@ -130,11 +130,11 @@ Auto-remediation: [if any automated response is triggered]
 ```
 
 ### Observability Anti-Patterns to Avoid
-- Alerting on causes instead of symptoms (alert on error rate, not CPU usage)
-- Missing correlation IDs across service boundaries
-- Logging sensitive data (PII, credentials, tokens)
-- Alert fatigue from noisy thresholds (tune before deploying)
-- Dashboard sprawl without clear ownership (every dashboard needs an owner)
+- 症状ではなく原因に対してアラートを出す（CPU 使用率ではなく、エラーレートでアラートを出す）
+- サービス境界をまたぐ相関 ID が欠落している
+- 機密データ（PII、認証情報、トークン）をログに記録する
+- ノイズの多いしきい値によるアラート疲れ（デプロイ前に調整する）
+- 所有者が明確でないダッシュボードの乱立（すべてのダッシュボードに所有者が必要）
 
 ## Security Requirement Templates
 
@@ -180,9 +180,9 @@ Evidence requirements: [what documentation/logs must be maintained]
 ```
 
 ### Security Anti-Requirements
-Explicitly exclude unreasonable expectations:
-- "The system should be secure" (not measurable)
-- "No vulnerabilities" (impossible — define acceptable risk)
-- "Military-grade encryption" (undefined — specify algorithm and key length)
+不合理な期待は明示的に除外する:
+- 「システムは安全であるべき」（測定できない）
+- 「脆弱性ゼロ」（不可能 — 許容できるリスクを定義する）
+- 「軍用レベルの暗号化」（定義されていない — アルゴリズムと鍵長を指定する）
 
-Replace with: "All API endpoints require JWT authentication with RS256 signing. Access tokens expire after 15 minutes. Refresh tokens expire after 7 days and are single-use."
+次のように置き換える: 「すべての API エンドポイントで、RS256 署名による JWT 認証を必須とする。アクセストークンは 15 分で失効する。リフレッシュトークンは 7 日で失効し、使い捨てである。」

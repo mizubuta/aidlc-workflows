@@ -1,58 +1,56 @@
 # Checkpoint Protocol Module
 
-Load this module when the engine lists `checkpoint` in `directive.protocol_modules`: on a Unit or skeleton checkpoint (`directive.construction_checkpoint`), a swarm batch checkpoint (`directive.swarm_checkpoint`), and every `invoke-swarm`.
+エンジンが `directive.protocol_modules` に `checkpoint` を挙げている場合にこのモジュールを読み込む: Unit またはスケルトンのチェックポイント（`directive.construction_checkpoint`）、スウォームのバッチチェックポイント（`directive.swarm_checkpoint`）、そしてすべての `invoke-swarm` が該当する。
 
 ### Checkpoint verification and approval
 
-A `run-stage` with `construction_checkpoint` carries `kind` (`unit` or
-`skeleton`), `unit`, `stages`, `fingerprint`, `ready`, `verified`, `approved`,
-`human_required`, `verification_command`, `command_authorized`, `errors`, and
-`proof_path`. It is a verification/approval re-entry over existing work.
-`verification_command` is the full canonical recorded command, never a truncated
-display label. Use the exact Unit and kind the engine emitted:
+`construction_checkpoint` を持つ `run-stage` は、`kind`（`unit` または
+`skeleton`）、`unit`、`stages`、`fingerprint`、`ready`、`verified`、`approved`、
+`human_required`、`verification_command`、`command_authorized`、`errors`、
+`proof_path` を持つ。これは既存の作業に対する検証/承認のための再入である。
+`verification_command` は記録された正規のコマンド全体であり、決して切り詰められた
+表示用ラベルではない。エンジンが出力した Unit と kind をそのまま使う:
 
 ```bash
 {{INVOKE}} engine bolt checkpoint --action status --unit "<unit>" --kind <unit|skeleton>
 ```
 
-`verify` runs the intent's recorded, human-authorized **Construction Verification
-Command**, reused at every Unit/batch checkpoint. If
-`construction_checkpoint.command_authorized` is false (no recorded command, no
-matching receipt, or a changed state field), **do not run `verify`**. Propose a
-real project check from the project scan, such as `bun test`, `pytest`, or
-`make check`. It must demonstrate the skeleton's integrated slice end to end and
-check completed Units' working results, and it must run every test level the
-Testing Contract requires (unit, integration, end-to-end as applicable) and the
-coverage check. When a required level cannot run on this machine (no container
-runtime, no running service), add to the Approve option's description the tests
-the command will not run and why, for example "Runs typecheck and unit tests.
-Does not run the integration tests: they need Docker, which is not installed."
-Never pick a narrower command to avoid a missing runtime without saying so, and
-never answer the gap with "CI runs them" when the plan skips CI Pipeline or the
-repository has no CI configuration. Use one nonblank line of at most 1024
-characters after trimming leading/trailing whitespace. The tools refuse control
-characters (including newline, CR, tab, or NUL) and display-spoofing characters:
-Unicode format characters (including zero-width and bidi controls), line/paragraph
-separators, and no-break space (U+00A0). The trimmed command is recorded, hashed,
-and executed unchanged. Put multiline checks in a script and record its invocation.
-Before presenting the command, write it as UTF-8 text to
-`<record>/verification-command.txt` using the harness's file-write tool
-(Write/edit), never a shell `echo` or heredoc. Repo-derived command text must
-never be interpolated into a shell line: shell substitutions could execute
-before the human approves. Pass only the record-relative file path below; the
-command finds the session it runs in by itself, so pass no session and never
-look one up:
+`verify` は、インテントに記録された、人間が承認した **Construction Verification
+Command** を実行する。このコマンドはすべての Unit/バッチのチェックポイントで再利用される。
+`construction_checkpoint.command_authorized` が false の場合（記録されたコマンドがない、
+一致する受領記録がない、または状態フィールドが変更された）、**`verify` を実行しない**。代わりに、プロジェクトのスキャン結果から
+実際のプロジェクトチェック（`bun test`、`pytest`、
+`make check` など）を提案する。そのチェックは、スケルトンの統合スライスをエンドツーエンドで実証し、
+完了した Unit の動作結果を確認するものでなければならない。また、Testing Contract が求める
+すべてのテストレベル（該当する場合はユニット、インテグレーション、エンドツーエンド）と
+カバレッジチェックを実行しなければならない。必要なレベルをこのマシンで実行できない場合（コンテナ
+ランタイムがない、サービスが起動していない）は、コマンドが実行しないテストとその理由を
+Approve 選択肢の説明に追記する。たとえば "Runs typecheck and unit tests.
+Does not run the integration tests: they need Docker, which is not installed."（型チェックとユニットテストを実行する。インテグレーションテストは実行しない: Docker が必要だが、インストールされていない。）のように書く。
+ランタイムがないことを避けるために、その旨を言わずに範囲の狭いコマンドを選んでは決してならない。また、
+プランが CI Pipeline をスキップしている場合やリポジトリに CI 設定がない場合に、その不足に対して "CI runs them" と答えては
+決してならない。前後の空白を取り除いた後で 1024 文字以内の、空でない 1 行を使う。
+ツールは制御文字（改行、CR、タブ、NUL を含む）と表示を偽装する文字を拒否する:
+Unicode の書式文字（ゼロ幅文字や双方向制御文字を含む）、行/段落の
+区切り文字、ノーブレークスペース（U+00A0）である。空白を取り除いたコマンドは、そのまま記録・ハッシュ化・
+実行される。複数行のチェックはスクリプトにまとめ、その呼び出しを記録する。
+コマンドを提示する前に、ハーネスのファイル書き込みツール（Write/edit）を使って、UTF-8 テキストとして
+`<record>/verification-command.txt` に書き込む。シェルの `echo` やヒアドキュメントは決して使わない。
+リポジトリ由来のコマンドテキストを、シェルのコマンドラインに決して
+埋め込んではならない: シェルの置換が、人間が承認する前に実行されてしまう可能性がある。
+以下のとおり、記録ディレクトリからの相対ファイルパスだけを渡す。
+コマンドは自分が実行されているセッションを自ら見つけるため、セッションを渡さず、
+セッションを調べることも決してしない:
 
 ```bash
 {{INVOKE}} engine log decision --stage "<directive.stage>" --checkpoint verification-command --command-file verification-command.txt --decision "Use this command to verify each completed Unit?" --options "Approve,Request Changes"
 ```
 
-Render this structured question through the harness's question binding. Copy the
-complete canonical command exactly from the `command` field in the `log decision`
-tool's JSON output into the question's code span; never abbreviate or substitute
-a summary, prefix, or digest. Use a code-span delimiter long enough to preserve
-any backticks in the command. The human can also open
-`<record>/verification-command.txt`. Wait for the human even under autonomous completion:
+この構造化質問は、ハーネスの質問バインディングを通じてレンダリングする。`log decision`
+ツールの JSON 出力にある `command` フィールドから、正規のコマンド全体を正確にコピーして
+質問のコードスパンに入れる。決して省略したり、要約・プレフィックス・ダイジェストで置き換えたりしない。
+コマンド内のバッククォートを保持できる長さのコードスパン区切りを使う。人間は
+`<record>/verification-command.txt` を開いて確認することもできる。自律完了の場合でも、人間の応答を待つ:
 
 ```question
 prompt: "Use this command to verify each completed Unit? `<full command>`"
@@ -65,165 +63,162 @@ options:
     description: Propose a different project check before running verification.
 ```
 
-Read the person's reply and record the choice they made. The
-human-turn hook keeps that they replied to this question and their exact words;
-a reply typed in a new chat is kept for it while it is the newest question
-asked, and a reply to another question does not count. When they
-approve, record their answer, and set the command:
+利用者の返信を読み、利用者が行った選択を記録する。
+human-turn フックが、利用者がこの質問に返信したことと、その正確な文言を保持する。
+新しいチャットで入力された返信も、それが最も新しく尋ねられた質問である間はこの質問への返信として保持される。
+別の質問への返信は数えない。利用者が
+承認した場合は、その回答を記録し、コマンドを設定する:
 
 ```bash
 {{INVOKE}} engine log answer --stage "<directive.stage>" --checkpoint verification-command --command-file verification-command.txt --details "Approve"
 {{INVOKE}} engine state set-construction-verification-command --command-file verification-command.txt
 ```
 
-For **Request Changes**, record the same `log answer` with
-`--details "Request Changes"`, do not call the setter, and propose another
-command. Never invent or auto-approve a command. The tool-owned approval receipt,
-not the state field, is the authority: never write the field without that receipt
-or use generic `state set`. Changing the command later requires this same fresh
-decision/answer/setter flow; Units and batches already approved keep their
-approval, the new command checks the ones still to be approved, and the setter's
-`notice` is the one line to tell the person. Re-run `next` after recording it, then follow the
-new directive before verification. If no runnable project check exists yet,
-resolve that gap with the human; do not substitute a placeholder or claim a pass.
+**Request Changes** の場合は、同じ `log answer` を
+`--details "Request Changes"` で記録し、セッターは呼び出さず、別の
+コマンドを提案する。コマンドを決して捏造したり自動承認したりしない。権限の根拠は状態フィールドではなく、
+ツールが管理する承認の受領記録である: その受領記録なしにフィールドを書き込んだり、
+汎用の `state set` を使ったりしては決してならない。後でコマンドを変更する場合も、これと同じ新たな
+decision/answer/setter のフローが必要である。すでに承認された Unit とバッチは承認を
+維持し、新しいコマンドはまだ承認されていないものを確認する。セッターの
+`notice` が、利用者に伝える 1 行である。記録した後に `next` を再実行し、検証の前に
+新しいディレクティブに従う。実行可能なプロジェクトチェックがまだ存在しない場合は、
+その不足を人間と一緒に解決する。プレースホルダーで代用したり、合格したと主張したりしない。
 
-When the new directive confirms `command_authorized: true`, verify with the
-recorded command:
+新しいディレクティブで `command_authorized: true` が確認できたら、
+記録されたコマンドで検証する:
 
 ```bash
 {{INVOKE}} engine bolt checkpoint --action verify --unit "<unit>" --kind <unit|skeleton>
 ```
 
-The verifier stores proof bound to the current artifacts, source, attempt, and
-authorized command's SHA-256 plus the complete canonical command as its display
-label. File presence, a claimed demonstration, a placeholder command, or a previous
-pass is not verification. A failed check halts. A check that changes the Unit's
-files while it runs (a formatter, a generator) runs once more against the files as
-they are then; if it changes them again, its proof's `error` says to use a check
-that leaves the files as they are. Long output never fails a passing check. Re-run `next` after verification;
-the resulting directive is the next source of truth about readiness and
-verification. Re-running `verify` withdraws every open checkpoint question and
-captured checkpoint response for this intent, in any session. Ask again only
-after the new verification reports `verified: true`. Say each `change_notices`
-line the verification returns, as written, before you ask.
-The verifier records a tool-owned `CHECKPOINT_VERIFICATION_RECORDED` receipt
-alongside the proof file, and approval requires that receipt; a hand-written
-proof file cannot verify a Unit. On a checkout with no proof file at all (a
-fresh clone, another machine), that receipt stands in for the proof of a Unit
-already approved whose evidence is unchanged, so nothing runs again.
+検証ツールは、現在の成果物、ソース、試行、承認済みコマンドの SHA-256 に結び付いた証明を、
+表示用ラベルとしての正規のコマンド全体とともに保存する。ファイルの存在、実証したという主張、プレースホルダーのコマンド、以前の
+合格は、検証ではない。チェックが失敗したら停止する。実行中に Unit の
+ファイルを変更するチェック（フォーマッター、ジェネレーター）は、その時点のファイルに対して
+もう一度実行される。それでも再びファイルを変更した場合は、証明の `error` が、ファイルを
+そのままにしておくチェックを使うよう指示する。出力が長いことを理由に、合格したチェックが失敗になることは決してない。検証の後に `next` を再実行する。
+その結果のディレクティブが、準備状況と検証に関する次の信頼できる情報源となる。`verify` を再実行すると、
+このインテントについて、どのセッションのものであれ、開いているすべてのチェックポイントの質問と
+取得済みのチェックポイントの応答が取り下げられる。再び質問するのは、
+新しい検証が `verified: true` を報告した後に限る。質問する前に、検証が返す各 `change_notices`
+の行を、書かれているとおりに伝える。
+検証ツールは、ツールが管理する `CHECKPOINT_VERIFICATION_RECORDED` の受領記録を
+証明ファイルと並べて記録し、承認にはその受領記録が必要である。手書きの
+証明ファイルで Unit を検証することはできない。証明ファイルがまったくないチェックアウト（新しい
+クローン、別のマシン）では、証拠が変わっていないすでに承認済みの Unit について、その受領記録が証明の代わりとなるため、
+何も再実行されない。
 
-When the checkpoint carries `rereview`, the Unit's reviewed code or documents
-changed after their review (the person's edit, a formatter, anything no review
-saw) and nothing else is missing. Do not ask the person anything first: run
-`rereview.command` now (it opens the Unit's re-check, which the pass cap never
-refuses; each approval of the Unit by the person opens a fresh one), dispatch
-`rereview.reviewer` for that request through the reviewer module, record its verdict with the
-`recordVerdict` command the request returned, re-run `next`, and verify. Either
-verdict is final for this re-check. The re-check runs under Guard Policy
-`strict` only. Under `relaxed` and `off` a change to a Unit's code or documents
-after their review is accepted: no checkpoint carries `rereview`, the Unit's
-approval or readiness stands, and its one line arrives in `change_notices`.
-The same holds with reviews off: under `relaxed` and `off` a later change to an
-approved Unit's work keeps its approval, and its one line arrives in
-`change_notices` from the next checkpoint's `verify` or the Construction stage's
-own check. A change made after the approval question was asked and before the
-person answers is accepted the same way: their `approve` records it, and its one
-line arrives in that command's `change_notices`.
-A `rereview` with `unfinished` is instead the Unit's own review that did not finish
-(`no-verdict`: never answered; `not-ready`: NOT-READY with a pass left, so repair
-what it found first): run it the same way. When the person said to approve the Unit
-as it is, run `verify` with `--over-unfinished-review` instead; the checkpoint then
-carries `review_not_finished` with `approved_in_words`: their words are the
-approval, so run `approve` at once without asking anything, and say the one line
-it returns. A verdict for that review that comes in after the approval is
-recorded as usual and leaves the Unit approved. Only a strict the
-team locks keeps the review required: `verify` then names the review step, and
-you run it without asking the person. A Unit whose review
-ended in the reviewer module's NOT-READY fallback carries `review_not_finished`
-with a `question`, which takes the place of "Approve this completed <unit>?",
-with no option to pass: that receipt is no reviewer's verdict.
-A `rereview` with `first` is the Unit's review that was never asked for in this run of
-its work (a jump back or a reopen starts a new run, so a review from before it does
-not count), under any Guard Policy: run it the same way. It is required, so `--over-unfinished-review`
-does not apply.
+チェックポイントが `rereview` を持つ場合、その Unit のレビュー済みのコードやドキュメントが
+レビューの後に変更されており（利用者による編集、フォーマッター、いかなるレビューも確認していない変更）、それ以外に欠けているものはない。まず利用者に何も尋ねずに、
+ただちに `rereview.command` を実行する（これにより Unit の再チェックが開かれる。パス上限によって
+拒否されることは決してない。利用者が Unit を承認するたびに新しい再チェックが開かれる）。そのリクエストのために
+レビュアーモジュールを通じて `rereview.reviewer` をディスパッチし、リクエストが返した
+`recordVerdict` コマンドでその判定を記録し、`next` を再実行してから検証する。どちらの
+判定も、この再チェックについては最終的なものである。再チェックが実行されるのは Guard Policy が
+`strict` の場合のみである。`relaxed` と `off` では、レビュー後に Unit のコードやドキュメントに加えられた変更は
+受け入れられる: どのチェックポイントも `rereview` を持たず、Unit の
+承認や準備状況はそのまま維持され、その旨の 1 行が `change_notices` で届く。
+レビューがオフの場合も同様である: `relaxed` と `off` では、承認済みの
+Unit の作業に後から変更が加えられても承認は維持され、その旨の 1 行が、次のチェックポイントの `verify` または Construction ステージ
+自身のチェックから `change_notices` で届く。承認の質問を尋ねた後、
+利用者が回答する前に加えられた変更も同じように受け入れられる: 利用者の `approve` がそれを記録し、その旨の 1
+行がそのコマンドの `change_notices` で届く。
+`unfinished` を持つ `rereview` は、代わりに、完了しなかった Unit 自身のレビューを表す
+（`no-verdict`: 一度も回答されなかった。`not-ready`: パスが残っている状態での NOT-READY であり、まず
+指摘されたものを修復する）。同じように実行する。利用者が Unit を
+そのまま承認するよう述べた場合は、代わりに `--over-unfinished-review` を付けて `verify` を実行する。するとチェックポイントは
+`approved_in_words` 付きの `review_not_finished` を持つ: 利用者の言葉が
+承認であるため、何も尋ねずにただちに `approve` を実行し、それが返す 1 行を
+伝える。承認の後にそのレビューの判定が届いた場合は、通常どおり
+記録され、Unit は承認されたままになる。レビューが必須のまま残るのは、チームが
+ロックした strict の場合だけである: そのとき `verify` はレビューのステップを示し、
+利用者に尋ねずにそれを実行する。レビューが
+レビュアーモジュールの NOT-READY フォールバックで終わった Unit は、
+`question` 付きの `review_not_finished` を持つ。これは "Approve this completed <unit>?" の代わりとなるもので、
+合格させる選択肢はない: その受領記録はどのレビュアーの判定でもないからである。
+`first` を持つ `rereview` は、その作業の今回の実行において一度も依頼されなかった Unit のレビューを表す
+（ジャンプバックや再オープンは新しい実行を開始するため、それ以前のレビューは
+数えない）。どの Guard Policy の下でも、同じように実行する。これは必須であるため、`--over-unfinished-review`
+は適用されない。
 
-Otherwise, if `ready` is false or evidence became stale, explain `errors`.
-Repair the named missing review or receipt through its owning procedure,
-consulting the human about the repair as needed; do not replay the whole body
-just because the checkpoint uses `gate: true`. Do not open a checkpoint
-approval question or claim verification succeeded while it is unverified. After any repair, obtain a new
-directive and verify the current result. If no real project check exists,
-resolve that gap with the human before claiming a pass.
+それ以外の場合で、`ready` が false であるか証拠が古くなっているときは、`errors` を説明する。
+指摘された欠けているレビューや受領記録は、それを担う手順を通じて修復し、
+必要に応じて修復について人間に相談する。チェックポイントが `gate: true` を使っているというだけで
+本体全体を再実行してはならない。未検証の間は、チェックポイントの
+承認の質問を開いたり、検証が成功したと主張したりしない。修復の後は、新しい
+ディレクティブを取得し、現在の結果を検証する。実際のプロジェクトチェックが存在しない場合は、
+合格を主張する前にその不足を人間と一緒に解決する。
 
-Only a verified checkpoint can be approved. A skeleton always needs a real
-human approval. An ordinary Unit needs one when `human_required` is true
-(`unset`/`gated`); under an explicit autonomous grant the conductor may approve
-the verified ordinary Unit automatically. At a human checkpoint, take the section
-13 learnings step for the represented stages only when
-`directive.protocol_modules` lists `learnings`. With the module listed, it asks
-only about a correction the person made in those stages (the module says when):
-log each question and its answer with `--stage "<directive.stage>"`, persist
-only what they keep through the owning stage's learning tools, then open the
-checkpoint approval with `ask` below as a separate question and turn. During
-automatic execution, a correction they made waits for the next human checkpoint
-or final handoff, only when `directive.protocol_modules` lists `learnings`; do
-not infer their answer or persist anything they did not keep. When the module is
-absent, keep no diary and ask no learning question; go straight to the
-checkpoint approval procedure when a human is required. Only after `verify`
-reports `verified: true` and the current directive has `ready: true`, run `ask`.
-It refuses an unready or unverified checkpoint. Before presenting **Approve** /
-**Request Changes**, bind the question to the current checkpoint proof and
-authorized command digest. The command finds the session it runs in by itself,
-so pass no session and never look one up:
+承認できるのは検証済みのチェックポイントだけである。スケルトンには常に、実際の
+人間による承認が必要である。通常の Unit では、`human_required` が true の場合
+（`unset`/`gated`）に人間の承認が必要となる。明示的な自律の許可がある場合は、コンダクターが
+検証済みの通常の Unit を自動的に承認してよい。人間によるチェックポイントでは、`directive.protocol_modules` に `learnings` が
+含まれている場合に限り、対象のステージについてセクション
+13 の学びのステップを実施する。モジュールが含まれている場合、それが尋ねるのは
+それらのステージで利用者が行った修正についてだけである（いつ尋ねるかはモジュールが定めている）:
+各質問とその回答を `--stage "<directive.stage>"` で記録し、利用者が残すものだけを
+担当ステージの学びツールで永続化し、その後、以下の `ask` で
+チェックポイントの承認を別の質問・別のターンとして開く。
+自動実行中は、`directive.protocol_modules` に `learnings` が含まれている場合に限り、利用者が行った修正は次の人間によるチェックポイント
+または最終的な引き渡しまで保留される。利用者の回答を推測したり、
+利用者が残さなかったものを永続化したりしない。モジュールが
+ない場合は、日誌を付けず、学びに関する質問もしない。人間が必要な場合は、そのまま
+チェックポイントの承認手順に進む。`verify` が
+`verified: true` を報告し、現在のディレクティブが `ready: true` を持つようになって初めて、`ask` を実行する。
+このコマンドは、準備ができていない、または未検証のチェックポイントを拒否する。**Approve** /
+**Request Changes** を提示する前に、質問を現在のチェックポイントの証明と
+承認済みコマンドのダイジェストに結び付ける。コマンドは自分が実行されているセッションを自ら見つけるため、
+セッションを渡さず、セッションを調べることも決してしない:
 
 ```bash
 {{INVOKE}} engine bolt checkpoint --action ask --unit "<unit>" --kind <unit|skeleton>
 ```
 
-When `ask` returns `earlier_reply`, the person already answered in this chat
-while the Unit's review ran: those are their words, kept as this question's
-reply. Do not show the question; read their words and run `approve` or `reject`
-as they chose, with their words as `--user-input`. When their words answer
-nothing (a question of theirs, talk about something else), present the question
-as below and wait; their reply counts together with those words.
+`ask` が `earlier_reply` を返した場合、利用者は Unit のレビューの実行中に、このチャットですでに
+回答している: それは利用者の言葉であり、この質問への
+返信として保持されている。質問を表示せず、利用者の言葉を読み、利用者が選んだとおりに `approve` または `reject`
+を、その言葉を `--user-input` として実行する。利用者の言葉が何にも
+答えていない場合（利用者自身の質問、別の話題）は、以下のとおり質問を
+提示して待つ。利用者の返信は、それらの言葉と合わせて扱われる。
 
-Then present the choices and wait for the human. When `ask` returns
-`check_findings`, `left_out`, `changed_files` or `check_offer`, say each as written just before the question. Show the complete recorded
-command, never abbreviated, in the approval question: "Verified with
-`<full command>` (exit 0). Approve this completed <unit>?" Use the full
-`verification_command` from the current tool output, with a code-span delimiter
-that preserves any backticks. When the checkpoint carries `rechecked`, this is
-the one question about the re-check: no learnings question comes before it, and
-its line takes the place of "Approve this completed <unit>?" after
-"Verified with `<full command>` (exit 0).", so the person is asked once:
+その後、選択肢を提示して人間の応答を待つ。`ask` が
+`check_findings`、`left_out`、`changed_files`、または `check_offer` を返した場合は、質問の直前にそれぞれを書かれているとおりに伝える。承認の質問では、記録された
+コマンドを省略せずに全体を示す: "Verified with
+`<full command>` (exit 0). Approve this completed <unit>?" 現在のツール出力にある完全な
+`verification_command` を、バッククォートを保持できるコードスパン区切りで
+使う。チェックポイントが `rechecked` を持つ場合、これが
+再チェックに関する唯一の質問となる: その前に学びに関する質問は入らず、
+その行が "Verified with `<full command>` (exit 0)." の後の
+"Approve this completed <unit>?" の代わりとなるため、利用者に尋ねるのは 1 回だけである:
+`rechecked.approved_before` が true の場合は
 "<unit>'s <changed> changed since you approved it, so it was re-checked:
-<verdict>. Approve it?" when
-`rechecked.approved_before` is true, otherwise "<unit>'s <changed> changed after
-its review, so it was re-checked: <verdict>. Approve it?", with `<changed>` as
-`rechecked.changed` (code, or documents) and the verdict in plain words (ready,
-or not ready). When `rechecked.redone` is true, the person asked for that work
-to be redone, so the line is instead "<unit>'s design was redone and its review
-says <verdict>. Approve it?" ("code" in place of "design" when
-`rechecked.changed` is code). On a `NOT-READY` verdict, print the Review brief
-first, as the reviewer module asks after a recovery verdict:
+<verdict>. Approve it?"、それ以外の場合は "<unit>'s <changed> changed after
+its review, so it was re-checked: <verdict>. Approve it?" とし、`<changed>` には
+`rechecked.changed`（code または documents）を、判定には平易な言葉（ready
+または not ready）を入れる。`rechecked.redone` が true の場合は、利用者がその作業の
+やり直しを求めたため、代わりに "<unit>'s design was redone and its review
+says <verdict>. Approve it?" という行にする（
+`rechecked.changed` が code の場合は "design" の代わりに "code"）。判定が `NOT-READY` の場合は、
+レビュアーモジュールが回復判定の後に求めるとおり、まず Review brief を出力する:
 `bun {{HARNESS_DIR}}/tools/aidlc-review-brief.ts review --stage "<directive.stage>" --unit "<unit>" --why stale`.
-The human's reply to this checkpoint question, in this chat or a new one,
-authorizes the action you read from it: approve, or reject with what they asked
-to change (their words are kept with the record; add `--reason` when you want to
-say more). When their reply only picked Request Changes, ask what should change
-before you record it. A reply typed in a new chat is kept for the question while it is the
-newest question asked; run the approve or reject command there, with no session,
-and never ask it again. A reply to a different question does not count. When they approved and asked for a change,
-approve, then make the change and say in one line what you changed. Add
-`--fix-finding "<review-artifact>#R-NN"` to `approve` for each review finding they
-asked to have fixed, and `--reject-finding '<review-artifact>#R-NN=<their reason>'`
-to `reject` for each one they rejected. The response is
-one-shot and bound to this Unit, kind, current fingerprint, verification proof ID,
-and authorized command digest. If the checkpoint changes, obtain a new directive,
-re-verify, and ask again; a reply captured before re-verification cannot approve
-the new proof. Automatic approval (`human_required: false`) needs no `ask` and no
-`--user-input`, but a human Request Changes always requires this verified
-question-and-answer flow.
+このチェックポイントの質問に対する人間の返信は、このチャットでも新しいチャットでも、
+そこから読み取った操作を承認する: 承認するか、利用者が変更を求めた内容とともに却下するかである
+（利用者の言葉は記録とともに保持される。さらに説明したい場合は `--reason` を追加する）。
+利用者の返信が Request Changes を選んだだけの場合は、記録する前に何を変えるべきかを
+尋ねる。新しいチャットで入力された返信は、それが最も新しく尋ねられた質問である間、
+その質問への返信として保持される。そこで approve または reject のコマンドをセッションなしで実行し、
+同じ質問を再び尋ねることは決してしない。別の質問への返信は数えない。利用者が承認したうえで変更を求めた場合は、
+承認してから変更を行い、何を変更したかを 1 行で伝える。利用者が修正を求めた
+レビュー指摘ごとに `approve` へ
+`--fix-finding "<review-artifact>#R-NN"` を追加し、利用者が却下した指摘ごとに `reject` へ `--reject-finding '<review-artifact>#R-NN=<their reason>'`
+を追加する。応答は
+1 回限りであり、この Unit、kind、現在のフィンガープリント、検証の証明 ID、
+承認済みコマンドのダイジェストに結び付いている。チェックポイントが変わった場合は、新しいディレクティブを取得し、
+再検証してから再び質問する。再検証の前に取得した返信で、
+新しい証明を承認することはできない。自動承認（`human_required: false`）には `ask` も
+`--user-input` も不要だが、人間による Request Changes には常に、この検証済みの
+質問と回答のフローが必要である。
 
 ```bash
 # Only after the human chose Approve:
@@ -234,11 +229,11 @@ question-and-answer flow.
 {{INVOKE}} engine bolt checkpoint --action reject --unit "<unit>" --kind <unit|skeleton> --user-input 'Request Changes' --reason '<human feedback>'
 ```
 
-After approval or rejection, re-run `next`. Never use a checkpoint approval as
-`report --stage code-generation --result approved` for the whole Unit set.
-Once all Unit approvals are recorded, the engine may emit normal stage gates
-with `completion_only: true`; settle those through the construction module's
-`completion_only` routing branch
-(in a solo unit-major walk a bare `next` records them itself).
-Explicit stage-major gated execution retains its ordinary stage reviews;
-autonomous execution skips their routine human completion questions.
+承認または却下の後は、`next` を再実行する。チェックポイントの承認を、Unit 全体に対する
+`report --stage code-generation --result approved` として使っては決してならない。
+すべての Unit の承認が記録されると、エンジンは
+`completion_only: true` 付きの通常のステージゲートを出力することがある。それらは construction モジュールの
+`completion_only` ルーティング分岐を通じて処理する
+（単独の unit-major ウォークでは、素の `next` がそれらを自ら記録する）。
+明示的な stage-major のゲート付き実行では、通常のステージレビューが維持される。
+自律実行では、定型的な人間による完了の質問はスキップされる。

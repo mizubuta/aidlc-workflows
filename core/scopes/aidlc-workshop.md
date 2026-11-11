@@ -19,29 +19,27 @@ collaborators: off
 
 # workshop scope
 
-Standard depth for a facilitated group session with mandatory gates, but
-with a Minimal test strategy - the `testStrategy` override that keeps the
-test floor light for a teaching context. It runs the inception,
-construction, and operation arc end to end (so participants see the whole
-lifecycle) while skipping the ideation discovery stages that a facilitator
-front-loads by hand.
+必須ゲートを備えたファシリテーター主導のグループセッション向けの Standard 深度だが、
+テスト戦略は Minimal とする。これは、教育の場でテストの最低基準を軽く保つための
+`testStrategy` の上書きである。inception、construction、operation の流れを端から端まで
+実行し（参加者がライフサイクル全体を見られるようにするため）、ファシリテーターが事前に
+手作業で済ませておく ideation の探索ステージはスキップする。
 
-Guard Policy defaults to off: moved inputs are reported once and plan approval, review freeze, state transition, and reviewer read scope are lowered for undirected work; human presence stays up, and a facilitator who wants approvals reopened and every fence up sets strict.
+Guard Policy の既定値は off である。移動された入力は一度だけ報告され、指示のない作業に対しては plan approval、review freeze、state transition、reviewer read scope が緩和される。human presence は有効のまま維持され、承認を再び必須にしてすべてのフェンスを有効にしたいファシリテーターは strict を設定する。
 
 ## Why these stages, why skip those
 
-A workshop walks a group through the methodology, so it keeps the
-substantive build and operate stages visible: reverse-engineering,
-practices-discovery, the full inception design pass, construction, and the
-operation phase all run. It skips the early ideation ceremony
-(market-research, feasibility, scope-definition, team-formation,
-rough-mockups, approval-handoff) because the facilitator scopes the
-exercise up front rather than running those stages live. The
-`testStrategy: Minimal` override means tests are demonstrated, not held to
-the production floor.
+ワークショップはグループを方法論に沿って導くものなので、実質的な構築と運用のステージは
+見える状態に保つ。reverse-engineering、practices-discovery、inception の設計パス全体、
+construction、そして operation フェーズはすべて実行される。初期の ideation の手続き
+（market-research、feasibility、scope-definition、team-formation、
+rough-mockups、approval-handoff）はスキップする。ファシリテーターがこれらのステージを
+その場で実行するのではなく、演習のスコープを事前に決めておくためである。
+`testStrategy: Minimal` の上書きにより、テストは実演として扱われ、本番レベルの
+最低基準は求められない。
 
 ## Membership
 
-Keyword triggers: `workshop`, `lab`, `training`. Initialization, the
-inception set, all of construction, and all of operation execute; the
-ideation discovery stages are SKIP.
+キーワードトリガー: `workshop`、`lab`、`training`。Initialization、inception の
+ステージ群、construction のすべて、operation のすべてが実行され、ideation の探索
+ステージは SKIP となる。

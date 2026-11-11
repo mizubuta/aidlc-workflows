@@ -43,58 +43,57 @@ outputs: wireframes.md, user-flow.md, rough-mockups-questions.md (under this sta
 
 ### Step 1: Load Prior Context
 
-- Read intent statement from `<record>/ideation/intent-capture/`
-- Read scope definition and intent backlog from `<record>/ideation/scope-definition/`
+- `<record>/ideation/intent-capture/` からインテントステートメントを読み込む
+- `<record>/ideation/scope-definition/` からスコープ定義とインテントバックログを読み込む
 
 ### Step 2: Generate Clarifying Questions
 
-Create `<record>/ideation/rough-mockups/rough-mockups-questions.md` with questions:
-- What are the primary user entry points and key screens/views?
-- What is the core user flow (happy path)?
-- What does the information hierarchy look like?
-- Are there existing brand guidelines, design systems, or UI patterns to follow?
-- What device/form factors must be supported?
-- Are there known accessibility requirements (WCAG level, screen reader support, keyboard-only navigation)?
-- For non-UI initiatives: what are the key system interactions and data flows?
+次の質問を含む `<record>/ideation/rough-mockups/rough-mockups-questions.md` を作成する:
+- 利用者の主な入口と、主要な画面/ビューは何か？
+- 中核となるユーザーフロー（ハッピーパス）は何か？
+- 情報の階層はどのようになっているか？
+- 従うべき既存のブランドガイドライン、デザインシステム、UI パターンはあるか？
+- サポートしなければならないデバイス/フォームファクターは何か？
+- 既知のアクセシビリティ要件（WCAG レベル、スクリーンリーダー対応、キーボードのみでの操作）はあるか？
+- UI を持たない取り組みの場合: 主要なシステム間のやり取りとデータフローは何か？
 
-Follow stage-protocol.md question flow.
+stage-protocol.md の質問フローに従う。
 
 ### Step 3: Collect and Analyze Answers
 
-Run contradiction analysis between UX expectations and scope constraints.
+UX への期待とスコープの制約との間で矛盾の分析を行う。
 
 ### Step 4: Generate Artifacts
 
-For UI initiatives: Create low-fidelity wireframes (ASCII art or structured descriptions), core user flow diagram, information architecture outline. Include a one-line accessibility note per screen: heading level (h1–h3), primary landmark regions (header/main/nav/footer), keyboard entry point.
+UI を持つ取り組みの場合: ローフィデリティのワイヤーフレーム（ASCII アートまたは構造化された説明）、中核となるユーザーフロー図、情報アーキテクチャの概要を作成する。各画面に1行のアクセシビリティに関する注記を含める: 見出しレベル（h1–h3）、主要なランドマーク領域（header/main/nav/footer）、キーボード操作の起点。
 
-For non-UI initiatives: Create system context diagram, key interaction flow sketches.
+UI を持たない取り組みの場合: システムコンテキスト図と、主要なやり取りのフロー図のスケッチを作成する。
 
-All diagrams follow ASCII diagram standards from stage-protocol.md.
+すべての図は stage-protocol.md の ASCII 図の標準に従う。
 
 ### Step 5: Completion Handoff
 
-Hand completion to `stage-protocol.md` via
-`{{INVOKE}} engine orchestrate report --stage rough-mockups --result <outcome>`.
-That `report` call owns every lifecycle transition and advancement; never perform one in prose, and never narrate this bookkeeping to the user.
+`{{INVOKE}} engine orchestrate report --stage rough-mockups --result <outcome>` を通じて、
+完了を `stage-protocol.md` に引き渡す。
+その `report` 呼び出しが、ライフサイクルの遷移と前進をすべて担う。散文の中で遷移を実行してはならず、この記録処理をユーザーに説明してもならない。
 
 ### Step 6: Present Completion & Request Approval
 
-Completion emoji: :pencil2:
-Review path: `<record>/ideation/rough-mockups/`
-Standard approval gate (Approve / Request Changes).
+完了時の絵文字: :pencil2:
+レビュー対象のパス: `<record>/ideation/rough-mockups/`
+標準の承認ゲート（Approve / Request Changes）。
 
 ## Sensors
 
-This stage's outputs are markdown artefacts under `<record>/ideation/rough-mockups/`.
+このステージの出力は `<record>/ideation/rough-mockups/` 配下の Markdown 成果物である。
 
-Imports: `required-sections`, `upstream-coverage`.
+インポート: `required-sections`, `upstream-coverage`.
 
-Upstream targets: `intent-statement`, `scope-document`, `intent-backlog`.
+上流の対象: `intent-statement`, `scope-document`, `intent-backlog`.
 
 ## Learn
 
-When `directive.protocol_modules` lists `learnings`, follow
-`stage-protocol-learnings.md`: keep the diary at `directive.memory_path` while
-working, and take the learnings step before the approval gate; that module says
-when it asks the person anything. When the module is absent, skip both the diary
-and the step.
+`directive.protocol_modules` に `learnings` が含まれている場合は、
+`stage-protocol-learnings.md` に従う。作業中は `directive.memory_path` に日誌を付け、
+承認ゲートの前に学習ステップを実施する。そのモジュールが、利用者に何かを尋ねるタイミングを定めている。
+モジュールがない場合は、日誌とステップの両方を省略する。

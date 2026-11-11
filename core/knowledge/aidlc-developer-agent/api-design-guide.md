@@ -1,45 +1,45 @@
 # REST API Design Guide
 
-Practical principles for designing consistent, predictable, and evolvable HTTP APIs.
+一貫性があり、予測可能で、進化させやすい HTTP API を設計するための実践的な原則。
 
 ## URL Naming Conventions
 
-- Use plural nouns for collections: `/orders`, `/users`, `/products`
-- Nest resources to express ownership: `/users/{userId}/orders/{orderId}`
-- Keep URLs shallow (max 2-3 levels); flatten when relationships are weak
-- Use kebab-case for multi-word segments: `/order-items`, not `/orderItems`
-- Avoid verbs in URLs; let HTTP methods convey the action
-- Use query parameters for filtering, sorting, and pagination: `/orders?status=pending&sort=-createdAt`
+- コレクションには複数形の名詞を使う: `/orders`、`/users`、`/products`
+- 所有関係はリソースをネストして表す: `/users/{userId}/orders/{orderId}`
+- URL は浅く保つ（最大 2〜3 階層）。関係が弱い場合はフラットにする
+- 複数語のセグメントには kebab-case を使う: `/order-items`（`/orderItems` ではない）
+- URL に動詞を入れない。アクションは HTTP メソッドで表す
+- フィルタリング、ソート、ページネーションにはクエリパラメータを使う: `/orders?status=pending&sort=-createdAt`
 
 ## HTTP Method Semantics
 
-| Method | Purpose | Idempotent | Safe |
+| メソッド | 目的 | 冪等 | 安全 |
 |--------|---------|------------|------|
-| GET | Retrieve resource(s) | Yes | Yes |
-| POST | Create a resource or trigger a process | No | No |
-| PUT | Full replace of a resource | Yes | No |
-| PATCH | Partial update of a resource | No* | No |
-| DELETE | Remove a resource | Yes | No |
+| GET | リソースの取得 | Yes | Yes |
+| POST | リソースの作成、または処理の起動 | No | No |
+| PUT | リソースの全体置換 | Yes | No |
+| PATCH | リソースの部分更新 | No* | No |
+| DELETE | リソースの削除 | Yes | No |
 
-Use POST for actions that do not map to CRUD: `POST /orders/{id}/cancel`.
+CRUD に対応しないアクションには POST を使う: `POST /orders/{id}/cancel`。
 
 ## Status Code Usage
 
-- **200 OK** — Successful GET, PUT, PATCH, or action POST
-- **201 Created** — Successful POST that created a resource; include Location header
-- **204 No Content** — Successful DELETE or PUT with no response body
-- **400 Bad Request** — Malformed syntax or invalid field values
-- **401 Unauthorized** — Missing or invalid authentication credentials
-- **403 Forbidden** — Authenticated but insufficient permissions
-- **404 Not Found** — Resource does not exist
-- **409 Conflict** — State conflict (duplicate, version mismatch)
-- **422 Unprocessable Entity** — Valid syntax but business rule violation
-- **429 Too Many Requests** — Rate limit exceeded; include Retry-After header
-- **500 Internal Server Error** — Unhandled server failure
+- **200 OK** — GET、PUT、PATCH、またはアクション POST の成功
+- **201 Created** — リソースを作成した POST の成功。Location ヘッダーを含める
+- **204 No Content** — レスポンスボディのない DELETE または PUT の成功
+- **400 Bad Request** — 構文の誤り、または不正なフィールド値
+- **401 Unauthorized** — 認証情報がない、または無効
+- **403 Forbidden** — 認証済みだが権限が不足している
+- **404 Not Found** — リソースが存在しない
+- **409 Conflict** — 状態の競合（重複、バージョン不一致）
+- **422 Unprocessable Entity** — 構文は正しいがビジネスルールに違反している
+- **429 Too Many Requests** — レート制限の超過。Retry-After ヘッダーを含める
+- **500 Internal Server Error** — 処理されなかったサーバー障害
 
 ## Error Response Format
 
-Use a consistent envelope for every error. Include a machine-readable code, a human-readable message, and optional field-level detail:
+すべてのエラーで一貫したエンベロープを使う。機械が読めるコード、人間が読めるメッセージ、および任意でフィールド単位の詳細を含める:
 
 ```json
 {
@@ -54,29 +54,29 @@ Use a consistent envelope for every error. Include a machine-readable code, a hu
 }
 ```
 
-Always include a request ID for traceability.
+トレーサビリティのため、リクエスト ID を必ず含める。
 
 ## Pagination Patterns
 
-- **Offset-based**: `?offset=20&limit=10` — Simple but degrades on large datasets due to OFFSET cost.
-- **Cursor-based**: `?cursor=eyJpZCI6MTAwfQ&limit=10` — Encode the last-seen key as an opaque token. Preferred for DynamoDB and large datasets.
-- Return pagination metadata in the response body: `nextCursor`, `hasMore`, `totalCount` (if cheap to compute).
+- **オフセット方式**: `?offset=20&limit=10` — シンプルだが、OFFSET のコストにより大規模データセットでは性能が劣化する。
+- **カーソル方式**: `?cursor=eyJpZCI6MTAwfQ&limit=10` — 最後に見たキーを不透明なトークンとしてエンコードする。DynamoDB や大規模データセットではこちらを推奨する。
+- ページネーションのメタデータはレスポンスボディで返す: `nextCursor`、`hasMore`、`totalCount`（計算が安価な場合）。
 
 ## Versioning Strategies
 
-- **URL path versioning** (`/v1/orders`) — Most explicit, easiest for consumers. Preferred for public APIs.
-- **Header versioning** (`Accept: application/vnd.myapi.v2+json`) — Cleaner URLs but harder to discover.
-- Avoid query-parameter versioning (`?version=2`); it conflates filtering with contract selection.
-- Version only when you introduce breaking changes. Additive changes (new optional fields) do not require a new version.
+- **URL パスによるバージョニング**（`/v1/orders`）— 最も明示的で、利用者にとって最も扱いやすい。公開 API ではこれを推奨する。
+- **ヘッダーによるバージョニング**（`Accept: application/vnd.myapi.v2+json`）— URL はすっきりするが、発見しにくい。
+- クエリパラメータによるバージョニング（`?version=2`）は避ける。フィルタリングと契約の選択を混同させる。
+- バージョンを上げるのは破壊的変更を導入するときだけにする。追加的な変更（新しい任意フィールド）には新しいバージョンは不要である。
 
 ## OpenAPI and AsyncAPI
 
-- Maintain an OpenAPI 3.1 spec as the source of truth. Generate server stubs and client SDKs from it.
-- For event-driven APIs (SNS, EventBridge, SQS), use AsyncAPI to document message schemas and channel bindings.
-- Store specs in the repo alongside the code (`docs/openapi.yaml`) and validate them in CI with spectral or redocly-cli.
+- OpenAPI 3.1 仕様を信頼できる唯一の情報源として維持する。サーバースタブとクライアント SDK はそこから生成する。
+- イベント駆動 API（SNS、EventBridge、SQS）では、AsyncAPI を使ってメッセージスキーマとチャネルバインディングを文書化する。
+- 仕様はコードと同じリポジトリに置き（`docs/openapi.yaml`）、CI で spectral や redocly-cli を使って検証する。
 
 ## HATEOAS Considerations
 
-- Include `_links` in responses to guide clients to related actions and resources.
-- Useful for complex state machines (order lifecycle) where available transitions change.
-- For internal microservice APIs, HATEOAS is often unnecessary overhead; reserve it for public or partner APIs where discoverability matters.
+- レスポンスに `_links` を含め、関連するアクションやリソースへクライアントを導く。
+- 利用可能な遷移が変化する複雑なステートマシン（注文のライフサイクル）で有用である。
+- 内部のマイクロサービス API では、HATEOAS は多くの場合不要なオーバーヘッドである。発見しやすさが重要な公開 API やパートナー API に限定して使う。

@@ -1,36 +1,36 @@
 # Compliance Agent
 
-> **Agent deep dive** · [User Guide](../00-introduction.md) › [Agents](../06-agents.md) › [deep dives](README.md) · Technical reference: [compliance-agent](../../reference/agents/compliance-agent.md)
+> **エージェント詳細解説** · [ユーザーガイド](../00-introduction.md) › [エージェント](../06-agents.md) › [詳細解説](README.md) · 技術リファレンス: [compliance-agent](../../reference/agents/compliance-agent.md)
 
-The aidlc-compliance-agent is your GRC (Governance, Risk, and Compliance) analyst. It ensures that every stage of the lifecycle accounts for applicable regulatory obligations and organizational compliance policies. It scans for regulatory requirements early, maps them to technical controls, maintains the RAID log for compliance risks, and validates that designs meet audit expectations.
+aidlc-compliance-agent は、GRC（Governance, Risk, and Compliance：ガバナンス・リスク・コンプライアンス）のアナリストです。ライフサイクルのすべてのステージで、適用される規制上の義務や組織のコンプライアンスポリシーが考慮されるようにします。規制要件を早い段階で洗い出し、それらを技術的コントロールに対応付け、コンプライアンスリスクに関する RAID ログを管理し、設計が監査上の期待を満たしているかを検証します。
 
-The aidlc-compliance-agent operates exclusively in a support role — it does not lead any stages. Instead, it contributes compliance expertise across four stages spanning Ideation, Construction, and Operation.
+aidlc-compliance-agent はもっぱら支援役として動作し、どのステージもリードしません。その代わりに、Ideation、Construction、Operation にまたがる 4 つのステージでコンプライアンスの専門知識を提供します。
 
 ## Stages Led
 
-The aidlc-compliance-agent does not lead any stages.
+aidlc-compliance-agent がリードするステージはありません。
 
 ## Stages Supported
 
-| Stage | Phase | Contribution |
+| ステージ | フェーズ | 貢献内容 |
 |-------|-------|-------------|
-| 1.3 Feasibility & Constraints | Ideation | Regulatory constraint identification, compliance feasibility, RAID log initialization |
-| 3.2 NFR Requirements | Construction | Regulatory NFR mapping, compliance control requirements, data classification |
-| 3.4 Infrastructure Design | Construction | Data residency validation, encryption requirements, IAM compliance controls |
-| 4.2 Environment Provisioning | Operation | Compliance controls validation, audit logging, regulatory configuration checks |
+| 1.3 Feasibility & Constraints | Ideation | 規制上の制約の特定、コンプライアンス面の実現可能性、RAID ログの初期化 |
+| 3.2 NFR Requirements | Construction | 規制に関する NFR の対応付け、コンプライアンスコントロール要件、データ分類 |
+| 3.4 Infrastructure Design | Construction | データレジデンシーの検証、暗号化要件、IAM のコンプライアンスコントロール |
+| 4.2 Environment Provisioning | Operation | コンプライアンスコントロールの検証、監査ログ記録、規制関連の設定チェック |
 
 ## What to Expect
 
-When the aidlc-compliance-agent is active (as a supporting agent alongside the lead), it focuses on regulatory frameworks, data classification, and control mapping. It asks about applicable regulations (GDPR, HIPAA, PCI-DSS, SOC 2), data sensitivity levels, and existing compliance policies. It produces compliance control matrices and flags gaps that need remediation.
+aidlc-compliance-agent が（リードエージェントと並ぶ支援エージェントとして）有効になっているとき、規制フレームワーク、データ分類、コントロールの対応付けに注力します。適用される規制（GDPR、HIPAA、PCI-DSS、SOC 2）、データの機密レベル、既存のコンプライアンスポリシーについて質問します。コンプライアンスコントロールのマトリクスを作成し、是正が必要なギャップを指摘します。
 
 ## How It Collaborates
 
-The aidlc-compliance-agent receives system designs and data flow information from the aidlc-architect-agent, and security control details from the aidlc-devsecops-agent. It provides compliance requirements and constraints back to the aidlc-architect-agent for design incorporation, and security control specifications to the aidlc-devsecops-agent for implementation.
+aidlc-compliance-agent は、aidlc-architect-agent からシステム設計とデータフローの情報を、aidlc-devsecops-agent からセキュリティコントロールの詳細を受け取ります。そして、設計に組み込むためのコンプライアンス要件と制約を aidlc-architect-agent に返し、実装のためのセキュリティコントロール仕様を aidlc-devsecops-agent に渡します。
 
 ## Key Principles
 
-- Compliance is a constraint, not an afterthought — gaps discovered at release are project failures
-- Data classification drives every control decision
-- Compliance claims require auditable evidence — a control without proof does not exist
-- Focus remediation on the highest-sensitivity data and highest-penalty regulations
-- Regulatory literacy is a team sport — the aidlc-compliance-agent educates, the team executes
+- コンプライアンスは後付けではなく制約です。リリース時に見つかったギャップはプロジェクトの失敗です
+- データ分類があらゆるコントロールの判断を左右します
+- コンプライアンスの主張には監査可能な証拠が必要です。証拠のないコントロールは存在しないのと同じです
+- 是正は、最も機密性の高いデータと、最も罰則の重い規制に集中させます
+- 規制への理解はチーム全体で取り組むものです。aidlc-compliance-agent が教え、チームが実行します

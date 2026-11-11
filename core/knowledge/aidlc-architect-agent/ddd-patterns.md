@@ -1,68 +1,68 @@
 # Domain-Driven Design Patterns
 
 ## Purpose
-DDD aligns software design with business reality. It provides patterns for modeling complex domains so that the code structure mirrors how the business thinks and operates.
+DDD はソフトウェア設計をビジネスの実態に合わせる。複雑なドメインをモデリングするためのパターンを提供し、コードの構造がビジネスの考え方や運営のあり方を映し出すようにする。
 
 ## Strategic Design
 
 ### Bounded Contexts
-A bounded context is an explicit boundary within which a domain model exists. The same real-world concept (e.g., "Customer") can have different meanings in different contexts.
+境界づけられたコンテキスト（bounded context）とは、その内側にドメインモデルが存在する明示的な境界である。現実世界の同じ概念（例:「顧客」）でも、コンテキストが異なれば意味が異なることがある。
 
-**Example**:
-- Sales context: Customer has leads, deals, revenue potential
-- Support context: Customer has tickets, SLAs, satisfaction score
-- Billing context: Customer has invoices, payment methods, credit limit
+**例**:
+- 営業コンテキスト: 顧客はリード、商談、収益見込みを持つ
+- サポートコンテキスト: 顧客はチケット、SLA、満足度スコアを持つ
+- 請求コンテキスト: 顧客は請求書、支払い方法、与信限度額を持つ
 
-**Rules**:
-- Each bounded context owns its data and logic — no shared database between contexts
-- Communication between contexts uses well-defined interfaces (APIs, events)
-- Each context can use different technology stacks and deployment strategies
+**ルール**:
+- 各 bounded context は自らのデータとロジックを所有する — コンテキスト間でデータベースを共有しない
+- コンテキスト間の通信には、明確に定義されたインターフェース（API、イベント）を使う
+- 各コンテキストは異なる技術スタックやデプロイ戦略を採用できる
 
 ### Context Mapping Patterns
 
-| Pattern | Relationship | Use When |
+| パターン | 関係 | 使う場面 |
 |---------|-------------|----------|
-| **Shared Kernel** | Two teams share a small common model | Teams are closely aligned and can coordinate changes |
-| **Customer-Supplier** | Upstream supplies data, downstream consumes | Clear provider/consumer relationship between teams |
-| **Conformist** | Downstream adopts upstream's model as-is | Upstream has no incentive to accommodate downstream needs |
-| **Anti-Corruption Layer** | Downstream translates upstream's model | Integrating with legacy systems or external services |
-| **Open Host Service** | Upstream publishes a well-defined protocol | Multiple consumers need access to a context's capabilities |
-| **Published Language** | Shared interchange format (e.g., JSON schema) | Cross-context communication needs a stable contract |
-| **Separate Ways** | No integration | The cost of integration exceeds the benefit |
+| **Shared Kernel** | 2 つのチームが小さな共通モデルを共有する | チーム同士が密接に足並みをそろえ、変更を調整できる |
+| **Customer-Supplier** | 上流がデータを供給し、下流が消費する | チーム間に明確な提供者／利用者の関係がある |
+| **Conformist** | 下流が上流のモデルをそのまま採用する | 上流に下流のニーズへ対応する動機がない |
+| **Anti-Corruption Layer** | 下流が上流のモデルを変換する | レガシーシステムや外部サービスと統合する |
+| **Open Host Service** | 上流が明確に定義されたプロトコルを公開する | 複数の利用者があるコンテキストの機能にアクセスする必要がある |
+| **Published Language** | 共有の交換フォーマット（例: JSON スキーマ） | コンテキスト間の通信に安定した契約が必要 |
+| **Separate Ways** | 統合しない | 統合のコストが便益を上回る |
 
 ### Anti-Corruption Layer (ACL)
-When integrating with an external or legacy system whose model does not match yours:
+自分たちのモデルと一致しない外部システムやレガシーシステムと統合する場合:
 ```
 Your Domain Model <-> ACL (translates) <-> External System Model
 ```
-The ACL isolates your clean model from the external system's concepts. If the external system changes, only the ACL needs updating.
+ACL は、クリーンな自分たちのモデルを外部システムの概念から隔離する。外部システムが変わっても、更新が必要なのは ACL だけである。
 
 ## Tactical Design
 
 ### Entities
-Objects defined by their identity, not their attributes. Two customers with the same name are different customers if they have different IDs.
-- Have a unique identifier that persists across state changes
-- Mutable — their state changes over time
-- Example: User, Order, Account
+属性ではなく同一性（アイデンティティ）によって定義されるオブジェクト。同じ名前の 2 人の顧客も、ID が異なれば別の顧客である。
+- 状態が変化しても持続する一意の識別子を持つ
+- ミュータブル — 状態は時間とともに変化する
+- 例: User、Order、Account
 
 ### Value Objects
-Objects defined by their attributes, not their identity. Two Money objects with the same amount and currency are interchangeable.
-- Immutable — create a new instance instead of modifying
-- No identity — equality is based on all attributes
-- Example: EmailAddress, Money, DateRange, Address
-- Prefer value objects over primitives (an email is not just a string)
+同一性ではなく属性によって定義されるオブジェクト。金額と通貨が同じ 2 つの Money オブジェクトは交換可能である。
+- イミュータブル — 変更する代わりに新しいインスタンスを作る
+- 同一性を持たない — 等価性はすべての属性に基づく
+- 例: EmailAddress、Money、DateRange、Address
+- プリミティブより値オブジェクトを優先する（メールアドレスは単なる文字列ではない）
 
 ### Aggregates
-A cluster of entities and value objects treated as a single unit for data changes.
+データ変更において単一の単位として扱われる、エンティティと値オブジェクトのまとまり。
 
-**Rules**:
-- Each aggregate has exactly one **aggregate root** — the only entity external code can reference
-- All changes to the aggregate go through the root (enforces invariants)
-- Transactions should not span multiple aggregates
-- Reference other aggregates by ID, not by object reference
-- Keep aggregates small — large aggregates cause contention and performance issues
+**ルール**:
+- 各集約はちょうど 1 つの **集約ルート（aggregate root）** を持つ — 外部のコードが参照できる唯一のエンティティである
+- 集約へのすべての変更はルートを経由する（不変条件を強制する）
+- トランザクションは複数の集約にまたがるべきではない
+- 他の集約はオブジェクト参照ではなく ID で参照する
+- 集約は小さく保つ — 大きな集約は競合やパフォーマンスの問題を引き起こす
 
-**Example**:
+**例**:
 ```
 Order (Aggregate Root)
   ├── OrderLine (Entity, only accessible through Order)
@@ -70,28 +70,28 @@ Order (Aggregate Root)
   └── OrderStatus (Value Object)
 ```
 
-External code calls `order.addItem(product, quantity)` — never modifies OrderLine directly.
+外部のコードは `order.addItem(product, quantity)` を呼び出す — OrderLine を直接変更することは決してない。
 
 ### Domain Events
-Record something meaningful that happened in the domain. Events are past-tense facts.
+ドメインで起きた意味のある出来事を記録する。イベントは過去形の事実である。
 
-**Naming**: `[Entity][PastTenseVerb]` — OrderPlaced, PaymentReceived, InventoryDepleted
+**命名**: `[Entity][PastTenseVerb]` — OrderPlaced、PaymentReceived、InventoryDepleted
 
-**Structure**:
-- Event ID (unique)
-- Timestamp (when it occurred)
-- Aggregate ID (which aggregate produced it)
-- Payload (relevant data at the time of the event)
+**構造**:
+- イベント ID（一意）
+- タイムスタンプ（発生日時）
+- 集約 ID（どの集約が生成したか）
+- ペイロード（イベント発生時点の関連データ）
 
-**Uses**:
-- Trigger side effects in other bounded contexts (eventual consistency)
-- Build audit trails and event sourcing
-- Enable loose coupling — publishers do not know about subscribers
+**用途**:
+- 他の bounded context で副作用をトリガーする（結果整合性）
+- 監査証跡やイベントソーシングを構築する
+- 疎結合を実現する — 発行者は購読者を知らない
 
 ### Repository Pattern
-Provides a collection-like interface for accessing aggregates, hiding persistence details from the domain layer.
+集約にアクセスするためのコレクションのようなインターフェースを提供し、永続化の詳細をドメイン層から隠す。
 
-**Interface** (defined in the domain layer):
+**インターフェース**（ドメイン層で定義する）:
 ```
 interface OrderRepository {
   findById(id: OrderId): Order | null
@@ -100,35 +100,35 @@ interface OrderRepository {
 }
 ```
 
-**Rules**:
-- One repository per aggregate root (not per entity or table)
-- Repository interface lives in the domain layer; implementation lives in infrastructure
-- Repositories return fully constituted aggregates, not partial data
-- Do not put query logic in repositories — use separate read models for complex queries
+**ルール**:
+- リポジトリは集約ルートごとに 1 つ（エンティティやテーブルごとではない）
+- リポジトリのインターフェースはドメイン層に置き、実装はインフラストラクチャ層に置く
+- リポジトリは部分的なデータではなく、完全に構成された集約を返す
+- リポジトリにクエリロジックを置かない — 複雑なクエリには別の読み取りモデルを使う
 
 ## Event Storming
 
-A collaborative workshop technique for discovering domain events, commands, and aggregates.
+ドメインイベント、コマンド、集約を発見するための協働型ワークショップ手法。
 
 ### Process
-1. **Gather**: Domain experts + developers in a room with unlimited sticky notes
-2. **Domain Events** (orange): Brainstorm everything that happens in the domain (past tense)
-3. **Commands** (blue): What triggers each event? (imperative: "Place Order")
-4. **Actors** (yellow): Who or what issues the command? (User, System, Scheduler)
-5. **Aggregates** (pale yellow): Group events around the entity they affect
-6. **Bounded Contexts**: Draw boundaries around related aggregate clusters
-7. **Policies** (purple): Automated reactions ("When OrderPlaced, then ReserveInventory")
+1. **集める**: ドメインエキスパートと開発者が、付箋を無制限に用意した部屋に集まる
+2. **ドメインイベント**（オレンジ）: ドメインで起きることをすべてブレインストーミングする（過去形）
+3. **コマンド**（青）: 各イベントを引き起こすものは何か？（命令形: "Place Order"）
+4. **アクター**（黄）: 誰が、または何がコマンドを発行するか？（User、System、Scheduler）
+5. **集約**（淡い黄）: 影響を受けるエンティティを中心にイベントをグループ化する
+6. **Bounded Contexts**: 関連する集約のまとまりの周りに境界線を引く
+7. **ポリシー**（紫）: 自動化された反応（"When OrderPlaced, then ReserveInventory"）
 
 ### Output
-A visual map of the domain that reveals:
-- Core business processes and their interactions
-- Natural bounded context boundaries
-- Integration points between contexts
-- Hot spots (areas of complexity, contention, or confusion)
+次のことを明らかにする、ドメインの視覚的なマップ:
+- 中核となるビジネスプロセスとその相互作用
+- 自然な bounded context の境界
+- コンテキスト間の統合ポイント
+- ホットスポット（複雑さ、競合、混乱が生じている領域）
 
 ## Design Heuristics
-- If two concepts change for different reasons, they belong in different bounded contexts
-- If you need a transaction across two aggregates, reconsider the aggregate boundaries
-- Start with larger aggregates and split when you encounter contention or performance issues
-- Domain events are the primary integration mechanism between bounded contexts
-- Ubiquitous language: use the same terms in code, documentation, and conversation with domain experts
+- 2 つの概念が異なる理由で変化するなら、それらは別の bounded context に属する
+- 2 つの集約にまたがるトランザクションが必要なら、集約の境界を見直す
+- 大きめの集約から始め、競合やパフォーマンスの問題に直面したら分割する
+- ドメインイベントは bounded context 間の主要な統合メカニズムである
+- ユビキタス言語: コード、ドキュメント、ドメインエキスパートとの会話で同じ用語を使う

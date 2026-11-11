@@ -25,45 +25,44 @@ timeout_seconds: 300
 
 # traceability sensor
 
-Deterministic element-level verification of each stage's JSON coverage table,
-run when the stage's documents are handed on (its review request, or the report
-that opens its gate when no review took them first) and again when its gate
-opens, on the tables as they are then:
+各ステージの JSON カバレッジ表を要素レベルで決定論的に検証する。ステージの
+ドキュメントが引き渡されるとき（そのレビュー依頼時、またはレビューが先に
+受け取らなかった場合はゲートを開くレポート時）に実行され、ゲートが開くときにも、
+その時点の表に対して再度実行される:
 
-1. Validates the runtime JSON shape and the closed status set.
-2. Fails on `GAP`, `ORPHAN`, missing coverage rows, or undeclared upstream IDs.
-   A requirement whose sub-requirements are upstream too (`FR1` beside
-   `FR1.1`) is traced through them and needs no row of its own.
-3. Requires non-empty targets for `OK`, `Deferred`, and `N/A`; for `Deferred`
-   and `N/A` the target is the reason.
-4. Resolves upstream IDs from the authored artifacts and fails closed when the
-   expected source is missing or yields no IDs. FR and NFR IDs come from the
-   `ids` Requirements Analysis records in its own traceability.json, spelled as
-   requirements.md spells them (each with its `kind`, a sub-requirement `of` its
-   requirement); without that record, a table's requirements are the ones it
-   lists and the ones the FR and NFR ID patterns find in requirements.md.
-5. Verifies deterministic targets where possible: stories, Unit mappings,
-   business rules, and workspace-relative code paths. A Functional Design Unit
-   whose kind writes no `rules.md` (a `ui` Unit) names one of its design files
-   (`functional-spec.md`, `frontend-components.md`) on each row instead of a
-   business rule.
-6. Derives functional-design orphans from `rules.md` rather than
-   trusting only the self-reported `reverse` array.
+1. 実行時の JSON の形と、閉じたステータス集合を検証する。
+2. `GAP`、`ORPHAN`、欠落したカバレッジ行、または宣言されていない上流 ID があれば失敗とする。
+   サブ要件も上流にある要件（`FR1` と並ぶ
+   `FR1.1`）はサブ要件を通じてトレースされ、それ自体の行は不要である。
+3. `OK`、`Deferred`、`N/A` には空でない target を必須とする。`Deferred`
+   と `N/A` では target が理由となる。
+4. 作成済みの成果物から上流 ID を解決し、期待されるソースが欠落しているか
+   ID が得られない場合はフェイルクローズする。FR と NFR の ID は、Requirements Analysis が
+   自身の traceability.json に記録する `ids` から取得され、requirements.md での
+   表記どおりに綴られる（それぞれ `kind` を持ち、サブ要件は自身の要件の `of` となる）。
+   その記録がない場合、表の要件は、その表に列挙されたものと、FR および NFR の
+   ID パターンが requirements.md で見つけたものとなる。
+5. 可能な場合は決定論的な target を検証する: ストーリー、Unit マッピング、
+   ビジネスルール、ワークスペース相対のコードパス。種別上 `rules.md` を書かない
+   Functional Design の Unit（`ui` Unit）は、ビジネスルールの代わりに、各行で
+   自身の設計ファイル（`functional-spec.md`、`frontend-components.md`）の 1 つを指定する。
+6. 自己申告の `reverse` 配列だけを信頼するのではなく、
+   `rules.md` から functional-design の孤立要素（orphan）を導出する。
 
-A later stage starts its table with the same tool, `--stage <slug> --output-path
-<its traceability.json> --write-upstream`: it adds every upstream ID this check
-asks for to `upstream_ids`, each with a `GAP` row, keeps what the table already
-holds, and writes nothing when nothing is missing.
+後続のステージは、同じツールを `--stage <slug> --output-path
+<its traceability.json> --write-upstream` で実行して表を開始する。これにより、このチェックが
+要求するすべての上流 ID がそれぞれ `GAP` 行付きで `upstream_ids` に追加される。表が
+既に保持している内容は維持され、欠落がなければ何も書き込まれない。
 
-Build and Test's coverage gate runs the same tool with `--stage build-and-test`
-and no output path. It reads every Code Generation table and prints each
-requirement and acceptance criterion as built or not: a requirement with
-sub-requirements is built when each Unit has built its own, a row for the
-parent alone not covering them; otherwise by its own row or, when User Stories
-ran, through the criteria of the stories User Stories traced it to. One that
-nothing builds is settled when the latest stage that traced it (User Stories,
-NFR Requirements, then Code Generation) marked it `N/A` with its reason in
-every table there that lists it; an `N/A` with no reason is not settled.
+Build and Test のカバレッジゲートは、同じツールを `--stage build-and-test`
+付き、出力パスなしで実行する。すべての Code Generation の表を読み込み、各
+要件と受け入れ基準について構築済みかどうかを出力する。サブ要件を持つ要件は、
+各 Unit がそれぞれ自分の分を構築したときに構築済みとなり、親だけの行では
+サブ要件はカバーされない。それ以外の要件は、自身の行によって、または User Stories が
+実行された場合は User Stories がトレースしたストーリーの受け入れ基準を通じて構築済みとなる。
+何によっても構築されない要件は、それをトレースした最新のステージ（User Stories、
+NFR Requirements、次いで Code Generation）が、そこで当該要件を列挙するすべての表で
+理由付きの `N/A` とした場合に決着済みとなる。理由のない `N/A` は決着済みではない。
 
 ## Expected JSON schema
 
@@ -83,7 +82,7 @@ every table there that lists it; an `N/A` with no reason is not settled.
 }
 ```
 
-Valid statuses are `OK`, `GAP`, `ORPHAN`, `Deferred`, and `N/A`. Every
-upstream ID goes in `upstream_ids` and `coverage`, `N/A` there when it does
-not apply; `reverse` lists only what the stage produced that traces to nothing
-upstream.
+
+有効なステータスは `OK`、`GAP`、`ORPHAN`、`Deferred`、`N/A` である。すべての
+上流 ID は `upstream_ids` と `coverage` に含め、該当しない場合はそこで `N/A` とする。
+`reverse` には、ステージが生成したもののうち上流の何にもトレースされないものだけを列挙する。

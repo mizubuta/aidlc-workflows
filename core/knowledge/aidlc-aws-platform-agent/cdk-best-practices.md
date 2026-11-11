@@ -1,29 +1,29 @@
 # AWS CDK Best Practices
 
 ## Purpose
-Guidelines for building maintainable, secure, and testable infrastructure using the AWS Cloud Development Kit. These practices apply to CDK v2 with TypeScript (the recommended language for most teams).
+AWS Cloud Development Kit を使って、保守しやすく、安全で、テスト可能なインフラストラクチャを構築するためのガイドライン。これらのプラクティスは、TypeScript（大半のチームに推奨される言語）を用いた CDK v2 に適用される。
 
 ## Construct Levels
 
 ### L1 (Cfn Resources)
-- Direct CloudFormation resource wrappers (e.g., `CfnBucket`)
-- Use only when L2 constructs do not expose a needed property
-- Require manual configuration of all properties (no defaults)
+- CloudFormation リソースを直接ラップしたもの（例: `CfnBucket`）
+- L2 コンストラクトが必要なプロパティを公開していない場合にのみ使う
+- すべてのプロパティを手動で設定する必要がある（デフォルト値なし）
 
 ### L2 (Curated Constructs)
-- AWS-maintained constructs with sensible defaults (e.g., `Bucket`, `Function`, `Table`)
-- Include helper methods (e.g., `bucket.grantRead(lambda)`)
-- Preferred for most use cases — they encode AWS best practices
+- 妥当なデフォルト値を備えた、AWS がメンテナンスするコンストラクト（例: `Bucket`、`Function`、`Table`）
+- ヘルパーメソッドを含む（例: `bucket.grantRead(lambda)`）
+- 大半のユースケースで推奨 — AWS のベストプラクティスが組み込まれている
 
 ### L3 (Patterns)
-- Higher-level constructs combining multiple resources (e.g., `LambdaRestApi`)
-- Use when the pattern fits your needs exactly
-- Avoid if you need significant customization — drop down to L2 instead
+- 複数のリソースを組み合わせた、より高レベルのコンストラクト（例: `LambdaRestApi`）
+- パターンがニーズに完全に合致する場合に使う
+- 大幅なカスタマイズが必要な場合は避け、代わりに L2 を使う
 
 ## Construct Design Patterns
 
 ### Single Responsibility
-Each custom construct should represent one logical unit (a service, a data pipeline stage, a monitoring stack). Do not create constructs that build unrelated resources.
+各カスタムコンストラクトは、1つの論理的な単位（サービス、データパイプラインの1段階、監視スタック）を表すようにする。互いに無関係なリソースを構築するコンストラクトを作成してはならない。
 
 ### Props Interface Pattern
 ```typescript
@@ -45,10 +45,10 @@ export class OrderService extends Construct {
 ```
 
 ### Rules
-- Accept dependencies via props (dependency injection), do not create shared resources inside constructs
-- Use interface types (`IVpc`, `ITable`) for props, not concrete types — enables cross-stack references
-- Expose outputs as public readonly properties for consuming constructs
-- Prefix optional props with documentation explaining the default behavior
+- 依存関係は props 経由で受け取り（依存性注入）、共有リソースをコンストラクトの内部で作成しない
+- props には具象型ではなくインターフェース型（`IVpc`、`ITable`）を使う — スタック間の参照が可能になる
+- 利用側のコンストラクトのために、出力を public readonly プロパティとして公開する
+- 省略可能な props には、デフォルトの動作を説明するドキュメントを付ける
 
 ## Stack Organization
 
@@ -72,10 +72,10 @@ export class OrderService extends Construct {
 ```
 
 ### Stack Separation Guidelines
-- Separate stacks by lifecycle: resources that change together should be in the same stack
-- Stateful resources (databases, S3 buckets) in separate stacks from stateless (Lambda, API Gateway)
-- Stateful stacks change rarely; stateless stacks deploy frequently
-- Use cross-stack references sparingly — they create deployment coupling
+- ライフサイクルでスタックを分ける: 一緒に変更されるリソースは同じスタックに置く
+- ステートフルなリソース（データベース、S3 バケット）は、ステートレスなリソース（Lambda、API Gateway）とは別のスタックに置く
+- ステートフルなスタックはめったに変更されず、ステートレスなスタックは頻繁にデプロイされる
+- スタック間の参照は控えめに使う — デプロイ時の結合を生む
 
 ## Environment-Aware Stacks
 
@@ -98,9 +98,9 @@ new ComputeStack(app, `ComputeStack-${env}`, {
 ```
 
 ### Rules
-- Never hardcode account IDs or regions — use environment variables or context
-- Use the same code for all environments; parameterize differences through config
-- Production stacks must specify explicit `env` (account + region) — do not rely on defaults
+- アカウント ID やリージョンを決してハードコードしない — 環境変数またはコンテキストを使う
+- すべての環境で同じコードを使い、違いは設定（config）でパラメータ化する
+- 本番スタックでは明示的な `env`（アカウント + リージョン）を必ず指定する — デフォルトに頼らない
 
 ## CDK Testing
 
@@ -128,32 +128,32 @@ test('stack matches snapshot', () => {
   expect(template.toJSON()).toMatchSnapshot();
 });
 ```
-- Update snapshots intentionally (`jest --updateSnapshot`) after deliberate changes
-- Review snapshot diffs in pull requests — they show exactly what infrastructure changes
+- 意図的な変更を行った後に、意図してスナップショットを更新する（`jest --updateSnapshot`）
+- プルリクエストでスナップショットの差分をレビューする — インフラストラクチャの何が変わるかが正確にわかる
 
 ### What to Test
-- Security properties: encryption enabled, public access blocked, least-privilege policies
-- Critical configuration: retention policies, backup settings, auto-scaling parameters
-- Resource counts: expected number of Lambda functions, tables, queues
-- Do NOT test CDK internals or CloudFormation implementation details
+- セキュリティ関連のプロパティ: 暗号化の有効化、パブリックアクセスのブロック、最小権限のポリシー
+- 重要な設定: 保持ポリシー、バックアップ設定、オートスケーリングのパラメータ
+- リソース数: Lambda 関数、テーブル、キューの想定数
+- CDK の内部や CloudFormation の実装の詳細はテストし**ない**
 
 ## Security Defaults
 
 ### Encryption
-- S3: `encryption: s3.BucketEncryption.S3_MANAGED` (minimum) or KMS for sensitive data
-- DynamoDB: `encryption: dynamodb.TableEncryption.AWS_MANAGED` (default) or customer-managed KMS
-- SQS: `encryption: sqs.QueueEncryption.KMS` for sensitive message content
-- EBS: Enable encryption by default in account settings
+- S3: `encryption: s3.BucketEncryption.S3_MANAGED`（最低限）、または機密データには KMS
+- DynamoDB: `encryption: dynamodb.TableEncryption.AWS_MANAGED`（デフォルト）、またはカスタマー管理の KMS
+- SQS: 機密性の高いメッセージ内容には `encryption: sqs.QueueEncryption.KMS`
+- EBS: アカウント設定でデフォルトの暗号化を有効にする
 
 ### Access Control
-- S3: `blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL` (always, unless serving public static content)
-- Lambda: Use `grant*` methods instead of writing IAM policies manually
-- API Gateway: Add authorization on every route (IAM, Cognito, or Lambda authorizer)
+- S3: `blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL`（パブリックな静的コンテンツを配信する場合を除き、常に）
+- Lambda: IAM ポリシーを手書きする代わりに `grant*` メソッドを使う
+- API Gateway: すべてのルートに認可を追加する（IAM、Cognito、または Lambda オーソライザー）
 
 ### Logging
-- S3: Enable access logging to a dedicated logging bucket
-- API Gateway: Enable access logging and execution logging
-- Lambda: Logs go to CloudWatch automatically; set retention (`logRetention: logs.RetentionDays.ONE_MONTH`)
+- S3: 専用のログ用バケットへのアクセスログを有効にする
+- API Gateway: アクセスログと実行ログを有効にする
+- Lambda: ログは自動的に CloudWatch に送られる。保持期間を設定する（`logRetention: logs.RetentionDays.ONE_MONTH`）
 
 ### Least Privilege
 ```typescript
@@ -170,7 +170,7 @@ lambdaFunction.addToRolePolicy(new iam.PolicyStatement({
 ## CDK Aspects for Compliance
 
 ### Purpose
-Aspects visit every construct in the tree and can validate, warn, or modify resources.
+Aspect はツリー内のすべてのコンストラクトを巡回し、リソースを検証・警告・変更できる。
 
 ```typescript
 class EncryptionChecker implements cdk.IAspect {
@@ -188,8 +188,8 @@ Aspects.of(app).add(new EncryptionChecker());
 ```
 
 ### Common Compliance Aspects
-- Verify all S3 buckets have encryption and block public access
-- Verify all DynamoDB tables have point-in-time recovery enabled
-- Verify all Lambda functions have reserved concurrency set
-- Verify all security groups do not allow 0.0.0.0/0 ingress
-- Tag all resources with required cost allocation tags
+- すべての S3 バケットで暗号化とパブリックアクセスのブロックが設定されていることを検証する
+- すべての DynamoDB テーブルでポイントインタイムリカバリが有効になっていることを検証する
+- すべての Lambda 関数で予約済み同時実行数が設定されていることを検証する
+- すべてのセキュリティグループが 0.0.0.0/0 からのインバウンドを許可していないことを検証する
+- 必須のコスト配分タグをすべてのリソースに付与する

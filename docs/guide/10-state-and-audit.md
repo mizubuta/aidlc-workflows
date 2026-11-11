@@ -1,41 +1,41 @@
 # State Tracking and Audit Trail
 
-Each piece of work keeps two committed records that together provide full traceability from intent to production: the **state file** tracks where you are in the workflow, and the **audit trail**, a folder of files, records every decision, action, and event along the way.
+各作業は、インテントから本番環境までの完全なトレーサビリティを共に提供する 2 つのコミット済みの記録を保持します。**state file** はワークフローの現在位置を追跡し、**audit trail**（ファイルのフォルダー）は、その過程でのすべての判断、アクション、イベントを記録します。
 
 ---
 
 ## State File (`aidlc-state.md`)
 
-Each intent has its own state file at `aidlc/spaces/<space>/intents/<YYMMDD>-<label>/aidlc-state.md` (under the intent's record dir) — the single source of truth for that intent's workflow progress. The engine reads the active intent's state file on every session start to determine what has been completed, what is in progress, and what comes next.
+各インテントは、`aidlc/spaces/<space>/intents/<YYMMDD>-<label>/aidlc-state.md`（インテントの記録ディレクトリ配下）に独自の状態ファイルを持ちます。これは、そのインテントのワークフロー進捗についての唯一の正です。エンジンはセッション開始のたびにアクティブなインテントの状態ファイルを読み込み、何が完了し、何が進行中で、次に何が来るかを判断します。
 
-The initial description is stored beside it in
-`project-description.json` as one JSON string, exactly as typed except that
-anything shaped like a key, token or password is masked (see
-[Keys and passwords you type](#keys-and-passwords-you-type)). `aidlc-state.md` names that
-committed source and keeps only a safe single-line
-`Project` preview, so multiline user input cannot introduce additional state
-fields. Pre-2.6.115 records without the source marker continue to use the
-existing `Project` field as their description; a marked new record whose file
-is missing or malformed fails source validation instead of silently degrading.
-JSON decoding preserves the original description even if Git normalizes the
-sidecar's final line ending.
+最初の説明は、その隣の
+`project-description.json` に 1 つの JSON 文字列として保存されます。入力したとおりにそのまま保存されますが、
+キー、トークン、パスワードのような形のものはマスクされます（
+[入力したキーとパスワード](#keys-and-passwords-you-type) を参照）。`aidlc-state.md` は、
+そのコミット済みのソースを指し、安全な 1 行の
+`Project` プレビューだけを保持します。そのため、複数行のユーザー入力によって追加の状態
+フィールドが入り込むことはありません。ソースマーカーのない 2.6.115 より前の記録は、引き続き
+既存の `Project` フィールドを説明として使います。マーカー付きの新しい記録でファイルが
+欠けているか不正な場合は、黙って劣化するのではなく、ソースの検証に失敗します。
+JSON のデコードにより、Git がサイドカーの最終行の改行を正規化しても、
+元の説明は保持されます。
 
 ### What it contains
 
-| Section | Purpose |
+| セクション | 目的 |
 |---------|---------|
-| **Project Information** | Project description, type (greenfield/brownfield) and who set it (`Project Type Source`: `workspace scan` or `you`), scope, start date, active agent |
-| **Scope Configuration** | Stages to execute, stages to skip (with reasons), depth level, test strategy, `Review Override`, and the per-intent settings: `Guard Policy`, `Guards Off` (fences lowered for this piece of work), `Guards On` (fences forced on above the policy word), `Sensors`, `Learnings`, `Summary Confirmation`, `Plan Approval`, `Collaborators`. The fence lines appear only when used and never include human presence, which has no per-work switch. |
-| **Workspace State** | Project root, detected languages, frameworks, build system |
-| **Execution Plan Summary** | Total stages, completed count, in-progress stage |
-| **Runtime State** | Revision count, Construction checkpoints, iteration and execution settings, receipt-bound Construction Verification Command, and optional Unit ownership and Unit gate rhythm |
-| **Phase Progress** | Each phase as `Pending`, `Active`, `Verified`, or `Skipped` |
-| **Stage Progress** | Per-stage checkboxes tracking completion status |
-| **Unit Progress** | Team mode only: derived per-Unit Construction stage and gate cells; rewritten by `next`, never authoritative |
-| **Current Status** | Lifecycle phase, current/next stage, status, last updated timestamp |
-| **Session Resume Point** | Last completed stage, next action, pending artifacts |
+| **Project Information** | プロジェクトの説明、種別（greenfield/brownfield）とそれを設定した主体（`Project Type Source`: `workspace scan` または `you`）、スコープ、開始日、アクティブなエージェント |
+| **Scope Configuration** | 実行するステージ、スキップするステージ（理由付き）、深さレベル、テスト戦略、`Review Override`、およびインテントごとの設定: `Guard Policy`、`Guards Off`（この作業で下げたフェンス）、`Guards On`（ポリシーの語を超えて強制的にオンにしたフェンス）、`Sensors`、`Learnings`、`Summary Confirmation`、`Plan Approval`、`Collaborators`。フェンスの行は使われた場合にのみ現れ、人間の関与は決して含みません。人間の関与には作業ごとのスイッチがないためです。 |
+| **Workspace State** | プロジェクトルート、検出された言語、フレームワーク、ビルドシステム |
+| **Execution Plan Summary** | ステージの総数、完了数、進行中のステージ |
+| **Runtime State** | 修正回数、Construction のチェックポイント、反復と実行の設定、受領記録に結び付いた Construction Verification Command、および任意のユニット所有権とユニットのゲートのリズム |
+| **Phase Progress** | 各フェーズを `Pending`、`Active`、`Verified`、`Skipped` のいずれかで示す |
+| **Stage Progress** | 完了状況を追跡するステージごとのチェックボックス |
+| **Unit Progress** | チームモードのみ: 導出されたユニットごとの Construction のステージとゲートのセル。`next` が書き直し、正となる情報ではない |
+| **Current Status** | ライフサイクルフェーズ、現在/次のステージ、ステータス、最終更新のタイムスタンプ |
+| **Session Resume Point** | 最後に完了したステージ、次のアクション、保留中の成果物 |
 
-Here is part of one, from a Claude Code run on the `mvp` plan just after Intent Capture was approved (shortened; the file puts a long dash between each stage and its `EXECUTE` or `SKIP`, shown here as `-`):
+以下は、Claude Code で `mvp` プランを実行し、Intent Capture が承認された直後の状態ファイルの一部です（短縮しています。ファイルでは各ステージとその `EXECUTE` または `SKIP` の間に長いダッシュが入りますが、ここでは `-` で示しています）:
 
 ```text
 ## Scope Configuration
@@ -72,47 +72,48 @@ Here is part of one, from a Claude Code run on the `mvp` plan just after Intent 
 - **Last Updated**: 2026-10-13T10:43:59Z
 ```
 
-If `Guard Policy` and the retired `Change Control` both appear with different
-policy words, status shows `strict (from conflicting state lines)` until the next
-`next`, which keeps one and writes it as the only line: the one the audit trail
-shows was set last, else the one you set, else the scope's own, else the stricter
-(a `GUARD_POLICY_SET` row with `Source: command` and a `Settled` field records it).
-It says nothing when it kept your own last choice, and once otherwise, for example:
+`Guard Policy` と、廃止された `Change Control` の両方が異なる
+ポリシーの語で現れる場合、ステータスは次の
+`next` まで `strict (from conflicting state lines)` と表示します。その時点で一方が残され、唯一の行として書き込まれます。残されるのは、監査証跡上で最後に設定されたもの、それがなければあなたが設定したもの、それもなければスコープ自身のもの、それもなければより厳しいものです
+（`Source: command` と `Settled` フィールドを持つ `GUARD_POLICY_SET` の行がそれを記録します）。
+あなた自身の最後の選択を残した場合は何も言わず、それ以外の場合は一度だけ、たとえば次のように伝えます:
 
 > This work had two settings for how closely AI-DLC checks changes, and they disagreed. The record does not say which was set last, so AI-DLC keeps the stricter one: it checks everything. You can change it any time.
+>
+> （訳: この作業には、AI-DLC が変更をどれだけ厳密にチェックするかについて 2 つの設定があり、食い違っていました。記録からはどちらが最後に設定されたかわからないため、AI-DLC はより厳しいほうを維持します。つまり、すべてをチェックします。これはいつでも変更できます。）
 
-Memory-held strict still takes precedence and leaves both lines as they are. If
-both agree, the `Guard Policy` line is used. Any write of the policy line removes
-the retired line, leaving one setting.
+メモリーで保持された strict は引き続き優先され、両方の行をそのまま残します。
+両方が一致している場合は、`Guard Policy` の行が使われます。ポリシーの行を書き込むと、
+廃止された行は削除され、設定は 1 つになります。
 
-`Construction Verification Command` records the project check reused at every
-Unit/batch checkpoint. A matching current-workflow human approval receipt is
-required before `state set-construction-verification-command` writes the field;
-the field alone never authorizes execution, and generic `state set` refuses it.
-The human's **Approve** / **Request Changes** reply counts in the chat that
-asked or in a new one while it is the newest question asked. Only **Approve**
-authorizes the receipt; an unrelated reply, **Request Changes**, or a reply to
-another question does not.
-See the [recorded-command flow](12-cli-commands.md#construction-verification-command-record-human-authorization).
+`Construction Verification Command` は、すべてのユニット/バッチの
+チェックポイントで再利用されるプロジェクトのチェックを記録します。`state set-construction-verification-command` がこのフィールドを書き込む前に、
+対応する現在のワークフローでの人間の承認の受領記録が必要です。
+フィールドだけでは実行は決して許可されず、汎用の `state set` はこれを拒否します。
+人間の **Approve** / **Request Changes** の返信は、質問したチャットでも、
+それが最新の質問である間の新しいチャットでも有効です。受領記録を許可するのは
+**Approve** だけです。無関係な返信、**Request Changes**、または
+別の質問への返信は許可しません。
+[記録済みコマンドのフロー](12-cli-commands.md#construction-verification-command-record-human-authorization) を参照してください。
 
 ### Six-state checkboxes
 
-Stage progress uses a six-state checkbox notation:
+ステージの進捗には、6 状態のチェックボックス表記を使います:
 
-| Checkbox | Meaning |
+| チェックボックス | 意味 |
 |----------|---------|
-| `[ ]` | Not started |
-| `[-]` | In progress |
-| `[?]` | Awaiting your approval (gate open) |
-| `[R]` | Revising (you rejected the gate, stage is being revised) |
-| `[x]` | Completed |
-| `[S]` | Skipped while the work ran (cut via `skip`, or bypassed by a `--stage`/`--phase` jump) |
+| `[ ]` | 未開始 |
+| `[-]` | 進行中 |
+| `[?]` | あなたの承認待ち（ゲートが開いている） |
+| `[R]` | 修正中（あなたがゲートで却下し、ステージを修正中） |
+| `[x]` | 完了 |
+| `[S]` | 作業の実行中にスキップされた（`skip` で削除された、または `--stage`/`--phase` のジャンプで飛ばされた） |
 
-A stage your plan leaves out never changes box: it stays `[ ]` with `SKIP` after its name, like `market-research` above.
+プランに含まれていないステージのボックスは決して変わりません。上の `market-research` のように、名前の後に `SKIP` が付いたまま `[ ]` にとどまります。
 
-Stages transition through `[ ]` → `[-]` → `[?]` → `[x]` on the happy path. When you reject at the gate, the stage moves to `[R]` while it's revised, back to `[?]` when ready, and finally to `[x]` on approval. `/aidlc --status` reads the checkbox and tells you who's blocking — "Awaiting your approval on \<stage\>" for `[?]`, "Revising \<stage\> (revision N of 3)" for `[R]`.
+ステージは、正常系では `[ ]` → `[-]` → `[?]` → `[x]` と遷移します。ゲートで却下すると、ステージは修正中に `[R]` へ移り、準備ができると `[?]` に戻り、承認で最終的に `[x]` になります。`/aidlc --status` はチェックボックスを読み、誰が進行を止めているかを伝えます。`[?]` では "Awaiting your approval on \<stage\>"（\<stage\> のあなたの承認待ち）、`[R]` では "Revising \<stage\> (revision N of 3)"（\<stage\> を修正中、3 回中 N 回目）と表示します。
 
-For the canonical state-machine reference (transition tables, audit-event emitters), see [Developer Reference: State Machine](../reference/12-state-machine.md).
+正規の状態機械のリファレンス（遷移表、監査イベントの発行元）については、[開発者リファレンス: 状態機械](../reference/12-state-machine.md) を参照してください。
 
 ### State transitions
 
@@ -142,45 +143,45 @@ stateDiagram-v2
 
 ### Normal, revision, skip, redo, and jump flows
 
-- **Normal flow**: `[ ]` -> `[-]` -> `[?]` -> `[x]` (stage begins, work completes, gate opens, you approve)
-- **Revision flow**: `[?]` -> `[R]` -> `[?]` -> `[x]` (you reject, stage is revised, gate re-opens, you approve)
-- **Scope skip flow**: none: a stage not in the plan stays `[ ]`, marked `SKIP` when the work is created
-- **Redo flow**: `[x]` or `[-]` -> `[ ]` -> `[-]` (you request redo, artifacts are deleted, stage re-executes)
-- **Jump flow**: `[-]` at stage A, you request jump to stage B, intervening stages are marked `[S]`
+- **通常のフロー**: `[ ]` -> `[-]` -> `[?]` -> `[x]`（ステージが始まり、作業が完了し、ゲートが開き、あなたが承認する）
+- **修正のフロー**: `[?]` -> `[R]` -> `[?]` -> `[x]`（あなたが却下し、ステージが修正され、ゲートが再び開き、あなたが承認する）
+- **スコープによるスキップのフロー**: なし。プランにないステージは `[ ]` のままで、作業の作成時に `SKIP` と記される
+- **やり直しのフロー**: `[x]` または `[-]` -> `[ ]` -> `[-]`（あなたがやり直しを求め、成果物が削除され、ステージが再実行される）
+- **ジャンプのフロー**: ステージ A で `[-]`、あなたがステージ B へのジャンプを求め、間のステージが `[S]` と記される
 
 ---
 
 ## Audit Trail (`audit/`)
 
-The audit trail records the active intent's decisions and events for later
-stages and recovery. AIDLC's tools and hooks write it; reads stay open by any
-means. The write guard is a guardrail, not a security boundary. See
-[Audit Trail Rules](../reference/04-stage-protocol.md#audit-trail-rules) for
-the owning commands and the read-only query contract.
+監査証跡は、後のステージと復旧のために、アクティブなインテントの判断とイベントを
+記録します。書き込むのは AIDLC のツールとフックで、読み取りはどの
+手段でも自由です。書き込みガードはガードレールであり、セキュリティ境界ではありません。
+担当するコマンドと読み取り専用のクエリ契約については、[監査証跡のルール](../reference/04-stage-protocol.md#audit-trail-rules) を
+参照してください。
 
 ### 134-event taxonomy
 
-Events are organized into 27 categories:
+イベントは 27 のカテゴリに分類されています:
 
-| Category | Count | Events |
+| カテゴリ | 数 | イベント |
 |----------|------:|--------|
-| **Workflow Lifecycle** | 9 | `WORKFLOW_STARTED`, `WORKFLOW_COMPLETED`, `WORKFLOW_PARKED`, `WORKFLOW_UNPARKED`, `WORKFLOW_ARCHIVED`, `WORKFLOW_UNARCHIVED`, `STATE_UPGRADED` (work an older AI-DLC recorded, brought up to this one when the engine first read it), `INTENT_REPOS_CHANGED`, `INTENT_CHECKOUTS_CHANGED` |
+| **Workflow Lifecycle** | 9 | `WORKFLOW_STARTED`, `WORKFLOW_COMPLETED`, `WORKFLOW_PARKED`, `WORKFLOW_UNPARKED`, `WORKFLOW_ARCHIVED`, `WORKFLOW_UNARCHIVED`, `STATE_UPGRADED`（古い AI-DLC が記録した作業を、エンジンが最初に読んだときにこのバージョンに合わせたもの）, `INTENT_REPOS_CHANGED`, `INTENT_CHECKOUTS_CHANGED` |
 | **Phase Lifecycle** | 4 | `PHASE_STARTED`, `PHASE_COMPLETED`, `PHASE_VERIFIED`, `PHASE_SKIPPED` |
-| **Stage Lifecycle** | 9 | `STAGE_STARTED`, `STAGE_AWAITING_APPROVAL`, `STAGE_REVISING`, `STAGE_COMPLETED`, `STAGE_SKIPPED`, `STAGE_JUMPED`, `STAGE_DEFINITION_CHANGED`, `STAGE_OUTPUT_AMENDED` (a stage's own document changed after you approved it and before your next message), `SOURCE_WORK_NOT_FOUND` (Code Generation found no new code where it looked, and what it did: told the agent, put the question to you, or stood aside under Guard Policy off) |
-| **Session** | 6 | `SESSION_STARTED`, `SESSION_RESUMED`, `SESSION_COMPACTED`, `SESSION_ENDED`, `HUMAN_TURN` (hook-emitted), `HOST_TURN` (a prompt the host made for the agent, never a person's turn; on Claude Code one that names a Message Id takes back a turn first recorded as the person's, such as a scheduled wake-up) |
+| **Stage Lifecycle** | 9 | `STAGE_STARTED`, `STAGE_AWAITING_APPROVAL`, `STAGE_REVISING`, `STAGE_COMPLETED`, `STAGE_SKIPPED`, `STAGE_JUMPED`, `STAGE_DEFINITION_CHANGED`, `STAGE_OUTPUT_AMENDED`（ステージ自身のドキュメントが、あなたの承認後、次のメッセージの前に変更された）, `SOURCE_WORK_NOT_FOUND`（Code Generation が探した場所に新しいコードが見つからなかったことと、その対応: エージェントに伝えた、あなたに質問した、または Guard Policy off の下で退いた） |
+| **Session** | 6 | `SESSION_STARTED`, `SESSION_RESUMED`, `SESSION_COMPACTED`, `SESSION_ENDED`, `HUMAN_TURN`（フックが発行）, `HOST_TURN`（ホストがエージェントのために作ったプロンプトで、決して人のターンではない。Claude Code では、Message Id を指定するものが、最初に人のターンとして記録されたターン（スケジュールされた起動など）を取り消す） |
 | **Initialization** | 3 | `WORKSPACE_SCAFFOLDED`, `WORKSPACE_SCANNED`, `WORKSPACE_INITIALISED` |
 | **Navigation** | 9 | `SCOPE_CHANGED`, `SCOPE_DETECTED`, `DEPTH_CHANGED`, `TEST_STRATEGY_CHANGED`, `REVIEW_CLASS_CHANGED`, `RECOMPOSED`, `WORKSPACE_RECLASSIFIED`, `SCOPE_SAVED`, `PLUGIN_SELECTION_CHANGED` |
-| **Guard Policy** | 5 | `GUARD_POLICY_SET`, `CHANGE_CONTROL_SET` (retired name, still read), `CHANGE_ACCEPTED`, `GUARD_RESTORED`, `GUARD_STOOD_ASIDE` |
-| **Ceremony** | 1 | `CEREMONY_SET`, emitted by `aidlc-utility.ts config-change` (also via the shared `scope-change` applier). Fields: `Key` (`sensors`, `learnings`, `summary_confirmation`, `plan_approval`, `collaborators`), `Old`, `New`, `Source` (`you` for an explicit set, `scope <name>` for an inherited default). `Old` is the previously saved value (raw text if invalid; scope default if absent), not the environment-effective value. One row per real stored field/source change; no-op commands emit none. |
+| **Guard Policy** | 5 | `GUARD_POLICY_SET`, `CHANGE_CONTROL_SET`（廃止された名前。引き続き読み込まれる）, `CHANGE_ACCEPTED`, `GUARD_RESTORED`, `GUARD_STOOD_ASIDE` |
+| **Ceremony** | 1 | `CEREMONY_SET`。`aidlc-utility.ts config-change` が発行する（共有の `scope-change` アプライヤー経由でも発行される）。フィールド: `Key`（`sensors`, `learnings`, `summary_confirmation`, `plan_approval`, `collaborators`）、`Old`、`New`、`Source`（明示的な設定では `you`、継承された既定値では `scope <name>`）。`Old` は以前に保存された値（不正な場合は生のテキスト、ない場合はスコープの既定値）であり、環境上の実効値ではない。実際に保存されたフィールド/ソースの変更ごとに 1 行。何も変えないコマンドは何も発行しない。 |
 | **Interaction** | 19 | `DECISION_RECORDED`, `GATE_APPROVED`, `GATE_REJECTED`, `QUESTION_ANSWERED`, `QUESTION_REPLIED`, `QUESTION_UNANSWERED`, `QUESTION_ASKED`, `QUESTION_SHOWN`, `REQUEST_ROUTED`, `SUMMARY_CONFIRMATION_RECORDED`, `VERIFICATION_COMMAND_RECORDED`, `CONSTRUCTION_POLICY_RECORDED`, `CHECKPOINT_VERIFICATION_RECORDED`, `PLAN_APPROVAL_RECORDED`, `PLAN_APPROVAL_SKIPPED`, `PLAN_APPROVAL_OVERRIDDEN`, `REVIEW_REQUESTED`, `REVIEW_COMPLETED`, `PIPELINE_LINK_COMPLETED` |
 | **Unit Configuration and Lifecycle** | 9 | `UNIT_OWNERSHIP_SET`, `UNIT_GATE_RHYTHM_SET`, `CONSTRUCTION_POLICY_SET`, `UNIT_STARTED`, `UNIT_PAUSED`, `UNIT_RESUMED`, `UNIT_COMPLETED`, `UNIT_SKIPPED`, `UNIT_MERGED` |
 | **Artifact** | 3 | `ARTIFACT_CREATED`, `ARTIFACT_UPDATED` (write-audit-log hook), `ARTIFACT_REUSED` |
-| **Subagent** | 4 | `SUBAGENT_DISPATCHED` (deliver-stage-rules hook, or log-subagent for Cursor and Kiro IDE), `SUBAGENT_COMPLETED` (log-subagent hook), `SUBAGENT_PROMPT_UNMATCHED` (Copilot adapter, advisory), `REVIEW_VERDICT_DICTATED` (no longer written; earlier releases' plan-approval-guard hook. The reviewer's own `**Verdict Dictated:**` line now rides `REVIEW_COMPLETED`) |
-| **Reviewer Enforcement** | 2 | `REVIEWER_SCOPE_BLOCKED` (reviewer-scope hook), `REVIEW_FREEZE_BLOCKED` (review-freeze hook) |
-| **Plan Approval** | 2 | `PLAN_APPROVAL_BLOCKED`, `GUARD_DISABLED` (plan-approval-guard hook, or a fence you switched off for this piece of work) |
-| **Guard Refusals** | 2 | `STATE_TRANSITION_BLOCKED` (state-transition guard refused a delegated agent's lifecycle or routing command), `STAGE_RULES_BLOCKED` (stage rules refused for size, or a required rule file could not be read); each carries `Guard`, `Reason`, and the `Target`/`Session` it refused, one row per refusal |
-| **System Install** | 3 | `SYSTEM_INSTALL_BLOCKED` (a system package install, such as `sudo apt-get install`, that you had not asked for and your approved plan does not name, held until you say so), `SYSTEM_INSTALL_ALLOWED` (one let through on your message, with your words), `SYSTEM_INSTALL_REQUESTED` (the message of yours that asked for it, named by the agent when your approval in the same message had used it) |
-| **Documents** | 3 | `DOCUMENT_INDEXED`, `DOCUMENT_UPDATED`, `DOCUMENT_REMOVED` — space-level shard even when intent-scoped |
+| **Subagent** | 4 | `SUBAGENT_DISPATCHED`（deliver-stage-rules フック、または Cursor と Kiro IDE では log-subagent）, `SUBAGENT_COMPLETED`（log-subagent フック）, `SUBAGENT_PROMPT_UNMATCHED`（Copilot アダプター、参考情報）, `REVIEW_VERDICT_DICTATED`（現在は書き込まれない。以前のリリースの plan-approval-guard フックによるもの。レビュアー自身の `**Verdict Dictated:**` 行は現在 `REVIEW_COMPLETED` に含まれる） |
+| **Reviewer Enforcement** | 2 | `REVIEWER_SCOPE_BLOCKED`（reviewer-scope フック）, `REVIEW_FREEZE_BLOCKED`（review-freeze フック） |
+| **Plan Approval** | 2 | `PLAN_APPROVAL_BLOCKED`, `GUARD_DISABLED`（plan-approval-guard フック、またはこの作業であなたがオフにしたフェンス） |
+| **Guard Refusals** | 2 | `STATE_TRANSITION_BLOCKED`（state-transition ガードが、委譲されたエージェントのライフサイクルまたはルーティングのコマンドを拒否した）, `STAGE_RULES_BLOCKED`（サイズのためにステージルールが拒否された、または必須のルールファイルを読み込めなかった）。それぞれが `Guard`、`Reason`、および拒否した `Target`/`Session` を持ち、拒否ごとに 1 行 |
+| **System Install** | 3 | `SYSTEM_INSTALL_BLOCKED`（`sudo apt-get install` のような、あなたが求めておらず承認済みのプランにも記載のないシステムパッケージのインストール。あなたが許可するまで保留される）, `SYSTEM_INSTALL_ALLOWED`（あなたのメッセージによって通されたもの。あなたの言葉を含む）, `SYSTEM_INSTALL_REQUESTED`（それを求めたあなたのメッセージ。同じメッセージでのあなたの承認がそれを使った場合にエージェントが指定する） |
+| **Documents** | 3 | `DOCUMENT_INDEXED`, `DOCUMENT_UPDATED`, `DOCUMENT_REMOVED` — インテントのスコープであってもスペースレベルのシャード |
 | **Utility** | 1 | `HEALTH_CHECKED` |
 | **Error/Recovery** | 3 | `ERROR_LOGGED`, `RECOVERY_COMPLETED`, `COORDINATION_STOOD_ASIDE` |
 | **Construction Bolt** | 4 | `BOLT_STARTED`, `BOLT_COMPLETED`, `BOLT_FAILED`, `AUTONOMY_MODE_SET` |
@@ -190,21 +191,21 @@ Events are organized into 27 categories:
 | **Sensors** | 6 | `SENSOR_FIRED`, `SENSOR_PASSED`, `SENSOR_FAILED`, `SENSOR_COULD_NOT_RUN`, `SENSOR_BUDGET_OVERRIDE`, `GUARDRAIL_LOADED` |
 | **Learning Loop** | 3 | `MEMORY_EMPTY`, `RULE_LEARNED`, `SENSOR_PROPOSED` |
 | **Swarm** | 9 | `SWARM_STARTED`, `SWARM_UNIT_CONVERGED`, `SWARM_SOURCE_MERGED`, `SWARM_UNIT_FAILED`, `SWARM_BATON_RETURNED`, `SWARM_COMPLETED`, `SWARM_DEGRADED`, `MAIN_CHECKOUT_CHANGE_ALLOWED`, `SWARM_TAKEN_OVER` |
-| **Commit Provenance** | 1 | `SOURCE_COMMITTED` (`aidlc attest anchor`, or the opt-in session-start sweep — enrichment only; `resolve` never reads it) |
+| **Commit Provenance** | 1 | `SOURCE_COMMITTED`（`aidlc attest anchor`、またはオプトインのセッション開始時のスイープ。情報の付加のみで、`resolve` はこれを決して読まない） |
 
 ### What gets logged and when
 
-- **Every stage start and completion** is logged with `STAGE_STARTED` and `STAGE_COMPLETED` events
-- **Every file the agent writes or edits with its file tools** in the intent's record dir or the space's `codekb/` (except the `audit/` shards themselves) is logged by the write-audit-log hook; a file written by a shell command is not
-- **Every approval gate decision** (approve, request changes, accept-as-is) is logged
-- **Every question answer** you provide is recorded
-- **Every subagent completion** is logged by the log-subagent hook, and every helper sent is logged when it is sent
-- **Every error and recovery** is logged
+- **すべてのステージの開始と完了** は、`STAGE_STARTED` と `STAGE_COMPLETED` のイベントで記録されます
+- インテントの記録ディレクトリまたはスペースの `codekb/`（`audit/` シャード自体を除く）で、**エージェントがファイルツールで書き込みまたは編集したすべてのファイル** は、write-audit-log フックによって記録されます。シェルコマンドで書き込まれたファイルは記録されません
+- **すべての承認ゲートの判断**（承認、変更の依頼、現状のまま受け入れ）が記録されます
+- あなたが提供した **すべての質問の回答** が記録されます
+- **すべてのサブエージェントの完了** は log-subagent フックによって記録され、送られたすべてのヘルパーは送信時に記録されます
+- **すべてのエラーと復旧** が記録されます
 
 ### How to read the audit log
 
-Each shard is plain Markdown, one block per event. Two from the Intent Capture
-stage of the run above:
+各シャードはプレーンな Markdown で、イベントごとに 1 ブロックです。以下は、上の実行の Intent Capture
+ステージからの 2 つです:
 
 ```text
 ## Stage Start
@@ -223,71 +224,69 @@ stage of the run above:
 **Person Reply**: One total per SKU
 ```
 
-Run `aidlc engine audit history` for the event timeline as JSON, or add
-`--stage <slug>` to review one stage. Each event carries its timestamp, type,
-and named fields. Results are oldest first; `unordered: true` marks tied
-entries with no known order across writers. Free-form notes appear as `NOTE`
-entries with their heading and body text. `--event NOTE` selects notes;
-`--stage` excludes them.
+イベントのタイムラインを JSON で得るには `aidlc engine audit history` を実行します。1 つのステージを確認するには
+`--stage <slug>` を追加します。各イベントは、タイムスタンプ、種別、
+名前付きフィールドを持ちます。結果は古い順です。`unordered: true` は、書き込み元をまたいだ順序が不明な
+同時刻のエントリを示します。自由形式のメモは、見出しと本文を持つ `NOTE`
+エントリとして現れます。`--event NOTE` はメモを選択し、
+`--stage` はメモを除外します。
 
-A `Human Turn` entry records that you acted, never your words. To read what you
-sent in each turn, run `aidlc engine audit turns`: it joins each turn to the
-message record this machine keeps for a day, and says when a turn's words are
-not here.
+`Human Turn` のエントリは、あなたが操作したことを記録するだけで、あなたの言葉は決して記録しません。各ターンで
+送った内容を読むには、`aidlc engine audit turns` を実行します。これは、各ターンを
+このマシンが 1 日保持するメッセージ記録と結び付け、ターンの言葉がここにない場合は
+そう伝えます。
 
-Run `aidlc engine log answers --stage <slug>` (add `--unit <unit>` for a Unit)
-for paired earlier questions and answers. One reply pairs with every question
-logged for the menu it answered. Open questions and the rare ambiguous answer
-(no question before it, or writers tied at one second) are reported apart.
-Neither command changes files or takes a lock.
+対になった過去の質問と回答を見るには、`aidlc engine log answers --stage <slug>` を実行します（ユニットの場合は `--unit <unit>` を追加）。
+1 つの返信は、それが答えたメニューについて記録されたすべての質問と対になります。
+未回答の質問と、まれにあるあいまいな回答（前に質問がない、または書き込み元が 1 秒単位で同時刻）は別に報告されます。
+どちらのコマンドもファイルを変更せず、ロックも取りません。
 
-When the agent marks one of a question's choices "(Recommended)", the record
-keeps that choice as `Recommended`: on the question's `Decision Recorded`
-entry when the logged choices carry the mark, and on the `Question Replied`
-entry when you answer in Claude Code's or Codex's question box, beside the
-box's `Options` and your `Reply`, so you can see whether you went with it.
-`log answers` lists a logged question's `Recommended` as `recommended` beside
-its `options` and your answer. Entries written before this have no
-`Recommended`, and read as they always did.
+エージェントが質問の選択肢の 1 つに "(Recommended)" と印を付けると、記録は
+その選択肢を `Recommended` として保持します。記録された選択肢にその印がある場合は質問の `Decision Recorded`
+エントリに、Claude Code や Codex の質問ボックスで回答した場合は `Question Replied`
+エントリに、ボックスの `Options` とあなたの `Reply` と並べて保持されるため、それに従ったかどうかを確認できます。
+`log answers` は、記録された質問の `Recommended` を、その `options` とあなたの回答と並べて
+`recommended` として一覧表示します。これより前に書かれたエントリには
+`Recommended` がなく、従来どおりに読まれます。
 
 ### Keys and passwords you type
 
-The state file, `project-description.json` and the audit shards are committed
-with your work, so AI-DLC masks anything shaped like a key, token or password
-before it writes them: a vendor token (GitHub, GitLab, Slack, Stripe, OpenAI,
-Anthropic, Google, npm, Hugging Face, an AWS access key), a private key block,
-a JWT or `Bearer` token, the password in an address
-(`postgres://app:[masked]@db`), and a value set after a secret's name
-(`password=`, `DB_PASSWORD=`, `GITHUB_TOKEN:`) when the value has a letter and
-a digit or symbol in it (after a password's name, words joined by `-`, `.` or
-`_` count too). A reference such as `$DB_PASSWORD` stays, and so does a
-placeholder such as `your-api-key-here`. The rest of your words stay as you typed them, for
-example `**Person Reply**: Approve, the deploy key is [masked]`. Your whole
-message stays only in `aidlc/.aidlc-sessions/`, which AI-DLC's `.gitignore`
-block keeps out of commits. When your message held one, AI-DLC says so once in
-the chat: the chat itself still received it, so change the key where it was
-issued if it is real. Masking goes by shape only, so a secret written another
-way (`my password is hunter2`) is kept as typed, and the doctor bundle masks
-the same shapes and more.
+状態ファイル、`project-description.json`、監査シャードはあなたの作業とともにコミットされるため、
+AI-DLC はそれらを書き込む前に、キー、トークン、パスワードのような形のものをマスクします。
+対象は、ベンダーのトークン（GitHub、GitLab、Slack、Stripe、OpenAI、
+Anthropic、Google、npm、Hugging Face、AWS のアクセスキー）、秘密鍵のブロック、
+JWT または `Bearer` トークン、アドレス内のパスワード
+（`postgres://app:[masked]@db`）、そしてシークレットの名前の後に設定された値
+（`password=`、`DB_PASSWORD=`、`GITHUB_TOKEN:`）で、その値に英字と
+数字または記号が含まれる場合です（パスワードの名前の後では、`-`、`.`、
+`_` で連結された単語も対象になります）。`$DB_PASSWORD` のような参照はそのまま残り、
+`your-api-key-here` のようなプレースホルダーも残ります。それ以外の言葉は入力したとおりに残ります。
+たとえば `**Person Reply**: Approve, the deploy key is [masked]` のようになります。メッセージ全体は
+`aidlc/.aidlc-sessions/` にのみ残り、AI-DLC の `.gitignore`
+ブロックによってコミットから除外されます。メッセージにそうしたものが含まれていた場合、AI-DLC はチャットで一度だけ
+その旨を伝えます。チャット自体はそれを受け取っているため、本物であれば
+発行元でキーを変更してください。マスクは形だけで判断するため、別の形で書かれたシークレット
+（`my password is hunter2`）は入力したとおりに保持されます。doctor バンドルは
+同じ形とそれ以上のものをマスクします。
 
 ### Who decided
 
-When you approve a stage, ask for changes, skip or jump to a stage, switch a
-check off or on, or let a changed input through, the audit row also records
-your git name, for example `**Git Name**: Jane Doe`. It is the name
-`git config user.name` gives for this project (the repo's own setting, then
-your global one), the same name the Unit board shows, so in a team clone each
-person's rows carry their own name. AI-DLC only reads it: it never sets it,
-asks for it, or records your email, and with no name in git it records
-nothing. It says who was at the keyboard as git reports it, not a signature or
-proof of identity. `/aidlc --status` names who approved the last completed
-stage, for example `Last Completed: Requirements Analysis (approved by Jane
-Doe)`. Which rows carry it is listed under "Git Name" in
-`knowledge/aidlc-shared/audit-format.md` in your harness folder.
+ステージを承認する、変更を求める、ステージをスキップする、ステージにジャンプする、
+チェックをオフまたはオンにする、変更された入力を通す、といった操作をすると、監査の行には
+あなたの git の名前も記録されます。たとえば `**Git Name**: Jane Doe` です。これは、
+このプロジェクトで `git config user.name` が返す名前（リポジトリ自身の設定、なければ
+グローバルの設定）で、ユニットボードに表示されるのと同じ名前です。そのため、チームのクローンでは各
+人の行にその人の名前が記録されます。AI-DLC はそれを読むだけで、設定したり、
+尋ねたり、メールアドレスを記録したりすることは決してなく、git に名前がなければ何も
+記録しません。これは git が報告するとおりに誰がキーボードの前にいたかを示すものであり、署名や
+本人確認の証明ではありません。`/aidlc --status` は、最後に完了した
+ステージを誰が承認したかを示します。たとえば `Last Completed: Requirements Analysis (approved by Jane
+Doe)` です。どの行がそれを持つかは、ハーネスフォルダー内の
+`knowledge/aidlc-shared/audit-format.md` の "Git Name" に記載されています。
 
 ### Audit event flow
 
-When a stage executes and produces artifacts, the audit trail captures the full sequence:
+ステージが実行されて成果物を生成すると、監査証跡は一連の流れ全体を記録します:
 
 ```mermaid
 sequenceDiagram
@@ -317,75 +316,73 @@ sequenceDiagram
 
 ### Source-bound review receipts
 
-Code Generation writes application source outside the intent record, so its
-terminal per-unit review receipt binds more than markdown artifacts. The
-reviewed unit's strict `source-manifest.json` lists created, modified, or deleted
-source paths; `Unit Source Fingerprint` binds those claims and manifest bytes.
-At completion the engine validates each unit newest-first (a newer reviewed
-claim can own an intentional shared-file integration), then compares the union
-of fresh claims with the stage-entry source baseline. Under Guard Policy
-strict, an uncovered change or a stale unit blocks all four completion routes
-and offers that unit's one bounded stale-receipt recovery. A file Git ignores
-that no unit can claim (neither tracked nor registered in
-`.aidlc-source-paths.json`, such as build output or a test run's record) is not
-an uncovered change, nor is a path that file's `exclude` list leaves out of the
-walk, even when the line was written after the stage started (a tool's cache the
-project does not ignore, a nested repository that is not this project's code);
-the registry file itself is AI-DLC's own, so no unit claims it. The strict
-refusal names the three ways through: the unit that made a change lists the path
-and is reviewed once more, a change nobody meant is undone, or a path that is
-not source is excluded there. Under relaxed or
-off, an uncovered change is kept: completion records it once as
-`CHANGE_ACCEPTED` and names the files in one line ("These files changed outside
-any unit's work in Code Generation: ... Kept them."). A stage-entry baseline
-that is missing on this machine (a fresh clone) skips the check with one line
-under every Guard Policy; one that is here and does not match still blocks
-completion under strict.
+Code Generation はインテントの記録の外にアプリケーションのソースを書き込むため、その
+ユニットごとの最終的なレビューの受領記録は、Markdown の成果物以上のものに結び付きます。
+レビューされたユニットの厳格な `source-manifest.json` は、作成、変更、削除された
+ソースのパスを列挙し、`Unit Source Fingerprint` がそれらの主張とマニフェストのバイト列を結び付けます。
+完了時、エンジンは各ユニットを新しい順に検証し（より新しいレビュー済みの
+主張は、意図的な共有ファイルの統合を所有できます）、次に新しい主張の和集合を
+ステージ開始時のソースのベースラインと比較します。Guard Policy が
+strict の場合、カバーされていない変更や古くなったユニットは 4 つの完了経路すべてをブロックし、
+そのユニットについて範囲を限定した古い受領記録の復旧を 1 回提示します。Git が無視し、
+どのユニットも主張できないファイル（追跡されておらず、
+`.aidlc-source-paths.json` にも登録されていないもの。ビルド出力やテスト実行の記録など）は、
+カバーされていない変更ではありません。そのファイルの `exclude` リストが走査から除外するパスも、
+その行がステージ開始後に書かれたものであっても同様です（プロジェクトが無視していない
+ツールのキャッシュ、このプロジェクトのコードではない入れ子のリポジトリなど）。
+レジストリファイル自体は AI-DLC 自身のものなので、どのユニットもそれを主張しません。strict の
+拒否は 3 つの抜け道を示します。変更を行ったユニットがそのパスを列挙して
+もう一度レビューを受ける、誰も意図していない変更を元に戻す、またはソースではない
+パスをそこで除外する、のいずれかです。relaxed または
+off の場合、カバーされていない変更は維持されます。完了時にそれを一度
+`CHANGE_ACCEPTED` として記録し、ファイルを 1 行で示します（"These files changed outside
+any unit's work in Code Generation: ... Kept them."）。このマシンにステージ開始時のベースラインが
+ない場合（新しいクローン）は、どの Guard Policy でも 1 行を示してチェックをスキップします。ベースラインが
+存在して一致しない場合は、strict の下では引き続き完了をブロックします。
 
-The workspace-global `Source Fingerprint` is normally the outer post-review
-mutation boundary. One narrow reconciliation makes the documented “revert”
-recovery real: after any unclaimed baseline change (addition, modification, or
-deletion) is fully reverted, completion can continue
-only when the stage baseline is present and valid, every applicable unit still
-has a fresh modern binding, and the baseline-to-current delta has zero
-unclaimed paths. Ordinary post-review edits, stale or legacy unit evidence, and
-any remaining unclaimed path still refuse. Pre-upgrade fieldless receipts or
-baselines retain documented migration fail-open behavior; missing or corrupt
-modern evidence fails closed. `AIDLC_SKIP_SOURCE_FRESHNESS=1` is the
-deterministic emergency off-switch and must be present again when consuming a
-bypass-marked receipt.
+ワークスペース全体の `Source Fingerprint` は、通常、レビュー後の変更に対する外側の
+境界です。1 つの限定的な調整によって、文書化されている「元に戻す（revert）」
+復旧が実際に機能します。主張されていないベースラインの変更（追加、変更、
+削除）が完全に元に戻された後、完了を続行できるのは、
+ステージのベースラインが存在して有効であり、該当するすべてのユニットがなお
+新しい最新形式の結び付きを持ち、ベースラインから現在までの差分に主張されていないパスが
+1 つもない場合だけです。通常のレビュー後の編集、古いまたはレガシーのユニットの証跡、
+残っている主張されていないパスは、引き続き拒否されます。アップグレード前のフィールドのない受領記録や
+ベースラインは、文書化された移行時の fail-open の振る舞いを維持します。最新形式の証跡が欠けているか
+破損している場合は fail-closed になります。`AIDLC_SKIP_SOURCE_FRESHNESS=1` は
+決定的な緊急用のオフスイッチであり、バイパスの印が付いた受領記録を消費するときにも
+再び設定されている必要があります。
 
-An AI-DLC update after the review changes only AI-DLC's own files, so it leaves
-the review current when the receipt's `Source Listing` is on this machine; a
-receipt without one is compared by `Source Fingerprint` as above.
+レビュー後の AI-DLC の更新は AI-DLC 自身のファイルだけを変更するため、
+受領記録の `Source Listing` がこのマシンにあれば、レビューは最新のまま保たれます。それがない
+受領記録は、上記のとおり `Source Fingerprint` で比較されます。
 
 ---
 
 ## How State and Audit Work Together
 
-The state file and audit trail serve complementary purposes:
+状態ファイルと監査証跡は、互いを補完する目的を果たします:
 
-| Concern | State File | Audit Trail |
+| 観点 | 状態ファイル | 監査証跡 |
 |---------|-----------|-------------|
-| **Purpose** | Track current position and progress | Record full history of events |
-| **Read by** | Orchestrator (for routing and resume) | Users and auditors (for traceability) |
-| **Update pattern** | Overwritten at each state change | Append-only (never modified) |
-| **Session resume** | Primary source for determining where to continue | Provides the original project description and decision context |
-| **Git policy** | Commit to version control | Commit (per-clone shards under `audit/`; no merge conflicts) |
+| **目的** | 現在の位置と進捗を追跡する | イベントの完全な履歴を記録する |
+| **読み手** | オーケストレーター（ルーティングと再開のため） | ユーザーと監査担当者（トレーサビリティのため） |
+| **更新パターン** | 状態が変わるたびに上書きされる | 追記のみ（決して変更されない） |
+| **セッションの再開** | どこから続けるかを判断する主要な情報源 | 元のプロジェクトの説明と判断のコンテキストを提供する |
+| **Git のポリシー** | バージョン管理にコミットする | コミットする（`audit/` 配下のクローンごとのシャード。マージの競合なし） |
 
-The orchestrator uses `aidlc-state.md` as the durable cursor. Team-owned
-Construction additionally derives Unit cells, receipt floors, gates, and merged
-rows from the active intent's audit shards; solo routing keeps the state-only
-cursor behavior. The audit trail also lets you trace every decision from intent
-through to production.
+オーケストレーターは、`aidlc-state.md` を永続的なカーソルとして使います。チームが所有する
+Construction では、さらにアクティブなインテントの監査シャードから、ユニットのセル、受領記録の下限、ゲート、マージ済みの
+行を導出します。ソロのルーティングでは、状態ファイルのみのカーソルの振る舞いを維持します。監査証跡によって、インテントから
+本番環境までのすべての判断を追跡することもできます。
 
-If the state file is corrupted, you can reconstruct it from the audit trail by reviewing `STAGE_STARTED` and `STAGE_COMPLETED` events. See [Troubleshooting](15-troubleshooting.md) for repair instructions.
+状態ファイルが破損した場合は、`STAGE_STARTED` と `STAGE_COMPLETED` のイベントを確認することで、監査証跡から再構築できます。修復手順については [トラブルシューティング](15-troubleshooting.md) を参照してください。
 
 ---
 
 ## Next Steps
 
-- [Session Management](11-session-management.md) — How state is used for session resume
-- [Artifacts Reference](14-artifacts-reference.md) — What gets stored in the intent's record dir
-- [Troubleshooting](15-troubleshooting.md) — State corruption repair
-- [Glossary](glossary.md) — Definitions for state file, audit trail, checkpoint, compaction
+- [セッション管理](11-session-management.md) — セッションの再開に状態がどう使われるか
+- [成果物リファレンス](14-artifacts-reference.md) — インテントの記録ディレクトリに何が保存されるか
+- [トラブルシューティング](15-troubleshooting.md) — 状態の破損の修復
+- [用語集](glossary.md) — 状態ファイル、監査証跡、チェックポイント、コンパクションの定義

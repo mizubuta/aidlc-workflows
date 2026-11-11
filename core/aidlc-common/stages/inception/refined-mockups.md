@@ -50,59 +50,58 @@ outputs: mockups.md, interaction-spec.md, design-system-mapping.md, accessibilit
 
 ### Step 1: Load Prior Context
 
-- Read rough mockups from `<record>/ideation/rough-mockups/` (if exists)
-- Read user stories from `<record>/inception/user-stories/`
-- Read requirements from `<record>/inception/requirements-analysis/`
+- `<record>/ideation/rough-mockups/` からラフモックアップを読み込む（存在する場合）
+- `<record>/inception/user-stories/` からユーザーストーリーを読み込む
+- `<record>/inception/requirements-analysis/` から要件を読み込む
 
-The classic scope skips rough-mockups by design (no Ideation phase); when the wireframes and user-flow inputs are absent, design the refined mockups directly from the user stories and requirements — never invent the content of a missing artifact.
+classic スコープは設計上 rough-mockups をスキップする（Ideation フェーズがない）。ワイヤーフレームとユーザーフローの入力が存在しない場合は、ユーザーストーリーと要件から直接リファインドモックアップを設計する。存在しない成果物の内容を決してでっち上げてはならない。
 
 ### Step 2: Generate Clarifying Questions
 
-Create `<record>/inception/refined-mockups/refined-mockups-questions.md` with questions:
-- How should each user story be represented in the UI?
-- What interaction patterns are needed (modals, inline edits, wizards, progressive disclosure)?
-- What states must each screen handle (loading, empty, error, success, partial)?
-- Does the design align with the existing design system / component library?
-- What accessibility requirements apply (WCAG level)?
-- What responsive breakpoints are needed?
-- For APIs: what does the developer experience look like?
+次の質問を含む `<record>/inception/refined-mockups/refined-mockups-questions.md` を作成する:
+- 各ユーザーストーリーを UI でどのように表現すべきか？
+- どのようなインタラクションパターンが必要か（モーダル、インライン編集、ウィザード、段階的な開示）？
+- 各画面が扱うべき状態は何か（読み込み中、空、エラー、成功、部分的）？
+- デザインは既存のデザインシステム／コンポーネントライブラリと整合しているか？
+- どのアクセシビリティ要件が適用されるか（WCAG のレベル）？
+- どのレスポンシブのブレークポイントが必要か？
+- API の場合: 開発者体験はどのようなものになるか？
 
-Follow stage-protocol.md question flow.
+stage-protocol.md の質問フローに従う。
 
 ### Step 3: Collect and Analyze Answers
 
-Validate design decisions against user stories and requirements for consistency.
+設計上の決定をユーザーストーリーと要件に照らして検証し、一貫性を確認する。
 
 ### Step 4: Generate Artifacts
 
-Create mid-to-high fidelity mockups (per user story/screen), interaction specification document (use `{{HARNESS_DIR}}/knowledge/aidlc-design-agent/component-spec-template.md` as the format for component-level specifications), design system mapping, responsive behavior specification, and accessibility compliance checklist.
+中〜高忠実度のモックアップ（ユーザーストーリー／画面ごと）、インタラクション仕様書（コンポーネントレベルの仕様の形式として `{{HARNESS_DIR}}/knowledge/aidlc-design-agent/component-spec-template.md` を使用する）、デザインシステムへのマッピング、レスポンシブ時の振る舞いの仕様、アクセシビリティ準拠のチェックリストを作成する。
 
-For non-UI: create API developer experience specification.
+UI 以外の場合: API の開発者体験の仕様を作成する。
 
 ### Step 5: Completion Handoff
 
-Hand completion to `stage-protocol.md` via
-`{{INVOKE}} engine orchestrate report --stage refined-mockups --result <outcome>`.
-That `report` call owns every lifecycle transition and advancement; never perform one in prose, and never narrate this bookkeeping to the user.
+`{{INVOKE}} engine orchestrate report --stage refined-mockups --result <outcome>` を通じて、
+完了を `stage-protocol.md` に引き渡す。
+その `report` 呼び出しが、ライフサイクルの遷移と前進をすべて担う。散文の中で遷移を実行してはならず、この記録処理をユーザーに説明してもならない。
 
 ### Step 6: Present Completion & Request Approval
 
-Completion emoji: :art:
-Review path: `<record>/inception/refined-mockups/`
-Standard approval gate (Approve / Request Changes).
+完了時の絵文字: :art:
+レビュー対象のパス: `<record>/inception/refined-mockups/`
+標準の承認ゲート（Approve / Request Changes）。
 
 ## Sensors
 
-This stage's outputs are markdown artefacts under `<record>/inception/refined-mockups/`.
+このステージの出力は `<record>/inception/refined-mockups/` 配下の Markdown 成果物である。
 
-Imports: `required-sections`, `upstream-coverage`.
+インポート: `required-sections`, `upstream-coverage`.
 
-Upstream targets: `wireframes`, `user-flow`, `stories`, `requirements`, `team-practices`.
+上流の対象: `wireframes`, `user-flow`, `stories`, `requirements`, `team-practices`.
 
 ## Learn
 
-When `directive.protocol_modules` lists `learnings`, follow
-`stage-protocol-learnings.md`: keep the diary at `directive.memory_path` while
-working, and take the learnings step before the approval gate; that module says
-when it asks the person anything. When the module is absent, skip both the diary
-and the step.
+`directive.protocol_modules` に `learnings` が含まれている場合は、
+`stage-protocol-learnings.md` に従う。作業中は `directive.memory_path` に日誌を付け、
+承認ゲートの前に学習ステップを実施する。そのモジュールが、利用者に何かを尋ねるタイミングを定めている。
+モジュールがない場合は、日誌とステップの両方を省略する。

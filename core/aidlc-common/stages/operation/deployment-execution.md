@@ -47,93 +47,89 @@ outputs: deployment-log.md, smoke-test-results.md, health-check-report.md, deplo
 
 ### Step 1: Load Prior Context
 
-- Read CD pipeline config and deployment strategy from `<record>/operation/deployment-pipeline/` (if they exist)
-- Read environment inventory from `<record>/operation/environment-provisioning/` (if exists)
-- Read build/test results from `<record>/construction/build-and-test/` (if exists)
-- Read rollback runbook (if exists)
+- `<record>/operation/deployment-pipeline/` から CD パイプラインの設定とデプロイ戦略を読み込む（存在する場合）
+- `<record>/operation/environment-provisioning/` から環境インベントリを読み込む（存在する場合）
+- `<record>/construction/build-and-test/` からビルド／テストの結果を読み込む（存在する場合）
+- ロールバックのランブックを読み込む（存在する場合）
 
-Incremental scopes (`bugfix`, `refactor`, and `security-patch`) plus `express`
-retain Build and Test but skip Environment Provisioning by design; `infra`
-retains both. Deployment Pipeline may also report skipped when the
-workspace's existing pipeline is already adequate; in that case its absent
-`cd-config` and `deployment-strategy` artifacts are expected, and this stage
-must inspect and use the real pipeline configuration in the workspace instead
-of invoking missing-artifact recovery. Inventory actual target environments
-from that workspace configuration and any approved Deployment Pipeline
-artifacts. For Express greenfield, deployment proceeds only when those files
-identify a real target; otherwise this CONDITIONAL stage reports skipped.
-Never invent an environment inventory or deployment path.
+インクリメンタルなスコープ（`bugfix`、`refactor`、`security-patch`）と `express`
+は、設計上 Build and Test を維持しつつ Environment Provisioning をスキップする。`infra`
+は両方を維持する。ワークスペースの既存のパイプラインがすでに十分な場合、Deployment Pipeline も
+スキップを報告することがある。その場合、`cd-config` と `deployment-strategy` の成果物が
+存在しないのは想定どおりであり、このステージは欠落した成果物の復旧を呼び出すのではなく、
+ワークスペース内の実際のパイプライン設定を調べて使用しなければならない。実際のデプロイ先の環境は、
+そのワークスペースの設定と、承認済みの Deployment Pipeline の成果物から
+洗い出す。Express のグリーンフィールドでは、それらのファイルが実際のデプロイ先を
+特定している場合にのみデプロイを進める。そうでなければ、この CONDITIONAL ステージはスキップを報告する。
+環境インベントリやデプロイ経路を決してでっち上げてはならない。
 
 ### Step 2: Pre-Deployment Checks
 
-When the deployment targets AWS (the pipeline or the deploy commands use the
-AWS CLI, CDK, SAM, or CloudFormation), first check the AWS identity from your
-own shell, before writing any question: run `aws sts get-caller-identity`
-with the profile and region the deployment will use (the same `AWS_PROFILE`
-and `AWS_REGION`, or the `--profile` and `--region` the pipeline names). A
-person's terminal can be signed in while the shell your harness runs commands
-in cannot see those credentials, and finding that out only when the deploy
-starts costs the time of every answer before it.
+デプロイ先が AWS の場合（パイプラインまたはデプロイコマンドが AWS CLI、CDK、SAM、
+CloudFormation を使用する場合）、質問を書く前に、まず自分の
+シェルから AWS のアイデンティティを確認する: デプロイで使用するプロファイルとリージョン
+（同じ `AWS_PROFILE` と `AWS_REGION`、またはパイプラインが指定する `--profile` と `--region`）で
+`aws sts get-caller-identity` を実行する。
+利用者のターミナルではサインインしていても、ハーネスがコマンドを実行するシェルからは
+その認証情報が見えないことがある。それがデプロイの開始時に初めて判明すると、
+それまでのすべての回答にかけた時間が無駄になる。
 
-- If the `aws` command itself is not installed, skip this check and go on: CDK
-  and SAM can deploy without the AWS CLI.
-- If it succeeds, go on. Never write the account ID or the full ARN into an
-  artifact, a questions file, or the audit: when you note the identity, keep
-  only the last four digits of the account (`********1234`) and the role or
-  user name.
-- If it fails (`NoCredentials`, `ExpiredToken`, `AccessDenied`, a missing
-  profile), do not ask any deployment question yet. Ask one question through
-  the stage-protocol.md question flow that says what failed, in the error's own
-  words, and the fix: the credentials must be visible to the shell this agent
-  runs commands in, so the person signs in again for that profile (for
-  example `aws sso login --profile <profile>`), makes the profile and region
-  available where the harness starts its shell (or restarts the harness from a
-  terminal where they are set), and replies when it is done. Then run the
-  check again; deploy only after it succeeds.
+- `aws` コマンド自体がインストールされていない場合は、このチェックをスキップして先に進む。CDK
+  と SAM は AWS CLI なしでもデプロイできる。
+- 成功した場合は先に進む。アカウント ID や完全な ARN を、成果物、質問ファイル、
+  監査に決して書き込んではならない。アイデンティティを記録する場合は、
+  アカウントの下 4 桁（`********1234`）とロール名またはユーザー名のみを残す。
+- 失敗した場合（`NoCredentials`、`ExpiredToken`、`AccessDenied`、プロファイルの
+  欠落）は、まだデプロイに関する質問をしてはならない。stage-protocol.md の質問フローを通じて、
+  何が失敗したかをエラーの文言そのままで伝え、修正方法を示す質問を 1 つ行う: 認証情報は、
+  このエージェントがコマンドを実行するシェルから見える必要がある。そのため利用者は、
+  そのプロファイルで再度サインインし（たとえば
+  `aws sso login --profile <profile>`）、ハーネスがシェルを起動する場所でプロファイルとリージョンを
+  利用できるようにし（または、それらが設定されたターミナルからハーネスを再起動し）、
+  完了したら返答する。その後、再度チェックを実行し、成功してからデプロイする。
 
-The same failure later in this stage (a token that expires mid-deploy) is
-handled the same way: stop, ask with the fix, check again, then carry on.
+このステージの後半で同じ失敗（デプロイ途中でのトークンの期限切れ）が起きた場合も、
+同じように対処する: 停止し、修正方法を示して質問し、再度チェックしてから続行する。
 
-Create questions file covering:
-- Are all pre-deployment checks passing?
-- Are database migrations required and tested?
-- Are dependent services available and healthy?
-- What is the deployment window?
+次の内容を扱う質問ファイルを作成する:
+- デプロイ前のチェックはすべて合格しているか？
+- データベースのマイグレーションは必要か、またテスト済みか？
+- 依存するサービスは利用可能で、正常に稼働しているか？
+- デプロイのウィンドウ（実施時間帯）はいつか？
 
-Follow stage-protocol.md question flow.
+stage-protocol.md の質問フローに従う。
 
 ### Step 3: Execute Deployment
 
-Push artifacts through the pipeline. Run smoke tests. Validate health checks. Execute database migrations if needed: delegate to Task tool with subagent_type="aidlc-developer-agent" for migration execution.
+成果物をパイプラインに流す。スモークテストを実行する。ヘルスチェックを検証する。必要に応じてデータベースのマイグレーションを実行する: マイグレーションの実行は、subagent_type="aidlc-developer-agent" を指定して Task ツールに委任する。
 
 ### Step 4: Generate Artifacts
 
-Create deployment execution log, smoke test results, health check validation report, and database migration log (if applicable).
+デプロイの実行ログ、スモークテストの結果、ヘルスチェックの検証レポート、データベースのマイグレーションログ（該当する場合）を作成する。
 
 ### Step 5: Completion Handoff
 
-Hand completion to `stage-protocol.md` via
-`{{INVOKE}} engine orchestrate report --stage deployment-execution --result <outcome>`.
-That `report` call owns every lifecycle transition and advancement; never perform one in prose, and never narrate this bookkeeping to the user.
+`{{INVOKE}} engine orchestrate report --stage deployment-execution --result <outcome>` を通じて、
+完了を `stage-protocol.md` に引き渡す。
+その `report` 呼び出しが、ライフサイクルの遷移と前進をすべて担う。散文の中で遷移を実行してはならず、この記録処理をユーザーに説明してもならない。
 
 ### Step 6: Present Completion & Request Approval
 
-Completion emoji: :package:
-Review path: `<record>/operation/deployment-execution/`
-Standard 2-option approval (Approve / Request Changes).
+完了時の絵文字: :package:
+レビュー対象のパス: `<record>/operation/deployment-execution/`
+標準の 2 択の承認（Approve / Request Changes）。
 
 ## Sensors
 
-This stage's outputs are markdown artefacts under `<record>/operation/deployment-execution/`.
+このステージの出力は `<record>/operation/deployment-execution/` 配下の Markdown 成果物である。
 
-Imports: `required-sections`, `upstream-coverage`.
+インポート: `required-sections`, `upstream-coverage`.
 
-Upstream targets: `cd-config`, `deployment-strategy`, `environment-inventory`, `build-test-results`.
+上流の対象: `cd-config`, `deployment-strategy`, `environment-inventory`, `build-test-results`.
 
 ## Learn
 
-When `directive.protocol_modules` lists `learnings`, follow
-`stage-protocol-learnings.md`: keep the diary at `directive.memory_path` while
-working, and take the learnings step before the approval gate; that module says
-when it asks the person anything. When the module is absent, skip both the diary
-and the step.
+`directive.protocol_modules` に `learnings` が含まれている場合は、
+`stage-protocol-learnings.md` に従う。作業中は `directive.memory_path` に日誌を付け、
+承認ゲートの前に学習ステップを実施する。そのモジュールが、利用者に何かを尋ねるタイミングを定めている。
+モジュールがない場合は、日誌とステップの両方を省略する。

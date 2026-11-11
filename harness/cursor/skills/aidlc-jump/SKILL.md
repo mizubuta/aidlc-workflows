@@ -10,25 +10,25 @@ disable-model-invocation: true
 
 # AI-DLC jump
 
-Jump through the same deterministic forwarding loop as `/aidlc`. Pass the
-user's `$ARGUMENTS` through verbatim; they must contain either `--stage
-<slug|#>` or `--phase <name|#>`.
+`/aidlc` と同じ決定論的な転送ループを通じてジャンプする。ユーザーの
+`$ARGUMENTS` は一字一句そのまま渡す。引数には `--stage
+<slug|#>` または `--phase <name|#>` のいずれかが含まれていなければならない。
 
-1. Validate the invocation before calling the engine. If `$ARGUMENTS` is empty
-   or does not contain exactly one of `--stage <target>` and `--phase <target>`,
-   print `Usage: /aidlc-jump --stage <slug|#> | --phase <name|#>` and stop. A
-   missing target must never degrade into a bare `next`.
+1. エンジンを呼び出す前に呼び出し内容を検証する。`$ARGUMENTS` が空の場合、
+   または `--stage <target>` と `--phase <target>` のうちちょうど1つを含んでいない場合は、
+   `Usage: /aidlc-jump --stage <slug|#> | --phase <name|#>` を出力して停止する。
+   ターゲットが欠けているときに、引数なしの `next` へ決してフォールバックしてはならない。
 
-2. Run:
+2. 次を実行する:
 
    ```bash
    {{INVOKE}} engine orchestrate next $ARGUMENTS
    ```
 
-3. Act on the directive exactly as the `aidlc` skill's forwarding loop
-   describes. In an active workflow, the engine returns a `print` directive
-   naming the validated jump command; run it and continue the loop. Stop only
-   when the directive or a human gate says to stop.
+3. `aidlc` スキルの転送ループの説明どおりに、ディレクティブに従って動作する。
+   アクティブなワークフローでは、エンジンは検証済みのジャンプコマンドを示す `print`
+   ディレクティブを返す。それを実行してループを続ける。ディレクティブまたは人間によるゲートが
+   停止を指示したときにのみ停止する。
 
-The engine owns target validation, direction, skipped-stage handling, and all
-state changes. Do not infer or apply a jump outside that loop.
+ターゲットの検証、方向、スキップされたステージの扱い、およびすべての状態変更はエンジンが担う。
+そのループの外でジャンプを推測したり適用したりしてはならない。

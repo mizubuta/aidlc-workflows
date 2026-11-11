@@ -1,30 +1,30 @@
 # Agents
 
-AI-DLC ships 14 agent personas: 11 domain experts that execute stage work, 2 review-only agents, and the adaptive-workflows composer. This chapter explains the full roster, beginning with the domain agents and then covering the reviewers and composer.
+AI-DLC には 14 のエージェントペルソナが付属しています: ステージの作業を実行する 11 のドメインエキスパート、2 つのレビュー専用エージェント、そして adaptive-workflows のコンポーザーです。この章では、まずドメインエージェント、続いてレビュアーとコンポーザーを取り上げ、全体の顔ぶれを説明します。
 
 ---
 
 ## Philosophy: Small Mob, Broad Agents
 
-Rather than dozens of narrow specialists (which recreates waterfall handoff chains), AI-DLC uses **11 broadly capable agents** that each participate across multiple stages and phases.
+数十の細分化されたスペシャリスト（ウォーターフォール型の引き継ぎの連鎖を再現してしまう）ではなく、AI-DLC はそれぞれが複数のステージとフェーズにまたがって参加する **11 の幅広い能力を持つエージェント**を使います。
 
 ### Why 11, not 30?
 
-In human software teams, a mob of 3-5 people covers an entire feature from requirements through deployment. Each person brings a broad skill set spanning several specialties. AI-DLC mirrors this model:
+人間のソフトウェアチームでは、3〜5 人のモブが要件からデプロイまで 1 つの機能全体を担当します。各メンバーは、いくつもの専門領域にまたがる幅広いスキルを持ち寄ります。AI-DLC はこのモデルを踏襲しています:
 
-- **Each agent covers a whole domain across many tasks.** The aidlc-architect-agent handles feasibility, domain design, units generation, contract design, functional design, NFR requirements, and NFR design — seven stages across three phases. A narrow specialist model would require seven separate agents with nearly identical knowledge bases.
+- **各エージェントが、多くのタスクにわたって 1 つのドメイン全体を担当します。** aidlc-architect-agent は、フィージビリティ、ドメイン設計、ユニット生成、コントラクト設計、機能設計、NFR 要件、NFR 設計を担当します — 3 つのフェーズにまたがる 7 つのステージです。細分化したスペシャリストのモデルでは、ほぼ同一のナレッジベースを持つ 7 つの別々のエージェントが必要になります。
 
-- **Fewer agents means fewer handoffs.** Every agent boundary is a potential information loss point. When the same aidlc-architect-agent leads both Domain Design and Functional Design, it retains context naturally instead of requiring an explicit handoff artifact.
+- **エージェントが少なければ、引き継ぎも少なくなります。** エージェントの境界はすべて、情報が失われうるポイントです。同じ aidlc-architect-agent が Domain Design と Functional Design の両方をリードすれば、明示的な引き継ぎ成果物を必要とせず、自然にコンテキストを保持できます。
 
-- **Support roles enable collaboration without proliferation.** Rather than creating a "security-reviewer-agent" and a "compliance-reviewer-agent" and a "cost-reviewer-agent," the aidlc-devsecops-agent and aidlc-compliance-agent participate as support agents in stages led by others. HOW they participate is the stage's `mode` — its communication topology: on an `inline` stage the conductor adopts each support agent as a persona in its own context; on `subagent` (hub-and-spoke) and `mob` (mesh) stages each support agent is dispatched as a real, independent collaborator that writes its own contribution file for the lead to integrate (everyone writes, the lead owns the final artifacts; user-stories ships as the mob showcase), and on `pipeline` (chain) stages the links advance the artifacts directly in sequence and each return is recorded as ordered completion evidence (reverse-engineering is the shipped chain). On every topology the conductor performs every delegation — agents never invoke each other.
+- **サポート役により、エージェントを増やさずに協働できます。** "security-reviewer-agent"、"compliance-reviewer-agent"、"cost-reviewer-agent" を作る代わりに、aidlc-devsecops-agent と aidlc-compliance-agent が、他のエージェントがリードするステージにサポートエージェントとして参加します。どのように参加するかはステージの `mode`、つまりその通信トポロジーで決まります。`inline` ステージでは、コンダクターが各サポートエージェントを自身のコンテキスト内でペルソナとして採用します。`subagent`（ハブ＆スポーク）と `mob`（メッシュ）のステージでは、各サポートエージェントが実在する独立した協力者としてディスパッチされ、リードが統合するための自身の貢献ファイルを書きます（全員が書き、最終成果物はリードが所有します。user-stories がモブのショーケースとして提供されています）。`pipeline`（チェーン）のステージでは、チェーンの各リンクが成果物を順番に直接進め、それぞれの戻りが順序付きの完了エビデンスとして記録されます（reverse-engineering が提供されているチェーンです）。どのトポロジーでも、委任はすべてコンダクターが行います — エージェント同士が互いを呼び出すことは決してありません。
 
-- **Knowledge loading is per-agent.** Each agent loads methodology knowledge from `.claude/knowledge/<agent-name>/` and team knowledge from the space-level `aidlc/spaces/<space>/knowledge/<agent-name>/` (if the team created it). Fewer agents means fewer knowledge directories to manage and fewer opportunities for contradictory guidance.
+- **ナレッジの読み込みはエージェントごとです。** 各エージェントは、方法論のナレッジを `.claude/knowledge/<agent-name>/` から、チームのナレッジをスペースレベルの `aidlc/spaces/<space>/knowledge/<agent-name>/` から（チームが作成している場合）読み込みます。エージェントが少なければ、管理すべきナレッジディレクトリも、矛盾するガイダンスが生じる機会も少なくなります。
 
 ---
 
 ## Agent Collaboration Map
 
-The following diagram shows how agents exchange information during a workflow. Solid arrows indicate primary artifact flows. Dashed arrows indicate advisory or review relationships. The operations-to-product feedback loop closes the full lifecycle.
+次の図は、ワークフロー中にエージェントがどのように情報をやり取りするかを示しています。実線の矢印は主要な成果物の流れを示します。破線の矢印は助言やレビューの関係を示します。運用からプロダクトへのフィードバックループが、ライフサイクル全体を閉じます。
 
 ```mermaid
 flowchart TD
@@ -85,128 +85,128 @@ flowchart TD
 
 ## The 11 Domain Agents
 
-> **Customizing what a shipped agent knows?** Do not edit the 14 shipped agent files at `.claude/agents/*.md`: they're framework files and get overwritten on upgrade. Add your company standards to the space-level `aidlc/spaces/<space>/knowledge/<agent-name>/` instead. See [Knowledge](08-knowledge.md) for the full workflow. Teams that want a *new* agent can drop a file at `.claude/agents/<slug>.md` with the required frontmatter; that file is user-owned. See [Contributing: Adding an Agent](../reference/11-contributing.md#adding-an-agent). Your harness's own subagents can live in the same directory: a file with none of AI-DLC's persona keys (`display_name`, `examples`, `tier`, `plugin`) and no `aidlc-` prefix is left to the harness, and `aidlc doctor --verbose` lists it as an advisory.
+> **付属エージェントが持つ知識をカスタマイズしたい場合は？** `.claude/agents/*.md` にある 14 個の付属エージェントファイルは編集しないでください。これらはフレームワークのファイルであり、アップグレード時に上書きされます。代わりに、会社の標準をスペースレベルの `aidlc/spaces/<space>/knowledge/<agent-name>/` に追加してください。ワークフロー全体については[ナレッジ](08-knowledge.md)を参照してください。*新しい*エージェントが欲しいチームは、必要な frontmatter を付けたファイルを `.claude/agents/<slug>.md` に置けます。そのファイルはユーザーの所有です。[コントリビューション: エージェントの追加](../reference/11-contributing.md#adding-an-agent)を参照してください。ハーネス独自のサブエージェントも同じディレクトリに置けます。AI-DLC のペルソナキー（`display_name`、`examples`、`tier`、`plugin`）を 1 つも持たず、`aidlc-` プレフィックスもないファイルはハーネスに任され、`aidlc doctor --verbose` はそれを助言として一覧表示します。
 
-Each agent below has a **deep-dive page** — its full responsibilities, the stages it leads and supports, and the knowledge it loads. The [agent deep-dive index](agents/README.md) lists all 11; the per-agent links are inline under each heading.
+以下の各エージェントには**詳細ページ**があります — その責務の全体、リードおよびサポートするステージ、読み込むナレッジです。[エージェント詳細ページの索引](agents/README.md)に 11 個すべてが載っています。エージェントごとのリンクは各見出しにあります。
 
 ### [aidlc-product-agent](agents/product-agent.md)
 
-**Domain:** Requirements, user stories, scope, market research
+**ドメイン:** 要件、ユーザーストーリー、スコープ、市場調査
 
-The aidlc-product-agent acts as the product manager and business analyst. It captures intent, conducts market research, defines scope, elicits requirements, and produces user stories. It is the most active agent in the Ideation and Inception phases.
+aidlc-product-agent は、プロダクトマネージャー兼ビジネスアナリストとして振る舞います。インテントを捉え、市場調査を行い、スコープを定義し、要件を引き出し、ユーザーストーリーを作成します。Ideation フェーズと Inception フェーズで最も活発なエージェントです。
 
-- **Leads:** intent-capture, market-research, scope-definition, requirements-analysis, user-stories
-- **Supports:** rough-mockups, approval-handoff, refined-mockups
-- **Special tools:** WebSearch (for market research)
+- **リード:** intent-capture, market-research, scope-definition, requirements-analysis, user-stories
+- **サポート:** rough-mockups, approval-handoff, refined-mockups
+- **特別なツール:** WebSearch（市場調査用）
 
 ### [aidlc-design-agent](agents/design-agent.md)
 
-**Domain:** UX/UI design, wireframes, interaction design, accessibility
+**ドメイン:** UX/UI デザイン、ワイヤーフレーム、インタラクションデザイン、アクセシビリティ
 
-The aidlc-design-agent creates wireframes, mockups, and interaction specifications. It works closely with the aidlc-product-agent on user-facing features and with the aidlc-developer-agent to ensure designs are implementable.
+aidlc-design-agent は、ワイヤーフレーム、モックアップ、インタラクション仕様を作成します。ユーザー向けの機能については aidlc-product-agent と、設計が実装可能であることを確かめるために aidlc-developer-agent と密接に協働します。
 
-- **Leads:** rough-mockups, refined-mockups
-- **Supports:** user-stories, domain-design
-- **Special tools:** WebSearch (for design research)
+- **リード:** rough-mockups, refined-mockups
+- **サポート:** user-stories, domain-design
+- **特別なツール:** WebSearch（デザインリサーチ用）
 
 ### [aidlc-delivery-agent](agents/delivery-agent.md)
 
-**Domain:** Team formation, capacity planning, delivery sequencing
+**ドメイン:** チーム編成、キャパシティプランニング、デリバリーの順序付け
 
-The aidlc-delivery-agent acts as the engineering manager. It assesses team capacity, forms the mob composition, plans delivery sequencing, and manages phase handoffs.
+aidlc-delivery-agent は、エンジニアリングマネージャーとして振る舞います。チームのキャパシティを評価し、モブの構成を決め、デリバリーの順序を計画し、フェーズ間の引き継ぎを管理します。
 
-- **Leads:** team-formation, approval-handoff, delivery-planning
-- **Supports:** scope-definition, units-generation
-- **Special tools:** None beyond the shared set
+- **リード:** team-formation, approval-handoff, delivery-planning
+- **サポート:** scope-definition, units-generation
+- **特別なツール:** 共通セット以外はなし
 
 ### [aidlc-architect-agent](agents/architect-agent.md)
 
-**Domain:** Domain design, domain modelling, NFRs, component decomposition
+**ドメイン:** ドメイン設計、ドメインモデリング、NFR、コンポーネント分割
 
-The aidlc-architect-agent is the central design authority. It has the broadest stage involvement (10 stages across 3 phases) and carries the `judgment` tier, alongside seven other high-judgment agents (product, design, developer, quality, devsecops, compliance, aws-platform). With no recorded model policy, judgment agents inherit your session's model and effort. Delivery, pipeline-deploy, and operations carry the `templated` tier because their output is dominantly planning, CI/CD YAML, and runbook scaffolding; their shipped baseline also inherits. The reviewer tier uses Sonnet at medium effort on Claude Code; on Codex and opencode it inherits the session model and applies medium reasoning effort. The wizard-default `balanced` preset is an explicit effort override for all three groups, setting each to medium without changing models. On Kiro CLI it sets one effort for the whole interactive session; Kiro IDE, Cursor, and Copilot cannot express those group effort dials, so the wizard records no preset there. See [Model Policy](18-install-and-lifecycle.md#model-policy).
+aidlc-architect-agent は、設計の中心的な権限を持ちます。関与するステージが最も多く（3 つのフェーズにまたがる 10 ステージ）、他の 7 つの高度な判断を要するエージェント（product、design、developer、quality、devsecops、compliance、aws-platform）と同様に `judgment` ティアに属します。モデルポリシーが記録されていない場合、judgment エージェントはセッションのモデルと effort を継承します。delivery、pipeline-deploy、operations は、出力の大部分が計画、CI/CD の YAML、ランブックの雛形であるため、`templated` ティアに属します。これらの付属の基準設定も継承です。レビュアーのティアは、Claude Code では Sonnet を medium effort で使います。Codex と opencode では、セッションのモデルを継承し、medium の推論 effort を適用します。ウィザードのデフォルトである `balanced` プリセットは 3 つのグループすべてに対する明示的な effort の上書きで、モデルを変えずにそれぞれを medium に設定します。Kiro CLI では、対話セッション全体に 1 つの effort を設定します。Kiro IDE、Cursor、Copilot はこれらのグループごとの effort の設定を表現できないため、ウィザードはそこではプリセットを記録しません。[モデルポリシー](18-install-and-lifecycle.md#model-policy)を参照してください。
 
-- **Leads:** feasibility, domain-design, units-generation, contract-design, functional-design, nfr-requirements, nfr-design
-- **Supports:** intent-capture, reverse-engineering (synthesis), delivery-planning
+- **リード:** feasibility, domain-design, units-generation, contract-design, functional-design, nfr-requirements, nfr-design
+- **サポート:** intent-capture, reverse-engineering (synthesis), delivery-planning
 
 ### [aidlc-aws-platform-agent](agents/aws-platform-agent.md)
 
-**Domain:** AWS infrastructure, CDK/CloudFormation, cost optimization
+**ドメイン:** AWS インフラ、CDK/CloudFormation、コスト最適化
 
-The aidlc-aws-platform-agent designs infrastructure, provisions environments, and optimizes costs. It has Bash access for running AWS CLI and CDK commands.
+aidlc-aws-platform-agent は、インフラを設計し、環境をプロビジョニングし、コストを最適化します。AWS CLI と CDK のコマンドを実行するための Bash アクセスを持ちます。
 
-- **Leads:** infrastructure-design, environment-provisioning
-- **Supports:** feasibility, domain-design, contract-design, nfr-design, feedback-optimization
-- **Special tools:** Bash (for `aws`, `cdk` commands)
+- **リード:** infrastructure-design, environment-provisioning
+- **サポート:** feasibility, domain-design, contract-design, nfr-design, feedback-optimization
+- **特別なツール:** Bash（`aws`、`cdk` コマンド用）
 
 ### [aidlc-compliance-agent](agents/compliance-agent.md)
 
-**Domain:** Regulatory scanning, data classification, risk assessment
+**ドメイン:** 規制のスキャン、データ分類、リスク評価
 
-The aidlc-compliance-agent operates purely in an advisory capacity — it has no lead stages. It feeds regulatory constraints into stages led by other agents, particularly the aidlc-architect-agent and aidlc-devsecops-agent.
+aidlc-compliance-agent は、純粋に助言の立場で動作します — リードするステージはありません。他のエージェント、特に aidlc-architect-agent と aidlc-devsecops-agent がリードするステージに、規制上の制約を提供します。
 
-- **Leads:** None (support only)
-- **Supports:** feasibility, nfr-requirements, infrastructure-design, environment-provisioning
-- **Special tools:** WebSearch (for regulatory research)
+- **リード:** なし（サポートのみ）
+- **サポート:** feasibility, nfr-requirements, infrastructure-design, environment-provisioning
+- **特別なツール:** WebSearch（規制の調査用）
 
 ### [aidlc-devsecops-agent](agents/devsecops-agent.md)
 
-**Domain:** Threat modelling, security scanning, DevSecOps pipelines
+**ドメイン:** 脅威モデリング、セキュリティスキャン、DevSecOps パイプライン
 
-The aidlc-devsecops-agent reviews designs for security, defines security requirements, and integrates security into CI/CD pipelines. Like the aidlc-compliance-agent, it operates in a support role.
+aidlc-devsecops-agent は、セキュリティの観点から設計をレビューし、セキュリティ要件を定義し、CI/CD パイプラインにセキュリティを組み込みます。aidlc-compliance-agent と同様に、サポート役として動作します。
 
-- **Leads:** None (support only)
-- **Supports:** practices-discovery, nfr-requirements, infrastructure-design, build-and-test, environment-provisioning
-- **Special tools:** Bash (for security scanning)
+- **リード:** なし（サポートのみ）
+- **サポート:** practices-discovery, nfr-requirements, infrastructure-design, build-and-test, environment-provisioning
+- **特別なツール:** Bash（セキュリティスキャン用）
 
 ### [aidlc-developer-agent](agents/developer-agent.md)
 
-**Domain:** Code implementation, code analysis, data modelling
+**ドメイン:** コードの実装、コード分析、データモデリング
 
-The aidlc-developer-agent spans three phases — from reverse engineering in Inception through deployment support in Operation. It runs code scans of existing codebases and generates implementation code.
+aidlc-developer-agent は 3 つのフェーズにまたがります — Inception のリバースエンジニアリングから、Operation のデプロイ支援までです。既存のコードベースのコードスキャンを実行し、実装コードを生成します。
 
-- **Leads:** reverse-engineering (code scan), code-generation
-- **Supports:** practices-discovery, user-stories, functional-design, deployment-execution
+- **リード:** reverse-engineering (code scan), code-generation
+- **サポート:** practices-discovery, user-stories, functional-design, deployment-execution
 
-Workspace detection (workspace-detection) used to be a subagent of the aidlc-developer-agent; it now runs deterministically inside `aidlc-utility intent-create` using rule-based file and manifest detection.
-- **Special tools:** Bash (for build and run commands)
+ワークスペースの検出（workspace-detection）は、以前は aidlc-developer-agent のサブエージェントでしたが、現在はルールベースのファイルおよびマニフェスト検出を用いて `aidlc-utility intent-create` の内部で決定論的に実行されます。
+- **特別なツール:** Bash（ビルドと実行のコマンド用）
 
 ### [aidlc-quality-agent](agents/quality-agent.md)
 
-**Domain:** Test strategy, test generation, performance validation
+**ドメイン:** テスト戦略、テスト生成、パフォーマンス検証
 
-The aidlc-quality-agent defines test strategy, generates test suites, validates quality gates, and runs performance testing.
+aidlc-quality-agent は、テスト戦略を定義し、テストスイートを生成し、品質ゲートを検証し、パフォーマンステストを実行します。
 
-- **Leads:** build-and-test, performance-validation
-- **Supports:** practices-discovery, user-stories, nfr-requirements
-- **Special tools:** Bash (for test execution)
+- **リード:** build-and-test, performance-validation
+- **サポート:** practices-discovery, user-stories, nfr-requirements
+- **特別なツール:** Bash（テスト実行用）
 
 ### [aidlc-pipeline-deploy-agent](agents/pipeline-deploy-agent.md)
 
-**Domain:** CI/CD pipelines, deployment strategy, release execution
+**ドメイン:** CI/CD パイプライン、デプロイ戦略、リリースの実行
 
-The aidlc-pipeline-deploy-agent configures CI/CD pipelines, plans deployment strategy, and executes releases with rollback capabilities.
+aidlc-pipeline-deploy-agent は、CI/CD パイプラインを構成し、デプロイ戦略を計画し、ロールバック機能を備えたリリースを実行します。
 
-- **Leads:** practices-discovery, ci-pipeline, deployment-pipeline, deployment-execution
-- **Supports:** None
-- **Special tools:** Bash (for pipeline and deployment commands)
+- **リード:** practices-discovery, ci-pipeline, deployment-pipeline, deployment-execution
+- **サポート:** なし
+- **特別なツール:** Bash（パイプラインとデプロイのコマンド用）
 
 ### [aidlc-operations-agent](agents/operations-agent.md)
 
-**Domain:** Observability, incident response, SLO tracking, feedback loops
+**ドメイン:** オブザーバビリティ、インシデント対応、SLO の追跡、フィードバックループ
 
-The aidlc-operations-agent sets up monitoring, defines incident response procedures, and closes the lifecycle loop by feeding operational insights back to the aidlc-product-agent for the next iteration.
+aidlc-operations-agent は、監視を設定し、インシデント対応手順を定義し、運用上の知見を次のイテレーションのために aidlc-product-agent へフィードバックすることで、ライフサイクルのループを閉じます。
 
-- **Leads:** observability-setup, incident-response, feedback-optimization
-- **Supports:** none
-- **Special tools:** Bash (for observability and monitoring commands)
+- **リード:** observability-setup, incident-response, feedback-optimization
+- **サポート:** なし
+- **特別なツール:** Bash（オブザーバビリティと監視のコマンド用）
 
 ---
 
 ## Phase Participation
 
-This table shows which agents are active in which phases, and whether they serve as lead (L) or support (S).
+この表は、どのエージェントがどのフェーズで活動し、リード（L）とサポート（S）のどちらを務めるかを示します。
 
-| Agent | Phase 0 | Phase 1 | Phase 2 | Phase 3 | Phase 4 |
+| エージェント | Phase 0 | Phase 1 | Phase 2 | Phase 3 | Phase 4 |
 |-------|---------|---------|---------|---------|---------|
 | aidlc-product-agent | — | L (intent-capture, market-research, scope-definition), S (rough-mockups, approval-handoff) | L (requirements-analysis, user-stories), S (refined-mockups) | — | — |
 | aidlc-design-agent | — | L (rough-mockups) | L (refined-mockups), S (user-stories, domain-design) | — | — |
@@ -222,119 +222,118 @@ This table shows which agents are active in which phases, and whether they serve
 
 ### Observations
 
-- The **aidlc-architect-agent** has the broadest involvement (10 stages across 3 phases). It carries the `judgment` tier (inherits your session's model and effort), as do seven other high-judgment agents; only **aidlc-delivery-agent**, **aidlc-pipeline-deploy-agent**, and **aidlc-operations-agent** carry the `templated` tier
-- The **aidlc-developer-agent** spans 3 phases: Inception, Construction, and Operation
-- The **aidlc-compliance-agent** and **aidlc-devsecops-agent** operate purely in support roles, participating in stages led by others
-- The **aidlc-operations-agent** closes the lifecycle loop by feeding insights back to the aidlc-product-agent
+- **aidlc-architect-agent** は関与の範囲が最も広いエージェントです（3 つのフェーズにまたがる 10 ステージ）。他の 7 つの高度な判断を要するエージェントと同様に `judgment` ティアに属します（セッションのモデルと effort を継承します）。`templated` ティアに属するのは **aidlc-delivery-agent**、**aidlc-pipeline-deploy-agent**、**aidlc-operations-agent** だけです
+- **aidlc-developer-agent** は Inception、Construction、Operation の 3 つのフェーズにまたがります
+- **aidlc-compliance-agent** と **aidlc-devsecops-agent** は純粋にサポート役として動作し、他のエージェントがリードするステージに参加します
+- **aidlc-operations-agent** は、知見を aidlc-product-agent にフィードバックすることでライフサイクルのループを閉じます
 
 ---
 
 ## Agent Tool Access
 
-On Claude Code, every agent inherits the **full session toolset** plus provisioned MCP tools, with `disallowedTools: Task` blocking nested delegation. Other harnesses use native tool policy for the same boundary; Kiro delegate allowlists omit `subagent`, and its projected agent Markdown does not carry the unsupported Claude key. The table below records which tools each persona is *expected* to exercise in its work, not a per-agent grant.
+Claude Code では、すべてのエージェントが**セッションのツールセット全体**とプロビジョニングされた MCP ツールを継承し、`disallowedTools: Task` によって入れ子の委任がブロックされます。他のハーネスは、同じ境界をネイティブのツールポリシーで実現します。Kiro の delegate の許可リストには `subagent` が含まれず、投影されたエージェントの Markdown にはサポートされない Claude のキーは含まれません。以下の表は、各ペルソナが作業で使うことが*想定される*ツールを記録したもので、エージェントごとの付与ではありません。
 
-| Tool | Expected to exercise it |
+| ツール | 使用が想定されるエージェント |
 |------|-------------|
-| Read, Edit, Write, Glob, Grep, AskUserQuestion | All 14 agents |
+| Read, Edit, Write, Glob, Grep, AskUserQuestion | 14 エージェントすべて |
 | Bash | aidlc-aws-platform-agent, aidlc-devsecops-agent, aidlc-developer-agent, aidlc-quality-agent, aidlc-pipeline-deploy-agent, aidlc-operations-agent |
 | WebSearch | aidlc-product-agent, aidlc-design-agent, aidlc-compliance-agent |
-| Task / native delegation tool | None (blocked by each harness's projected agent policy) |
+| Task / ネイティブの委任ツール | なし（各ハーネスが投影するエージェントポリシーによりブロック） |
 
-To narrow a Claude persona, add an optional `tools:` allowlist to its frontmatter — but doing so drops inherited MCP access unless the fully-qualified `mcp__<server>__<tool>` ids are also listed. Other harnesses use their native agent configuration.
+Claude のペルソナの範囲を絞るには、その frontmatter に任意の `tools:` 許可リストを追加します — ただしそうすると、完全修飾の `mcp__<server>__<tool>` ID も列挙しない限り、継承された MCP へのアクセスが失われます。他のハーネスはネイティブのエージェント設定を使います。
 
 ### MCP servers are shared, not per-agent
 
-The table above shows the built-in tools each persona is expected to use; in practice every agent inherits all of them. MCP servers follow the same inherit-all model: this implementation declares them once in `.mcp.json` at the project root (beside `.claude/`), Claude Code provisions them to the session, and every agent inherits all of them — there is no per-agent grant. Each of the 14 agents can reach every declared server (`context7` and the four AWS servers) with no further configuration, and a server you lack credentials for is simply unavailable rather than a blocker. To stop a specific agent from reaching a server, narrow that agent's `tools:` allowlist to the fully-qualified `mcp__<server>__<tool>` ids it should keep (for example `mcp__context7__<tool>`); this implementation ships no such restrictions today.
+上の表は、各ペルソナが使うことが想定される組み込みツールを示していますが、実際にはすべてのエージェントがそれらすべてを継承します。MCP サーバーも同じくすべてを継承するモデルに従います。この実装では、プロジェクトルート（`.claude/` の隣）の `.mcp.json` で一度だけ宣言し、Claude Code がそれらをセッションにプロビジョニングし、すべてのエージェントがそれらすべてを継承します — エージェントごとの付与はありません。14 のエージェントはそれぞれ、追加の設定なしに宣言されたすべてのサーバー（`context7` と 4 つの AWS サーバー）にアクセスでき、認証情報を持っていないサーバーは単に利用できないだけで、妨げにはなりません。特定のエージェントがあるサーバーにアクセスできないようにするには、そのエージェントの `tools:` 許可リストを、保持すべき完全修飾の `mcp__<server>__<tool>` ID（たとえば `mcp__context7__<tool>`）に絞ります。現在、この実装にはそのような制限は付属していません。
 
-See [Getting Started](01-getting-started.md) for the server registry and credentials, and [Harness Primitives Mapping](../reference/14-claude-features.md#mcp-servers) for how MCP maps onto Claude Code's native tool model.
+サーバーのレジストリと認証情報については[はじめに](01-getting-started.md)を、MCP が Claude Code のネイティブなツールモデルにどう対応するかについては[ハーネスのプリミティブの対応](../reference/14-claude-features.md#mcp-servers)を参照してください。
 
 ---
 
 ## Reviewer Agents
 
-Beyond the 11 domain-expert agents, AI-DLC ships **2 quality-gate reviewer
-agents**. They do not produce artifacts — they review what a builder produced and
-challenge it, representing the customer (or the review board) at the gate.
+11 のドメインエキスパートエージェントに加えて、AI-DLC には **2 つの品質ゲート用レビュアー
+エージェント**が付属しています。これらは成果物を作成しません — ビルダーが作成したものをレビューして
+異議を唱え、ゲートにおいて顧客（またはレビュー委員会）を代表します。
 
-| Reviewer | Reviews | Tier |
+| レビュアー | レビュー対象 | ティア |
 |----------|---------|------|
-| `aidlc-product-lead-agent` | Requirements, user stories, and UX/mockup artifacts — completeness, business alignment, testability | balanced |
-| `aidlc-architecture-reviewer-agent` | Technical design artifacts — soundness, implementability, broken cross-references, unachievable NFR targets | balanced |
+| `aidlc-product-lead-agent` | 要件、ユーザーストーリー、UX/モックアップの成果物 — 完全性、ビジネスとの整合、テスト容易性 | balanced |
+| `aidlc-architecture-reviewer-agent` | 技術設計の成果物 — 妥当性、実装可能性、壊れた相互参照、達成不可能な NFR 目標 | balanced |
 
 ## The Composer Agent
 
-One more agent sits outside both groups: `aidlc-composer-agent`, the adaptive-workflows composer. The conductor dispatches it on a compose request (`/aidlc compose`, a compose offer on a cold start, `--report`, or `--new-scope`). It estimates the task's implementation entropy (five components: intent ambiguity, structural uncertainty, verification entropy, risk, unresolved assumptions - grounded in CodeKB MCP analysis when configured, the workspace scan otherwise), proposes the minimum viable EXECUTE/SKIP grid with the score breakdown and a per-stage rationale, and - only after your approval at the gate - the plan is created for that piece of work (front/report; the composer writes no scope file, and the engine saves the plan as a scope only if you ask) or its pending-stage flips are applied by the deterministic `recompose` verb (in-flight). Its persona justifies both presence and absence against the entropy profile: every EXECUTE names the component it reduces, every SKIP names what already covers it, and cutting the spine (core, verification, the load-bearing discovery stage) is treated as the dangerous failure. See [Scopes and Depth - The Adaptive Composer](05-scopes-and-depth.md#the-adaptive-composer).
+もう 1 つのエージェントは、どちらのグループにも属しません: adaptive-workflows のコンポーザーである `aidlc-composer-agent` です。コンダクターは compose のリクエスト（`/aidlc compose`、コールドスタート時の compose の提案、`--report`、または `--new-scope`）があるとこれをディスパッチします。このエージェントはタスクの実装エントロピー（5 つの要素: インテントの曖昧さ、構造の不確実性、検証のエントロピー、リスク、未解決の前提 — 構成されていれば CodeKB MCP の分析に、そうでなければワークスペースのスキャンに基づく）を推定し、スコアの内訳とステージごとの根拠を添えて、最小限で実行可能な EXECUTE/SKIP のグリッドを提案します。そして、ゲートで承認された後にのみ、その作業の計画が作成される（front/report の場合。コンポーザーはスコープファイルを書かず、エンジンは依頼された場合にのみ計画をスコープとして保存します）か、保留中のステージの切り替えが決定論的な `recompose` 動詞によって適用されます（進行中の場合）。そのペルソナは、各ステージを含めることと含めないことの両方をエントロピーのプロファイルに照らして正当化します: すべての EXECUTE は低減する要素を、すべての SKIP はすでにそれをカバーしているものを示し、背骨（コア、検証、要となる発見ステージ）を削ることは危険な失敗として扱われます。[スコープと深さ - 適応型コンポーザー](05-scopes-and-depth.md#the-adaptive-composer)を参照してください。
 
-A reviewer fires only when a stage declares a `reviewer:` field. Today the product
-lead reviews `intent-capture`, `rough-mockups`, `refined-mockups`,
-`requirements-analysis`, and `user-stories`; the architecture reviewer reviews
-`domain-design`, `units-generation`, `contract-design`, `functional-design`,
-`nfr-requirements`, `nfr-design`, `infrastructure-design`, and `code-generation`.
+レビュアーは、ステージが `reviewer:` フィールドを宣言している場合にのみ起動します。現在、プロダクト
+リードは `intent-capture`、`rough-mockups`、`refined-mockups`、
+`requirements-analysis`、`user-stories` をレビューし、アーキテクチャレビュアーは
+`domain-design`、`units-generation`、`contract-design`、`functional-design`、
+`nfr-requirements`、`nfr-design`、`infrastructure-design`、`code-generation` をレビューします。
 
-**The reviewer step.** After the stage body produces its artifacts and before the
-learnings ritual and approval gate, the conductor invokes the named reviewer as a
-**separate sub-agent**. The reviewer reads the stage definition, the Q&A, and the
-artifacts (never the builder's `memory.md` or plan — it forms independent
-judgment), then writes its review (a verdict of **READY** or **NOT-READY** plus
-a report of what changed: prior findings it re-checked and new findings) to the
-review file the conductor names. The engine keeps the findings list: it assigns
-the IDs, keeps your decisions exactly as you made them, and never lets a
-reviewer write one. The reviewer never
-edits the artifact it reviews; the engine records the review as a framework-owned
-record under the intent's `.aidlc-engine/reviews/` directory, writes a readable copy
-with the full findings list as of that review for people at
-`<stage dir>/reviews/review-NN.md` beside the reviewed
-artifact, and refuses a verdict whose artifacts changed. How the verdict is handled depends on the stage's review class:
+**レビュアーのステップ。** ステージ本体が成果物を作成した後、
+学びの儀式と承認ゲートの前に、コンダクターは指定されたレビュアーを
+**別のサブエージェント**として呼び出します。レビュアーはステージ定義、Q&A、
+成果物を読み（ビルダーの `memory.md` や計画は決して読みません — 独立した
+判断を下すためです）、その後レビュー（**READY** または **NOT-READY** の判定と、
+変更点のレポート: 再確認した以前の指摘と新しい指摘）を、
+コンダクターが指定するレビューファイルに書き込みます。指摘の一覧はエンジンが保持します: エンジンは
+ID を割り当て、あなたの決定をあなたが下したとおりに保持し、
+レビュアーに決定を書かせることは決してありません。レビュアーは
+レビュー対象の成果物を決して編集しません。エンジンはレビューを、インテントの `.aidlc-engine/reviews/` ディレクトリ配下に
+フレームワーク所有の記録として保存し、そのレビュー時点の完全な指摘一覧を含む人間向けの読みやすいコピーを
+レビュー対象の成果物の隣の `<stage dir>/reviews/review-NN.md` に書き込み、
+成果物が変更された判定は拒否します。判定の扱いは、ステージのレビュークラスによって異なります:
 
-- **Advisory** (the human-gated ideation/inception prose stages): one normal-flow
-  review pass, whatever the verdict. The engine's findings list is shown at the
-  approval gate as decision support: you triage it, and a
-  Request Changes at the gate is how a finding becomes a revision. If a later
-  output write invalidates the terminal receipt, one bounded recovery request
-  runs at the next ordinal.
-- **Adversarial** (the Construction design/build stages): on NOT-READY the
-  builder re-runs to address the findings and the reviewer re-checks, looping
-  up to `reviewer_max_iterations` times (default 2, engine-enforced). If
-  findings remain after the cap, the workflow proceeds to the approval gate
-  with the unresolved findings noted.
+- **Advisory**（人間がゲートを担う ideation/inception の散文ステージ）: 判定にかかわらず、
+  通常フローでのレビューは 1 回です。エンジンの指摘一覧は、判断材料として
+  承認ゲートで表示されます: あなたがそれをトリアージし、
+  ゲートでの Request Changes によって指摘が修正につながります。後の
+  出力の書き込みによって最終の受領記録が無効になった場合は、上限付きの回復リクエストが 1 回
+  次の連番で実行されます。
+- **Adversarial**（Construction の設計/ビルドのステージ）: NOT-READY の場合、
+  ビルダーが指摘に対処するために再実行し、レビュアーが再確認します。このループは
+  最大 `reviewer_max_iterations` 回（デフォルトは 2、エンジンが強制）繰り返されます。
+  上限に達しても指摘が残っている場合、ワークフローは未解決の指摘を記録したうえで
+  承認ゲートに進みます。
 
-When a stage's review passes are used up and its reviewed work changed after
-the last review (the work took another approach, for example), the approval
-asks once: "Do you want me to have the new approach checked before you
-decide?" Say yes and the review runs again, past the passes, before you are
-asked to approve; say approve and it is approved as it is.
+ステージのレビュー回数を使い切った後、最後のレビュー以降にレビュー対象の作業が
+変更された場合（たとえば作業が別のアプローチを取った場合）、承認時に
+一度だけ "Do you want me to have the new approach checked before you
+decide?"（判断の前に、新しいアプローチを確認させますか？）と尋ねます。はいと答えると、上限を超えてレビューが再度実行され、その後に
+承認を求められます。承認すると、そのままの状態で承認されます。
 
-The reviewers also run under a hard turn budget - `maxTurns: 60`, authored in
-the persona frontmatter, enforced natively on Claude Code and projected to
-opencode's per-agent `steps: 60`; elsewhere it ships as persona prose. If a
-review comes back without a usable verdict - no review file, or no single
-canonical READY / NOT-READY line (a capped, crashed, or cut-off reviewer) - the
-conductor re-dispatches that same review once, and a second incomplete attempt
-is recorded as NOT-READY, and the gate shows the finding "The review did not
-finish, so there is no review result to rely on." (followed by why, when the
-reviewer's reply said), so a silent cutoff becomes a visible finding at the
-gate instead of a missing verdict. That result is no reviewer's: you are told the review did
-not finish, and your approval records it that way. If you stop a review
-yourself and say what you want, the conductor does not retry it on its own: it
-checks the next step first and does what you asked. Every request opens a
-fresh review slot, so a stale pre-revision review can never be misread as
-covering new work. Reviews recorded
-by earlier releases as a `## Review` section inside the artifact stay readable
-at the gate until the next review replaces them.
+レビュアーは厳格なターン予算のもとでも実行されます — `maxTurns: 60` で、
+ペルソナの frontmatter に記述され、Claude Code ではネイティブに強制され、
+opencode ではエージェントごとの `steps: 60` に投影されます。それ以外の環境ではペルソナの散文として提供されます。
+レビューが使用可能な判定なしに戻ってきた場合 — レビューファイルがない、または
+正規の READY / NOT-READY の行が 1 つだけ存在しない場合（上限に達した、クラッシュした、途中で打ち切られたレビュアー）— 
+コンダクターは同じレビューを一度だけ再ディスパッチし、2 回目も不完全だった場合は
+NOT-READY として記録され、ゲートには "The review did not
+finish, so there is no review result to rely on."（レビューが完了しなかったため、頼れるレビュー結果がありません）という指摘が表示されます（レビュアーの返答に理由があれば、その後に続きます）。
+これにより、気づかれない打ち切りは、判定の欠落ではなく
+ゲートで目に見える指摘になります。その結果はどのレビュアーのものでもありません: レビューが
+完了しなかったことが伝えられ、あなたの承認もそのように記録されます。あなたが自分でレビューを
+止めて望むことを伝えた場合、コンダクターは自分から再試行しません: 
+まず次のステップを確認し、あなたが求めたことを行います。リクエストのたびに
+新しいレビュー枠が開かれるため、修正前の古いレビューが新しい作業を
+カバーしていると誤って解釈されることはありません。以前のリリースで成果物内の `## Review` セクションとして
+記録されたレビューは、次のレビューで置き換えられるまで
+ゲートで読むことができます。
 
-The scope can cap the class (`bugfix`, `poc`, `classic`, and `workshop` cap
-every stage to advisory; `express` caps reviews to none) and
-`/aidlc --review <class>` caps it per run. Explicit autonomy keeps the single
-pre-merge review, exempt from scope caps and per-run overrides. Either way the reviewer never blocks —
-the human always has final say.
+スコープはクラスの上限を定められます（`bugfix`、`poc`、`classic`、`workshop` は
+すべてのステージを advisory に制限し、`express` はレビューをなしに制限します）。また
+`/aidlc --review <class>` で実行ごとに上限を定められます。明示的な自律モードでは、マージ前の
+1 回のレビューが維持され、スコープの上限や実行ごとの上書きの対象外になります。いずれの場合も、レビュアーが作業をブロックすることはありません —
+最終的な決定権は常に人間にあります。
 
-(IMPORTANT: use plain agent names in backticks as shown — do NOT make them markdown links; per-agent reviewer doc pages do not exist yet.)
+（重要: エージェント名は示したとおりバッククォートで囲んだプレーンな名前を使うこと — Markdown のリンクにしてはならない。エージェントごとのレビュアーのドキュメントページはまだ存在しない。）
 
 ---
 
 ## Next Steps
 
-- [Phases and Stages](04-phases-and-stages.md) — see agents in context of the full stage flow
-- [Knowledge](08-knowledge.md) — how agents load methodology and team knowledge
-- [Rules and the Learning Loop](09-rules-and-the-learning-loop.md) — behavioral rules that constrain agent behavior
-- [Glossary](glossary.md) — terminology reference
+- [フェーズとステージ](04-phases-and-stages.md) — ステージフロー全体の文脈でエージェントを見る
+- [ナレッジ](08-knowledge.md) — エージェントが方法論とチームのナレッジをどう読み込むか
+- [ルールと学習ループ](09-rules-and-the-learning-loop.md) — エージェントの振る舞いを制約する行動ルール
+- [用語集](glossary.md) — 用語のリファレンス

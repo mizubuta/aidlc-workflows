@@ -1,18 +1,18 @@
 # Worked Examples
 
-Two complete walkthroughs showing AI-DLC in action: a bugfix and a feature. Each demonstrates the command invocation, stage progression, approval gates, and artifact output.
+AI-DLC の動作を示す 2 つの完全なウォークスルーです: バグ修正と機能開発です。それぞれ、コマンドの呼び出し、ステージの進行、承認ゲート、成果物の出力を示します。
 
-> **Harness note.** These transcripts are recorded on **Claude Code**, so they show
-> its surfaces — `/aidlc`, and subagent stages dispatched via `Task` calls. The
-> stage flow, gates, and artifacts are identical on every harness; only the
-> dispatch mechanic differs (Kiro uses its `subagent` tool, Codex its `spawn_agent`
-> subagents). See [Running on other harnesses](harnesses/README.md).
+> **ハーネスに関する注記。** これらの記録は **Claude Code** で取得したものなので、
+> その画面要素 — `/aidlc` や、`Task` 呼び出しでディスパッチされるサブエージェントのステージ — が表示されています。
+> ステージの流れ、ゲート、成果物はどのハーネスでも同じで、違うのは
+> ディスパッチの仕組みだけです（Kiro は `subagent` ツール、Codex は `spawn_agent`
+> サブエージェントを使います）。[他のハーネスでの実行](harnesses/README.md) を参照してください。
 
 ---
 
 ## Bugfix Walkthrough
 
-This example fixes a null pointer exception in a user profile API. The **bugfix** scope runs 9 stages (3 Initialization + 6 domain) at Minimal depth.
+この例では、ユーザープロフィール API の null ポインター例外を修正します。**bugfix** スコープは、Minimal の深さで 9 つのステージ（Initialization 3 つ + ドメイン 6 つ）を実行します。
 
 ### Invocation
 
@@ -20,17 +20,17 @@ This example fixes a null pointer exception in a user profile API. The **bugfix*
 /aidlc bugfix
 ```
 
-The conductor asks what you want to fix:
+コンダクターが、何を修正したいかを尋ねます:
 
-> **What would you like to build?**
+> **What would you like to build?**（何を作りたいですか？）
 
-You respond:
+あなたはこう答えます:
 
-> The user profile API returns HTTP 500 when the `display_name` field is null. The `GET /api/v1/users/:id/profile` endpoint crashes with a NullPointerException in `ProfileSerializer.serialize()`. This affects about 12% of user profiles created before display_name was made mandatory.
+> `display_name` フィールドが null のとき、ユーザープロフィール API が HTTP 500 を返します。`GET /api/v1/users/:id/profile` エンドポイントが `ProfileSerializer.serialize()` で NullPointerException を起こしてクラッシュします。display_name が必須化される前に作成されたユーザープロフィールの約 12% が影響を受けています。
 
 ### Stages executed
 
-| # | Stage | Phase | Lead Agent | Mode |
+| # | ステージ | フェーズ | リードエージェント | モード |
 |---|-------|-------|------------|------|
 | 0.1 | Workspace Scaffold | Initialization | orchestrator | inline (auto-proceed) |
 | 0.2 | Workspace Detection | Initialization | orchestrator | inline (auto-proceed) |
@@ -44,31 +44,31 @@ You respond:
 
 ### Initialization (stages 0.1-0.3) — auto-proceed
 
-The 3 Initialization stages run as a single deterministic tool call (`aidlc-utility intent-create`) in well under a second, without user interaction:
+3 つの Initialization ステージは、1 回の決定的なツール呼び出し（`aidlc-utility intent-create`）として、ユーザーとの対話なしに 1 秒もかからずに実行されます:
 
-- **0.1 Workspace Scaffold** - Auto-creates the first intent and creates its record dir at `aidlc/spaces/<space>/intents/<YYMMDD>-<label>/` (written `<record>/` below) - `<YYMMDD>` is a compact UTC date prefix so records sort chronologically, and `<label>` is the conductor's short kebab-case essence of the request; the canonical id is a UUIDv7 carried in the `intents.json` registry row
-- **0.2 Workspace Detection** — Rule-based scan identifies Java 17, Spring Boot 3.2, Maven, brownfield project
-- **0.3 State Init** — Initializes `aidlc-state.md` with scope `bugfix`, depth `Minimal`, and the domain stages marked for execution
+- **0.1 Workspace Scaffold** - 最初のインテントを自動作成し、その記録ディレクトリを `aidlc/spaces/<space>/intents/<YYMMDD>-<label>/`（以下 `<record>/` と表記）に作成します - `<YYMMDD>` は記録が時系列順に並ぶようにするための簡潔な UTC 日付のプレフィックスで、`<label>` はコンダクターがリクエストの要点を短いケバブケースにしたものです。正式な ID は、`intents.json` レジストリの行に保持される UUIDv7 です
+- **0.2 Workspace Detection** — ルールベースのスキャンで、Java 17、Spring Boot 3.2、Maven、ブラウンフィールドのプロジェクトであることを特定します
+- **0.3 State Init** — スコープ `bugfix`、深さ `Minimal`、実行対象としてマークしたドメインステージで `aidlc-state.md` を初期化します
 
-> Setting up the bugfix workflow for this: 6 stages, 6 approval gates.
+> Setting up the bugfix workflow for this: 6 stages, 6 approval gates.（このための bugfix ワークフローを設定しています: 6 ステージ、6 承認ゲート。）
 
 ### Stage 2.1 — Reverse Engineering
 
-A two-link pipeline scans the codebase: first an aidlc-developer-agent code scan, then an aidlc-architect-agent synthesis that writes the artifacts. It produces 9 durable artifacts for the repository in `aidlc/spaces/default/codekb/user-service/`:
+2 段のパイプラインがコードベースをスキャンします。まず aidlc-developer-agent がコードをスキャンし、次に aidlc-architect-agent が統合して成果物を書き出します。リポジトリについて 9 つの永続的な成果物を `aidlc/spaces/default/codekb/user-service/` に作成します:
 
-| Artifact | Contents |
+| 成果物 | 内容 |
 |----------|----------|
-| `business-overview.md` | User service — profiles, preferences, auth tokens |
-| `architecture.md` | Spring Boot monolith, 3-layer design |
-| `code-structure.md` | 6 packages: controller, service, model, repository, serializer, config |
-| `api-documentation.md` | 8 REST endpoints under `/api/v1/users/` |
-| `component-inventory.md` | Controllers, services, repositories, and serializers catalogued |
-| `technology-stack.md` | Java 17, Spring Boot 3.2, PostgreSQL 15, Jackson 2.15 |
-| `dependencies.md` | Maven dependency tree, third-party libraries, version constraints |
-| `code-quality-assessment.md` | 62% test coverage, basic CI |
-| `reverse-engineering-timestamp.md` | When the scan ran, against which commit |
+| `business-overview.md` | ユーザーサービス — プロフィール、設定、認証トークン |
+| `architecture.md` | Spring Boot のモノリス、3 層設計 |
+| `code-structure.md` | 6 つのパッケージ: controller、service、model、repository、serializer、config |
+| `api-documentation.md` | `/api/v1/users/` 配下の 8 つの REST エンドポイント |
+| `component-inventory.md` | コントローラー、サービス、リポジトリ、シリアライザーの一覧 |
+| `technology-stack.md` | Java 17、Spring Boot 3.2、PostgreSQL 15、Jackson 2.15 |
+| `dependencies.md` | Maven の依存関係ツリー、サードパーティライブラリ、バージョン制約 |
+| `code-quality-assessment.md` | テストカバレッジ 62%、基本的な CI |
+| `reverse-engineering-timestamp.md` | スキャンをいつ、どのコミットに対して実行したか |
 
-**Approval gate:**
+**承認ゲート:**
 
 ```
 Reverse Engineering complete. How would you like to proceed?
@@ -76,11 +76,11 @@ Reverse Engineering complete. How would you like to proceed?
 - Request Changes -> Provide revision feedback
 ```
 
-You select **Approve**.
+**Approve** を選びます。
 
 ### Stage 2.3 — Requirements Analysis
 
-The aidlc-product-agent persona loads and creates clarifying questions at `<record>/inception/requirements-analysis/requirements-analysis-questions.md`:
+aidlc-product-agent のペルソナが読み込まれ、`<record>/inception/requirements-analysis/requirements-analysis-questions.md` に確認の質問を作成します:
 
 ```markdown
 ## Q1. [Product owner] Bug Severity Classification
@@ -94,7 +94,7 @@ X. Other (please specify)
 [Answer]:
 ```
 
-The conductor offers interaction modes:
+コンダクターが対話モードを提示します:
 
 ```
 How would you like to answer these questions?
@@ -103,34 +103,34 @@ How would you like to answer these questions?
 - Chat            -> Discuss freely
 ```
 
-You select **Guide me** and answer: Q1 = High, Q2 = Username as fallback, Q3 = Handle null gracefully (no migration).
+**Guide me** を選び、次のように答えます: Q1 = High、Q2 = フォールバックとしてユーザー名を使う、Q3 = null を適切に処理する（マイグレーションなし）。
 
-The conductor generates `requirements.md` with 3 functional requirements (null handling, serializer fix, fallback logic) and 1 non-functional requirement (no regression in response time).
+コンダクターは、3 つの機能要件（null の処理、シリアライザーの修正、フォールバックのロジック）と 1 つの非機能要件（応答時間の劣化なし）を含む `requirements.md` を生成します。
 
-**Approval gate:** You select **Approve**.
+**承認ゲート:** **Approve** を選びます。
 
 ### Stage 3.5 — Code Generation
 
-The conductor creates a code generation plan, then delegates to a aidlc-developer-agent subagent:
+コンダクターはコード生成の計画を作成し、aidlc-developer-agent サブエージェントに委譲します:
 
-**Plan:**
-1. Fix `ProfileSerializer.serialize()` to handle null `display_name`
-2. Add unit tests for null/non-null cases
-3. Fix `ProfileService.getProfile()` defensive check
-4. Add integration tests for the API endpoint
+**計画:**
+1. null の `display_name` を処理できるよう `ProfileSerializer.serialize()` を修正する
+2. null／非 null のケースのユニットテストを追加する
+3. `ProfileService.getProfile()` の防御的チェックを修正する
+4. API エンドポイントの統合テストを追加する
 
-You approve the plan. The subagent implements all 4 steps:
+計画を承認します。サブエージェントは 4 つのステップすべてを実装します:
 
-- **Modified**: `ProfileSerializer.java` (null-safe with username fallback)
-- **Modified**: `ProfileService.java` (defensive null handling)
-- **Created**: `ProfileSerializerTest.java` (2 unit tests)
-- **Created**: `ProfileControllerIntegrationTest.java` (2 integration tests)
+- **変更**: `ProfileSerializer.java`（ユーザー名へのフォールバック付きで null セーフに）
+- **変更**: `ProfileService.java`（防御的な null 処理）
+- **作成**: `ProfileSerializerTest.java`（ユニットテスト 2 件）
+- **作成**: `ProfileControllerIntegrationTest.java`（統合テスト 2 件）
 
-**Approval gate:** You select **Approve**.
+**承認ゲート:** **Approve** を選びます。
 
 ### Stage 3.6 — Build and Test
 
-The aidlc-quality-agent runs the build and tests:
+aidlc-quality-agent がビルドとテストを実行します:
 
 ```
 mvn clean compile        # BUILD SUCCESS
@@ -138,20 +138,19 @@ mvn test                 # 89 tests, 0 failures
 mvn verify               # Integration tests pass
 ```
 
-Results captured in `<record>/construction/build-and-test/test-results.md`: 89 tests passed, 0 failures, coverage increased from 62% to 64%.
+結果は `<record>/construction/build-and-test/test-results.md` に記録されます: 89 件のテストが成功、失敗 0 件、カバレッジは 62% から 64% に向上しました。
 
-**Approval gate:** You select **Approve**.
+**承認ゲート:** **Approve** を選びます。
 
 ### Stages 4.1 and 4.3 — Deploy
 
-Deployment Pipeline inspects the existing delivery configuration and records
-the deployment strategy, CD configuration, and rollback runbook. Environment
-Provisioning remains skipped because this bugfix uses the existing target
-environment.
+Deployment Pipeline は既存のデリバリー設定を調べ、デプロイ戦略、
+CD 設定、ロールバック用ランブックを記録します。このバグ修正では既存のデプロイ先環境を
+使うため、Environment Provisioning はスキップされたままです。
 
-After approval, Deployment Execution deploys the tested artifact through that
-pipeline, runs smoke tests and health checks, and records the deployment log.
-You approve the final gate and the workflow completes.
+承認後、Deployment Execution はテスト済みの成果物をそのパイプラインを通じてデプロイし、
+スモークテストとヘルスチェックを実行して、デプロイログを記録します。
+最後のゲートを承認すると、ワークフローが完了します。
 
 ### End state
 
@@ -173,25 +172,25 @@ aidlc/spaces/default/
       deployment-execution/  # deployment log + smoke tests + health checks
 ```
 
-Application code in workspace root:
-- `ProfileSerializer.java` (modified)
-- `ProfileService.java` (modified)
-- `ProfileSerializerTest.java` (created)
-- `ProfileControllerIntegrationTest.java` (created)
+ワークスペースのルートにあるアプリケーションコード:
+- `ProfileSerializer.java`（変更）
+- `ProfileService.java`（変更）
+- `ProfileSerializerTest.java`（作成）
+- `ProfileControllerIntegrationTest.java`（作成）
 
 ### Key observations
 
-1. **Approval gates at every domain stage** — you control each decision
-2. **Minimal depth** — brief, targeted artifacts; only the questions needed to define the fix
-3. **Subagent delegation** — heavy work (RE, code gen) runs in subprocesses while you approve
-4. **Full audit trail** — every decision logged with ISO timestamps
-5. **Session resume** — if interrupted at any point, `/aidlc` detects the in-progress state
+1. **すべてのドメインステージに承認ゲート** — 各判断をあなたがコントロールします
+2. **Minimal の深さ** — 簡潔で的を絞った成果物。修正内容の定義に必要な質問だけが出されます
+3. **サブエージェントへの委譲** — 重い作業（RE、コード生成）は、あなたが承認している間にサブプロセスで実行されます
+4. **完全な監査証跡** — すべての判断が ISO タイムスタンプ付きで記録されます
+5. **セッションの再開** — どの時点で中断しても、`/aidlc` が進行中の状態を検出します
 
 ---
 
 ## Feature Walkthrough
 
-This example builds a notification service for a task management application. The **feature** scope runs all 33 stages at Standard depth. This walkthrough highlights key stages across all phases. It runs with collaborators on (`/aidlc --collaborators on`), so the Inception ensembles below show their full roster; the feature scope ships them off, and then those stages run with the lead agent only.
+この例では、タスク管理アプリケーション向けの通知サービスを構築します。**feature** スコープは、Standard の深さで 33 のステージすべてを実行します。このウォークスルーでは、すべてのフェーズにわたる主要なステージを取り上げます。コラボレーターをオンにして（`/aidlc --collaborators on`）実行しているため、以下の Inception のアンサンブルではメンバー全員が登場します。feature スコープの出荷時設定ではオフになっており、その場合それらのステージはリードエージェントだけで実行されます。
 
 ### Invocation
 
@@ -199,23 +198,23 @@ This example builds a notification service for a task management application. Th
 /aidlc feature
 ```
 
-> **What would you like to build?**
+> **What would you like to build?**（何を作りたいですか？）
 
-> A notification service for our task management app. Users should receive in-app notifications and optional email digests when tasks are assigned, due dates approach, or comments are posted. Support notification preferences per user.
+> タスク管理アプリ向けの通知サービスです。タスクが割り当てられたとき、期日が近づいたとき、コメントが投稿されたときに、ユーザーがアプリ内通知と、任意でメールのダイジェストを受け取れるようにしたいです。ユーザーごとの通知設定もサポートしてください。
 
 ### Initialization (stages 0.1-0.3) — auto-proceed
 
-The 3 Initialization stages run automatically inside `aidlc-utility intent-create`. Workspace Detection identifies: TypeScript, Node.js 20, Express, PostgreSQL, brownfield project with existing task and user services.
+3 つの Initialization ステージは `aidlc-utility intent-create` の中で自動的に実行されます。Workspace Detection は次を特定します: TypeScript、Node.js 20、Express、PostgreSQL、既存のタスクサービスとユーザーサービスを持つブラウンフィールドのプロジェクト。
 
-> Setting up the feature workflow for this: 30 stages, 30 approval gates, 5 stages repeat per unit of work in Construction.
+> Setting up the feature workflow for this: 30 stages, 30 approval gates, 5 stages repeat per unit of work in Construction.（このための feature ワークフローを設定しています: 30 ステージ、30 承認ゲート、Construction では 5 ステージを作業ユニットごとに繰り返します。）
 
 ### Ideation Phase (stages 1.1-1.7)
 
-**Stage 1.1 — Intent Capture** (aidlc-product-agent)
+**Stage 1.1 — Intent Capture**（aidlc-product-agent）
 
-The aidlc-product-agent first records the permitted source universe in
-`intent-capture-questions.md`, then asks about the problem, target users,
-stakeholders, decision authority, communication needs, and scope:
+aidlc-product-agent はまず、参照してよい情報源の範囲を
+`intent-capture-questions.md` に記録し、次に課題、対象ユーザー、
+ステークホルダー、意思決定の権限、コミュニケーションのニーズ、スコープについて尋ねます:
 
 ```markdown
 ## Sources
@@ -233,8 +232,8 @@ X. Other
 [Answer]: B. In-app + email
 ```
 
-The resulting artifacts keep each claim tied to that register or a confirmed
-answer:
+作成される成果物では、各主張がその情報源の一覧または確認済みの回答に
+結び付けられています:
 
 ```markdown
 ## Target Customer
@@ -250,143 +249,142 @@ In-app notifications and optional email digests are in scope. [Q1]
 None.
 ```
 
-The stakeholder map uses the same tags in a `Source` column. Any unsupported
-content is asked as a follow-up or remains under `## Assumptions & Open
-Questions`; retained assumptions require your explicit acceptance and stay
-labeled as assumptions. The aidlc-product-lead-agent then reviews source
-grounding before the ordinary approval gate.
+ステークホルダーマップでは、`Source` 列で同じタグを使います。根拠のない内容は
+追加の質問として尋ねられるか、`## Assumptions & Open
+Questions` の下に残ります。残された前提にはあなたの明示的な承諾が必要で、引き続き
+前提としてラベル付けされます。その後、aidlc-product-lead-agent が、通常の承認ゲートの前に
+情報源との結び付きをレビューします。
 
-**Stage 1.4 — Scope Definition** (aidlc-product-agent)
+**Stage 1.4 — Scope Definition**（aidlc-product-agent）
 
-Defines scope boundaries: in-scope (3 trigger types, user preferences, email digest), out-of-scope (push notifications, SMS, real-time WebSocket). Produces `scope-document.md` and `intent-backlog.md` with prioritized items.
+スコープの境界を定義します: スコープ内（3 種類のトリガー、ユーザー設定、メールダイジェスト）、スコープ外（プッシュ通知、SMS、リアルタイムの WebSocket）。優先順位付きの項目を含む `scope-document.md` と `intent-backlog.md` を作成します。
 
-**Stage 1.7 — Approval & Handoff** (aidlc-delivery-agent)
+**Stage 1.7 — Approval & Handoff**（aidlc-delivery-agent）
 
-Compiles the initiative brief aggregating all Ideation outputs. Phase boundary verification confirms intent-to-scope traceability.
+Ideation のすべての出力を集約したイニシアチブブリーフをまとめます。フェーズ境界の検証で、インテントからスコープへのトレーサビリティを確認します。
 
-> Progress: 7 of 30 stages done. Next: Reverse Engineering.
+> Progress: 7 of 30 stages done. Next: Reverse Engineering.（進捗: 30 ステージ中 7 完了。次: Reverse Engineering。）
 
 ### Inception Phase (stages 2.1-2.9)
 
-**Stage 2.1 — Reverse Engineering** (pipeline)
+**Stage 2.1 — Reverse Engineering**（pipeline）
 
-Two-link scan of the existing codebase. It writes the 9 artifacts to the repository's space-level store at `aidlc/spaces/<active-space>/codekb/<repo>/`, identifying the existing service structure, database schema, and API patterns that the notification service must integrate with.
+既存のコードベースを 2 段でスキャンします。9 つの成果物を、リポジトリのスペースレベルのストア `aidlc/spaces/<active-space>/codekb/<repo>/` に書き出し、通知サービスが統合する必要のある既存のサービス構成、データベーススキーマ、API パターンを特定します。
 
-**Stage 2.2 — Practices Discovery** (aidlc-pipeline-deploy-agent)
+**Stage 2.2 — Practices Discovery**（aidlc-pipeline-deploy-agent）
 
-This is a subagent hub-and-spoke. The aidlc-pipeline-deploy-agent drafts from the Reverse Engineering evidence; aidlc-quality-agent, aidlc-developer-agent, and aidlc-devsecops-agent then inspect that draft in parallel without seeing one another's contributions. The human interview resolves evidence gaps and policy judgments, after which the lead integrates all three contributions into `team-practices.md`, `discovered-rules.md`, and `evidence.md`. The gate offers **Approve** / **Request Changes**. After Approve, `practices-promote` writes `aidlc/spaces/<active-space>/memory/team.md` and `project.md`, then atomically records the affirmed timestamp and matching `PRACTICES_AFFIRMED` receipt; only then does the conductor report the stage approved. A missing, stale, or failed promotion leaves the gate open and the stage incomplete.
+これはサブエージェントのハブ&スポークです。aidlc-pipeline-deploy-agent が Reverse Engineering の証拠からドラフトを作成し、その後 aidlc-quality-agent、aidlc-developer-agent、aidlc-devsecops-agent が、互いの貢献を見ずに並行してそのドラフトを確認します。人間へのインタビューで証拠のギャップとポリシー上の判断を解消し、その後リードが 3 つの貢献すべてを `team-practices.md`、`discovered-rules.md`、`evidence.md` に統合します。ゲートでは **Approve** / **Request Changes** が提示されます。Approve の後、`practices-promote` が `aidlc/spaces/<active-space>/memory/team.md` と `project.md` を書き出し、承認のタイムスタンプと対応する `PRACTICES_AFFIRMED` レシートをアトミックに記録します。その後で初めて、コンダクターはステージが承認されたと報告します。昇格が欠けている、古い、または失敗した場合は、ゲートは開いたままで、ステージは未完了のままです。
 
-**Stage 2.3 — Requirements Analysis** (aidlc-product-agent)
+**Stage 2.3 — Requirements Analysis**（aidlc-product-agent）
 
-Produces 12 functional requirements (notification triggers, preference CRUD, email rendering, digest scheduling) and 5 non-functional requirements (delivery latency < 5s, email retry, preference storage). Questions drill into edge cases: what happens when email delivery fails? How frequently should digests run?
+12 の機能要件（通知のトリガー、設定の CRUD、メールのレンダリング、ダイジェストのスケジューリング）と 5 つの非機能要件（配信レイテンシー < 5 秒、メールのリトライ、設定の保存）を作成します。質問はエッジケースを掘り下げます: メール配信が失敗したらどうなるか？ダイジェストはどのくらいの頻度で実行すべきか？
 
-**Stage 2.4 — User Stories** (mob)
+**Stage 2.4 — User Stories**（mob）
 
-The aidlc-product-agent first drafts the personas and stories. The aidlc-design-agent, aidlc-developer-agent, and aidlc-quality-agent then inspect that draft as mutually blind collaborators, each writing an identity-marked contribution file. The aidlc-product-agent lead integrates all three contributions into `personas.md` and `stories.md` before presenting the **Approve** / **Request Changes** gate.
+aidlc-product-agent がまずペルソナとストーリーのドラフトを作成します。その後、aidlc-design-agent、aidlc-developer-agent、aidlc-quality-agent が、互いの内容を見ないコラボレーターとしてそのドラフトを確認し、それぞれが識別子付きの貢献ファイルを書きます。リードの aidlc-product-agent は、**Approve** / **Request Changes** のゲートを提示する前に、3 つの貢献すべてを `personas.md` と `stories.md` に統合します。
 
-**Stage 2.6 — Domain Design** (aidlc-architect-agent)
+**Stage 2.6 — Domain Design**（aidlc-architect-agent）
 
-The aidlc-architect-agent designs the notification service architecture:
+aidlc-architect-agent が通知サービスのアーキテクチャを設計します:
 
-- **Components**: NotificationService, PreferenceService, EmailRenderer, DigestScheduler — each with behaviour, dependencies/dependents, and owned entities
-- **Entity ownership**: NotificationService owns Notification + NotificationEvent; PreferenceService owns Preference
-- **Rationale**: event-driven trigger pattern (vs. polling), SQS for email queue (vs. direct send) recorded in the Rationale section
+- **コンポーネント**: NotificationService、PreferenceService、EmailRenderer、DigestScheduler — それぞれの振る舞い、依存先／依存元、所有するエンティティ
+- **エンティティの所有権**: NotificationService は Notification と NotificationEvent を所有し、PreferenceService は Preference を所有します
+- **根拠**: イベント駆動のトリガーパターン（ポーリングとの比較）、メールキューに SQS を使用（直接送信との比較）を Rationale セクションに記録
 
-Produces the consolidated `components.md` (fenced `yaml` catalogue + mermaid diagram, summary, ownership, and rationale tables) plus `decisions.md` (the ADR log).
+統合された `components.md`（フェンス付きの `yaml` カタログ + mermaid 図、概要、所有権、根拠の表）と、`decisions.md`（ADR ログ）を作成します。
 
-**Stage 2.7 — Units Generation** (aidlc-architect-agent)
+**Stage 2.7 — Units Generation**（aidlc-architect-agent）
 
-Decomposes into 3 units of work:
+3 つの作業ユニットに分解します:
 
-1. **notification-core** — Event handler, notification storage, in-app delivery
-2. **notification-preferences** — Preference CRUD API, default preferences
-3. **notification-email** — Email renderer, SQS integration, digest scheduler
+1. **notification-core** — イベントハンドラー、通知の保存、アプリ内配信
+2. **notification-preferences** — 設定の CRUD API、デフォルト設定
+3. **notification-email** — メールレンダラー、SQS 連携、ダイジェストのスケジューラー
 
-Produces `unit-of-work.md` and `unit-of-work-dependency.md`: notification-core first, then notification-preferences, then notification-email, whose preference lookup depends on the preferences API.
+`unit-of-work.md` と `unit-of-work-dependency.md` を作成します: まず notification-core、次に notification-preferences、そして notification-email の順です。notification-email の設定参照は preferences の API に依存します。
 
-**Stage 2.8 — Contract Design** (aidlc-architect-agent)
+**Stage 2.8 — Contract Design**（aidlc-architect-agent）
 
-Because the system splits into three integrating units, Contract Design formalises the inter-unit boundaries: the internal event contract notification-core exposes to its callers, and the preference-lookup contract notification-email consumes from notification-preferences. Produces `contract-summary.md` (one row per boundary, each with an inline spec block).
+システムが互いに連携する 3 つのユニットに分かれるため、Contract Design はユニット間の境界を正式に定めます: notification-core が呼び出し元に公開する内部イベントの契約と、notification-email が notification-preferences から利用する設定参照の契約です。`contract-summary.md`（境界ごとに 1 行、それぞれインラインの仕様ブロック付き）を作成します。
 
-**Stage 2.9 — Delivery Planning** (aidlc-delivery-agent)
+**Stage 2.9 — Delivery Planning**（aidlc-delivery-agent）
 
-Delivery Planning identifies notification-core as the first integrated slice: an event must reach stored notification data and in-app delivery. The later delivery grouping contains preferences and email, while the actual order respects their dependency. Per-Bolt DoDs land in `bolt-plan.md`, rationale in `risk-and-sequencing-rationale.md`, and SES/SQS dependencies in `external-dependency-map.md`. The engine follows the 2.7 DAG and recorded iteration choice. Phase boundary verification confirms requirements-to-architecture alignment.
+Delivery Planning は notification-core を最初の統合スライスと特定します: イベントが、保存された通知データとアプリ内配信に到達しなければなりません。後のデリバリーグループには preferences と email が含まれますが、実際の順序はそれらの依存関係に従います。Bolt ごとの DoD は `bolt-plan.md` に、根拠は `risk-and-sequencing-rationale.md` に、SES/SQS への依存は `external-dependency-map.md` に記録されます。エンジンは 2.7 の DAG と記録された反復の選択に従います。フェーズ境界の検証で、要件とアーキテクチャの整合性を確認します。
 
-For this example, the project check is `bun run verify:notifications`: it submits
-an event and verifies storage and in-app delivery. The conductor writes the
-proposed command to `<record>/verification-command.txt` with the file-write tool,
-then opens the verification-command decision. It copies the complete canonical
-`command` from the `decision` tool's JSON output exactly into a code span in the
-question: "Use this command to verify each completed Unit?
-`bun run verify:notifications`". Commands are never abbreviated; the human can
-also open `<record>/verification-command.txt`. The canonical command must be a
-nonblank single line of at most 1024 characters. Control characters and
-display-spoofing characters (Unicode format characters, including zero-width and
-bidi controls, line/paragraph separators, and no-break space U+00A0) are refused.
-You choose **Approve** (in that chat, or in a new one while it is the newest
-question asked); only after recording that exact answer does the typed setter
-authorize this command for the intent's checkpoints.
+この例では、プロジェクトのチェックは `bun run verify:notifications` です。イベントを送信し、
+保存とアプリ内配信を検証します。コンダクターは、提案するコマンドをファイル書き込みツールで
+`<record>/verification-command.txt` に書き出し、
+その後、検証コマンドの決定を開始します。`decision` ツールの JSON 出力から正式な
+`command` 全体を、質問内のコードスパンにそのままコピーします:
+"Use this command to verify each completed Unit?
+`bun run verify:notifications`"（完了した各ユニットの検証にこのコマンドを使いますか？）。コマンドが省略されることは決してありません。人間は
+`<record>/verification-command.txt` を開いて確認することもできます。正式なコマンドは、
+空白でない 1 行で、最大 1024 文字でなければなりません。制御文字と
+表示を偽装する文字（ゼロ幅文字や双方向制御文字を含む Unicode の書式文字、
+行／段落の区切り文字、ノーブレークスペース U+00A0）は拒否されます。
+**Approve** を選びます（そのチャットで、またはそれが最新の質問である間は新しいチャットで）。
+その正確な回答が記録されて初めて、型付きのセッターがインテントのチェックポイントに対して
+このコマンドを認可します。
 
-> Progress: 16 of 30 stages done. Next: Functional Design.
+> Progress: 16 of 30 stages done. Next: Functional Design.（進捗: 30 ステージ中 16 完了。次: Functional Design。）
 
 ### Construction Phase (stages 3.1-3.7)
 
-This new source-producing solo workflow qualifies for the **unit-major, serial
-checkpoint default**. The 2.9 Bolt plan remains planning content; the engine
-walks the Units from `unit-of-work-dependency.md`.
+ソースを生成するこの新しい単独ワークフローは、**Unit-major・直列チェックポイントの
+デフォルト**の対象になります。2.9 の Bolt プランは計画の内容のままで、エンジンは
+`unit-of-work-dependency.md` に従ってユニットを順にたどります。
 
-**First Unit: notification-core — the working integrated slice**
+**最初のユニット: notification-core — 動作する統合スライス**
 
-The conductor runs notification-core through its applicable design stages and
-Code Generation before starting either later Unit. Functional Design covers
-Notification and NotificationEvent entities, deduplication, and rate limiting;
-NFR and infrastructure work cover the first slice where applicable. You confirm
-the summaries and approve its Code Generation plan before generation. The Unit
-then produces its event handler, notification repository, and in-app delivery
-endpoint: 3 source files and 4 test files in this example.
+コンダクターは、後のどちらのユニットにも着手する前に、notification-core に該当する設計ステージと
+Code Generation を実行します。Functional Design は Notification と NotificationEvent の
+エンティティ、重複排除、レート制限を扱い、NFR とインフラの作業は、該当する範囲で
+最初のスライスを扱います。あなたは要約を確認し、生成の前に Code Generation の計画を承認します。
+その後、ユニットはイベントハンドラー、通知リポジトリ、アプリ内配信の
+エンドポイントを作成します。この例では、ソースファイル 3 つとテストファイル 4 つです。
 
-After the required reviews and completion receipts, the conductor runs the
-recorded command through verification:
+必須のレビューと完了レシートの後、コンダクターは
+記録済みのコマンドを検証を通じて実行します:
 
 ```bash
 aidlc engine bolt checkpoint --action verify --unit "notification-core" --kind skeleton
 ```
 
-For a longer project check, add `--timeout-ms 3600000` to `--action verify`
-(one hour). The default is 30 minutes; the value must be a positive integer
-of at most 2,147,483,647 milliseconds. A timeout retires the owned process
-group/tree and records a failed verification, reporting incomplete cleanup if
-it cannot confirm termination. See the [timeout contract](../reference/12-state-machine.md#construction-checkpoint-verification-timeout).
+プロジェクトのチェックに時間がかかる場合は、`--action verify` に `--timeout-ms 3600000` を
+追加します（1 時間）。デフォルトは 30 分で、値は 2,147,483,647 ミリ秒以下の正の整数でなければなりません。
+タイムアウトすると、所有するプロセスグループ／ツリーが終了され、
+検証の失敗が記録されます。終了を確認できない場合は、後片付けが不完全であることを報告します。
+[タイムアウトの契約](../reference/12-state-machine.md#construction-checkpoint-verification-timeout) を参照してください。
 
-Only after `verify` reports `verified: true` and the current checkpoint has
-`ready: true` does the conductor open its session-bound approval question:
+`verify` が `verified: true` を報告し、現在のチェックポイントが
+`ready: true` になって初めて、コンダクターはセッションに結び付いた承認の質問を開始します:
 
 ```bash
 aidlc engine bolt checkpoint --action ask --unit "notification-core" --kind skeleton
 ```
 
-It presents "Verified with `bun run verify:notifications` (exit 0). Approve this
-completed notification-core?" with **Approve** / **Request Changes** and waits.
-The code span shows the full recorded command, not a summary. You choose
-**Approve**; only that exact reply to this checkpoint question authorizes
-approval, in that chat or in a new one while it is the newest question asked.
-An unrelated reply, the agent's own words, or a reply to a different question
-does not. The conductor records your actual choice in the chat you answered in,
-never passing `--user-input` you did not choose:
+"Verified with `bun run verify:notifications` (exit 0). Approve this
+completed notification-core?"（bun run verify:notifications で検証済み（exit 0）。完了した notification-core を承認しますか？）を **Approve** / **Request Changes** とともに提示し、待機します。
+コードスパンには、要約ではなく記録されたコマンド全体が表示されます。あなたは
+**Approve** を選びます。承認を認可するのは、このチェックポイントの質問に対するその正確な返答だけです。
+そのチャットでも、それが最新の質問である間は新しいチャットでもかまいません。
+無関係な返答、エージェント自身の言葉、別の質問への返答では
+認可されません。コンダクターは、あなたが返答したチャットで、あなたが実際に選んだものを記録し、
+あなたが選んでいない `--user-input` を渡すことは決してありません:
 
 ```bash
 aidlc engine bolt checkpoint --action approve --unit "notification-core" --kind skeleton --user-input 'Approve'
 ```
 
-The earlier Functional Design review by itself would not have established that
-the integration worked, nor could its answer authorize this checkpoint.
-Re-running `verify` withdraws any open checkpoint question and captured response
-for this intent, in any session; the conductor must re-verify and ask again after
-`verified: true`, even if the command and artifacts are unchanged. For swarm
-batches the same rule applies to `finalize`: after fresh verification and source
-landing, confirm `ready: true` before asking again.
+それ以前の Functional Design のレビューだけでは、統合が動作することは
+確認できず、その回答でこのチェックポイントを認可することもできません。
+`verify` を再実行すると、このインテントについて開いているチェックポイントの質問と記録済みの応答が、
+どのセッションであっても取り消されます。コマンドと成果物が変わっていなくても、コンダクターは再検証し、
+`verified: true` の後に改めて尋ねなければなりません。スウォームの
+バッチでは、同じルールが `finalize` に適用されます: 新たな検証とソースの
+取り込みの後、改めて尋ねる前に `ready: true` を確認します。
 
-If no autonomy choice has already been recorded, the workflow offers:
+自律実行の選択がまだ記録されていない場合、ワークフローは次を提示します:
 
 ```
 How should I continue building the remaining work?
@@ -394,67 +392,67 @@ How should I continue building the remaining work?
   ▸ Review each checkpoint
 ```
 
-You choose **Continue automatically**. The conductor records `autonomous` and
-continues serially; this approval choice does not enable swarm execution.
+**Continue automatically** を選びます。コンダクターは `autonomous` を記録し、
+直列のまま続行します。この承認の選択によってスウォーム実行が有効になることはありません。
 
-**Remaining Units: notification-preferences, then notification-email**
+**残りのユニット: notification-preferences、次に notification-email**
 
-Each Unit goes through its own applicable design stages, any enabled summary
-confirmation, Plan Approval, code, checks, and reviews before the next begins:
+各ユニットは、次のユニットが始まる前に、該当する設計ステージ、有効になっている要約確認、
+Plan Approval、コード、チェック、レビューをそれぞれ通過します:
 
-- **notification-preferences** — Preference entity, defaults, channel toggles, CRUD API, repository, and validation; 2 source files and 3 test files.
-- **notification-email** — Delivery rules, renderer, SQS consumer, and digest cron job using the approved preference-lookup contract; 4 source files and 5 test files.
+- **notification-preferences** — Preference エンティティ、デフォルト、チャネルの切り替え、CRUD API、リポジトリ、検証。ソースファイル 2 つとテストファイル 3 つ。
+- **notification-email** — 配信ルール、レンダラー、SQS コンシューマー、承認済みの設定参照の契約を使うダイジェストの cron ジョブ。ソースファイル 4 つとテストファイル 5 つ。
 
-The conductor may automatically approve each verified ordinary Unit checkpoint
-under your recorded grant, without `ask` or `--user-input`. Plan Approval and verification command selection still
-wait for you, as does summary confirmation when
-`directive.ceremony.summary_confirmation === "on"`. Once all
-Units are approved, completion-only stage directives reconcile bookkeeping without
-another round of stage-body or reviewer work.
+コンダクターは、記録された付与に基づき、`ask` や `--user-input` なしで、検証済みの通常のユニットチェックポイントを
+それぞれ自動承認できます。Plan Approval と検証コマンドの選択は引き続き
+あなたを待ちます。`directive.ceremony.summary_confirmation === "on"` の場合は
+要約確認も同様です。すべての
+ユニットが承認されると、完了専用のステージディレクティブが、ステージ本体やレビュアーの作業を
+もう一巡させることなく、記録処理を整合させます。
 
-**What a failure would look like.** If notification-email's check fails because
-its SES mock cannot be constructed, the workflow stops and explains the failure.
-The already completed preferences Unit stays complete. Any required repair-plan
-approval remains a human decision; an automatic-completion grant never counts
-as verification of a failed check.
+**失敗した場合の様子。** notification-email のチェックが、SES のモックを
+構築できないために失敗した場合、ワークフローは停止して失敗を説明します。
+すでに完了している preferences ユニットは完了のままです。必要な修復計画の
+承認は引き続き人間の判断であり、自動完了の付与が失敗したチェックの検証として
+扱われることは決してありません。
 
-**Stage 3.6 — Build and Test** (aidlc-quality-agent, runs once after all Units)
+**Stage 3.6 — Build and Test**（aidlc-quality-agent、すべてのユニットの後に一度実行）
 
-Generates build instructions, runs the full test suite across all 3 Units: 47 tests pass, 0 failures, 78% coverage.
+ビルド手順を生成し、3 つのユニットすべてにわたってテストスイート全体を実行します: 47 件のテストが成功、失敗 0 件、カバレッジ 78%。
 
-**Stage 3.7 — CI Pipeline** (aidlc-pipeline-deploy-agent)
+**Stage 3.7 — CI Pipeline**（aidlc-pipeline-deploy-agent）
 
-Configures CI pipeline with lint, build, test, and security scan stages. Quality gates: coverage >= 75%, no critical vulnerabilities.
+lint、ビルド、テスト、セキュリティスキャンのステージを持つ CI パイプラインを設定します。品質ゲート: カバレッジ >= 75%、重大な脆弱性なし。
 
-> Progress: 23 of 30 stages done. Next: Deployment Pipeline.
+> Progress: 23 of 30 stages done. Next: Deployment Pipeline.（進捗: 30 ステージ中 23 完了。次: Deployment Pipeline。）
 
 ### Operation Phase (stages 4.1-4.7)
 
-**Stage 4.1 — Deployment Pipeline** — Blue-green deployment strategy with health check gates
+**Stage 4.1 — Deployment Pipeline** — ヘルスチェックのゲートを備えたブルー／グリーンデプロイ戦略
 
-**Stage 4.2 — Environment Provisioning** — SQS queues, SES configuration, DynamoDB table for notification storage
+**Stage 4.2 — Environment Provisioning** — SQS キュー、SES の設定、通知保存用の DynamoDB テーブル
 
-**Stage 4.4 — Observability Setup** — CloudWatch dashboards for notification delivery latency, email send rate, dead-letter queue depth. Alarms for delivery failures.
+**Stage 4.4 — Observability Setup** — 通知配信のレイテンシー、メール送信レート、デッドレターキューの深さを表示する CloudWatch ダッシュボード。配信失敗のアラーム。
 
-**Stage 4.7 — Feedback & Optimization** — SLO targets (99.9% in-app delivery, 99% email delivery within 30s), cost analysis, feedback loop document.
+**Stage 4.7 — Feedback & Optimization** — SLO 目標（アプリ内配信 99.9%、30 秒以内のメール配信 99%）、コスト分析、フィードバックループのドキュメント。
 
 ### Key differences from bugfix
 
-| Aspect | Bugfix | Feature |
+| 観点 | Bugfix | Feature |
 |--------|--------|---------|
-| Stages executed | 9 | 33 |
-| Depth | Minimal | Standard |
-| Phases | Initialization + Inception + Construction + Operation | All 5 |
-| Units of work | No Unit DAG; stage-level work | 3 |
-| Construction walk | Existing stage-level flow | New unit-major, serial checkpoint flow (2.9 still plans delivery groupings) |
-| Conditional stages | Most skipped | Most executed |
-| Approval gates | Ordinary stage approvals | Verified human skeleton checkpoint; later completion follows the recorded choice; Plan Approval, verification command selection, and summaries remain human |
+| 実行したステージ | 9 | 33 |
+| 深さ | Minimal | Standard |
+| フェーズ | Initialization + Inception + Construction + Operation | 5 つすべて |
+| 作業ユニット | ユニットの DAG なし。ステージ単位の作業 | 3 |
+| Construction の進め方 | 既存のステージ単位のフロー | 新しい Unit-major・直列チェックポイントのフロー（2.9 は引き続きデリバリーのグループ分けを計画） |
+| 条件付きステージ | ほとんどスキップ | ほとんど実行 |
+| 承認ゲート | 通常のステージ承認 | 検証済みスケルトンを人間がチェックポイントで承認。以降の完了は記録された選択に従う。Plan Approval、検証コマンドの選択、要約は人間が行う |
 
 ---
 
 ## Next Steps
 
-- [Scopes, Depth, and Test Strategy](05-scopes-and-depth.md) — How scopes determine which stages run
-- [How a Stage Runs](04-phases-and-stages.md) — Stage protocol details
-- [Agents](06-agents.md) — Agent personas and responsibilities
-- [Artifacts Reference](14-artifacts-reference.md) — Complete artifact directory tree
+- [Scopes, Depth, and Test Strategy](05-scopes-and-depth.md) — スコープがどのステージを実行するかをどのように決めるか
+- [How a Stage Runs](04-phases-and-stages.md) — ステージのプロトコルの詳細
+- [Agents](06-agents.md) — エージェントのペルソナと責務
+- [Artifacts Reference](14-artifacts-reference.md) — 成果物のディレクトリツリー全体

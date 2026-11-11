@@ -19,29 +19,29 @@ collaborators: off
 
 # poc scope
 
-Minimal depth aimed at proving feasibility fast. Almost everything except
-the bare path to running code is skipped: capture the intent, reverse-
-engineer any existing code, pull the requirements, then generate and test.
-No design ceremony, no operations, no delivery planning.
+実現可能性を素早く証明することを目的とした Minimal 深度。動くコードに至る
+最短経路以外はほぼすべてスキップする: インテントを捉え、既存コードがあれば
+リバースエンジニアリングし、要件を引き出し、その後コードを生成してテストする。
+設計の儀式も、運用も、デリバリー計画も行わない。
 
-Guard Policy defaults to off: changed inputs are recorded and announced, the spike keeps moving, and plan approval, review freeze, state transition, and reviewer read scope are lowered for undirected work. Human presence stays up.
+Guard Policy の既定値は off である: 変更された入力は記録・通知されるがスパイクは止まらずに進み、指示のない作業に対しては計画承認、レビューフリーズ、状態遷移、レビュアーの読み取りスコープが引き下げられる。人の関与（human presence）は維持される。
 
-Plan approval is off: once the code plan is written you see one line naming it,
-code generation starts, and the line says you can ask to go over the plan at
-any time. You can also ask to see a plan before it is built, or to be asked about
-every plan.
+計画承認は off である: コード計画が書かれると、それを示す 1 行が表示されて
+コード生成が始まり、その行にはいつでも計画の確認を依頼できる旨が示される。
+構築前に計画を見せるよう依頼することも、すべての計画について確認を求めるよう
+依頼することもできる。
 
 ## Why these stages, why skip those
 
-A proof of concept answers one question — "can this work?" — so it keeps
-only the stages that get to an answer: intent-capture, reverse-engineering,
-requirements-analysis, code-generation, build-and-test. The whole point is
-to discard the rest (domain-design, units-generation, nfr work, the
-operation phase) because a spike is throwaway. If the answer is yes,
-re-scope to `feature`/`mvp` and run the full arc on the real build.
+PoC（概念実証）が答えるのは「これは実現できるか？」という 1 つの問いだけである。
+そのため、答えにたどり着くためのステージだけを残す: intent-capture、reverse-engineering、
+requirements-analysis、code-generation、build-and-test。スパイクは使い捨てなので、
+それ以外（domain-design、units-generation、NFR 関連の作業、Operation フェーズ）を
+捨てることこそが要点である。答えが yes なら、`feature`/`mvp` にスコープを変更し、
+本番の構築で全工程を実行する。
 
 ## Membership
 
-Keyword triggers: `proof of concept`, `prototype`, `poc`, `spike`.
-Initialization plus the thin feasibility path execute; everything else is
-SKIP.
+キーワードトリガー: `proof of concept`, `prototype`, `poc`, `spike`.
+Initialization と、実現可能性を確かめる最小限の経路だけを実行する。それ以外はすべて
+SKIP となる。

@@ -1,106 +1,106 @@
 # Scopes, Depth, and Test Strategy
 
-Scopes control **which stages execute**. Depth controls **how much detail** each stage produces. Test strategy controls **how many tests** are generated. Together, they adapt the lifecycle to your task — from a comprehensive enterprise feature to a quick bugfix.
+スコープは**どのステージを実行するか**を制御します。深さ（depth）は各ステージが**どの程度詳しく**成果物を作るかを制御します。テスト戦略は**いくつのテスト**を生成するかを制御します。これらを組み合わせて、包括的なエンタープライズ機能から手早いバグ修正まで、ライフサイクルをタスクに合わせます。
 
-This chapter is the detailed routing reference. If you are choosing what kind
-of workflow to run, start with [Workflow Profiles](workflow-profiles.md), where
-the same scopes are explained in user-facing terms.
+この章は、ルーティングの詳細なリファレンスです。どのような種類のワークフローを実行するか
+選んでいる段階なら、同じスコープを利用者向けの言葉で説明している
+[ワークフロープロファイル](workflow-profiles.md) から読み始めてください。
 
 ---
 
 ## The 11 Core Scopes
 
-Core ships 11 named scopes. Each scope defines a stage set, a default depth level, and a default Guard Policy value (strict on `enterprise`; off on the rest; see [Guard Policy](13-customization.md#guard-policy) for what the value does and how to set it). Plugin installs can add more scopes, and an install can narrow which plugin scopes are visible with `aidlc engine plugin select <names>`. When a `plugins` selection disables core (`aidlc` omitted), the core scope files remain installed but are not valid runtime scopes until core is re-enabled; the Initialization stages still run for every enabled scope.
+コアには 11 個の名前付きスコープが同梱されています。各スコープは、ステージの集合、既定の深さ、既定の Guard Policy の値を定義します（`enterprise` では strict、それ以外では off。値の意味と設定方法は [Guard Policy](13-customization.md#guard-policy) を参照してください）。プラグインをインストールするとスコープを追加でき、`aidlc engine plugin select <names>` で、表示するプラグインのスコープを絞り込めます。`plugins` の選択でコアを無効にした場合（`aidlc` を省いた場合）、コアのスコープファイルはインストールされたまま残りますが、コアを再度有効にするまで実行時の有効なスコープにはなりません。Initialization のステージは、有効なすべてのスコープで引き続き実行されます。
 
-Each scope's stage count below is the stages it runs after Initialization's three setup stages, which every scope runs first: the count `/aidlc --help` gives, and the count its plan offer and each stage's start give on existing code. On a new project the offer leaves out Reverse Engineering, so for a scope that runs it the offer says one fewer.
+以下の各スコープのステージ数は、すべてのスコープが最初に実行する Initialization の 3 つのセットアップステージの後に実行するステージの数です。これは `/aidlc --help` が示す数であり、既存のコードに対してプランの提案と各ステージの開始時に示される数でもあります。新規プロジェクトでは提案から Reverse Engineering が除かれるため、それを実行するスコープでは提案に示される数が 1 つ少なくなります。
 
 ### enterprise
 
-**Use when:** Building a regulated enterprise feature that requires full audit trail, compliance review, and production-grade operations.
+**使う場面:** 完全な監査証跡、コンプライアンスレビュー、本番品質の運用が求められる、規制対象のエンタープライズ機能を構築するとき。
 
-- **Stages:** All 30
-- **Default depth:** Comprehensive
-- **Includes:** Full compliance, security, and operations stages
+- **ステージ:** 30 すべて
+- **既定の深さ:** Comprehensive
+- **含まれるもの:** コンプライアンス、セキュリティ、運用のすべてのステージ
 
 ### feature
 
-**Use when:** Building a new feature of any size with the full 33-stage lifecycle. Select it explicitly with `--scope feature` or `/aidlc-feature`.
+**使う場面:** 規模を問わず、33 ステージの完全なライフサイクルで新機能を構築するとき。`--scope feature` または `/aidlc-feature` で明示的に選択します。
 
-- **Stages:** All 30
-- **Default depth:** Standard
-- **Includes:** All stages, standard artifact detail
+- **ステージ:** 30 すべて
+- **既定の深さ:** Standard
+- **含まれるもの:** すべてのステージ、標準的な成果物の詳しさ
 
 ### mvp
 
-**Use when:** Building a greenfield minimum viable product. Skips late-stage operations but retains full design and construction.
+**使う場面:** グリーンフィールドの MVP（実用最小限の製品）を構築するとき。後半の運用ステージはスキップしますが、設計と構築はすべて残します。
 
-- **Stages:** 20 of 30
-- **Default depth:** Standard
-- **Skips:** All 7 Operation stages (deployment pipeline, environment provisioning, deployment execution, observability, incident response, performance validation, feedback) plus Market Research, Team Formation, and Approval Handoff from Ideation (10 skipped, 20 executed)
+- **ステージ:** 30 のうち 20
+- **既定の深さ:** Standard
+- **スキップするもの:** Operation の 7 ステージすべて（デプロイパイプライン、環境のプロビジョニング、デプロイの実行、オブザーバビリティ、インシデント対応、パフォーマンス検証、フィードバック）に加え、Ideation の Market Research、Team Formation、Approval Handoff（10 をスキップ、20 を実行）
 
 ### poc
 
-**Use when:** Proving feasibility quickly. Skips most Ideation and Inception stages, focuses on getting to code fast.
+**使う場面:** 実現可能性を素早く証明するとき。Ideation と Inception のほとんどのステージをスキップし、早くコードにたどり着くことに集中します。
 
-- **Stages:** 5 of 30
-- **Default depth:** Minimal
-- **Skips:** Market Research, Feasibility, Team Formation, Mockups, User Stories, most Operation stages
-- **Plan approval:** Off. Once a code plan is written you see one line naming it, code generation starts, and the line says you can ask to go over the plan at any time; you can also ask to see a plan before it is built, or to be asked about every plan
+- **ステージ:** 30 のうち 5
+- **既定の深さ:** Minimal
+- **スキップするもの:** Market Research、Feasibility、Team Formation、Mockups、User Stories、ほとんどの Operation ステージ
+- **プラン承認:** オフ。コードのプランが書かれると、それを示す 1 行が表示されてコード生成が始まり、その行でいつでもプランを見直すよう依頼できると伝えられます。ビルド前にプランを見せるよう依頼することも、すべてのプランについて確認を求めるよう依頼することもできます
 
 ### bugfix
 
-**Use when:** Fixing a specific bug. Streamlined path from intent capture through code generation and testing.
+**使う場面:** 特定のバグを修正するとき。インテントの把握からコード生成とテストまでを効率化した経路です。
 
-- **Stages:** 6 of 30
-- **Default depth:** Minimal
-- **Includes:** Deployment Pipeline and Deployment Execution so the verified fix ships
-- **Skips:** Market Research, Feasibility, Team Formation, Mockups, most design and architecture stages, environment provisioning, and broader operational readiness
-- **Ceremony:** No stage diary and no "Keep that for next time?" question after a correction, and no summary to confirm before an artifact is written. Sensors, every stage approval, and plan approval stay on, and each stage runs with its lead agent only; type `/aidlc --learnings on`, `/aidlc --summary-confirmation on`, or `/aidlc --collaborators on` to bring one back for this piece of work
+- **ステージ:** 30 のうち 6
+- **既定の深さ:** Minimal
+- **含まれるもの:** 検証済みの修正を出荷するための Deployment Pipeline と Deployment Execution
+- **スキップするもの:** Market Research、Feasibility、Team Formation、Mockups、ほとんどの設計・アーキテクチャのステージ、環境のプロビジョニング、より広範な運用準備
+- **儀式（ceremony）:** ステージの日誌はなく、修正後の "Keep that for next time?" という質問もなく、成果物を書く前に確認するサマリーもありません。センサー、すべてのステージ承認、プラン承認は有効のままで、各ステージはリードエージェントだけで実行されます。この作業でいずれかを戻すには、`/aidlc --learnings on`、`/aidlc --summary-confirmation on`、`/aidlc --collaborators on` と入力します
 
 ### refactor
 
-**Use when:** Cleaning up or restructuring existing code without changing functionality.
+**使う場面:** 機能を変えずに既存のコードを整理または再構成するとき。
 
-- **Stages:** 7 of 30
-- **Default depth:** Minimal
-- **Includes:** Functional Design plus Deployment Pipeline and Deployment Execution
-- **Skips:** Similar to bugfix — focused on code analysis, design, implementation, and deployment through the existing path
+- **ステージ:** 30 のうち 7
+- **既定の深さ:** Minimal
+- **含まれるもの:** Functional Design に加え、Deployment Pipeline と Deployment Execution
+- **スキップするもの:** bugfix とほぼ同じ — コード分析、設計、実装、既存の経路でのデプロイに集中します
 
 ### infra
 
-**Use when:** Making infrastructure changes (new environments, CDK/CloudFormation updates, cost optimization).
+**使う場面:** インフラストラクチャを変更するとき（新しい環境、CDK/CloudFormation の更新、コスト最適化）。
 
-- **Stages:** 12 of 30
-- **Default depth:** Standard
-- **Skips:** User-facing stages (stories, mockups, user flows) — focuses on architecture, infrastructure, and deployment
-- **Writes the IaC in:** Code Generation, under Plan Approval, from the Infrastructure Design; Build and Test then runs the IaC checks, and Environment Provisioning applies it
+- **ステージ:** 30 のうち 12
+- **既定の深さ:** Standard
+- **スキップするもの:** ユーザー向けのステージ（ストーリー、モックアップ、ユーザーフロー）— アーキテクチャ、インフラストラクチャ、デプロイに集中します
+- **IaC を書くステージ:** Code Generation で、Plan Approval のもと、Infrastructure Design をもとに書きます。その後 Build and Test が IaC のチェックを実行し、Environment Provisioning が適用します
 
 ### security-patch
 
-**Use when:** Responding to a CVE or security vulnerability. Fast path through security-relevant stages.
+**使う場面:** CVE やセキュリティ脆弱性に対応するとき。セキュリティに関係するステージを通る高速な経路です。
 
-- **Stages:** 7 of 30
-- **Default depth:** Minimal
-- **Skips:** Market Research, Team Formation, Mockups, non-security design stages
+- **ステージ:** 30 のうち 7
+- **既定の深さ:** Minimal
+- **スキップするもの:** Market Research、Team Formation、Mockups、セキュリティ以外の設計ステージ
 
 ### classic
 
-**Use when:** You want v1-style ceremony: Inception and Construction, with a human approval at each stage (in Construction, per Unit when the work has Units). Conditional stages adapt to the project at runtime; Operation remains a placeholder. Stage-declared execution modes are unchanged; collaborators are off, so each stage runs with its lead agent only (`/aidlc --collaborators on` brings the support agents in).
+**使う場面:** v1 スタイルの進め方を望むとき。Inception と Construction で構成され、各ステージで人間が承認します（Construction では、作業にユニットがある場合はユニットごと）。条件付きステージは実行時にプロジェクトに合わせて調整され、Operation はプレースホルダーのままです。ステージが宣言する実行モードは変わりません。collaborators はオフなので、各ステージはリードエージェントだけで実行されます（`/aidlc --collaborators on` でサポートエージェントが加わります）。
 
-- **Stages:** 15 of 30
-- **Default depth:** Standard
-- **Default test strategy:** Standard
-- **Skips:** All Ideation stages (1.1-1.7), CI Pipeline (3.7), and all Operation stages (4.1-4.7)
-- **Keywords:** None; selected explicitly or used as the implicit default
-- **Ceremony:** Walking skeleton and summary confirmation off. Sensors run and the learnings ritual runs. Reviews are advisory (one pass per stage, findings at the approval gate); explicit autonomy keeps the single pre-merge review.
+- **ステージ:** 30 のうち 15
+- **既定の深さ:** Standard
+- **既定のテスト戦略:** Standard
+- **スキップするもの:** Ideation のすべてのステージ（1.1-1.7）、CI Pipeline（3.7）、Operation のすべてのステージ（4.1-4.7）
+- **キーワード:** なし。明示的に選択されるか、暗黙の既定として使われます
+- **儀式:** ウォーキングスケルトンとサマリー確認はオフ。センサーは実行され、学びの手順も実行されます。レビューは advisory です（ステージごとに 1 回のパスで、指摘は承認ゲートで示されます）。明示的な自律モードでは、マージ前の単一のレビューが維持されます。
 
-Override ceremonies for an intent with `/aidlc --sensors on|off`, `/aidlc --learnings on|off`, `/aidlc --summary-confirmation on|off`, `/aidlc --plan-approval on|off`, or `/aidlc --collaborators on|off`. The global kill switches `AIDLC_DISABLE_SENSORS=1`, `AIDLC_DISABLE_LEARNINGS=1`, `AIDLC_DISABLE_SUMMARY_CONFIRMATION=1`, `AIDLC_DISABLE_PLAN_APPROVAL_GUARD=1`, and `AIDLC_DISABLE_COLLABORATORS=1` force them off. Apart from plan approval, which only you turn off, approval gates, human-turn authority, audit, and team write protection still apply. See [ceremony customization](13-customization.md#ceremony-switches).
+インテントごとに儀式を上書きするには、`/aidlc --sensors on|off`、`/aidlc --learnings on|off`、`/aidlc --summary-confirmation on|off`、`/aidlc --plan-approval on|off`、`/aidlc --collaborators on|off` を使います。グローバルなキルスイッチ `AIDLC_DISABLE_SENSORS=1`、`AIDLC_DISABLE_LEARNINGS=1`、`AIDLC_DISABLE_SUMMARY_CONFIRMATION=1`、`AIDLC_DISABLE_PLAN_APPROVAL_GUARD=1`、`AIDLC_DISABLE_COLLABORATORS=1` は、それらを強制的にオフにします。オフにできるのはあなただけであるプラン承認を除き、承認ゲート、人間のターンの権限、監査、チームの書き込み保護は引き続き適用されます。[儀式のカスタマイズ](13-customization.md#ceremony-switches) を参照してください。
 
 #### Fewer stops for a workshop or small work
 
-Two per-stage checks can add stops to a long run: the learnings question
-after a correction and the summary confirmation. To start a plan without them,
-type both switches with the request, so the new work is created with them off:
+長い実行では、ステージごとの 2 つの確認が停止点を増やすことがあります。修正後の学びの質問と、
+サマリー確認です。これらなしでプランを始めるには、要求と一緒に両方のスイッチを入力します。
+そうすると、新しい作業はそれらがオフの状態で作成されます:
 
 ```
 /aidlc workshop --learnings off --summary-confirmation off <the work>

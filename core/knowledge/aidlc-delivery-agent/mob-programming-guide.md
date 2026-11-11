@@ -1,99 +1,99 @@
 # Mob Programming Guide
 
-Practical guidance for effective mob programming (ensemble programming) as a team practice for knowledge sharing and high-quality delivery.
+ナレッジ共有と高品質なデリバリーのためのチームプラクティスとして、モブプログラミング（アンサンブルプログラミング）を効果的に行うための実践的なガイダンス。
 
 ## What is Mob Programming?
 
-Mob programming is the practice of the whole team working on the same thing, at the same time, in the same space (physical or virtual), at the same computer. It extends pair programming to the entire team.
+モブプログラミングとは、チーム全員が同じものに、同じ時間に、同じ場所（物理的またはバーチャル）で、同じコンピューターで取り組むプラクティスである。ペアプログラミングをチーム全体に拡張したものである。
 
-Core principle: "All the brilliant minds working on the same thing, at the same time, in the same space, and at the same computer." — Woody Zuill
+基本原則: "All the brilliant minds working on the same thing, at the same time, in the same space, and at the same computer."（優秀な頭脳のすべてが、同じものに、同じ時間に、同じ場所で、同じコンピューターで取り組む。）— Woody Zuill
 
 ## Roles
 
 ### Driver
-- The person at the keyboard. Types what the navigators direct.
-- Does NOT make design decisions or solve problems independently.
-- Focuses on translating spoken intent into code. Asks for clarification when directions are unclear.
-- Think of the driver as a "smart input device" — capable and knowledgeable, but acting on group direction.
+- キーボードの前にいる人。ナビゲーターの指示どおりに入力する。
+- 設計上の判断や問題解決を単独で行わ**ない**。
+- 口頭で伝えられた意図をコードに変換することに集中する。指示が不明確なときは確認を求める。
+- ドライバーは「賢い入力装置」と考えるとよい。有能で知識もあるが、グループの指示に基づいて行動する。
 
 ### Navigator(s)
-- The rest of the team. They think, discuss, and direct the driver.
-- One primary navigator speaks at a time to avoid overwhelming the driver.
-- Navigators discuss approach, spot issues, suggest improvements, and think ahead.
-- Different navigators bring different expertise: one thinks about design, another about edge cases, another about testing.
+- チームの残りのメンバー。考え、議論し、ドライバーに指示を出す。
+- ドライバーを混乱させないよう、一度に話すのは主ナビゲーター 1 人とする。
+- ナビゲーターはアプローチを議論し、問題を見つけ、改善を提案し、先を見通す。
+- ナビゲーターごとに異なる専門性を持ち込む。設計を考える人、エッジケースを考える人、テストを考える人がいる。
 
 ### Facilitator (optional, recommended for new mobs)
-- Keeps the session on track. Manages rotation timer. Ensures everyone participates.
-- Watches for dominant voices and draws quieter members into the conversation.
-- Not a permanent role; rotate or remove once the team is comfortable with the practice.
+- セッションを軌道に乗せ続ける。ローテーションのタイマーを管理する。全員が参加していることを確認する。
+- 発言が支配的な人に注意を払い、口数の少ないメンバーを会話に引き込む。
+- 恒久的な役割ではない。チームがプラクティスに慣れたら、ローテーションするか廃止する。
 
 ## Rotation Cadence
 
-- **Recommended interval**: 10-15 minutes per driver rotation.
-- Use a timer (mobti.me, mob.sh CLI tool, or a simple kitchen timer).
-- Everyone rotates through the driver role. No opt-outs; the practice only works with full participation.
-- When the timer sounds, the current driver moves out, the next person in the rotation moves to the keyboard.
-- The transition should be seamless: do not wait for a "good stopping point." Forcing handoff mid-thought builds shared understanding.
+- **推奨間隔**: ドライバーのローテーション 1 回あたり 10〜15 分。
+- タイマーを使う（mobti.me、mob.sh CLI ツール、またはシンプルなキッチンタイマー）。
+- 全員がドライバーの役割をローテーションで担当する。不参加は認めない。このプラクティスは全員参加でなければ機能しない。
+- タイマーが鳴ったら、現在のドライバーは退き、ローテーションの次の人がキーボードの前に移る。
+- 交代は途切れなく行う。「区切りのよいところ」を待たない。考えの途中で強制的に引き継ぐことで、共通理解が築かれる。
 
 ## Remote Mob Tooling
 
-- **Screen sharing**: VS Code Live Share, JetBrains Code With Me, or plain screen share with remote control.
-- **mob.sh**: CLI tool that automates git handoff. `mob start` creates a WIP branch; `mob next` commits and pushes for the next driver to pull. `mob done` squashes to a clean commit.
-- **Timer tools**: mobti.me (web-based), mob.sh built-in timer, Cuckoo.team.
-- **Communication**: Keep a persistent video call open. Audio quality matters more than video quality. Use a good microphone.
-- **Shared notes**: Keep a shared document or whiteboard for parking lot items, decisions, and action items.
+- **画面共有**: VS Code Live Share、JetBrains Code With Me、またはリモート操作付きの通常の画面共有。
+- **mob.sh**: git による引き継ぎを自動化する CLI ツール。`mob start` は WIP ブランチを作成する。`mob next` はコミットしてプッシュし、次のドライバーがプルできるようにする。`mob done` はスカッシュしてクリーンなコミットにまとめる。
+- **タイマーツール**: mobti.me（Web ベース）、mob.sh 組み込みのタイマー、Cuckoo.team。
+- **コミュニケーション**: ビデオ通話を常時つないでおく。映像の品質より音声の品質のほうが重要である。良いマイクを使う。
+- **共有メモ**: パーキングロットの項目、決定事項、アクションアイテムのために、共有ドキュメントやホワイトボードを用意しておく。
 
 ## When to Mob vs Pair vs Solo
 
-| Situation | Recommended Practice |
+| 状況 | 推奨されるプラクティス |
 |-----------|---------------------|
-| New team member onboarding | Mob — fastest knowledge transfer |
-| Complex design decision | Mob — multiple perspectives needed |
-| Unfamiliar technology or domain | Mob — collective learning |
-| Well-understood, repetitive work | Solo — mobbing adds overhead |
-| Focused deep work (research, investigation) | Solo or pair — mob is too noisy |
-| Code review backlog growing | Mob — eliminates the need for async review |
-| Cross-team knowledge is siloed | Mob — breaks down silos |
-| Time-sensitive bug fix | Pair or mob — faster diagnosis with multiple minds |
+| 新メンバーのオンボーディング | モブ — 最も速くナレッジが移転する |
+| 複雑な設計判断 | モブ — 複数の視点が必要 |
+| 不慣れな技術やドメイン | モブ — 集団で学習できる |
+| よく理解された反復的な作業 | ソロ — モブにするとオーバーヘッドが増える |
+| 集中を要する深い作業（調査、探索） | ソロまたはペア — モブでは騒がしすぎる |
+| コードレビューのバックログが増えている | モブ — 非同期レビューの必要がなくなる |
+| チーム間のナレッジがサイロ化している | モブ — サイロを打破する |
+| 時間的制約のあるバグ修正 | ペアまたはモブ — 複数の頭脳でより速く診断できる |
 
-Mobbing is most valuable when uncertainty is high, knowledge needs to be shared, or quality matters more than raw throughput.
+モブが最も価値を発揮するのは、不確実性が高いとき、ナレッジを共有する必要があるとき、または単純なスループットよりも品質が重要なときである。
 
 ## Mob Session Facilitation
 
 ### Starting a Session
-1. Agree on the goal: "By the end of this session, we want to have X."
-2. Set the rotation timer.
-3. Establish ground rules: respect the driver, one navigator speaks at a time, take breaks every 60-90 minutes.
-4. Pull up all relevant context: tickets, design docs, existing code.
+1. ゴールに合意する: 「このセッションの終わりまでに X を達成したい」。
+2. ローテーションのタイマーを設定する。
+3. グラウンドルールを決める: ドライバーを尊重する、一度に話すナビゲーターは 1 人、60〜90 分ごとに休憩を取る。
+4. 関連するすべてのコンテキストを用意する: チケット、設計ドキュメント、既存のコード。
 
 ### During the Session
-- If the mob gets stuck, take 5 minutes for silent individual research, then reconvene.
-- Park tangential discussions on a visible "parking lot" list; address them later.
-- If energy drops, take a break. A tired mob produces worse code than an individual.
-- Celebrate small wins: passing tests, completing a feature, resolving a tricky bug.
+- モブが行き詰まったら、5 分間それぞれ黙って個人で調べ、その後再集合する。
+- 本筋から外れた議論は、目に見える「パーキングロット」のリストに置いておき、後で扱う。
+- エネルギーが落ちたら休憩を取る。疲れたモブは、個人よりも質の悪いコードを生み出す。
+- 小さな成功を祝う: テストが通った、機能が完成した、厄介なバグを解決した、など。
 
 ### Ending a Session
-- Commit and push all work (use `mob done` for a clean commit).
-- Spend 5 minutes reviewing what was accomplished and what is left.
-- Note any parking lot items that need follow-up.
+- すべての作業をコミットしてプッシュする（クリーンなコミットには `mob done` を使う）。
+- 5 分かけて、達成したことと残っていることを振り返る。
+- フォローアップが必要なパーキングロットの項目を記録する。
 
 ## Knowledge Transfer Through Mobbing
 
-- Mobbing is the fastest way to spread knowledge across a team. Every team member sees every decision in real time.
-- New team members become productive faster because they absorb codebase knowledge, team conventions, and domain context simultaneously.
-- Reduces bus factor to near zero: if one person leaves, the rest of the team has full context.
-- Eliminates asynchronous code review: the review happens live, during development. Code is reviewed by the entire team before it is committed.
+- モブは、チーム全体にナレッジを広める最速の方法である。チームの全メンバーが、すべての判断をリアルタイムで目にする。
+- 新メンバーは、コードベースのナレッジ、チームの規約、ドメインのコンテキストを同時に吸収するため、より早く生産的になる。
+- バス係数のリスクをほぼゼロにする: 誰か 1 人が抜けても、チームの残りのメンバーが完全なコンテキストを持っている。
+- 非同期のコードレビューが不要になる: レビューは開発中にライブで行われる。コードはコミットされる前にチーム全員によってレビューされる。
 
 ## Mob Retrospectives
 
-After running mob sessions for 1-2 weeks, hold a retrospective specifically about the practice:
+モブセッションを 1〜2 週間続けたら、このプラクティスそのものについての振り返りを行う:
 
-- **What is working well?** (knowledge sharing, fewer bugs, faster onboarding)
-- **What is frustrating?** (rotation too fast/slow, some people dominating, fatigue)
-- **What should we experiment with?** (different rotation time, mob only for complex work, include stakeholders)
+- **うまくいっていることは何か？**（ナレッジ共有、バグの減少、オンボーディングの高速化）
+- **不満に感じていることは何か？**（ローテーションが速すぎる/遅すぎる、一部の人が支配的、疲労）
+- **何を試してみるべきか？**（ローテーション時間を変える、複雑な作業のときだけモブにする、ステークホルダーを加える）
 
-Common adjustments:
-- Increase rotation time if transitions feel disruptive (try 15-20 minutes).
-- Decrease rotation time if the driver disengages or dominates (try 7-10 minutes).
-- Mob for half the day and solo for the other half if energy is a concern.
-- Use strong-style pairing rule: "For an idea to go from your head into the computer, it must go through someone else's hands."
+よくある調整:
+- 交代が作業の妨げに感じられる場合は、ローテーション時間を長くする（15〜20 分を試す）。
+- ドライバーが集中を欠いたり支配的になったりする場合は、ローテーション時間を短くする（7〜10 分を試す）。
+- エネルギーが懸念される場合は、1 日の半分をモブ、残りの半分をソロにする。
+- ストロングスタイルのペアリングのルールを使う: "For an idea to go from your head into the computer, it must go through someone else's hands."（アイデアを頭の中からコンピューターに移すには、必ず他の誰かの手を通さなければならない。）

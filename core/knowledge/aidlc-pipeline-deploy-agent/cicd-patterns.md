@@ -1,91 +1,91 @@
 # CI/CD Pipeline Patterns
 
-Patterns for building reliable continuous integration and continuous delivery pipelines.
+信頼性の高い継続的インテグレーションおよび継続的デリバリーのパイプラインを構築するためのパターン。
 
 ## CI Pipeline Stages
 
-A well-structured CI pipeline runs these stages in order:
+よく構成された CI パイプラインは、次のステージを順に実行する:
 
-1. **Lint** — Code formatting and style checks (ESLint, Prettier, Ruff, Black). Catch trivial issues before deeper analysis. Fast (< 30 seconds).
-2. **Build** — Compile, transpile, or bundle the application. Verify the code produces valid artifacts. For CDK: `cdk synth`.
-3. **Unit Test** — Run fast, isolated tests. Target: < 3 minutes. Fail the pipeline on any test failure.
-4. **Static Analysis / Security Scan** — SAST, IaC scanning, dependency audit. Report findings; gate on severity thresholds.
-5. **Integration Test** — Test against real dependencies (databases, queues) using testcontainers or LocalStack. Target: < 10 minutes.
-6. **Package** — Build deployable artifacts: Docker images, Lambda ZIPs, CloudFormation templates. Tag with commit SHA and semantic version.
+1. **Lint** — コードのフォーマットとスタイルのチェック（ESLint、Prettier、Ruff、Black）。詳細な分析の前に些細な問題を検出する。高速（30 秒未満）。
+2. **Build** — アプリケーションをコンパイル、トランスパイル、またはバンドルする。コードが有効な成果物を生成することを検証する。CDK の場合: `cdk synth`。
+3. **Unit Test** — 高速で分離されたテストを実行する。目標: 3 分未満。テストが 1 つでも失敗したらパイプラインを失敗させる。
+4. **Static Analysis / Security Scan** — SAST、IaC スキャン、依存関係の監査。検出結果を報告し、重大度のしきい値でゲートを設ける。
+5. **Integration Test** — testcontainers や LocalStack を使い、実際の依存先（データベース、キュー）に対してテストする。目標: 10 分未満。
+6. **Package** — デプロイ可能な成果物（Docker イメージ、Lambda の ZIP、CloudFormation テンプレート）をビルドする。コミット SHA とセマンティックバージョンでタグ付けする。
 
 ## CD Pipeline Patterns
 
 ### Continuous Delivery
-Every commit that passes CI is deployable, but a human triggers the production deployment. Use manual approval gates in CodePipeline or GitHub Actions environments.
+CI を通過したすべてのコミットはデプロイ可能だが、本番デプロイは人間がトリガーする。CodePipeline の手動承認ゲートや GitHub Actions の environments を使う。
 
 ### Continuous Deployment
-Every commit that passes CI and staging validation deploys to production automatically. Requires high confidence in test coverage and automated rollback.
+CI とステージング検証を通過したすべてのコミットが、自動的に本番へデプロイされる。テストカバレッジと自動ロールバックへの高い信頼が必要である。
 
-**Recommendation**: Start with continuous delivery. Graduate to continuous deployment as test maturity and observability improve.
+**推奨**: まず継続的デリバリーから始める。テストの成熟度とオブザーバビリティが向上したら、継続的デプロイへ移行する。
 
 ## Branch Strategies
 
-> See `branching-strategies.md` in this directory for the deeper menu aidlc-pipeline-deploy-agent surveys at Bolt-merge dispatch — including diagrams, common problems, AIDLC worktree mapping per strategy, and parallel-Bolts notes for each. The summaries below cover the CI-flow context.
+> 図、よくある問題、戦略ごとの AIDLC ワークツリーの対応づけ、各戦略における並列 Bolt に関する注記を含め、aidlc-pipeline-deploy-agent が Bolt マージのディスパッチ時に検討するより詳しい選択肢については、このディレクトリの `branching-strategies.md` を参照。以下の要約は CI フローの文脈を扱う。
 
 ### Trunk-Based Development (Preferred)
-- All developers commit to `main` (or short-lived feature branches merged within 1-2 days).
-- Feature flags gate incomplete work. No long-lived branches.
-- CI runs on every push to main. CD deploys from main.
-- Benefits: Fewer merge conflicts, faster feedback, simpler pipeline.
+- すべての開発者が `main` にコミットする（または 1〜2 日以内にマージされる短命のフィーチャーブランチを使う）。
+- 未完成の作業はフィーチャーフラグでゲートする。長命のブランチは作らない。
+- main へのプッシュごとに CI を実行する。CD は main からデプロイする。
+- 利点: マージコンフリクトが少なく、フィードバックが速く、パイプラインが単純になる。
 
 ### GitFlow
-- `main` (production), `develop` (integration), `feature/*`, `release/*`, `hotfix/*`.
-- Suitable for teams with infrequent releases or strict release management.
-- Drawback: Long-lived branches cause painful merges and delayed integration.
+- `main`（本番）、`develop`（統合）、`feature/*`、`release/*`、`hotfix/*`。
+- リリース頻度が低いチームや、リリース管理が厳格なチームに適している。
+- 欠点: 長命のブランチが苦痛を伴うマージと統合の遅れを招く。
 
 ### GitHub Flow
-- `main` + short-lived feature branches. PRs merge to main.
-- Simpler than GitFlow but still relies on branching. Good middle ground.
+- `main` と短命のフィーチャーブランチ。PR は main にマージする。
+- GitFlow より単純だが、依然としてブランチに依存する。ちょうどよい中間的な選択肢。
 
 ## Quality Gates
 
-Define explicit pass/fail criteria that block pipeline progression:
+パイプラインの進行をブロックする明示的な合否基準を定義する:
 
 | Gate | Criteria | Stage |
 |------|----------|-------|
-| Lint | Zero lint errors | Pre-build |
-| Test coverage | >= 80% line coverage, no decrease | Post-test |
-| Security scan | Zero Critical/High findings | Post-scan |
-| Integration tests | 100% pass rate | Post-integration |
-| Manual approval | Tech lead or product owner sign-off | Pre-production |
-| Smoke tests | Critical path tests pass in production | Post-deploy |
+| Lint | Lint エラーがゼロ | ビルド前 |
+| テストカバレッジ | 行カバレッジ 80% 以上で、低下しないこと | テスト後 |
+| セキュリティスキャン | Critical/High の検出がゼロ | スキャン後 |
+| 統合テスト | 合格率 100% | 統合後 |
+| 手動承認 | テックリードまたはプロダクトオーナーの承認 | 本番前 |
+| スモークテスト | 本番環境でクリティカルパスのテストが合格 | デプロイ後 |
 
 ## Artifact Management
 
-- **Amazon ECR**: Store Docker images. Use immutable tags (commit SHA), not `latest`.
-- **AWS CodeArtifact**: Host npm, pip, Maven packages. Proxy upstream registries for caching and security.
-- **S3**: Store Lambda deployment ZIPs, CloudFormation templates, and build outputs.
-- Tag every artifact with: commit SHA, build number, branch, timestamp.
-- Set lifecycle policies: keep the last 30 tagged images; expire untagged images after 7 days.
+- **Amazon ECR**: Docker イメージを保存する。`latest` ではなく、イミュータブルなタグ（コミット SHA）を使う。
+- **AWS CodeArtifact**: npm、pip、Maven のパッケージをホストする。キャッシュとセキュリティのために上流のレジストリをプロキシする。
+- **S3**: Lambda デプロイ用の ZIP、CloudFormation テンプレート、ビルド出力を保存する。
+- すべての成果物に、コミット SHA、ビルド番号、ブランチ、タイムスタンプでタグを付ける。
+- ライフサイクルポリシーを設定する: タグ付きイメージは直近 30 個を保持し、タグなしイメージは 7 日後に期限切れにする。
 
 ## Pipeline as Code
 
-- Define pipelines in version-controlled files, not UI configurations.
-- **GitHub Actions**: `.github/workflows/*.yml`. Matrix builds for multi-version testing.
-- **AWS CodePipeline + CodeBuild**: `buildspec.yml` for build steps; pipeline defined in CDK or CloudFormation.
-- **Reusable workflows**: Extract common steps (lint, test, deploy) into shared workflow templates. Avoid copy-paste across repos.
+- パイプラインは UI 上の設定ではなく、バージョン管理されたファイルで定義する。
+- **GitHub Actions**: `.github/workflows/*.yml`。複数バージョンのテストにはマトリクスビルドを使う。
+- **AWS CodePipeline + CodeBuild**: ビルドステップには `buildspec.yml` を使い、パイプラインは CDK または CloudFormation で定義する。
+- **再利用可能なワークフロー**: 共通のステップ（lint、テスト、デプロイ）を共有のワークフローテンプレートに切り出す。リポジトリ間でのコピー＆ペーストは避ける。
 
 ## Monorepo vs Polyrepo CI Strategies
 
 ### Monorepo
-- Use path-based triggers: only build/test services whose files changed.
-- Tools: Nx, Turborepo, Pants. These understand dependency graphs and skip unchanged packages.
-- Shared CI steps (lint, security scan) run once; service-specific steps run conditionally.
+- パスベースのトリガーを使い、ファイルが変更されたサービスだけをビルド/テストする。
+- ツール: Nx、Turborepo、Pants。これらは依存関係グラフを理解し、変更のないパッケージをスキップする。
+- 共通の CI ステップ（lint、セキュリティスキャン）は一度だけ実行し、サービス固有のステップは条件付きで実行する。
 
 ### Polyrepo
-- Each repo has its own pipeline. Simpler per-repo but harder to coordinate cross-service changes.
-- Use contract testing (Pact) to verify compatibility across repos without a monolithic integration test.
-- Automate dependency updates across repos with Renovate or a custom bot.
+- 各リポジトリが独自のパイプラインを持つ。リポジトリ単位では単純だが、サービスをまたぐ変更の調整は難しくなる。
+- コントラクトテスト（Pact）を使い、モノリシックな統合テストなしでリポジトリ間の互換性を検証する。
+- Renovate やカスタムボットで、リポジトリ間の依存関係の更新を自動化する。
 
 ## Pipeline Performance
 
-- Target: commit to production in under 30 minutes (excluding manual approval).
-- Parallelize independent stages (lint + unit test, SAST + dependency scan).
-- Cache dependencies aggressively (npm cache, pip cache, Docker layer caching).
-- Use spot instances or reserved capacity for build workers to reduce cost.
-- Monitor pipeline duration as a team metric; alert when it exceeds thresholds.
+- 目標: コミットから本番まで 30 分未満（手動承認を除く）。
+- 独立したステージは並列化する（lint とユニットテスト、SAST と依存関係スキャン）。
+- 依存関係は積極的にキャッシュする（npm キャッシュ、pip キャッシュ、Docker レイヤーキャッシュ）。
+- コスト削減のため、ビルドワーカーにはスポットインスタンスやリザーブドキャパシティを使う。
+- パイプラインの所要時間をチームの指標として監視し、しきい値を超えたらアラートを出す。

@@ -1,67 +1,67 @@
 # AI-DLC State Tracking
 
-This document defines the `aidlc-state.md` section and field contract. The
-engine writes the concrete state file and enumerates stages from the compiled
-stage graph plus scope grid; this template must not hand-list shipped stages.
-The exact initial description is JSON-encoded as one string beside the state
-file in `<record>/project-description.json`; the `Project` field below is its
-safe single-line preview.
+このドキュメントは、`aidlc-state.md` のセクションとフィールドの契約を定義する。
+具体的な状態ファイルはエンジンが書き込み、ステージはコンパイル済みのステージグラフと
+スコープグリッドから列挙する。このテンプレートで、出荷済みのステージを手作業で列挙してはならない。
+初期説明の正確な内容は、状態ファイルの隣の `<record>/project-description.json` に
+1つの文字列として JSON エンコードされて保存される。下記の `Project` フィールドは、その
+安全な1行プレビューである。
 
-Authoritative generated views:
-- Stage graph: `{{INVOKE}} engine gen stage-table`
-- Scope grid: `{{INVOKE}} engine gen scope-table`
+正となる生成ビュー:
+- ステージグラフ: `{{INVOKE}} engine gen stage-table`
+- スコープグリッド: `{{INVOKE}} engine gen scope-table`
 
 ## Project Information
-- **Project**: [single-line project description preview]
+- **Project**: [プロジェクト説明の1行プレビュー]
 - **Project Description Source**: project-description.json
-- **Project Type**: [Greenfield/Brownfield; the bare word, which every reader compares]
-- **Project Type Source**: [`workspace scan` or `you`: who decided the type. Written at intent creation (`you` when the request carried `--project-type`), rewritten to `you` by `workspace reclassify` (the person's `/aidlc --project-type` or plain words). A routing field: while it reads `workspace scan` on Greenfield work that has not started Construction, `next` asks once when the folder gains code; `you` is never second-guessed by a scan. A state file without the line reads as `workspace scan`]
-- **Scope**: [scope slug from compiled scope grid]
-- **Plan**: [present only for a plan composed for this piece of work: its name as the gate showed it (`--plan-name`), or `tailored plan`; its stage changes are the Stage Progress suffixes, and a scope change removes the line]
-- **Start Date**: [ISO 8601 timestamp]
+- **Project Type**: [Greenfield/Brownfield。すべての読み手が比較に使う、その語のみ]
+- **Project Type Source**: [`workspace scan` または `you`: 種別を決めたのは誰か。インテント作成時に書き込まれ（リクエストに `--project-type` が含まれていた場合は `you`）、`workspace reclassify`（利用者の `/aidlc --project-type` または平文での指示）によって `you` に書き換えられる。ルーティング用のフィールド: Construction を開始していない Greenfield の作業でこの値が `workspace scan` の間は、フォルダにコードが追加されたときに `next` が一度だけ確認する。`you` の場合は、スキャンによって覆されることは決してない。この行のない状態ファイルは `workspace scan` として読まれる]
+- **Scope**: [コンパイル済みスコープグリッドのスコープ slug]
+- **Plan**: [この作業のために組み立てたプランがある場合のみ記載する: ゲートに表示されたとおりのプラン名（`--plan-name`）、または `tailored plan`。そのステージの変更は Stage Progress のサフィックスとして表れ、スコープを変更するとこの行は削除される]
+- **Start Date**: [ISO 8601 タイムスタンプ]
 - **State Version**: 8
-- **Active Agent**: [current lead agent slug]
-- **Worktree Path**: [empty when not in a worktree]
-- **Bolt Refs**: [empty list or comma-separated bolt slugs]
-- **Practices Affirmed Timestamp**: [ISO 8601 timestamp on affirmation]
+- **Active Agent**: [現在のリードエージェントの slug]
+- **Worktree Path**: [worktree 内でない場合は空]
+- **Bolt Refs**: [空リスト、またはカンマ区切りの bolt slug]
+- **Practices Affirmed Timestamp**: [確認時の ISO 8601 タイムスタンプ]
 
 ## Scope Configuration
-- **Stages to Execute**: [comma-separated stage numbers with slugs included in scope, e.g. 2.3 (requirements-analysis)]
-- **Stages to Skip**: [comma-separated stage numbers with reasons, or none]
+- **Stages to Execute**: [スコープに含まれるステージ番号と slug のカンマ区切り。例: 2.3 (requirements-analysis)]
+- **Stages to Skip**: [ステージ番号と理由のカンマ区切り、または none]
 - **Depth**: [Minimal/Standard/Comprehensive]
 - **Test Strategy**: [Minimal/Standard/Comprehensive]
-- **Guard Policy**: [strict/relaxed/off, then its source in parentheses: `(from scope <name>)`, `(from <layer>.md)`, `(set by you)` when the record shows the person asked, or `(set by a command)`; written at intent creation with the resolved value, rewritten by `/aidlc --guard-policy` or the plain-chat request, read by value only. When a record carries only the retired `**Change Control**` line, every `/aidlc` run announces that a carried-over relaxed or off value now also lowers fences for work nobody directed and every pass is recorded in the audit trail, and asks the person to keep it or raise the fences again; the notice repeats until the person chooses a Guard Policy setting; a retired strict line alone gets no notice. If both lines carry different policy words, strict applies with source `conflicting state lines` unless memory holds strict, until the next `next` keeps the one the record shows was set last (else the person's own, the scope's, or the stricter) as the only line, saying one line only when the record could not tell; if both agree, `Guard Policy` is used. Any policy write removes the retired line and retains only `Guard Policy`; for a lone retired line `next` writes nothing]
-- **Guards Off**: [only present once a fence was switched off for this piece of work: a comma list of `plan-approval`, `review-freeze`, `state-transition`, `reviewer-scope` followed by `(set by you)` while every check on it is the person's, else `(set by a command)`, or `none`; written by `/aidlc config set guard.<fence> off|on`; a persisted human-presence entry is ignored because human presence has no per-work switch]
-- **Guards On**: [only present once a fence was forced on above the policy word for this piece of work: a comma list of `plan-approval`, `review-freeze`, `state-transition`, `reviewer-scope` followed by `(set by you)` while every check on it is the person's, else `(set by a command)`, or `none`; written by `/aidlc config set guard.<fence> on|off`; a persisted human-presence entry is ignored; precedence is environment kill switch, Guards Off, Guards On, Guard Policy, then on by default]
-- **Sensors**: [on/off, then its source in parentheses: `(from scope <name>)`, `(set by you)`, or `(set by a command)`; written at intent creation with the scope default, rewritten by `/aidlc --sensors`, read by value only]
-- **Learnings**: [on/off, then its source in parentheses: `(from scope <name>)`, `(set by you)`, or `(set by a command)`; written at intent creation with the scope default, rewritten by `/aidlc --learnings`, read by value only]
-- **Summary Confirmation**: [on/off, then its source in parentheses: `(from scope <name>)`, `(set by you)`, or `(set by a command)`; written at intent creation with the scope default, rewritten by `/aidlc --summary-confirmation`, read by value only]
+- **Guard Policy**: [strict/relaxed/off。その後に括弧で出所を付ける: `(from scope <name>)`、`(from <layer>.md)`、記録上利用者が求めた場合は `(set by you)`、または `(set by a command)`。インテント作成時に解決済みの値で書き込まれ、`/aidlc --guard-policy` または平文のチャットでの依頼によって書き換えられ、値のみで読み取られる。記録に廃止済みの `**Change Control**` 行しかない場合、すべての `/aidlc` 実行で、引き継がれた relaxed または off の値が誰も指示していない作業に対してもフェンスを下げるようになったこと、そしてすべての通過が監査証跡に記録されることを告知し、その値を維持するかフェンスを再び上げるかを利用者に尋ねる。この告知は、利用者が Guard Policy の設定を選ぶまで繰り返される。廃止済みの行が strict のみの場合は告知しない。両方の行が異なるポリシー語を持つ場合、メモリが strict を保持していない限り、出所を `conflicting state lines` として strict を適用する。これは、次の `next` が、記録上最後に設定されたほう（判別できなければ利用者自身のもの、スコープのもの、またはより厳しいもの）を唯一の行として残すまで続く。記録から判別できなかった場合にのみ、1行だけを残したことを伝える。両方が一致する場合は `Guard Policy` を使う。ポリシーを書き込むと廃止済みの行は削除され、`Guard Policy` だけが残る。廃止済みの行のみの場合、`next` は何も書き込まない]
+- **Guards Off**: [この作業でフェンスがオフにされた後にのみ記載する: `plan-approval`、`review-freeze`、`state-transition`、`reviewer-scope` のカンマ区切りリストの後に、そのすべてのチェックが利用者によるものであれば `(set by you)`、そうでなければ `(set by a command)` を付ける。または `none`。`/aidlc config set guard.<fence> off|on` によって書き込まれる。human-presence には作業ごとのスイッチがないため、永続化された human-presence のエントリは無視される]
+- **Guards On**: [この作業でフェンスがポリシー語より上に強制的にオンにされた後にのみ記載する: `plan-approval`、`review-freeze`、`state-transition`、`reviewer-scope` のカンマ区切りリストの後に、そのすべてのチェックが利用者によるものであれば `(set by you)`、そうでなければ `(set by a command)` を付ける。または `none`。`/aidlc config set guard.<fence> on|off` によって書き込まれる。永続化された human-presence のエントリは無視される。優先順位は、環境のキルスイッチ、Guards Off、Guards On、Guard Policy、その後にデフォルトのオンである]
+- **Sensors**: [on/off。その後に括弧で出所を付ける: `(from scope <name>)`、`(set by you)`、または `(set by a command)`。インテント作成時にスコープのデフォルトで書き込まれ、`/aidlc --sensors` によって書き換えられ、値のみで読み取られる]
+- **Learnings**: [on/off。その後に括弧で出所を付ける: `(from scope <name>)`、`(set by you)`、または `(set by a command)`。インテント作成時にスコープのデフォルトで書き込まれ、`/aidlc --learnings` によって書き換えられ、値のみで読み取られる]
+- **Summary Confirmation**: [on/off。その後に括弧で出所を付ける: `(from scope <name>)`、`(set by you)`、または `(set by a command)`。インテント作成時にスコープのデフォルトで書き込まれ、`/aidlc --summary-confirmation` によって書き換えられ、値のみで読み取られる]
 
 ## Workspace State
-- **Project Root**: [project-relative path, normally `.`; re-derived at runtime, never trusted as an absolute path]
-- **Languages**: [detected languages]
-- **Frameworks**: [detected frameworks]
-- **Build System**: [detected build system]
+- **Project Root**: [プロジェクト相対パス。通常は `.`。実行時に再導出され、絶対パスとして信頼されることは決してない]
+- **Languages**: [検出された言語]
+- **Frameworks**: [検出されたフレームワーク]
+- **Build System**: [検出されたビルドシステム]
 
 ## Execution Plan Summary
-- **Total Stages**: [count of EXECUTE stages]
-- **Completed**: [count of completed EXECUTE stages]
-- **In Progress**: [current stage slug]
+- **Total Stages**: [EXECUTE ステージの数]
+- **Completed**: [完了した EXECUTE ステージの数]
+- **In Progress**: [現在のステージの slug]
 
 ## Runtime State
-- **Revision Count**: [integer]
-- **Construction Checkpoints**: [enabled for new workflows; absent on legacy workflows]
-- **Construction Iteration**: [unit-major/stage-major; new workflows default to unit-major, preserve an explicit choice]
-- **Construction Execution**: [serial/swarm; new workflows default to serial, swarm requires stage-major]
-- **Construction Verification Command**: [human-approved project check command; unset until a matching verification-command receipt is recorded]
-- **Unit Ownership**: [solo/team; optional, exact `team` activates the derived grid]
-- **Unit Gate Rhythm**: [per-stage/unit-end; optional, defaults to per-stage under team ownership]
+- **Revision Count**: [整数]
+- **Construction Checkpoints**: [新しいワークフローでは enabled。レガシーのワークフローでは記載なし]
+- **Construction Iteration**: [unit-major/stage-major。新しいワークフローのデフォルトは unit-major。明示的な選択は維持する]
+- **Construction Execution**: [serial/swarm。新しいワークフローのデフォルトは serial。swarm には stage-major が必要]
+- **Construction Verification Command**: [人間が承認したプロジェクトのチェックコマンド。対応する verification-command のレシートが記録されるまでは未設定]
+- **Unit Ownership**: [solo/team。省略可能。値がちょうど `team` の場合に導出グリッドが有効になる]
+- **Unit Gate Rhythm**: [per-stage/unit-end。省略可能。team オーナーシップではデフォルトで per-stage]
 
-Checkpoint policy applies only to solo work with an actual non-empty Unit DAG.
-Existing workflows without the checkpoint field retain their legacy first-stage
-and late per-stage approvals. An absent execution field preserves legacy
-autonomy-based swarm routing. Execution selection is independent of approval;
-team ownership retains its `unit_gate` policy.
+チェックポイントのポリシーは、実際に空でない Unit DAG を持つ solo の作業にのみ適用される。
+チェックポイントのフィールドを持たない既存のワークフローは、レガシーの最初のステージでの承認と
+後続のステージごとの承認を維持する。execution フィールドがない場合は、レガシーの
+自律性ベースのスウォームのルーティングを維持する。実行方式の選択は承認とは独立している。
+team オーナーシップは、その `unit_gate` ポリシーを維持する。
 
 ## Phase Progress
 <!-- Status values: Pending, Active, Verified, Skipped -->
@@ -71,39 +71,39 @@ team ownership retains its `unit_gate` policy.
 ## Stage Progress
 <!-- Checkbox states: [ ] pending, [-] in-progress, [?] awaiting approval, [R] revising, [x] completed, [S] skipped -->
 
-The engine emits one phase heading per compiled phase, then one checkbox row per
-compiled stage in that phase:
+エンジンは、コンパイル済みのフェーズごとに1つのフェーズ見出しを出力し、その後に
+そのフェーズ内のコンパイル済みステージごとに1つのチェックボックス行を出力する:
 
 ### [PHASE] PHASE
 - [ ] stage-slug — [EXECUTE/SKIP: reason]
 
 ## Unit Progress
 
-Present only when `Unit Ownership: team` and `Construction Iteration:
-unit-major`. This table is an engine-owned, derived projection of the Unit DAG,
-artifact coverage, lifecycle receipts, and unit gate events. It is rewritten on
-every `next`; hand edits are never routing or completion evidence.
+`Unit Ownership: team` かつ `Construction Iteration:
+unit-major` の場合にのみ記載する。この表は、Unit DAG、成果物のカバレッジ、ライフサイクルのレシート、
+ユニットのゲートイベントから導出された、エンジンが所有する投影である。
+`next` のたびに書き換えられる。手作業での編集は、ルーティングや完了の根拠には決してならない。
 
 | unit | owner | [per-unit Construction stage columns in graph order] | gate |
 | --- | --- | --- | --- |
 | [Unit name] | - | [[ ]/[-]/[?]/[R]/[x]/[S] per stage] | [[ ]/[-]/[?]/[R]/[x]] |
 
-The stage columns use the same checkbox vocabulary as `## Stage Progress`.
-`owner` remains `-` until the claim increment supplies ownership. `gate`
-summarizes the current per-stage gates or the unit-end gate, depending on Unit
-Gate Rhythm. Stage Progress rows are derived complete only when their Unit
-Progress column and required team gates are complete.
+ステージの列は `## Stage Progress` と同じチェックボックスの語彙を使う。
+`owner` は、claim のインクリメントがオーナーシップを提供するまで `-` のままである。`gate` は、
+Unit Gate Rhythm に応じて、現在のステージごとのゲート、またはユニット終了時のゲートを要約する。
+Stage Progress の行は、対応する Unit Progress の列と必須のチームゲートが完了している場合にのみ、
+完了として導出される。
 
 ## Current Status
 - **Lifecycle Phase**: [READY/INITIALIZATION/IDEATION/INCEPTION/CONSTRUCTION/OPERATION]
-- **Current Stage**: [stage slug or status text]
-- **Next Stage**: [next stage slug or none]
+- **Current Stage**: [ステージの slug またはステータスのテキスト]
+- **Next Stage**: [次のステージの slug、または none]
 - **Status**: [Running/Completed/Archived]
 - **Construction Autonomy Mode**: [unset/autonomous/gated]
-- **Last Updated**: [ISO 8601 timestamp]
-- **Archived From**: [only while Archived: the Status it replaced, Running or Completed]
+- **Last Updated**: [ISO 8601 タイムスタンプ]
+- **Archived From**: [Archived の間のみ: 置き換えられた Status（Running または Completed）]
 
 ## Session Resume Point
-- **Last Completed Stage**: [stage slug]
-- **Next Action**: [what to do next]
-- **Pending Artifacts**: [any incomplete artifacts or none]
+- **Last Completed Stage**: [ステージの slug]
+- **Next Action**: [次に行うこと]
+- **Pending Artifacts**: [未完了の成果物、または none]

@@ -39,51 +39,50 @@ outputs: environment-inventory.md, validation-report.md, environment-provisionin
 
 ### Step 1: Load Prior Context
 
-- Read infrastructure design from `<record>/construction/infrastructure-design/`
-- Read security requirements from `<record>/construction/nfr-requirements/`
+- `<record>/construction/infrastructure-design/` からインフラストラクチャ設計を読み込む
+- `<record>/construction/nfr-requirements/` からセキュリティ要件を読み込む
 
 ### Step 2: Generate Clarifying Questions
 
-Create questions file covering:
-- Are all environments provisioned per Infra Design?
-- Are VPCs, subnets, security groups, NACLs correct?
-- Are secrets in Secrets Manager / Parameter Store correctly injected?
-- Is cross-account / cross-VPC connectivity validated?
+次の内容を扱う質問ファイルを作成する:
+- すべての環境が Infra Design のとおりにプロビジョニングされているか？
+- VPC、サブネット、セキュリティグループ、NACL は正しいか？
+- Secrets Manager / Parameter Store のシークレットは正しく注入されているか？
+- クロスアカウント / クロス VPC の接続性は検証されているか？
 
-Follow stage-protocol.md question flow.
+stage-protocol.md の質問フローに従う。
 
 ### Step 3: Provision and Validate
 
-Provision target AWS environments using the IaC that Code Generation wrote under Plan Approval and Build and Test checked. This stage applies that IaC; it does not author it. When a change the provisioning needs is missing from that IaC, stop and name the gap rather than writing it here. Validate infrastructure configuration. The orchestrator will invoke aidlc-devsecops-agent for security posture validation.
+Code Generation が Plan Approval のもとで作成し、Build and Test が確認した IaC を使って、対象の AWS 環境をプロビジョニングする。このステージはその IaC を適用するだけであり、IaC を作成はしない。プロビジョニングに必要な変更がその IaC に欠けている場合は、ここで書くのではなく、停止して不足箇所を明示する。インフラストラクチャの構成を検証する。オーケストレーターがセキュリティ態勢の検証のために aidlc-devsecops-agent を呼び出す。
 
 ### Step 4: Generate Artifacts
 
-Create provisioned environment inventory, infrastructure validation report, secrets & parameter store audit, stack deployment logs, and environment health check results.
+プロビジョニング済み環境のインベントリ、インフラストラクチャ検証レポート、シークレットおよび Parameter Store の監査、スタックのデプロイログ、環境ヘルスチェックの結果を作成する。
 
 ### Step 5: Completion Handoff
 
-Hand completion to `stage-protocol.md` via
-`{{INVOKE}} engine orchestrate report --stage environment-provisioning --result <outcome>`.
-That `report` call owns every lifecycle transition and advancement; never perform one in prose, and never narrate this bookkeeping to the user.
+`{{INVOKE}} engine orchestrate report --stage environment-provisioning --result <outcome>` を通じて、
+完了を `stage-protocol.md` に引き渡す。
+その `report` 呼び出しが、ライフサイクルの遷移と前進をすべて担う。散文の中で遷移を実行してはならず、この記録処理をユーザーに説明してもならない。
 
 ### Step 6: Present Completion & Request Approval
 
-Completion emoji: :cloud:
-Review path: `<record>/operation/environment-provisioning/`
-Standard 2-option approval (Approve / Request Changes).
+完了時の絵文字: :cloud:
+レビュー対象のパス: `<record>/operation/environment-provisioning/`
+標準の2択の承認（Approve / Request Changes）。
 
 ## Sensors
 
-This stage's outputs are markdown artefacts under `<record>/operation/environment-provisioning/`.
+このステージの出力は `<record>/operation/environment-provisioning/` 配下の Markdown 成果物である。
 
-Imports: `required-sections`, `upstream-coverage`.
+インポート: `required-sections`, `upstream-coverage`.
 
-Upstream targets: `infrastructure-specification`, `cd-config`.
+上流の対象: `infrastructure-specification`, `cd-config`.
 
 ## Learn
 
-When `directive.protocol_modules` lists `learnings`, follow
-`stage-protocol-learnings.md`: keep the diary at `directive.memory_path` while
-working, and take the learnings step before the approval gate; that module says
-when it asks the person anything. When the module is absent, skip both the diary
-and the step.
+`directive.protocol_modules` に `learnings` が含まれている場合は、
+`stage-protocol-learnings.md` に従う。作業中は `directive.memory_path` に日誌を付け、
+承認ゲートの前に学びのステップを実施する。そのモジュールが、利用者に何かを尋ねるタイミングを定めている。
+モジュールがない場合は、日誌とステップの両方を省略する。

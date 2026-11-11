@@ -1,21 +1,21 @@
 # Architecture Decision Records (ADRs)
 
 ## Purpose
-ADRs capture significant architectural decisions, the context that drove them, and the consequences of choosing one option over alternatives. They create a decision journal that explains WHY the architecture looks the way it does.
+ADR は、重要なアーキテクチャ上の決定、その決定を促した背景、そして代替案ではなくある選択肢を選んだことによる結果を記録する。ADR は、アーキテクチャが今の形になっている「なぜ（WHY）」を説明する決定の記録簿となる。
 
 ## When to Create an ADR
 
-Create an ADR when the decision:
-- Is difficult to reverse once implemented (database choice, API contract, framework)
-- Affects multiple teams or components
-- Has significant cost, performance, or security implications
-- Was debated — if there was disagreement, the reasoning needs documentation
-- Changes a previous architectural direction
+次のような決定の場合に ADR を作成する:
+- 一度実装すると元に戻すのが難しい（データベースの選定、API コントラクト、フレームワーク）
+- 複数のチームやコンポーネントに影響する
+- コスト、パフォーマンス、セキュリティに大きな影響がある
+- 議論があった — 意見の相違があった場合、その理由を文書化する必要がある
+- 以前のアーキテクチャの方向性を変更する
 
-Do NOT create an ADR for:
-- Routine implementation choices (variable names, code formatting)
-- Decisions that are trivially reversible
-- Standard practices already documented in team guidelines
+次の場合は ADR を作成**しない**:
+- 日常的な実装上の選択（変数名、コードのフォーマット）
+- 容易に元に戻せる決定
+- チームのガイドラインにすでに文書化されている標準的なプラクティス
 
 ## ADR Template
 
@@ -78,7 +78,7 @@ Not: "It was decided that PostgreSQL might be a good option."
 
 ## Numbering Convention
 
-Use sequential numbering with zero-padding:
+ゼロ埋めした連番を使う:
 ```
 ADR-001-use-postgresql-for-orders.md
 ADR-002-adopt-event-driven-integration.md
@@ -86,29 +86,29 @@ ADR-003-select-react-for-frontend.md
 ```
 
 ### Naming Rules
-- Sequential numbers, never reused (even if deprecated)
-- Kebab-case descriptive suffix after the number
-- Store in a dedicated `/docs/adr/` or `/architecture/decisions/` directory
-- Include an `index.md` that lists all ADRs with status and one-line summary
+- 連番は決して再利用しない（非推奨になった場合でも）
+- 番号の後ろに、内容を表すケバブケースのサフィックスを付ける
+- 専用の `/docs/adr/` または `/architecture/decisions/` ディレクトリに保存する
+- すべての ADR をステータスと1行の概要付きで一覧にした `index.md` を用意する
 
 ## ADR Lifecycle
 
 ### Proposed
-The decision is under discussion. The ADR is a draft open for review and feedback. Include it in pull requests or architecture review meetings.
+決定は議論中である。ADR はレビューとフィードバックを受け付けるドラフトである。プルリクエストやアーキテクチャレビュー会議に含める。
 
 ### Accepted
-The decision has been approved and should be followed. Implementation can proceed. Record the acceptance date and approver(s).
+決定は承認済みであり、従うべきものである。実装を進めてよい。承認日と承認者を記録する。
 
 ### Deprecated
-The decision is no longer relevant — the system or feature it applied to has been removed. Keep the ADR for historical context but mark it clearly.
+決定はもはや意味を持たない — 対象のシステムや機能は削除されている。歴史的な経緯のために ADR は残すが、そのことを明確に示す。
 
 ### Superseded
-A new decision has replaced this one. Link to the new ADR:
+新しい決定がこの決定を置き換えた。新しい ADR へリンクする:
 ```
 ## Status
 Superseded by [ADR-015](./ADR-015-migrate-to-dynamodb.md)
 ```
-The superseding ADR should reference the original:
+置き換える側の ADR は、元の ADR を参照する:
 ```
 ## Context
 This decision supersedes [ADR-003](./ADR-003-select-postgresql.md) because...
@@ -117,30 +117,30 @@ This decision supersedes [ADR-003](./ADR-003-select-postgresql.md) because...
 ## Best Practices
 
 ### Writing Quality
-- Write for a future reader who has no context — assume they joined the team after the decision was made
-- Focus on WHY, not just WHAT — the code shows what was built; the ADR explains why
-- Be honest about trade-offs — every decision has downsides; documenting them builds trust
-- Include quantitative data when available (benchmark results, cost estimates, load test numbers)
+- 背景を何も知らない将来の読み手に向けて書く — 決定後にチームに加わった人を想定する
+- 「何を（WHAT）」だけでなく「なぜ（WHY）」に焦点を当てる — 何が作られたかはコードが示し、なぜかは ADR が説明する
+- トレードオフについて正直に書く — どの決定にも欠点があり、それを文書化することで信頼が生まれる
+- 利用できる場合は定量的なデータ（ベンチマーク結果、コスト見積もり、負荷テストの数値）を含める
 
 ### Process
-- Create the ADR BEFORE implementation, not after — it is a decision tool, not documentation
-- Review ADRs in pull requests alongside the code they influence
-- Revisit ADRs quarterly — some may need updating as circumstances change
-- Keep ADRs concise — one to two pages is ideal; longer suggests the scope is too broad
+- ADR は実装の後ではなく、実装の**前**に作成する — ADR はドキュメントではなく、意思決定のためのツールである
+- ADR は、それが影響するコードと一緒にプルリクエストでレビューする
+- ADR を四半期ごとに見直す — 状況の変化に応じて更新が必要なものもある
+- ADR は簡潔に保つ — 1〜2ページが理想であり、それより長い場合はスコープが広すぎることを示唆する
 
 ### Common Mistakes
-- Writing ADRs after the fact as documentation (they should drive the decision)
-- Omitting alternatives (makes the decision look unconsidered)
-- Not recording negative consequences (creates false confidence)
-- Making ADRs too granular (implementation details do not need ADRs)
-- Letting ADRs become stale without status updates
+- 事後にドキュメントとして ADR を書く（ADR は決定を導くものであるべき）
+- 代替案を省略する（決定が十分に検討されていないように見える）
+- 負の結果を記録しない（誤った安心感を生む）
+- ADR を細かくしすぎる（実装の詳細に ADR は不要）
+- ステータスを更新せずに ADR を放置して古くする
 
 ## Example ADR Index
 
-| ADR | Title | Status | Date |
+| ADR | タイトル | ステータス | 日付 |
 |-----|-------|--------|------|
-| 001 | Use PostgreSQL for order management | Accepted | 2024-01-15 |
-| 002 | Adopt event-driven integration between services | Accepted | 2024-02-01 |
-| 003 | Select React with TypeScript for frontend | Accepted | 2024-02-10 |
-| 004 | Use JWT for API authentication | Superseded by 012 | 2024-03-01 |
-| 005 | Deploy to AWS ECS Fargate | Accepted | 2024-03-15 |
+| 001 | 注文管理に PostgreSQL を使用する | Accepted | 2024-01-15 |
+| 002 | サービス間でイベント駆動型の連携を採用する | Accepted | 2024-02-01 |
+| 003 | フロントエンドに React と TypeScript を選定する | Accepted | 2024-02-10 |
+| 004 | API 認証に JWT を使用する | Superseded by 012 | 2024-03-01 |
+| 005 | AWS ECS Fargate にデプロイする | Accepted | 2024-03-15 |

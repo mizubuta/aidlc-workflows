@@ -2,7 +2,7 @@
 
 ## Test Pyramid
 
-Structure tests in this ratio (approximate):
+テストは次の比率（目安）で構成する:
 ```
          /  E2E  \          ~5%   (slow, expensive, high confidence)
         / Integration \      ~20%  (moderate speed, cross-component)
@@ -10,71 +10,71 @@ Structure tests in this ratio (approximate):
 ```
 
 ### Unit Tests
-- Test a single function/method/class in isolation
-- Mock all external dependencies (database, network, file system)
-- Execute in milliseconds; run on every commit
-- Target: every public function with non-trivial logic
-- Naming: `test_[function]_[scenario]_[expected_result]`
+- 単一の関数／メソッド／クラスを単独でテストする
+- 外部依存関係（データベース、ネットワーク、ファイルシステム）はすべてモックする
+- ミリ秒単位で実行し、コミットごとに実行する
+- 対象: 自明でないロジックを持つすべての公開関数
+- 命名: `test_[function]_[scenario]_[expected_result]`
 
 ### Integration Tests
-- Test interactions between two or more components
-- Use real dependencies where practical (test database, local queue)
-- Execute in seconds; run on every PR
-- Target: API endpoints, service-to-repository interactions, message flows
-- Focus on contract verification between components
+- 2 つ以上のコンポーネント間の相互作用をテストする
+- 現実的な範囲で実際の依存関係（テスト用データベース、ローカルキュー）を使う
+- 秒単位で実行し、PR ごとに実行する
+- 対象: API エンドポイント、サービスとリポジトリ間の相互作用、メッセージフロー
+- コンポーネント間の契約の検証に重点を置く
 
 ### End-to-End Tests
-- Test complete user workflows through the full stack
-- Use a deployed (or containerized) environment
-- Execute in minutes; run before release
-- Target: critical business workflows only (login, core CRUD, payment)
-- Maximum 20-30 e2e tests; more indicates missing integration coverage
-- A browser workflow is end to end only when it runs in a real browser engine
-  (for example Chromium through Playwright). A journey in Node or a DOM
-  emulator (jsdom, Happy DOM) is an integration test, however much of the app
-  it assembles: it misses native browser behavior, such as `fetch` failing
-  when called without its `window` receiver
+- フルスタックを通して、ユーザーのワークフロー全体をテストする
+- デプロイ済み（またはコンテナ化された）環境を使う
+- 分単位で実行し、リリース前に実行する
+- 対象: 重要な業務ワークフローのみ（ログイン、中核の CRUD、決済）
+- E2E テストは最大 20〜30 件とする。それより多い場合は、統合テストのカバレッジが不足している兆候である
+- ブラウザのワークフローが E2E といえるのは、実際のブラウザエンジン
+  （例: Playwright 経由の Chromium）で実行される場合に限る。Node や DOM
+  エミュレーター（jsdom、Happy DOM）上でのジャーニーは、アプリをどれだけ組み上げていても
+  統合テストである。`window` レシーバーなしで呼び出したときに `fetch` が失敗するといった、
+  ネイティブなブラウザの挙動を見逃すためである
 
 ## Test Types Beyond the Pyramid
 
 ### Performance Tests
-- **Load test**: Expected concurrent users for sustained period (establish baseline)
-- **Stress test**: Increase load until failure (find breaking point)
-- **Soak test**: Sustained load over hours (find memory leaks, connection exhaustion)
-- Metrics: response time (p50, p95, p99), throughput, error rate, resource utilization
+- **負荷テスト**: 想定される同時ユーザー数で一定期間負荷をかける（ベースラインを確立する）
+- **ストレステスト**: 障害が起きるまで負荷を増やす（限界点を見つける）
+- **ソークテスト**: 数時間にわたり負荷をかけ続ける（メモリリークや接続枯渇を見つける）
+- 指標: 応答時間（p50、p95、p99）、スループット、エラー率、リソース使用率
 
 ### Security Tests
-- **SAST**: Static analysis of source code for known vulnerability patterns
-- **DAST**: Dynamic testing of running application (injection, XSS, auth bypass)
-- **Dependency scan**: Check third-party packages against CVE databases
-- Integrate into CI pipeline as blocking quality gate
+- **SAST**: 既知の脆弱性パターンを対象としたソースコードの静的解析
+- **DAST**: 実行中のアプリケーションに対する動的テスト（インジェクション、XSS、認証回避）
+- **依存関係スキャン**: サードパーティパッケージを CVE データベースと照合する
+- ブロッキングする品質ゲートとして CI パイプラインに組み込む
 
 ### Contract Tests
-- Verify API consumer expectations match provider implementation
-- Use Pact or similar consumer-driven contract framework
-- Run independently of full integration environment
-- Essential for microservices and multi-team projects
+- API コンシューマーの期待がプロバイダーの実装と一致することを検証する
+- Pact または同様のコンシューマー駆動契約フレームワークを使う
+- 完全な統合環境とは独立して実行する
+- マイクロサービスや複数チームのプロジェクトには不可欠である
 
 ### Accessibility Tests
-- Automated: axe-core or pa11y for WCAG violations
-- Manual: keyboard navigation, screen reader walkthrough
-- Run automated checks in CI; manual checks before release
+- 自動: axe-core または pa11y で WCAG 違反を検出する
+- 手動: キーボード操作、スクリーンリーダーでの通し確認
+- 自動チェックは CI で、手動チェックはリリース前に実行する
 
 ## Depth-Aware Test Volume
 
-Test volume scales with the active test strategy (defaults to depth level, overridable via `--test-strategy`). The pyramid ratios above set proportions within the volume cap for each level:
+テストの量は、アクティブなテスト戦略に応じて増減する（デフォルトは深さのレベルで、`--test-strategy` で上書きできる）。上記のピラミッドの比率は、各レベルの量の上限内での配分を定める:
 
-| Strategy | Tests per Component | Test Types | Total (typical) |
+| 戦略 | コンポーネントあたりのテスト数 | テストの種類 | 合計（目安） |
 |----------|-------------------|------------|-----------------|
-| Minimal (Nyquist) | 1 per requirement + happy-path floor | Unit only | ~5-15 |
-| Standard | 5-8 | Unit + integration | ~20-50 |
-| Comprehensive | 10-15 | Unit + integration + E2E + perf + security | ~50-100+ |
+| Minimal (Nyquist) | 要件ごとに 1 件 + 正常系の最低限 | ユニットのみ | ~5-15 |
+| Standard | 5-8 | ユニット + 統合 | ~20-50 |
+| Comprehensive | 10-15 | ユニット + 統合 + E2E + パフォーマンス + セキュリティ | ~50-100+ |
 
-- **Minimal** uses a requirement-driven model (1 test per requirement, not per component). The pyramid doesn't apply — unit tests only.
-- **Standard** and **Comprehensive** use a per-component model. The pyramid proportions (75/20/5) apply within the generated set.
-- All levels are soft guidelines. The LLM can exceed when context demands (e.g., security-critical code at Minimal depth).
+- **Minimal** は要件駆動のモデル（コンポーネントごとではなく要件ごとに 1 テスト）を使う。ピラミッドは適用されず、ユニットテストのみとなる。
+- **Standard** と **Comprehensive** はコンポーネント単位のモデルを使う。生成されるテスト群の中でピラミッドの比率（75/20/5）が適用される。
+- どのレベルも緩やかなガイドラインである。状況が求める場合（例: Minimal の深さでのセキュリティ上重要なコード）、LLM は上限を超えてよい。
 
-See stage-protocol.md §8 "Test Strategy" for the authoritative guidance.
+正式なガイダンスは stage-protocol.md §8 "Test Strategy" を参照すること。
 
 ## Test Case Design Template
 
@@ -95,64 +95,61 @@ Cleanup: [teardown required]
 ## Quality Gate Definitions
 
 ### Gate 1: Code Review (before merge)
-- All unit tests pass
-- No new linter warnings
-- Code coverage does not decrease
-- Security scan finds no high/critical issues
+- すべてのユニットテストが成功する
+- 新たなリンター警告がない
+- コードカバレッジが低下しない
+- セキュリティスキャンで high/critical の問題が検出されない
 
 ### Gate 2: Integration (after merge to main)
-- All integration tests pass
-- Contract tests pass
-- Performance baseline not regressed (>10% degradation = fail)
+- すべての統合テストが成功する
+- 契約テストが成功する
+- パフォーマンスのベースラインが劣化していない（10% 超の劣化 = 失敗）
 
 ### Gate 3: Release Readiness (before deploy)
-- All e2e tests pass on staging environment
-- Accessibility automated checks pass
-- No open P0/P1 defects
-- Stakeholder acceptance sign-off obtained
+- staging 環境ですべての E2E テストが成功する
+- アクセシビリティの自動チェックが成功する
+- 未解決の P0/P1 欠陥がない
+- ステークホルダーの受け入れ承認を得ている
 
 ## Coverage-Ignore Pragmas
 
-Coverage-ignore pragmas exclude code from coverage measurement. Their syntax
-depends on the coverage provider; an unrecognized pragma may leave the code
-included in the report. Apply exclusions only when justified and permitted by
-the project's policy and current Testing Contract.
+カバレッジ除外プラグマは、コードをカバレッジ計測から除外する。その構文は
+カバレッジプロバイダーによって異なり、認識されないプラグマではコードがレポートに
+含まれたままになることがある。除外は、正当な理由があり、プロジェクトのポリシーと
+現行の Testing Contract で許可されている場合にのみ適用する。
 
-1. **Test reachable behavior; remove only proven dead code.** Defensive checks
-   that can execute need tests. Remove or restructure unreachable code only
-   when doing so preserves required behavior, validation, and error handling.
-2. **Use the project's actual provider.** If an unreachable defensive branch
-   must remain and an exclusion is permitted, determine the coverage provider
-   from the effective test configuration and dependencies. Use the syntax
-   documented for that provider and installed version, and record why the
-   exclusion is justified.
-3. **Do not guess or weaken targets.** If the provider or supported syntax
-   cannot be determined, leave the code unannotated and surface the uncertainty
-   for resolution. Preserve the Testing Contract, coverage scope, and thresholds.
-4. **Verify when introducing or changing an exclusion.** Run the configured
-   coverage command through the project's actual build and test pipeline as
-   part of the current work, then inspect the freshly generated report. Confirm
-   that each justified pragma excludes the intended code; matching the documented
-   syntax alone does not establish that the pipeline honored it. This obligation
-   does not depend on Build and Test being scheduled. When that stage is present,
-   its coverage verification checks the exclusions again.
-5. **Record evidence and unresolved gaps.** Include the provider, command,
-   report location, and exclusion rationale in the test results. If a pragma
-   has no effect, investigate the provider configuration and build transforms,
-   then correct the mismatch or safely restructure the unreachable code.
-   If the coverage command cannot run, record the exclusion's effect as
-   unverified; do not assume a later stage will verify it. Report unmet or
-   unverified applicable coverage targets through the existing failure handling.
-   Never lower thresholds or broaden exclusions just to make a gate pass.
+1. **到達可能な振る舞いはテストし、削除するのは死んだコードと証明できたものだけにする。**
+   実行され得る防御的チェックにはテストが必要である。到達不能なコードを削除または再構成するのは、
+   必要な振る舞い、検証、エラー処理が維持される場合に限る。
+2. **プロジェクトで実際に使われているプロバイダーを使う。** 到達不能な防御的分岐を残す必要があり、
+   除外が許可されている場合は、実際に有効なテスト設定と依存関係からカバレッジプロバイダーを
+   特定する。そのプロバイダーとインストール済みバージョンで文書化されている構文を使い、
+   除外が正当である理由を記録する。
+3. **推測したり目標を緩めたりしない。** プロバイダーやサポートされる構文を特定できない場合は、
+   コードに注釈を付けずに残し、不確実性を解決のために提示する。Testing Contract、
+   カバレッジのスコープ、しきい値は維持する。
+4. **除外を導入・変更するときは検証する。** 現在の作業の一環として、プロジェクトの実際のビルド・
+   テストパイプラインを通じて設定済みのカバレッジコマンドを実行し、新たに生成されたレポートを
+   確認する。正当化された各プラグマが意図したコードを除外していることを確かめる。文書化された
+   構文に一致しているだけでは、パイプラインがそれを尊重したことにはならない。この義務は、
+   Build and Test がスケジュールされているかどうかに左右されない。そのステージが存在する場合は、
+   そのカバレッジ検証で除外が再度チェックされる。
+5. **証拠と未解決のギャップを記録する。** プロバイダー、コマンド、レポートの場所、除外の理由を
+   テスト結果に含める。プラグマが効果を持たない場合は、プロバイダーの設定とビルド時の変換を
+   調査し、不一致を修正するか、到達不能なコードを安全に再構成する。
+   カバレッジコマンドを実行できない場合は、除外の効果を未検証として記録する。後のステージが
+   検証してくれると想定してはならない。適用対象のカバレッジ目標が未達または未検証であれば、
+   既存の失敗時の処理を通じて報告する。
+   ゲートを通すためだけにしきい値を下げたり除外を広げたりしてはならない。
 
 ## Test Data Strategy
 
-- **Factories**: Generate test objects with sensible defaults, override per test
-- **Fixtures**: Static data loaded before test suite (reference data, lookup tables)
-- **Builders**: Fluent API for constructing complex test scenarios
-- **Synthetic**: Generated data for performance tests (realistic volume and distribution)
-- **Isolation**: Each test owns its data. Never share mutable state between tests.
-- **Cleanup**: Tests clean up after themselves. Use database transactions that roll back.
+- **Factories**: 妥当なデフォルト値を持つテストオブジェクトを生成し、テストごとに上書きする
+- **Fixtures**: テストスイートの前に読み込む静的データ（参照データ、ルックアップテーブル）
+- **Builders**: 複雑なテストシナリオを組み立てるための流れるような API
+- **Synthetic**: パフォーマンステスト用に生成されたデータ（現実的な量と分布）
+- **Isolation**: 各テストは自身のデータを所有する。テスト間で可変状態を決して共有しない。
+- **Cleanup**: テストは自身の後始末をする。ロールバックするデータベーストランザクションを使う。
 
 ## Defect Report Format
 

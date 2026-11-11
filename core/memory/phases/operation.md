@@ -1,29 +1,29 @@
 # Operation Phase Guardrails
 
-These rules apply to every stage whose `phase: operation` declaration
-imports them as the matching phase rule.
+これらのルールは、`phase: operation` 宣言によって該当フェーズのルールとして
+これをインポートするすべてのステージに適用される。
 
 ## Infrastructure Safety
 
-- Infrastructure changes require security review — document the security implications of every change
-- Never remove or bypass existing security controls without explicit approval and documented rationale
-- Changes to IAM roles, network policies, or encryption settings must include a risk assessment
+- インフラの変更にはセキュリティレビューが必要である — すべての変更について、セキュリティ上の影響を文書化する
+- 明示的な承認と文書化された根拠なしに、既存のセキュリティ統制を削除または回避してはならない
+- IAM ロール、ネットワークポリシー、暗号化設定の変更には、必ずリスク評価を含める
 
 ## Deployment Procedures
 
-- All deployment procedures must include rollback steps — document how to reverse every change
-- Deployments to production must have a defined smoke test or health check to verify success
-- Blue/green or canary strategies must document traffic-shifting criteria and abort conditions
+- すべてのデプロイ手順には必ずロールバック手順を含める — すべての変更を元に戻す方法を文書化する
+- 本番環境へのデプロイには、成功を確認するためのスモークテストまたはヘルスチェックを必ず定義する
+- Blue/Green またはカナリア戦略では、トラフィック切り替えの基準と中止条件を必ず文書化する
 
 ## Observability
 
-- SLOs must be quantified with specific percentages and time windows (e.g., "99.9% availability over a 30-day rolling window")
-- Alerting thresholds must be set below SLO breach to allow time for remediation
-- Every new service or component must have at least one health metric and one error rate metric
+- SLO は具体的なパーセンテージと時間枠で必ず定量化する（例: "99.9% availability over a 30-day rolling window"（30 日間のローリングウィンドウで 99.9% の可用性））
+- アラートのしきい値は、是正の時間を確保できるよう、SLO 違反より手前に必ず設定する
+- すべての新しいサービスまたはコンポーネントには、少なくとも 1 つのヘルスメトリクスと 1 つのエラー率メトリクスを必ず設ける
 
 ## Incident Response
 
-- Runbooks must include escalation paths and contact information
-- Post-incident reviews are required for any P1/P2 incident — document timeline, root cause, and prevention
+- ランブックには必ずエスカレーション経路と連絡先情報を含める
+- P1/P2 のインシデントには必ずポストインシデントレビューを行う — タイムライン、根本原因、再発防止策を文書化する
 
 ## Corrections

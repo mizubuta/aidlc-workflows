@@ -1,10 +1,10 @@
 # AI-DLC scopes and stages
 
-Generated tables, kept beside the skill as human-readable data: the engine routes from the compiled scope grid and stage graph, never from these.
+自動生成された表であり、人が読むためのデータとしてスキルの横に置いている: エンジンはコンパイル済みのスコープグリッドとステージグラフに基づいてルーティングし、これらの表を使うことは決してない。
 
 ## Scope-to-Stage Mapping
 
-The engine resolves scope-level stage routing internally (it reads the compiled scope grid the table below summarises). The summary table is kept here as human-readable data — not dispatch logic — and is regenerated, never hand-edited. (One carve-out: `scope save` adds a plan the human chose to keep to the runtime scope registry (the durable `aidlc/scopes/<name>.md` record, projected into `{{HARNESS_DIR}}/scopes/aidlc-<name>.md` and a `scope-grid.json` entry) - that is the sanctioned write path for saved scopes, not a hand-edit; this summary table itself stays generated.) Source of truth: one file per scope under `{{HARNESS_DIR}}/scopes/aidlc-<name>.md` plus each stage's `scopes:` frontmatter, transposed at `{{INVOKE}} engine graph compile`; regenerate this table with `{{INVOKE}} engine gen scope-table`.
+エンジンはスコープ単位のステージのルーティングを内部で解決する（下の表が要約しているコンパイル済みのスコープグリッドを読む）。この要約表は、ディスパッチのロジックではなく人が読むためのデータとしてここに置いており、再生成されるもので、決して手で編集しない。（例外が 1 つある: `scope save` は、利用者が保持することを選んだプランをランタイムのスコープレジストリに追加する（永続的な `aidlc/scopes/<name>.md` の記録で、`{{HARNESS_DIR}}/scopes/aidlc-<name>.md` と `scope-grid.json` のエントリに反映される）- これは保存済みスコープのための正式な書き込み経路であり、手での編集ではない。この要約表自体は自動生成のままである。）信頼できる情報源: `{{HARNESS_DIR}}/scopes/aidlc-<name>.md` 配下のスコープごとに 1 つのファイルと、各ステージの `scopes:` frontmatter であり、`{{INVOKE}} engine graph compile` で転置される。この表は `{{INVOKE}} engine gen scope-table` で再生成する。
 
 <!-- BEGIN: compiled scope grid via `{{INVOKE}} engine gen scope-table` - do NOT hand-edit -->
 
@@ -28,7 +28,7 @@ The engine resolves scope-level stage routing internally (it reads the compiled 
 
 ## Stage Graph
 
-The engine reads the compiled `data/stage-graph.json` directly for all routing; this table is the human-readable mirror of that graph (the 33 stages, their phase, execution mode, lead/support agents, and run mode) — data, not dispatch logic.
+エンジンはすべてのルーティングでコンパイル済みの `data/stage-graph.json` を直接読む。この表はそのグラフを人が読める形にしたもの（33 のステージと、そのフェーズ、実行モード、リード／サポートエージェント、実行方式）であり、ディスパッチのロジックではなくデータである。
 
 <!-- BEGIN: compiled stage graph via `{{INVOKE}} engine gen stage-table` - do NOT hand-edit -->
 

@@ -1,148 +1,141 @@
 # Loop-back Protocol Module
 
-Load this module when the engine lists `loopback` in `directive.protocol_modules`: on every Code Generation and Build and Test step, and every `invoke-swarm`.
+エンジンが `directive.protocol_modules` に `loopback` を列挙したときにこのモジュールを読み込む。対象は、Code Generation と Build and Test のすべてのステップ、およびすべての `invoke-swarm` である。
 
 ### Build-and-Test failure loop-back (3.6 → 3.5)
 
-When Build and Test (3.6) diagnoses a failure whose ROOT CAUSE lies in the
-generated code or an approach chosen at code-generation (not in this stage's
-own test/build scaffolding), the workflow may return to code-generation and
-repair it rather than writing the approach off or dead-ending at the gate.
-The stage's Step 9 failure-escalation ladder decides WHEN this fires; this
-subsection defines HOW. It is a sanctioned exception to Critical-checklist
-item 5's "complete the current stage before jumping": a failed build-and-test
-run is deliberately left in-flight — its gate is NOT presented and its enabled §13
-learnings ritual DEFERS to the eventual passing run (when the `learnings` module is listed, the stage diary
-memory.md persists across the loop; otherwise no diary or ritual runs).
+Build and Test（3.6）が診断した失敗の根本原因（ROOT CAUSE）が、生成された
+コード、または code-generation で選択されたアプローチにある場合（このステージ
+自身のテスト/ビルド用の足場ではなく）、ワークフローはそのアプローチを見限ったりゲートで
+行き詰まったりする代わりに、code-generation に戻って修復できる。
+これが発動する「タイミング」はステージの Step 9 の失敗エスカレーションラダーが決め、この
+サブセクションは「方法」を定義する。これは Critical チェックリスト項目 5 の
+"complete the current stage before jumping"（ジャンプする前に現在のステージを完了する）に対する公認の例外である。失敗した build-and-test の
+実行は意図的に実行途中のまま残される — そのゲートは提示されず（NOT presented）、有効化されている §13 の
+学びの儀式は最終的に成功する実行まで延期（DEFERS）される（`learnings` モジュールが列挙されている場合、ステージの日誌
+memory.md はループをまたいで保持される。そうでない場合、日誌も儀式も実行されない）。
 
-**Which units go back.** The loop-back reopens Code Generation for the
-unit(s) the diagnosis names. Every other unit keeps its finished work,
-reviews, Plan Approval and checkpoint approval, and is not re-run, reviewed or
-asked about again. Only a cause that spans every unit, or cannot be pinned to
-one, reopens Code Generation for every unit. Either way the stages before Code
-Generation keep their work. Below, an "applicable unit" is a reopened one.
+**どのユニットが戻るか。** ループバックは、診断が指定した
+ユニットについて Code Generation を再オープンする。それ以外のユニットはすべて、完了済みの作業、
+レビュー、Plan Approval、チェックポイントの承認を維持し、再実行、再レビュー、
+再質問の対象にはならない。すべてのユニットにまたがる原因、または特定のユニットに
+絞り込めない原因の場合にのみ、すべてのユニットについて Code Generation を再オープンする。いずれの場合も、Code
+Generation より前のステージは作業を維持する。以下で「対象ユニット」とは、再オープンされたユニットを指す。
 
-**The loop-back counter** lives in test-results.md under `## Loop-Back Log`:
-the count of `### Loop-back N` entries IS the bound (max 3 per intent). This
-artifact ledger is chosen over parsing the jump's audit rows because it
-survives the backward jump (jumps reset checkboxes, never artifacts), is
-colocated with the diagnosis it must carry anyway, and is readable at the
-final gate; the rows the jump tool emits (a `STAGE_JUMPED` for every unit, a
-unit-tagged `GATE_REJECTED` per reopened unit) remain the
-deterministic audit cross-check. The log is append-only. A human-directed
-backward jump does not count against the bound — only entries this protocol
-writes do.
+**ループバックカウンター**は test-results.md の `## Loop-Back Log` の下にある。
+`### Loop-back N` エントリの数がそのまま上限の判定に使われる（インテントあたり最大 3 回）。ジャンプの監査行を
+解析するのではなくこの成果物の台帳を選んでいるのは、後方へのジャンプを経ても残り（ジャンプはチェックボックスをリセットするが、成果物は決してリセットしない）、
+いずれにせよ記録しなければならない診断と同じ場所にあり、最終ゲートで読めるためである。
+ジャンプツールが出力する行（すべてのユニットに対する `STAGE_JUMPED`、再オープンされたユニットごとのユニットタグ付き
+`GATE_REJECTED`）は、引き続き決定論的な監査の照合手段となる。ログは追記専用である。人間の指示による
+後方へのジャンプは上限にカウントされない — このプロトコルが書くエントリだけがカウントされる。
 
-**Plan approval on replay.** The jump opens a new stage attempt for each
-unit it reopens, so that unit's prior Plan Approval (bound to the previous
-attempt) cannot authorize the replay.
-Preserve the Loop-Back Log; after the repaired plan is written, `next` asks the
-person for Plan Approval again before generation (Code Generation Step 3). The
-human's "Retry with fix" choice authorizes the loop-back jump; it is not approval
-of plan content the human has not reviewed under the new attempt.
+**再実行時のプラン承認。** ジャンプは、再オープンする各ユニットについて新しいステージ試行を
+開始するため、そのユニットの以前の Plan Approval（前回の試行に紐付いている）では再実行を
+承認できない。
+Loop-Back Log を保持する。修復したプランが書かれた後、`next` は生成の前に再度
+利用者に Plan Approval を求める（Code Generation Step 3）。人間が
+"Retry with fix" を選択したことはループバックジャンプを承認するものであり、新しい試行のもとで
+人間がレビューしていないプラン内容を承認するものではない。
 
-**Autonomous loop-back procedure** (mode `autonomous`, bound not exhausted,
-impact-estimated fix identified):
-1. Append the `### Loop-back N — <ISO timestamp>` entry (Diagnosis /
-   Root-cause stage / Planned fix / Estimated impact) to test-results.md and a matching
-   Deviations entry to this stage's memory.md.
-2. Execute the jump through the ENGINE: for each unit the diagnosis names,
-   run `bun {{HARNESS_DIR}}/tools/aidlc-orchestrate.ts next --stage
-   code-generation --unit <unit>` and run the command its `print` directive
-   names verbatim before the next unit (an `aidlc-jump.ts reopen --target
-   code-generation ... --units <unit>` that reopens that unit and moves
-   Current Stage back to Code Generation). Only for a cause that spans every
-   unit, or names none, run `next --stage code-generation` instead: it runs
+**自律ループバックの手順**（モードが `autonomous`、上限に達していない、
+影響を見積もった修正が特定済み）:
+1. `### Loop-back N — <ISO timestamp>` エントリ（Diagnosis /
+   Root-cause stage / Planned fix / Estimated impact）を test-results.md に追記し、対応する
+   Deviations エントリをこのステージの memory.md に追記する。
+2. エンジンを通じてジャンプを実行する: 診断が指定した各ユニットについて、
+   `bun {{HARNESS_DIR}}/tools/aidlc-orchestrate.ts next --stage
+   code-generation --unit <unit>` を実行し、次のユニットに進む前に、その `print` ディレクティブが
+   指定するコマンドをそのまま実行する（`aidlc-jump.ts reopen --target
+   code-generation ... --units <unit>` で、そのユニットを再オープンし、
+   Current Stage を Code Generation に戻す）。すべてのユニットにまたがる原因、または
+   ユニットを指定しない原因の場合にのみ、代わりに `next --stage code-generation` を実行する。これは
    `aidlc-jump.ts execute --target code-generation --direction backward
-   --scope <scope>` itself, which resets Code Generation and the stages after
-   it for every unit and emits the canonical `STAGE_JUMPED`, and returns Code
-   Generation's step. When Construction runs
-   stage by stage (`Construction Iteration` in aidlc-state.md is not
-   `unit-major`), one unit cannot be reopened alone: run that
-   `next --stage code-generation` at once, without asking; "Retry with fix"
-   (or the autonomy grant) already chose the repair. After a `reopen`, re-run
-   `next`; then continue the forwarding loop from the step that comes back.
-   Never compose the `reopen` or `execute` call by hand: the engine's print
-   is the validated form.
-3. On the code-generation re-entry, follow "Re-entry settlement and review"
-   below. Before any fix generation, the engine asks for Plan Approval of the
-   repaired plan as required above; this is a human stop even though Construction
-   autonomy remains granted. Then apply the planned fix ONLY to the unit(s) the diagnosis names and
-   apply the deterministic Artifact Re-use decisions (see "Autonomous failure
-   loop-back" under Artifact Re-use in stage-protocol.md). The standing
-   `Construction Autonomy Mode: autonomous` grant is unchanged by the jump;
-   after every applicable unit has a fresh current-attempt review, the replayed
-   completion follows the current checkpoint/policy directive. Automatic
-   completion omits `--user-input`; never label a conductor decision as the
-   human's answer. Fresh Plan Approval is still mandatory.
-4. Build and Test then re-runs naturally on the forward replay; choose Modify
-   at its own Artifact Re-use prompt (never Redo — it would erase the
-   Loop-Back Log) and re-execute Step 9 fresh.
+   --scope <scope>` を自ら実行し、すべてのユニットについて Code Generation とそれ以降の
+   ステージをリセットして正規の `STAGE_JUMPED` を出力し、Code
+   Generation のステップを返す。Construction を
+   ステージ単位で実行している場合（aidlc-state.md の `Construction Iteration` が
+   `unit-major` でない場合）、1 つのユニットだけを再オープンすることはできない。その
+   `next --stage code-generation` を、尋ねずに直ちに実行する。"Retry with fix"
+   （または自律の許可）によって既に修復が選択されている。`reopen` の後は
+   `next` を再実行し、戻ってきたステップから転送ループを続ける。
+   `reopen` や `execute` の呼び出しを決して手で組み立てない。エンジンの print が
+   検証済みの形式である。
+3. code-generation に再入したら、下記の "Re-entry settlement and review"
+   に従う。修正の生成を行う前に、エンジンは上記のとおり修復したプランの Plan Approval を
+   求める。Construction の自律が許可されたままであっても、これは人間による停止点である。その後、計画した修正を診断が指定したユニットにのみ（ONLY）適用し、
+   決定論的な Artifact Re-use の判断を適用する（stage-protocol.md の Artifact Re-use の下にある "Autonomous failure
+   loop-back" を参照）。常設の
+   `Construction Autonomy Mode: autonomous` の許可はジャンプによって変わらない。
+   すべての対象ユニットに現在の試行での新しいレビューが揃った後、再実行された
+   完了処理は現在のチェックポイント/ポリシーのディレクティブに従う。自動的な
+   完了では `--user-input` を省略する。コンダクターの判断を人間の回答として
+   ラベル付けしてはならない。新しい Plan Approval は依然として必須である。
+4. その後、Build and Test は前方への再実行の中で自然に再実行される。その Artifact Re-use の
+   問いでは Modify を選び（Redo は決して選ばない — Loop-Back Log が消去されてしまう）、Step 9 を新たに実行し直す。
 
-**Re-entry settlement and review.** Backward jumps preserve artifacts, but the
-route depends on whether code-generation has ever used the unit lifecycle
-ledger:
+**Re-entry settlement and review（再入時の決着とレビュー）。** 後方へのジャンプは成果物を保持するが、
+その経路は code-generation がこれまでにユニットのライフサイクル台帳を使ったことがあるかどうかで
+変わる:
 
-1. **Artifact-only workflow** — when no code-generation lifecycle row has ever
-   been emitted and Construction checkpoints are off (with them on, receipts
-   are required from the first unit), artifacts remain the settlement signal. The re-entry `next`
-   call can therefore emit the all-covered `gate: true` fast path. Apply the
-   planned fix and the deterministic Modify/Keep decisions through the
-   re-entry override BEFORE presenting or auto-approving that gate.
-2. **Receipt-mode workflow** — once any code-generation lifecycle row exists,
-   receipt mode is sticky (with Construction checkpoints on it applies from the
-   first unit). The reopen invalidates each applicable unit's old
-   settlement receipts, so re-entry emits per-unit `run-stage` directives for
-   those units. For each applicable unit,
-   re-mint `unit start` / `unit complete`, applying the planned fix to targeted
-   units and the deterministic **Modify targeted / Keep rest** Artifact Re-use
-   decision inline as that unit re-runs.
+1. **成果物のみのワークフロー** — code-generation のライフサイクル行が一度も
+   出力されておらず、Construction のチェックポイントがオフの場合（オンの場合は、最初のユニットから
+   レシートが必要となる）、引き続き成果物が決着のシグナルとなる。そのため、再入時の `next`
+   呼び出しは、全件カバー済みの `gate: true` の高速パスを出力しうる。そのゲートを提示または自動承認する
+   前に（BEFORE）、再入時のオーバーライドを通じて、計画した修正と決定論的な Modify/Keep の判断を
+   適用する。
+2. **レシートモードのワークフロー** — code-generation のライフサイクル行が 1 つでも存在すると、
+   レシートモードは固定される（Construction のチェックポイントがオンの場合は、最初の
+   ユニットから適用される）。再オープンによって各対象ユニットの古い
+   決着レシートが無効になるため、再入時にはそれらのユニットについてユニットごとの `run-stage` ディレクティブが
+   出力される。各対象ユニットについて、
+   `unit start` / `unit complete` を発行し直し、対象のユニットには計画した修正を、
+   そしてそのユニットの再実行時にインラインで、決定論的な **Modify targeted / Keep rest** の Artifact Re-use
+   の判断を適用する。
 
-On BOTH paths, after every fix and re-use decision and BEFORE presenting or
-auto-approving the settle/approval gate, dispatch code-generation's declared
-reviewer for every applicable unit and record fresh current-attempt
-`REVIEW_COMPLETED` receipts. The reopen invalidates each applicable unit's
-prior review receipts (every unit's, after the stage-wide `STAGE_JUMPED`), and
-the engine refuses approval while any applicable unit lacks a fresh one. Under unit-major iteration the autonomous swarm never
-fires: the replay follows the ordinary per-unit walk, re-mints lifecycle and
-review receipts per unit as above. Fresh target-bound Plan Approval remains
-a human stop for the repair; autonomy does not waive it.
+どちらの経路でも（BOTH）、すべての修正と再利用の判断を終えた後、かつ決着/承認ゲートを提示または
+自動承認する前に（BEFORE）、すべての対象ユニットについて code-generation で宣言された
+レビュアーをディスパッチし、現在の試行での新しい
+`REVIEW_COMPLETED` レシートを記録する。再オープンによって各対象ユニットの
+以前のレビューレシートは無効になり（ステージ全体の `STAGE_JUMPED` の後ではすべてのユニットのもの）、
+新しいレシートを欠く対象ユニットが 1 つでもある間、エンジンは承認を拒否する。unit-major の反復では、自律スウォームは決して
+発動しない。再実行は通常のユニットごとの順次処理に従い、上記のとおりユニットごとにライフサイクルと
+レビューのレシートを発行し直す。対象に紐付いた新しい Plan Approval は、修復のための
+人間による停止点であり続ける。自律はそれを免除しない。
 
-**Swarm interaction.** On a loop-back replay where the engine emits
-`invoke-swarm`, the jump establishes a new exact stage-attempt `Run floor`
-boundary token (`<event>:<timestamp>#<ordinal>` over workflow start, jump,
-rejection, and stage start boundaries). Each `SWARM_UNIT_CONVERGED` row must
-match the current token, so prior-attempt rows no longer count and all units
-re-dispatch by default. Before `prepare`, use `worktree list` and `worktree info`
-to identify the selected intent's worktrees and branches left by the prior
-attempt (a crash or a halt-and-ask mid-swarm leaves them in place):
-`prepare` hard-errors on collision, and
-`finalize` refuses a unit without the current attempt's prepare stamp, so
-discard the stale worktrees/branches before a fresh `prepare` — never adopt
-them into the new attempt. Discard only the selected intent's Bolts: matching
-Unit slugs in another intent are not stale siblings, and cleanup refuses a
-branch checked out at a foreign worktree path (surface the owner path rather
-than deleting it).
-Discard parks each attempt; its snapshot remains
-recoverable with `{{INVOKE}} engine worktree restore --slug <slug>` in a
-separate restored checkout, never as current-attempt evidence. Do not spend a worker turn per unit: after
-`prepare`, run
-`check <unit> --check-cmd '<the convergence check the project runs>'` on every unit
-FIRST. A unit already green needs no builder turn, but before putting it in
-`finalize --claimed`, dispatch code-generation's reviewer in that fresh
-worktree and record a terminal current-attempt `REVIEW_COMPLETED`. `finalize`
-then verifies the current prepare stamp, the terminal receipt, and its current
-artifact fingerprint before accepting the claim. Dispatch workers only for the
-unit(s) the Loop-Back Log's planned fix targets or that fail the check, then
-run the same reviewer pass after their final changes. The cheap path assumes
-the prior attempt's code is in the base the worktrees forked from — true only
-once that attempt's git code merge actually completed; if it did not (the
-attempt halted before finalizing), every `check` comes back red and the cheap
-path degrades gracefully to full re-dispatch rather than silently claiming
-unbuilt units.
+**スウォームとの相互作用。** エンジンが `invoke-swarm` を出力するループバックの再実行では、
+ジャンプによって新しい正確なステージ試行の `Run floor`
+境界トークン（ワークフロー開始、ジャンプ、却下、ステージ開始の境界にわたる `<event>:<timestamp>#<ordinal>`）が確立される。各 `SWARM_UNIT_CONVERGED` 行は
+現在のトークンと一致しなければならないため、以前の試行の行はもはやカウントされず、既定ではすべてのユニットが
+再ディスパッチされる。`prepare` の前に、`worktree list` と `worktree info`
+を使って、選択されたインテントについて以前の試行が残したワークツリーとブランチを特定する
+（スウォームの途中でのクラッシュや halt-and-ask はそれらを残したままにする）。
+`prepare` は衝突があるとハードエラーになり、
+`finalize` は現在の試行の prepare スタンプがないユニットを拒否するため、
+新たに `prepare` する前に古いワークツリー/ブランチを破棄する — それらを新しい試行に
+取り込んではならない。破棄するのは選択されたインテントの Bolt だけである。別のインテントにある
+同じ Unit slug は古い兄弟ではなく、クリーンアップは他のワークツリーのパスでチェックアウトされている
+ブランチを拒否する（削除するのではなく、所有者のパスを提示する）。
+破棄は各試行を退避させる。そのスナップショットは
+`{{INVOKE}} engine worktree restore --slug <slug>` によって、別の復元用チェックアウトで
+復元可能なままだが、現在の試行の証拠として扱ってはならない。ユニットごとにワーカーのターンを費やさない:
+`prepare` の後、まず（FIRST）すべてのユニットで
+`check <unit> --check-cmd '<the convergence check the project runs>'` を
+実行する。既にグリーンのユニットにビルダーのターンは不要だが、それを
+`finalize --claimed` に入れる前に、その新しいワークツリーで code-generation のレビュアーを
+ディスパッチし、現在の試行の終端 `REVIEW_COMPLETED` を記録する。`finalize`
+はその後、現在の prepare スタンプ、終端レシート、および現在の
+成果物フィンガープリントを検証してから、その主張を受け入れる。ワーカーをディスパッチするのは、
+Loop-Back Log の計画した修正が対象とするユニット、またはチェックに失敗したユニットに対してだけであり、
+それらの最終的な変更の後に同じレビュアーのパスを実行する。この安価な経路は、
+以前の試行のコードがワークツリーの分岐元のベースに含まれていることを前提とする — これが真となるのは、
+その試行の git のコードマージが実際に完了した場合だけである。完了していない場合（その
+試行が finalize の前に停止した場合）、すべての `check` が赤になり、安価な
+経路は、未構築のユニットを黙って構築済みと主張するのではなく、完全な再ディスパッチへと穏やかに
+退化する。
 
-**Halt-and-ask, impact-estimated variant (gated or unset mode, or bound exhausted, WITH
-a candidate fix identified):**
+**Halt-and-ask、影響見積もり付きのバリアント（gated モードまたは未設定のモード、あるいは上限到達で、かつ
+修正候補が特定されている場合）:**
 
 ```question
 prompt: "Build and Test failed: [short error]. Root cause: [diagnosis]. Candidate fix: [fix] — estimated impact — effort: [effort]; financial cost: [cost]; risk: [risk]. Loop-backs used: [N]/3. How would you like to proceed?"
@@ -157,10 +150,10 @@ options:
     description: Stop here; the workflow can resume later.
 ```
 
-**Halt-and-ask, no-fix variant (no identifiable fix exists in any swappable
-dimension):** omit "Retry with fix" entirely — presenting it without a
-candidate fix would itself be the impact-unestimated give-up option this protocol
-forbids in the other direction (a fabricated fix to retry with). Use:
+**Halt-and-ask、修正なしのバリアント（入れ替え可能などの次元にも
+特定可能な修正が存在しない場合）:** "Retry with fix" は完全に省略する — 修正
+候補なしでそれを提示すること自体が、このプロトコルが逆方向に禁じている、影響を見積もっていない
+諦めの選択肢（リトライ用にでっち上げた修正）になってしまう。次を使う:
 
 ```question
 prompt: "Build and Test failed: [short error]. Root cause: [diagnosis]. No identifiable fix exists in any swappable dimension (library/version, container image, instance type, algorithm, flag). Loop-backs used: [N]/3. How would you like to proceed?"
@@ -173,57 +166,57 @@ options:
     description: Stop here; the workflow can resume later.
 ```
 
-Choose the variant by whether rung 2's classify-and-estimate step actually
-produced an impact-estimated candidate fix — never render the impact-estimated template's
-`Candidate fix` / `Retry with fix` slots with placeholder or invented
-content just to keep the template shape.
+バリアントは、ラダーの段階 2 の分類・見積もりステップが影響を見積もった修正候補を実際に
+生成したかどうかで選ぶ — テンプレートの形を保つためだけに、影響見積もり付きテンプレートの
+`Candidate fix` / `Retry with fix` の欄をプレースホルダーやでっち上げた
+内容で埋めてはならない。
 
-"Retry with fix" runs the same settlement-aware procedure as the autonomous
-loop-back, including its re-entry override (see "Gated failure loop-back" under
-its Artifact Re-use below). Artifact-only workflows may take the
-all-covered `gate: true` fast path; receipt-mode workflows instead re-emit
-per-unit directives. On either path the planned fix and deterministic
-Modify/Keep decisions MUST be applied BEFORE the settle/approval gate, and
-every applicable unit MUST receive a fresh current-attempt review before that
-gate is presented. A human-approved retry does count an entry in the Loop-Back
-Log, and the human may override the bound explicitly. Every option's
-description must carry its estimated impact where one is known — presenting an
-impact-unestimated give-up option is a protocol violation.
+"Retry with fix" は、自律ループバックと同じ決着を考慮した手順を、
+その再入時のオーバーライドも含めて実行する（下記の Artifact Re-use にある "Gated failure loop-back"
+を参照）。成果物のみのワークフローは
+全件カバー済みの `gate: true` の高速パスを取りうる。レシートモードのワークフローは代わりに
+ユニットごとのディレクティブを再出力する。どちらの経路でも、計画した修正と決定論的な
+Modify/Keep の判断は決着/承認ゲートの前に必ず（MUST）適用し、
+すべての対象ユニットは、そのゲートが提示される前に、現在の試行での新しいレビューを必ず（MUST）受けなければならない。
+人間が承認したリトライは Loop-Back Log のエントリとしてカウントされ、人間は上限を明示的に
+オーバーライドできる。各選択肢の
+説明には、判明している場合は見積もった影響を必ず含める — 影響を見積もっていない
+諦めの選択肢を提示することはプロトコル違反である。
 
 ### Artifact Re-use on a failure loop-back replay
 
-On a replay the failure loop-back started, stage-protocol.md's Artifact Re-use question (Keep, Modify, Redo) is decided as follows.
+失敗ループバックが開始した再実行では、stage-protocol.md の Artifact Re-use の問い（Keep、Modify、Redo）は次のように決定される。
 
-**Autonomous failure loop-back**: when the replay was initiated by the
-Build-and-Test failure loop-back in the loop-back protocol module
-(`aidlc-common/protocols/stage-protocol-loopback.md`) under `Construction
-Autonomy Mode: autonomous`, the 3-option question is NOT presented (the loop is
-meant to run without the human). The conductor decides deterministically from
-the Loop-Back Log's planned fix: **Modify** for the unit(s) the fix targets,
-**Keep** for all other units, **Modify** for build-and-test itself on re-entry
-(Redo is forbidden there — it would erase the Loop-Back Log). Every
-auto-decision is still audited via `aidlc-state.ts reuse-artifact <slug>
+**Autonomous failure loop-back（自律失敗ループバック）**: 再実行が、
+`Construction
+Autonomy Mode: autonomous` のもとで、ループバックプロトコルモジュール
+（`aidlc-common/protocols/stage-protocol-loopback.md`）の Build-and-Test 失敗ループバックによって
+開始された場合、3 択の問いは提示されない（NOT presented。このループは
+人間なしで実行されることを意図している）。コンダクターは Loop-Back Log の計画した修正から
+決定論的に判断する: 修正が対象とするユニットには **Modify**、
+それ以外のすべてのユニットには **Keep**、再入時の build-and-test 自体には **Modify**
+（そこでは Redo は禁止 — Loop-Back Log が消去されてしまう）。すべての
+自動判断は引き続き `aidlc-state.ts reuse-artifact <slug>
 --decision <keep|modify> --artifacts "<comma-separated list of existing
-artifacts found>"`. In receipt mode apply those decisions inside each emitted
-per-unit replay between `unit start` and the fresh reviewer / `unit complete`;
-in artifact-only mode apply them through the pre-gate override. Either way,
-fresh current-attempt reviews for every applicable unit are mandatory before
-the replayed gate is auto-approved.
+artifacts found>"` によって監査される。レシートモードでは、それらの判断を、出力された各
+ユニットごとの再実行の中で `unit start` と新しいレビュアー / `unit complete` の間に適用する。
+成果物のみのモードでは、ゲート前のオーバーライドを通じて適用する。いずれの場合も、
+再実行されたゲートが自動承認される前に、すべての対象ユニットについて現在の試行での新しいレビューが必須である。
 
-**Gated failure loop-back**: the same override applies when the human chose
-"Retry with fix" at the Build-and-Test halt-and-ask in the loop-back
-protocol module (`aidlc-common/protocols/stage-protocol-loopback.md`) under
-`Construction Autonomy Mode: gated` (or unset). Artifact-only workflows may
-arrive directly at the all-covered `gate: true` directive, where the ordinary
-Artifact Re-use question never fires; receipt-mode workflows instead receive
-per-unit replay directives. In the fast path, BEFORE presenting the gate,
-apply the planned fix through the override. In receipt mode, apply it inline
-while the units re-run. Both use **Modify** for the unit(s) the fix targets,
-**Keep** for all other units, and **Modify** for build-and-test itself on
-re-entry (Redo is forbidden there — it would erase the Loop-Back Log), audited
-via the same `aidlc-state.ts reuse-artifact <slug> --decision <keep|modify>
---artifacts "<comma-separated list of existing artifacts found>"` call. After
-those decisions, dispatch the declared reviewer for every applicable unit and
-record fresh current-attempt reviews BEFORE presenting the settle/approval
-gate. The human already gave the confirming decision by choosing "Retry with
-fix"; this is not a second, silent autonomy inference.
+**Gated failure loop-back（ゲート付き失敗ループバック）**: 同じオーバーライドは、
+`Construction Autonomy Mode: gated`（または未設定）のもとで、ループバック
+プロトコルモジュール（`aidlc-common/protocols/stage-protocol-loopback.md`）の Build-and-Test の halt-and-ask で、人間が
+"Retry with fix" を選んだ場合にも適用される。成果物のみのワークフローは、
+全件カバー済みの `gate: true` ディレクティブに直接到達することがあり、そこでは通常の
+Artifact Re-use の問いは決して発動しない。レシートモードのワークフローは代わりに
+ユニットごとの再実行ディレクティブを受け取る。高速パスでは、ゲートを提示する前に（BEFORE）、
+オーバーライドを通じて計画した修正を適用する。レシートモードでは、ユニットの再実行中に
+インラインで適用する。どちらも、修正が対象とするユニットには **Modify**、
+それ以外のすべてのユニットには **Keep**、再入時の build-and-test 自体には **Modify** を使い
+（そこでは Redo は禁止 — Loop-Back Log が消去されてしまう）、同じ
+`aidlc-state.ts reuse-artifact <slug> --decision <keep|modify>
+--artifacts "<comma-separated list of existing artifacts found>"` 呼び出しで監査される。それらの
+判断の後、すべての対象ユニットについて宣言されたレビュアーをディスパッチし、
+決着/承認ゲートを提示する前に（BEFORE）現在の試行での新しいレビューを記録する。
+人間は "Retry with fix" を選んだ時点で既に確認の判断を下している。
+これは、2 回目の、黙示的な自律の推定ではない。

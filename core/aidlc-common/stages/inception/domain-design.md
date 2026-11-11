@@ -49,42 +49,42 @@ outputs: components.md (fenced ```yaml component catalogue plus a human-readable
 
 # Domain Design
 
-Identify and detail the **logical building blocks** of the system — the components you will write code for. A component is a bounded piece of software with its own business logic, entities, and lifecycle: **code you write, not infrastructure you deploy.** Databases, caches, queues, and third-party services are dependencies OF components, not components themselves.
+システムの**論理的な構成要素**、つまりコードを書く対象となるコンポーネントを特定し、詳細化する。コンポーネントとは、独自のビジネスロジック、エンティティ、ライフサイクルを持つ、境界のあるソフトウェアの一部である。**デプロイするインフラではなく、書くコードである。** データベース、キャッシュ、キュー、サードパーティのサービスはコンポーネントの依存先であり、コンポーネントそのものではない。
 
-This stage does NOT decide deployment topology (monolith, microservices, serverless, etc.) — that is Units Generation's job. Domain Design produces the building blocks so the team can then decide how to group them into deployable units. It also does not choose the tech stack or NFR patterns — those belong to the NFR and infrastructure stages.
+このステージでは、デプロイのトポロジー（モノリス、マイクロサービス、サーバーレスなど）は決定**しない** — それは Units Generation の役割である。Domain Design は構成要素を作り出し、チームがそれをデプロイ可能なユニットにどうまとめるかを後で決められるようにする。また、技術スタックや NFR のパターンも選択しない — それらは NFR とインフラのステージに属する。
 
 ## Steps
 
 ### Step 1: Load Prior Context
 
-- Read `<record>/inception/requirements-analysis/requirements.md`
-- Read `<record>/inception/user-stories/stories.md` (if produced)
-- If brownfield: Read relevant RE artifacts (especially architecture.md, component-inventory.md, dependencies.md)
+- `<record>/inception/requirements-analysis/requirements.md` を読み込む
+- `<record>/inception/user-stories/stories.md` を読み込む（作成されている場合）
+- ブラウンフィールドの場合: 関連する RE 成果物（特に architecture.md、component-inventory.md、dependencies.md）を読み込む
 
 ### Step 2: Create Design Plan with Questions
 
-Create `<record>/inception/domain-design/domain-design-questions.md` with context-appropriate questions using [Answer]: tag format:
-- Component boundary decisions (what is a distinct building block, and why)
-- Entity ownership (each entity has exactly one owning component — ambiguity is a design smell)
-- Component responsibilities (what business logic each block owns)
-- Interaction between components (which component calls which, and why)
-- Integration approach with existing components (brownfield)
-- UI component structure (if user-facing, informed by UX designer perspective)
+[Answer]: タグ形式を使い、文脈に適した質問を含む `<record>/inception/domain-design/domain-design-questions.md` を作成する:
+- コンポーネント境界の決定（何を独立した構成要素とし、それはなぜか）
+- エンティティの所有（各エンティティを所有するコンポーネントはちょうど 1 つ — 曖昧さは設計上の悪い兆候である）
+- コンポーネントの責務（各構成要素がどのビジネスロジックを所有するか）
+- コンポーネント間のやり取り（どのコンポーネントがどれを呼び出すか、それはなぜか）
+- 既存コンポーネントとの統合方法（ブラウンフィールド）
+- UI コンポーネントの構造（ユーザー向けの場合。UX デザイナーの視点を踏まえる）
 
 ### Step 3: Collect and Analyze Answers
 
-Collect answers following stage-protocol.md §3 question flow (offer interaction mode choice, collect answers, write back to file).
-- MANDATORY ambiguity analysis: scan for vague language, contradictions, missing details
-- Create follow-up questions if ANY ambiguity found
-- Resolve all ambiguities before proceeding
+stage-protocol.md §3 の質問フロー（インタラクションモードの選択肢を提示し、回答を収集し、ファイルに書き戻す）に従って回答を収集する。
+- **必須**の曖昧さ分析: 曖昧な表現、矛盾、欠けている詳細がないかを精査する
+- 曖昧さが 1 つでも見つかったら、追加の質問を作成する
+- 先に進む前に、すべての曖昧さを解消する
 
 ### Step 4: Generate the Component Catalogue
 
-Create `<record>/inception/domain-design/components.md`. This single artifact carries both a machine-readable catalogue and the human-readable view.
+`<record>/inception/domain-design/components.md` を作成する。この 1 つの成果物に、機械可読なカタログと人間が読むためのビューの両方を含める。
 
-**Entity capture depth.** Capture entities at the **ownership + shape** level only — which component owns each entity, its identifier, its attribute names, and any cross-component references. Do NOT specify data types, validation constraints, allowed values, or relationship cardinality here — that full schema belongs to Functional Design (`entities.md`). Every entity has **exactly one** owning component; ambiguous ownership is a design smell to resolve before the gate.
+**エンティティを記述する深さ。** エンティティは**所有 + 形**のレベルでのみ記述する — 各エンティティをどのコンポーネントが所有するか、その識別子、属性名、コンポーネントをまたぐ参照。ここではデータ型、検証制約、許容値、関係の多重度は指定**しない** — その完全なスキーマは Functional Design（`entities.md`）に属する。すべてのエンティティを所有するコンポーネントは**ちょうど 1 つ**である。所有が曖昧なのは設計上の悪い兆候であり、ゲートの前に解消する。
 
-**Part A — machine-readable catalogue (fenced `yaml` block).** Author a fenced ```yaml block near the top of the file listing every component. This block is the source of truth; the human view below is derived from it:
+**パート A — 機械可読なカタログ（フェンス付きの `yaml` ブロック）。** ファイルの冒頭付近に、すべてのコンポーネントを列挙するフェンス付きの ```yaml ブロックを書く。このブロックが信頼できる情報源であり、以下の人間向けのビューはここから導出する:
 
 ```yaml
 components:
@@ -115,55 +115,54 @@ components:
             relationship: <plain-language, e.g. "each Order belongs to one Customer">
 ```
 
-Well-formedness rules (all must hold): each component name is unique; every `component:`/`owned_by` named anywhere is a declared component; no component depends on itself; `depends_on`/`dependents` are symmetric (if A depends_on B, B lists A in dependents); every entity is owned by exactly one component and has an identifier; every `references.entity` is declared under its `owned_by` component; the dependency graph is acyclic (call out any deliberate cycle in the Rationale). Infrastructure, databases, caches, queues, and third-party services are `external_dependencies` — never components.
+整形式のルール（すべてを満たさなければならない）: 各コンポーネント名は一意である。どこかで名前が挙がっている `component:`/`owned_by` はすべて宣言済みのコンポーネントである。自分自身に依存するコンポーネントはない。`depends_on`/`dependents` は対称である（A が B に depends_on なら、B は dependents に A を挙げる）。すべてのエンティティはちょうど 1 つのコンポーネントに所有され、識別子を持つ。すべての `references.entity` は、その `owned_by` のコンポーネントの下で宣言されている。依存関係グラフは非循環である（意図的な循環があれば Rationale で明記する）。インフラ、データベース、キャッシュ、キュー、サードパーティのサービスは `external_dependencies` であり、決してコンポーネントではない。
 
-**Part B — human-readable view (below the block).** Derive these sections from the catalogue — same data, presented for humans:
+**パート B — 人間が読むためのビュー（ブロックの下）。** 次のセクションをカタログから導出する — 同じデータを人間向けに提示する:
 
-- **Component Diagram** — a `mermaid` graph, one node per component, one labelled edge per `depends_on`.
-- **Component Summary** — a table: `| Component | Purpose | Depends On | Dependents | Entities Owned |`.
-- **Entity Ownership** — a table: `| Entity | Owning Component | Identifier | Attributes | References |`.
-- **External Dependencies** — a table: `| Component | Dependency | Kind | Purpose |`.
-- **Rationale** — a table explaining why each component is a separate building block (distinct lifecycle, distinct concern, distinct data ownership, distinct change rate — pick what applies).
+- **Component Diagram** — `mermaid` のグラフ。コンポーネントごとに 1 ノード、`depends_on` ごとにラベル付きのエッジを 1 本。
+- **Component Summary** — 表: `| Component | Purpose | Depends On | Dependents | Entities Owned |`。
+- **Entity Ownership** — 表: `| Entity | Owning Component | Identifier | Attributes | References |`。
+- **External Dependencies** — 表: `| Component | Dependency | Kind | Purpose |`。
+- **Rationale** — 各コンポーネントが独立した構成要素である理由を説明する表（異なるライフサイクル、異なる関心事、異なるデータ所有、異なる変更頻度 — 当てはまるものを選ぶ）。
 
 #### Component-boundary options (when >1 viable decomposition)
 
-When a decomposition choice has more than one viable approach, present the
-trade-off before recording the decision:
+分割の選択に実行可能なアプローチが複数ある場合は、
+決定を記録する前にトレードオフを提示する:
 
-- Option A — <name>: pros / cons / reversibility
-- Option B — <name>: pros / cons / reversibility
-- Recommendation: <option> because <trade-off tied to responsibilities/change rate>
+- Option A — <name>: 長所 / 短所 / 可逆性
+- Option B — <name>: 長所 / 短所 / 可逆性
+- Recommendation: <option>。理由は <trade-off tied to responsibilities/change rate>
 
-The team chooses at the gate (ownership stays with the team), then record the
-chosen decomposition plus an **Alternatives Rejected** note in the Rationale
-section of components.md.
+チームがゲートで選択し（所有権はチームにある）、その後、選ばれた分割と
+**Alternatives Rejected** の注記を components.md の Rationale セクションに
+記録する。
 
-When only one decomposition is viable, state why and skip the block.
+実行可能な分割が 1 つしかない場合は、その理由を述べてこのブロックを省略する。
 
 ### Step 5: Record Architecture Decisions (ADRs)
 
-Create `<record>/inception/domain-design/decisions.md`. The `components.md` Rationale table is a quick per-component justification; `decisions.md` is the durable Architecture Decision Record log that the Inception phase rule requires. Record one ADR for every **significant** design choice made here — component-boundary decompositions, entity-ownership calls, cross-component interaction styles, and any deliberate dependency cycle.
+`<record>/inception/domain-design/decisions.md` を作成する。`components.md` の Rationale 表はコンポーネントごとの簡単な根拠づけであり、`decisions.md` は Inception フェーズのルールが要求する永続的な Architecture Decision Record のログである。ここで行った**重要な**設計上の選択ごとに ADR を 1 つ記録する — コンポーネント境界の分割、エンティティ所有の判断、コンポーネント間のやり取りのスタイル、意図的な依存関係の循環など。
 
-Each ADR MUST follow this structure (per the Inception phase guardrails):
+各 ADR は（Inception フェーズのガードレールに従い）**必ず**次の構造に従う:
 
 - **ADR-NNN: <short title>**
-  - **Context** — the forces and constraints that made a decision necessary
-  - **Decision** — what was chosen
-  - **Consequences** — the resulting trade-offs, both positive and negative
-  - **Alternatives Rejected** — the other viable options considered and why they were not chosen
+  - **Context** — 決定を必要とした要因と制約
+  - **Decision** — 何を選んだか
+  - **Consequences** — 結果として生じるトレードオフ（良い面と悪い面の両方）
+  - **Alternatives Rejected** — 検討した他の実行可能な選択肢と、それらを選ばなかった理由
 
-Number ADRs sequentially (`ADR-001`, `ADR-002`, …). Where a decision came from a Step 4 component-boundary option block, its rejected options populate that ADR's **Alternatives Rejected**. If no significant decision was made (a single obvious decomposition with no trade-offs), state that explicitly in a single ADR rather than leaving the file empty.
+ADR には連番を振る（`ADR-001`, `ADR-002`, …）。決定が Step 4 のコンポーネント境界の選択肢ブロックから来た場合、却下された選択肢をその ADR の **Alternatives Rejected** に記入する。重要な決定がなかった場合（トレードオフのない自明な分割が 1 つだけの場合）は、ファイルを空のままにせず、そのことを 1 つの ADR に明記する。
 
 ### Step 6: Record Traceability
 
-Create `<record>/inception/domain-design/traceability.json` by running
-`{{INVOKE}} engine sensor-traceability --stage domain-design --output-path <that path> --write-upstream`:
-when `stories.md` exists it lists every `USx.y`, otherwise every `FR`
-Requirements Analysis recorded (a requirement with sub-requirements is traced through its `FR{n}.{m}` IDs and needs no row of its own), each with a `GAP` row. Map each upstream ID to the **component or entity**
-in `components.md` that realizes it — those are the only identifiers this
-stage's source of truth defines (it does not name services or public methods;
-method- and API-level targets are pinned later in Contract Design and
-Functional Design):
+`{{INVOKE}} engine sensor-traceability --stage domain-design --output-path <that path> --write-upstream`
+を実行して `<record>/inception/domain-design/traceability.json` を作成する。
+`stories.md` が存在する場合はすべての `USx.y` が、存在しない場合は
+Requirements Analysis が記録したすべての `FR` が（サブ要件を持つ要件はその `FR{n}.{m}` ID を通じて追跡され、それ自体の行は不要）、それぞれ `GAP` の行として列挙される。各上流 ID を、それを実現する `components.md` 内の**コンポーネントまたはエンティティ**に対応づける —
+それらが、このステージの信頼できる情報源が定義する唯一の識別子である（サービスや公開メソッドはここでは名指ししない。
+メソッドや API レベルの対象は、後の Contract Design と
+Functional Design で確定する）:
 
 ```json
 {
@@ -178,43 +177,42 @@ Functional Design):
 
 ### Step 7: Completion Handoff
 
-Hand completion to `stage-protocol.md` via
-`{{INVOKE}} engine orchestrate report --stage domain-design --result <outcome>`.
-That `report` call owns every lifecycle transition and advancement; never perform one in prose, and never narrate this bookkeeping to the user.
+`{{INVOKE}} engine orchestrate report --stage domain-design --result <outcome>` を通じて、
+完了を `stage-protocol.md` に引き渡す。
+その `report` 呼び出しが、ライフサイクルの遷移と前進をすべて担う。散文の中で遷移を実行してはならず、この記録処理をユーザーに説明してもならない。
 
 ### Step 8: Present Completion & Request Approval
 
-Use stage-protocol.md completion template with completion emoji: :building_construction:
-- Summary of components identified (count, key boundaries, entity ownership)
-- Key boundary decisions highlighted (with a pointer to the ADR log in `decisions.md`)
-- Review path: `<record>/inception/domain-design/`
-- Structured approval question with options:
-  - Approve (continue to next stage)
-  - Request Changes (provide revision feedback)
-  - Approve, and add Units Generation next (if it was skipped in execution plan)
+stage-protocol.md の完了テンプレートを、完了時の絵文字 :building_construction: とともに使う:
+- 特定したコンポーネントのサマリー（数、主要な境界、エンティティの所有）
+- 主要な境界の決定を強調する（`decisions.md` の ADR ログへの参照を添える）
+- レビューパス: `<record>/inception/domain-design/`
+- 次の選択肢を持つ構造化された承認の質問:
+  - Approve（次のステージへ進む）
+  - Request Changes（修正のフィードバックを提供する）
+  - Approve, and add Units Generation next（実行計画でスキップされていた場合）
 
-If they pick "Approve, and add Units Generation next", run
-`{{INVOKE}} engine orchestrate next --add units-generation` and follow its
-step, which names the report that records their approval; Units Generation
-runs next. If they only ask to add Units Generation, run the same
-`next --add units-generation`, say in one line that it is on the plan, and ask
-once whether they approve the design as it is or want anything changed.
+利用者が "Approve, and add Units Generation next" を選んだ場合は、
+`{{INVOKE}} engine orchestrate next --add units-generation` を実行し、その
+ステップに従う。そのステップが承認を記録する report を指定する。その後 Units Generation
+が次に実行される。利用者が Units Generation の追加だけを求めた場合は、同じ
+`next --add units-generation` を実行し、計画に追加したことを 1 行で伝え、
+設計をこのまま承認するか、何か変更を望むかを一度だけ尋ねる。
 
 ## Sensors
 
-This stage's outputs are markdown artefacts under `<record>/inception/domain-design/` (`components.md` and `decisions.md`) plus `traceability.json`.
+このステージの出力は、`<record>/inception/domain-design/` 配下の Markdown 成果物（`components.md` と `decisions.md`）と `traceability.json` である。
 
-Imports: `required-sections`, `upstream-coverage`, `traceability`.
+インポート: `required-sections`, `upstream-coverage`, `traceability`.
 
-Upstream targets: `requirements`, `stories`, `architecture`, `component-inventory`, `team-practices`.
+上流の対象: `requirements`, `stories`, `architecture`, `component-inventory`, `team-practices`.
 
-`traceability` owns `traceability.json` and checks every story, or every
-fallback functional requirement, is declared and covered.
+`traceability` は `traceability.json` を所有し、すべてのストーリー、または
+フォールバックとしてのすべての機能要件が宣言され、カバーされていることを確認する。
 
 ## Learn
 
-When `directive.protocol_modules` lists `learnings`, follow
-`stage-protocol-learnings.md`: keep the diary at `directive.memory_path` while
-working, and take the learnings step before the approval gate; that module says
-when it asks the person anything. When the module is absent, skip both the diary
-and the step.
+`directive.protocol_modules` に `learnings` が含まれている場合は、
+`stage-protocol-learnings.md` に従う。作業中は `directive.memory_path` に日誌を付け、
+承認ゲートの前に学習ステップを実施する。そのモジュールが、利用者に何かを尋ねるタイミングを定めている。
+モジュールがない場合は、日誌とステップの両方を省略する。

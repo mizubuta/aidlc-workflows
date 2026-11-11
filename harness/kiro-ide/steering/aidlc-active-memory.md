@@ -4,8 +4,8 @@ inclusion: always
 
 # AI-DLC Active Memory
 
-The following live workspace files are the active AI-DLC method and policy
-layers. They apply to the conductor and delegated agents.
+以下のワークスペース上の実ファイルが、有効な AI-DLC のメソッド層およびポリシー層である。
+これらはコンダクターと委譲先のエージェントに適用される。
 
 #[[file:aidlc/spaces/default/memory/org.md]]
 #[[file:aidlc/spaces/default/memory/team.md]]

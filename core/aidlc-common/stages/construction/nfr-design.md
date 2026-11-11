@@ -68,77 +68,77 @@ outputs: "performance-design.md, security-design.md, scalability-design.md, reli
 
 ## Constraints
 
-This is a design stage — artifacts describe architectural patterns, strategies, and decisions, not implementation-ready code. Complete implementations (middleware, interceptors, retry libraries, encryption routines) belong in code-generation. Limit code to short illustrative snippets (pseudocode or interface-level, ≤15 lines) that clarify a design decision.
+これは設計ステージである — 成果物はアーキテクチャのパターン、戦略、意思決定を記述するものであり、そのまま実装に使えるコードではない。完全な実装（ミドルウェア、インターセプター、リトライライブラリ、暗号化ルーチン）は code-generation に属する。コードは、設計上の意思決定を明確にするための短い説明用スニペット（擬似コードまたはインターフェースレベル、15 行以下）に限定する。
 
 ## Steps
 
 ### Execution Modes
 
-This stage supports two execution modes, controlled by the orchestrator:
+このステージは、オーケストレーターが制御する 2 つの実行モードをサポートする:
 
-**QUESTION-ONLY mode** (invoked by orchestrator during a Bolt's question phase):
-Execute Steps 1–3 only (read artifacts, generate questions, collect answers).
-Do NOT proceed to design or artifact generation. Return control to the orchestrator.
+**QUESTION-ONLY モード**（Bolt の質問フェーズ中にオーケストレーターから呼び出される）:
+Step 1〜3 のみを実行する（成果物の読み込み、質問の生成、回答の収集）。
+設計や成果物の生成には進んではならない。制御をオーケストレーターに返す。
 
-**ARTIFACT-ONLY mode** (invoked by orchestrator during a Bolt's design phase):
-Skip Steps 1–3 (questions already collected and approved).
-Read the answered questions file from the per-unit directory.
-Execute Steps 4–7 only (design solutions, generate artifacts, update state, completion).
+**ARTIFACT-ONLY モード**（Bolt の設計フェーズ中にオーケストレーターから呼び出される）:
+Step 1〜3 をスキップする（質問はすでに収集・承認済み）。
+ユニットごとのディレクトリから回答済みの質問ファイルを読み込む。
+Step 4〜7 のみを実行する（ソリューションの設計、成果物の生成、状態の更新、完了）。
 
-**Full mode** (default — single-unit projects or direct stage invocation):
-Execute all steps sequentially as written.
+**Full モード**（デフォルト — 単一ユニットのプロジェクト、またはステージを直接呼び出した場合）:
+記載どおりにすべてのステップを順番に実行する。
 
 ### Step 1: Read Prior Artifacts
 
-Read NFR requirements from `<record>/construction/{unit-name}/nfr-requirements/`. Read functional design artifacts from `<record>/construction/{unit-name}/functional-design/` (if they exist). Read the inter-unit contracts from `<record>/inception/contract-design/contract-summary.md` (if produced) — the integration mechanism and failure behaviour at each boundary drive the resilience and scalability patterns designed here. Read the domain-design component catalogue from `<record>/inception/domain-design/components.md` (if exists) for architectural context; when the scope skipped those design stages, derive the architectural context from the NFR requirements and, on brownfield, the code knowledge base — never invent the content of a missing artifact.
+`<record>/construction/{unit-name}/nfr-requirements/` から NFR 要件を読み込む。`<record>/construction/{unit-name}/functional-design/` から機能設計の成果物を読み込む（存在する場合）。`<record>/inception/contract-design/contract-summary.md` からユニット間の契約を読み込む（作成されている場合） — 各境界における統合メカニズムと障害時の振る舞いが、ここで設計するレジリエンスとスケーラビリティのパターンを左右する。アーキテクチャ上のコンテキストとして、`<record>/inception/domain-design/components.md` から domain-design のコンポーネントカタログを読み込む（存在する場合）。スコープがそれらの設計ステージをスキップした場合は、NFR 要件と、ブラウンフィールドであればコードナレッジベースからアーキテクチャ上のコンテキストを導き出す — 存在しない成果物の内容を決して捏造しない。
 
 ### Step 2: Generate Design Questions
 
-Create a questions file at `<record>/construction/{unit-name}/nfr-design/nfr-design-questions.md` with context-appropriate questions using [Answer]: tags.
+`<record>/construction/{unit-name}/nfr-design/nfr-design-questions.md` に質問ファイルを作成し、[Answer]: タグを使ってコンテキストに応じた質問を記載する。
 
-Focus areas:
-- Resilience patterns (circuit breakers, bulkheads, fallback strategies)
-- Scalability patterns (horizontal vs vertical, data partitioning, caching tiers)
-- Performance optimization (latency budgets, throughput targets, resource pooling)
-- Security approach (defense in depth, zero trust, encryption standards)
-- Observability approach (metrics and SLI/SLO targets, structured logging, tracing depth, alerting philosophy, dashboard needs)
-- Logical component boundaries (service isolation, failure domains, blast radius)
+重点領域:
+- レジリエンスパターン（サーキットブレーカー、バルクヘッド、フォールバック戦略）
+- スケーラビリティパターン（水平 対 垂直、データパーティショニング、キャッシュ階層）
+- パフォーマンス最適化（レイテンシバジェット、スループット目標、リソースプーリング）
+- セキュリティのアプローチ（多層防御、ゼロトラスト、暗号化標準）
+- オブザーバビリティのアプローチ（メトリクスと SLI/SLO 目標、構造化ログ、トレーシングの深さ、アラートの方針、ダッシュボードのニーズ）
+- 論理コンポーネントの境界（サービスの分離、障害ドメイン、影響範囲）
 
 ### Step 3: Collect and Analyze Answers
 
-Collect answers following stage-protocol.md §3 question flow (offer interaction mode choice, collect answers, write back to file). After collecting answers, perform MANDATORY ambiguity analysis:
-- Identify vague answers ("mix of", "not sure", "depends", "probably")
-- Check for contradictions between answers
-- Flag missing details needed for artifact generation
+stage-protocol.md §3 の質問フロー（インタラクションモードの選択肢を提示し、回答を収集し、ファイルに書き戻す）に従って回答を収集する。回答の収集後、**必須**の曖昧さ分析を行う:
+- 曖昧な回答（"mix of"、"not sure"、"depends"、"probably" など、「混在」「わからない」「場合による」「おそらく」の類）を特定する
+- 回答間の矛盾を確認する
+- 成果物の生成に必要な詳細の欠落を指摘する
 
-If ANY ambiguity found: create follow-up questions and resolve before proceeding.
+曖昧さが 1 つでも見つかった場合は、フォローアップの質問を作成し、解消してから先に進む。
 
 ### Step 4: Design NFR Solutions
 
-Design concrete solutions for each NFR category:
+NFR のカテゴリごとに具体的なソリューションを設計する:
 
-- **Performance**: Caching strategies, query optimization, connection pooling, async processing, CDN usage, lazy loading, pagination
-- **Security**: Authentication flows, authorization model, encryption (at rest and in transit), input validation, CSRF/XSS protection, secrets management, audit logging
-- **Scalability**: Horizontal/vertical scaling approach, load balancing, data partitioning/sharding, queue-based decoupling, stateless design
-- **Reliability**: Circuit breakers, retry policies with backoff, health checks, graceful degradation, failover strategies, data replication
-- **Observability**: Metrics collection strategy, structured logging design, distributed tracing architecture, alerting rules, dashboard specifications, SLI/SLO tracking, correlation ID propagation
+- **Performance**: キャッシュ戦略、クエリ最適化、コネクションプーリング、非同期処理、CDN の活用、遅延読み込み、ページネーション
+- **Security**: 認証フロー、認可モデル、暗号化（保存時と転送時）、入力のバリデーション、CSRF/XSS 対策、シークレット管理、監査ログ
+- **Scalability**: 水平／垂直スケーリングのアプローチ、ロードバランシング、データのパーティショニング／シャーディング、キューによる疎結合化、ステートレス設計
+- **Reliability**: サーキットブレーカー、バックオフ付きのリトライポリシー、ヘルスチェック、グレースフルデグラデーション、フェイルオーバー戦略、データレプリケーション
+- **Observability**: メトリクス収集戦略、構造化ログの設計、分散トレーシングのアーキテクチャ、アラートルール、ダッシュボードの仕様、SLI/SLO の追跡、相関 ID の伝播
 
 ### Step 5: Generate Artifacts
 
-Generate the following in `<record>/construction/{unit-name}/nfr-design/`:
+`<record>/construction/{unit-name}/nfr-design/` に次を生成する:
 
-- **performance-design.md**: Caching architecture, optimization strategies, resource pooling, async patterns, performance budgets
-- **security-design.md**: Authentication/authorization architecture, encryption design, input validation strategy, security headers, compliance controls
-- **scalability-design.md**: Scaling architecture, load distribution, data partitioning strategy, capacity thresholds, auto-scaling rules
-- **reliability-design.md**: Resilience patterns, circuit breaker configuration, retry policies, health check design, failover procedures, backup strategy
-- **observability-design.md**: Metrics collection architecture, structured logging design, distributed tracing strategy, alerting rules and escalation, dashboard specifications, SLI/SLO definitions, correlation ID propagation
-- **logical-components.md**: Logical infrastructure component inventory — service boundaries, failure domains, blast radius mapping, component isolation strategy, shared resource identification. Bridges NFR design decisions with Infrastructure Design by providing a component-level view of where NFR patterns apply.
+- **performance-design.md**: キャッシュアーキテクチャ、最適化戦略、リソースプーリング、非同期パターン、パフォーマンスバジェット
+- **security-design.md**: 認証／認可のアーキテクチャ、暗号化の設計、入力バリデーション戦略、セキュリティヘッダー、コンプライアンス統制
+- **scalability-design.md**: スケーリングのアーキテクチャ、負荷分散、データパーティショニング戦略、キャパシティのしきい値、オートスケーリングのルール
+- **reliability-design.md**: レジリエンスパターン、サーキットブレーカーの構成、リトライポリシー、ヘルスチェックの設計、フェイルオーバー手順、バックアップ戦略
+- **observability-design.md**: メトリクス収集のアーキテクチャ、構造化ログの設計、分散トレーシング戦略、アラートルールとエスカレーション、ダッシュボードの仕様、SLI/SLO の定義、相関 ID の伝播
+- **logical-components.md**: 論理的なインフラコンポーネントの一覧 — サービス境界、障害ドメイン、影響範囲のマッピング、コンポーネントの分離戦略、共有リソースの特定。NFR パターンがどこに適用されるかをコンポーネントレベルで示すことで、NFR 設計の意思決定と Infrastructure Design を橋渡しする。
 
-Create `<record>/construction/{unit-name}/nfr-design/traceability.json` by running
-`{{INVOKE}} engine sensor-traceability --stage nfr-design --output-path <that path> --write-upstream`:
-it lists every `NFRx.y` from this Unit's NFR requirements (if NFR Requirements did not run, every
-`NFRn` Requirements Analysis recorded), each with a `GAP` row. Map each to the
-concrete design solution:
+次を実行して `<record>/construction/{unit-name}/nfr-design/traceability.json` を作成する:
+`{{INVOKE}} engine sensor-traceability --stage nfr-design --output-path <that path> --write-upstream`
+このファイルには、このユニットの NFR 要件にあるすべての `NFRx.y`（NFR Requirements が実行されなかった場合は、
+Requirements Analysis が記録したすべての `NFRn`）が、それぞれ `GAP` 行として列挙される。それぞれを
+具体的な設計ソリューションに対応付ける:
 
 ```json
 {
@@ -154,42 +154,41 @@ concrete design solution:
 
 ### Step 6: Completion Handoff
 
-Hand completion to `stage-protocol.md` via
-`{{INVOKE}} engine orchestrate report --stage nfr-design --result <outcome>`.
-That `report` call owns every lifecycle transition and advancement; never perform one in prose, and never narrate this bookkeeping to the user.
+`{{INVOKE}} engine orchestrate report --stage nfr-design --result <outcome>` を通じて、
+完了処理を `stage-protocol.md` に引き渡す。
+その `report` 呼び出しが、ライフサイクルの遷移と前進をすべて担う。散文の中で遷移を実行してはならず、この記録処理をユーザーに説明してもならない。
 
 ### Step 7: Completion
 
-Present completion message and approval gate:
+完了メッセージと承認ゲートを提示する:
 
 ```
 # :shield: NFR Design Complete — {unit-name}
 ```
 
-Summary of design decisions per NFR category, then:
+NFR のカテゴリごとの設計上の意思決定のサマリーを示し、続いて次を示す:
 
 ```
 **Review:** `<record>/construction/{unit-name}/nfr-design/`
 ```
 
-Approval gate: strictly 2-option (Approve / Request Changes).
+承認ゲート: 厳密に 2 択（Approve / Request Changes）。
 
 ## Sensors
 
-This stage's outputs are markdown design artefacts under `<record>/construction/{unit-name}/nfr-design/`. Some sections include code samples that the code-shape sensors can also flag.
+このステージの出力は、`<record>/construction/{unit-name}/nfr-design/` 配下の Markdown の設計成果物である。一部のセクションには、コード形状のセンサーも検出対象とするコードサンプルが含まれる。
 
-Imports: `required-sections`, `upstream-coverage`, `linter`, `type-check`, `traceability`.
+インポート: `required-sections`、`upstream-coverage`、`linter`、`type-check`、`traceability`。
 
-Upstream targets: `performance-requirements`, `security-requirements`, `scalability-requirements`, `reliability-requirements`, `observability-requirements`, `tech-stack-decisions`, `functional-spec`, `contract-summary`.
+上流のターゲット: `performance-requirements`、`security-requirements`、`scalability-requirements`、`reliability-requirements`、`observability-requirements`、`tech-stack-decisions`、`functional-spec`、`contract-summary`。
 
-`linter` and `type-check` inspect matching TypeScript/JavaScript snippets.
-`traceability` verifies that every detailed NFR requirement is declared and
-covered by a design solution.
+`linter` と `type-check` は、該当する TypeScript/JavaScript のスニペットを検査する。
+`traceability` は、詳細なすべての NFR 要件が宣言され、
+設計ソリューションによってカバーされていることを検証する。
 
 ## Learn
 
-When `directive.protocol_modules` lists `learnings`, follow
-`stage-protocol-learnings.md`: keep the diary at `directive.memory_path` while
-working, and take the learnings step before the approval gate; that module says
-when it asks the person anything. When the module is absent, skip both the diary
-and the step.
+`directive.protocol_modules` に `learnings` が含まれている場合は、
+`stage-protocol-learnings.md` に従う。作業中は `directive.memory_path` に日誌を付け、
+承認ゲートの前に学習ステップを実施する。そのモジュールが、利用者に何かを尋ねるタイミングを定めている。
+モジュールがない場合は、日誌とステップの両方を省略する。

@@ -1,44 +1,43 @@
 # Writing a Technical Environment Document
 
-A technical environment document says **how the project is built**: the
-languages, frameworks, cloud services, security rules and tests it must use,
-and what it must not use. It is the technical counterpart to the
-[vision document](vision-document-guide.md), and the reference the
-Construction stages work from.
+技術環境ドキュメントは、**プロジェクトをどう構築するか**を示します。使用しなければならない
+言語、フレームワーク、クラウドサービス、セキュリティルール、テスト、そして使用してはならないものです。
+これは [ビジョンドキュメント](vision-document-guide.md) の技術面における対となる文書であり、
+Construction のステージが作業の拠り所とするリファレンスです。
 
-Without it, the design and build stages either ask you about each choice or
-pick a default you then have to change. Allow lists and disallow lists, each
-with a reason, stop the agents guessing.
+これがないと、設計や構築のステージは選択のたびにあなたに質問するか、
+後で変更が必要になるデフォルトを選んでしまいます。許可リストと禁止リストに
+それぞれ理由を添えておけば、エージェントが推測で動くことを防げます。
 
 ---
 
 ## Where it goes in AI-DLC
 
-The vision document goes into your first request. The technical environment
-document belongs where every stage reads it: your space's team knowledge.
+ビジョンドキュメントは最初のリクエストに含めます。技術環境ドキュメントは、
+すべてのステージが読み込む場所、つまりスペースのチームナレッジに置きます。
 
-1. Save it as
+1. 次の場所に保存します:
    `aidlc/spaces/<space>/knowledge/aidlc-shared/technical-environment.md`
-   (`default` is the space name unless you created others). Every Markdown
-   file in `aidlc-shared/` is part of every stage's context. The
-   [Knowledge](../08-knowledge.md) chapter calls this folder
-   `aidlc/knowledge/aidlc-shared/`.
-2. Keep all of it in `aidlc-shared/`. Security, testing and cloud standards
-   are read by stages that different agents lead (Code Generation, for one,
-   runs as the developer agent), and an agent's own folder is read only while
-   that agent works. Use an agent folder only for material one agent alone
-   needs; see
-   [Adding Company Standards](../08-knowledge.md#adding-company-standards)
-   for the folder names.
-3. Put the few rules that must never be broken (a prohibited library, a
-   required version) in `aidlc/spaces/<space>/memory/project.md` as well, or
-   in `team.md` when they apply to every project your team runs. The memory
-   files are rules every stage applies; see
-   [Rules and the Learning Loop](../09-rules-and-the-learning-loop.md).
+   （他のスペースを作成していなければ、スペース名は `default` です）。`aidlc-shared/` 内の
+   すべての Markdown ファイルは、すべてのステージのコンテキストに含まれます。
+   [ナレッジ](../08-knowledge.md) の章では、このフォルダーを
+   `aidlc/knowledge/aidlc-shared/` と呼んでいます。
+2. すべてを `aidlc-shared/` に置いてください。セキュリティ、テスト、クラウドの標準は、
+   異なるエージェントがリードするステージで読み込まれます（たとえば Code Generation は
+   developer エージェントとして実行されます）。また、エージェント専用のフォルダーは、そのエージェントが
+   作業している間しか読み込まれません。エージェント専用のフォルダーは、1 つのエージェントだけが
+   必要とする資料にのみ使ってください。フォルダー名については
+   [会社の標準を追加する](../08-knowledge.md#adding-company-standards)
+   を参照してください。
+3. 決して破ってはならない少数のルール（禁止ライブラリ、必須バージョンなど）は、
+   `aidlc/spaces/<space>/memory/project.md` にも記載してください。チームが手がけるすべての
+   プロジェクトに適用される場合は `team.md` に記載します。メモリファイルは
+   すべてのステージが適用するルールです。
+   [ルールと学習ループ](../09-rules-and-the-learning-loop.md) を参照してください。
 
-Do this before the first `/aidlc` of the piece of work. When the plan includes
-Practices Discovery, early in Inception, it asks how your team works; on a new
-project, the answers already in this document are quick to confirm.
+これは、その作業で最初に `/aidlc` を実行する前に行ってください。計画に
+Practices Discovery（Inception の序盤）が含まれる場合、チームの働き方について質問されます。新規
+プロジェクトでは、このドキュメントにすでに記載されている回答をすばやく確認するだけで済みます。
 
 ---
 
@@ -55,12 +54,11 @@ project, the answers already in this document are quick to confirm.
 8. Example code: one short example each of a typical endpoint, function and test
 ```
 
-On item 6, the reason and the alternative matter: without them the agents
-follow the prohibition but cannot judge a good substitute.
+項目 6 では、理由と代替手段が重要です。それがないと、エージェントは禁止には
+従いますが、適切な代替手段を判断できません。
 
-On item 8, even one or two short examples give Code Generation a pattern to
-follow instead of inventing one. It is the most useful addition beyond the
-basics.
+項目 8 では、短い例が 1〜2 個あるだけでも、Code Generation はパターンを発明する代わりに
+それに従うことができます。基本項目以外で追加するなら、これが最も役に立ちます。
 
 ### For work on an existing codebase
 
@@ -72,25 +70,24 @@ basics.
 5. Example code taken from the existing codebase
 ```
 
-Take the examples from real files, so new code looks like it belongs.
-Reverse Engineering also reads the code, but it cannot tell which patterns you
-want kept and which you are moving away from.
+例は実際のファイルから取ってください。そうすれば、新しいコードが既存のコードになじみます。
+Reverse Engineering もコードを読み込みますが、どのパターンを残したいのか、
+どのパターンから移行しようとしているのかまでは判断できません。
 
-What this piece of work adds or changes, and anything only it must leave
-alone, goes in the
-[vision note](vision-document-guide.md#for-work-on-an-existing-codebase): this
-document stays in the space, and every later piece of work reads it.
+この作業で追加・変更する内容や、この作業だけが手を付けてはならないものは、
+[ビジョンノート](vision-document-guide.md#for-work-on-an-existing-codebase) に記載します。
+このドキュメントはスペースに残り、以降のすべての作業がこれを読み込みます。
 
-Whether the project is new or existing comes from the code in the project
-folder, not from this document. If AI-DLC calls an existing project new, say
-so in your request, or start with `/aidlc --project-type brownfield`.
+プロジェクトが新規か既存かは、このドキュメントではなくプロジェクトフォルダー内のコードから
+判断されます。既存のプロジェクトを AI-DLC が新規と判断した場合は、リクエストでその旨を伝えるか、
+`/aidlc --project-type brownfield` で開始してください。
 
 ---
 
 ## The full structure
 
-Mark each section for the kind of project: **(New)** for a new project,
-**(Existing)** for work on an existing codebase, **(Both)**.
+各セクションには対象となるプロジェクトの種類を示しています。**(New)** は新規プロジェクト、
+**(Existing)** は既存のコードベースに対する作業、**(Both)** は両方です。
 
 ### 1. Project Technical Summary (Both)
 
@@ -126,8 +123,8 @@ Mark each section for the kind of project: **(New)** for a new project,
 | PHP | No team expertise, not the platform direction |
 ```
 
-For an existing codebase, add the languages already in use and the direction
-for each (keep, upgrade, migrate).
+既存のコードベースの場合は、すでに使用している言語と、それぞれの方針
+（維持、アップグレード、移行）を追加してください。
 
 ### 3. Frameworks and Libraries (Both)
 
@@ -240,20 +237,20 @@ for each (keep, upgrade, migrate).
 
 #### Choose a security framework
 
-Pick one framework and say, for each of its categories, how the project
-addresses it. A category that does not apply says why; a control planned for
-later names the gap and the phase.
+フレームワークを 1 つ選び、そのカテゴリごとに、プロジェクトがどう対処するかを記載してください。
+該当しないカテゴリにはその理由を、後で導入予定の統制にはそのギャップと
+対応するフェーズを明記します。
 
-| Kind of project | Common choices |
+| プロジェクトの種類 | よく選ばれるもの |
 |-----------------|----------------|
-| Web applications and APIs | OWASP Top 10, OWASP API Security Top 10 |
-| Cloud infrastructure | The cloud provider's Well-Architected security pillar, CIS Benchmarks |
-| Government or regulated | NIST 800-53, FedRAMP, ISO 27001 |
-| General software | CIS Controls v8, SANS Top 25 |
+| Web アプリケーションと API | OWASP Top 10、OWASP API Security Top 10 |
+| クラウドインフラ | クラウドプロバイダーの Well-Architected セキュリティの柱、CIS Benchmarks |
+| 政府機関または規制対象 | NIST 800-53、FedRAMP、ISO 27001 |
+| 一般的なソフトウェア | CIS Controls v8、SANS Top 25 |
 
-For a framework with ten categories or fewer, put the full table in this
-document. For a large one, keep it in a file of its own next to this one, for
-example `aidlc-shared/nist-800-53-compliance.md`, and link it from here.
+カテゴリが 10 個以下のフレームワークであれば、表全体をこのドキュメントに記載します。
+大規模なフレームワークの場合は、このドキュメントの隣に専用のファイルを置き
+（例: `aidlc-shared/nist-800-53-compliance.md`）、ここからリンクしてください。
 
 ### 7. Testing (Both)
 
@@ -279,21 +276,19 @@ example `aidlc-shared/nist-800-53-compliance.md`, and link it from here.
 | Before staging deploy | End-to-end | Block the deploy |
 ```
 
-How many tests the workflow writes also follows the test strategy you pick for
-the piece of work; see
-[Scopes, Depth, and Test Strategy](../05-scopes-and-depth.md).
+ワークフローが書くテストの量は、その作業に対して選んだテスト戦略にも従います。
+[スコープ、深さ、テスト戦略](../05-scopes-and-depth.md) を参照してください。
 
 ### 8. Example Code (Both)
 
-Example code shows the canonical way to do the common things, so generated
-code follows it rather than inventing a new style.
+サンプルコードは、よくある処理の標準的なやり方を示します。これにより、生成されるコードは
+新しいスタイルを発明するのではなく、それに従います。
 
-Provide examples for whichever of these the project has: the project layout,
-an API endpoint, database access, error handling, applying authorisation, a
-unit test and an integration test, logging, configuration loading, and an
-infrastructure module.
+プロジェクトにあるものについて、次の例を用意してください: プロジェクトのレイアウト、
+API エンドポイント、データベースアクセス、エラー処理、認可の適用、
+ユニットテストと統合テスト、ログ出力、設定の読み込み、インフラモジュール。
 
-Keep them in the repository, for example:
+例はリポジトリ内に置きます。たとえば次のようにします:
 
 ```text
 project-root/
@@ -308,16 +303,15 @@ project-root/
       README.md
 ```
 
-Each example should run, come with its test, and have a short README: what
-pattern it shows, when to use it and when not, which parts to customise and
-which to keep as they are.
+各例は実行可能で、テストが付属し、短い README を備えているべきです。README には、
+どのパターンを示しているか、いつ使い、いつ使わないか、どの部分をカスタマイズし、
+どの部分をそのまま維持すべきかを記載します。
 
-The examples folder is not read on its own: say in this document which
-example applies to what, for example "Every API endpoint follows
-`examples/api-endpoint/`", so Code Generation opens it when it plans that
-step. Keep the examples current when a standard changes, and rename a
-superseded one with a `deprecated-` prefix and a note pointing to its
-replacement.
+examples フォルダーは単独では読み込まれません。このドキュメントの中で、どの例が何に
+適用されるかを記載してください。たとえば「すべての API エンドポイントは
+`examples/api-endpoint/` に従う」と書いておけば、Code Generation はそのステップを計画するときに
+それを開きます。標準が変わったら例も最新の状態に保ち、置き換えられた例は
+`deprecated-` 接頭辞を付けて名前を変え、後継を指す注記を添えてください。
 
 ### 9. Existing Codebase Only
 
@@ -352,16 +346,16 @@ replacement.
 
 ## Where each section is used
 
-| Section | Stage | How it is used |
+| セクション | ステージ | 使われ方 |
 |---------|-------|----------------|
-| Project Technical Summary | Practices Discovery | Team practices and skills |
-| Languages, Frameworks and Libraries | NFR Design, Code Generation | What is used, at which version, and what is never added |
-| Cloud Services | Feasibility & Constraints, Infrastructure Design | Which services the design may use |
-| Architecture and Patterns | Domain Design, Contract Design, Functional Design | Structure, API and data decisions |
-| Security | NFR Requirements, NFR Design, Build and Test | Security controls and their checks |
-| Testing | Code Generation, Build and Test, CI Pipeline | Test types, coverage and gates |
-| Example Code | Code Generation | The pattern each piece of code follows |
-| Existing Technical Inventory | Reverse Engineering, Practices Discovery | What to keep, migrate or remove |
+| Project Technical Summary | Practices Discovery | チームのプラクティスとスキル |
+| Languages, Frameworks and Libraries | NFR Design, Code Generation | 何をどのバージョンで使うか、そして何を決して追加しないか |
+| Cloud Services | Feasibility & Constraints, Infrastructure Design | 設計で使用できるサービス |
+| Architecture and Patterns | Domain Design, Contract Design, Functional Design | 構造、API、データに関する意思決定 |
+| Security | NFR Requirements, NFR Design, Build and Test | セキュリティ統制とそのチェック |
+| Testing | Code Generation, Build and Test, CI Pipeline | テストの種類、カバレッジ、ゲート |
+| Example Code | Code Generation | 各コードが従うパターン |
+| Existing Technical Inventory | Reverse Engineering, Practices Discovery | 維持、移行、削除するもの |
 
-Which stages run depends on the plan you approve; see
-[Phases and Stages](../04-phases-and-stages.md).
+どのステージが実行されるかは、承認した計画によって決まります。
+[フェーズとステージ](../04-phases-and-stages.md) を参照してください。

@@ -1,109 +1,109 @@
 # Wireframing Guide
 
 ## Purpose
-Wireframes are visual blueprints that define layout, hierarchy, and interaction flow before visual design or development begins. They reduce rework by validating structure early and cheaply.
+ワイヤーフレームは、ビジュアルデザインや開発を始める前に、レイアウト、階層、インタラクションの流れを定義する視覚的な設計図である。構造を早い段階で安価に検証することで、手戻りを減らす。
 
 ## Fidelity Progression
 
 ### Low-Fidelity (Sketches)
-- **Tools**: Paper, whiteboard, basic drawing tools
-- **When**: Initial ideation, stakeholder alignment, exploring multiple layouts quickly
-- **Content**: Boxes and lines, placeholder text ("Lorem ipsum"), no color, no real data
-- **Time per screen**: 5-15 minutes
-- **Rule**: If you spend more than 15 minutes on a sketch, you are over-investing
+- **ツール**: 紙、ホワイトボード、基本的な描画ツール
+- **使う場面**: 初期のアイデア出し、ステークホルダーとの認識合わせ、複数のレイアウトを素早く探索するとき
+- **内容**: 箱と線、プレースホルダーテキスト（"Lorem ipsum"）、色なし、実データなし
+- **1 画面あたりの時間**: 5〜15 分
+- **ルール**: 1 つのスケッチに 15 分以上かけているなら、投資しすぎである
 
 ### Mid-Fidelity (Structural Wireframes)
-- **Tools**: Figma, Balsamiq, Excalidraw
-- **When**: Defining content hierarchy, information architecture, navigation flow
-- **Content**: Real labels, approximate spacing, grayscale, actual content structure
-- **Time per screen**: 30-60 minutes
+- **ツール**: Figma、Balsamiq、Excalidraw
+- **使う場面**: コンテンツ階層、情報アーキテクチャ、ナビゲーションフローを定義するとき
+- **内容**: 実際のラベル、おおよその余白、グレースケール、実際のコンテンツ構造
+- **1 画面あたりの時間**: 30〜60 分
 
 ### High-Fidelity (Interactive Prototypes)
-- **Tools**: Figma (prototyping mode), Framer
-- **When**: User testing, developer handoff, complex interaction validation
-- **Content**: Real copy, accurate spacing, clickable interactions, state transitions
-- **Time per screen**: 2-4 hours
+- **ツール**: Figma（プロトタイピングモード）、Framer
+- **使う場面**: ユーザーテスト、開発者への引き渡し、複雑なインタラクションの検証
+- **内容**: 実際のコピー、正確な余白、クリック可能なインタラクション、状態遷移
+- **1 画面あたりの時間**: 2〜4 時間
 
 ### Progression Rule
-Start at the lowest fidelity that answers your current question. Do not jump to high-fidelity until low-fidelity concepts are validated.
+現在の問いに答えられる最も低い忠実度から始める。低忠実度のコンセプトが検証されるまで、高忠実度に飛びつかない。
 
 ## Layout Patterns
 
 ### F-Pattern (Content-Heavy Pages)
-Users scan horizontally across the top, then down the left side, then across again. Use for:
-- Article pages, search results, dashboards
-- Place critical content in the top-left and along the left edge
+ユーザーは上部を横方向に走査し、次に左側を下へ、そして再び横方向に走査する。用途:
+- 記事ページ、検索結果、ダッシュボード
+- 重要なコンテンツは左上と左端に沿って配置する
 
 ### Z-Pattern (Marketing / Landing Pages)
-Eye moves: top-left to top-right, diagonally to bottom-left, then to bottom-right. Use for:
-- Landing pages, sign-up flows, simple layouts
-- Place logo top-left, CTA top-right, key message bottom-right
+視線の動き: 左上から右上へ、斜めに左下へ、そして右下へ。用途:
+- ランディングページ、サインアップフロー、シンプルなレイアウト
+- ロゴは左上、CTA は右上、主要メッセージは右下に配置する
 
 ### Card Layout
-Grid of self-contained content units. Use for:
-- Product catalogs, dashboards, media galleries
-- Each card is independently scannable and actionable
+自己完結したコンテンツ単位のグリッド。用途:
+- 製品カタログ、ダッシュボード、メディアギャラリー
+- 各カードは独立して走査・操作できる
 
 ### Split Screen
-Two equal or weighted panels side by side. Use for:
-- Comparison views, master-detail, editor-preview
+2 つの均等または比重の異なるパネルを横に並べる。用途:
+- 比較ビュー、マスター/詳細、エディター/プレビュー
 
 ## Component Library Basics
 
 ### Essential Components to Define Early
-- **Navigation**: Top bar, side nav, breadcrumbs, tabs
-- **Data display**: Tables, cards, lists, detail panels
-- **Input**: Text fields, selects, checkboxes, date pickers, file upload
-- **Feedback**: Alerts, toasts, progress bars, empty states
-- **Actions**: Buttons (primary, secondary, destructive), links, menus
+- **ナビゲーション**: トップバー、サイドナビ、パンくずリスト、タブ
+- **データ表示**: テーブル、カード、リスト、詳細パネル
+- **入力**: テキストフィールド、セレクト、チェックボックス、日付ピッカー、ファイルアップロード
+- **フィードバック**: アラート、トースト、プログレスバー、空状態
+- **アクション**: ボタン（プライマリ、セカンダリ、破壊的操作）、リンク、メニュー
 
 ### Consistency Rules
-- One primary action per screen section (single prominent button)
-- Consistent placement of navigation and actions across all screens
-- Uniform spacing scale (4px, 8px, 16px, 24px, 32px, 48px)
+- 画面のセクションごとにプライマリアクションは 1 つ（目立つボタンは 1 つだけ）
+- ナビゲーションとアクションの配置をすべての画面で一貫させる
+- 統一された余白スケール（4px、8px、16px、24px、32px、48px）
 
 ## Screen State Design
 
-Every screen has multiple states. Wireframe ALL of them, not just the happy path.
+すべての画面には複数の状態がある。ハッピーパスだけでなく、そのすべてをワイヤーフレーム化する。
 
 ### The Five States
 
-1. **Empty State**
-   - First-time user with no data
-   - Include: illustration/icon, explanation of what will appear, clear CTA to create first item
-   - Never show a blank table or empty list with no guidance
+1. **空状態（Empty State）**
+   - データを持たない初回利用者
+   - 含めるもの: イラスト/アイコン、何が表示されるようになるかの説明、最初の項目を作成する明確な CTA
+   - ガイダンスのない空のテーブルや空のリストを決して表示しない
 
-2. **Loading State**
-   - Data is being fetched or processed
-   - Use skeleton screens (preferred) or spinners
-   - Show loading in context (inline), not as a full-page block
+2. **読み込み中状態（Loading State）**
+   - データの取得中または処理中
+   - スケルトンスクリーン（推奨）またはスピナーを使う
+   - 読み込み表示は全画面のブロックではなく、文脈の中（インライン）で示す
 
-3. **Success / Populated State**
-   - Normal operation with real data
-   - This is the state most wireframes show — but it is only one of five
+3. **成功/データ表示状態（Success / Populated State）**
+   - 実データでの通常動作
+   - ほとんどのワイヤーフレームが示すのはこの状態だが、5 つのうちの 1 つにすぎない
 
-4. **Error State**
-   - Something went wrong (network error, validation failure, permission denied)
-   - Explain what happened in plain language, suggest recovery action
-   - Never show raw error codes or stack traces to users
+4. **エラー状態（Error State）**
+   - 何かが失敗した（ネットワークエラー、検証失敗、権限拒否）
+   - 何が起きたかを平易な言葉で説明し、回復のためのアクションを提案する
+   - 生のエラーコードやスタックトレースをユーザーに決して表示しない
 
-5. **Partial / Edge State**
-   - Incomplete data, very long content, single item vs many items, max limits reached
-   - Test with: 0 items, 1 item, 5 items, 100 items, 10,000 items
-   - Test with: very short text, very long text, special characters, missing optional fields
+5. **部分/エッジ状態（Partial / Edge State）**
+   - 不完全なデータ、非常に長いコンテンツ、1 件と多数の場合、上限到達
+   - テストする件数: 0 件、1 件、5 件、100 件、10,000 件
+   - テストする内容: 非常に短いテキスト、非常に長いテキスト、特殊文字、任意フィールドの欠落
 
 ## Wireframe Review Checklist
-- [ ] All five screen states represented (empty, loading, success, error, partial)
-- [ ] Navigation is consistent across all screens
-- [ ] Content hierarchy is clear — most important information is most prominent
-- [ ] Interactive elements are obviously clickable/tappable
-- [ ] Mobile and desktop layouts considered (even if only one is wireframed in detail)
-- [ ] Accessibility annotations present (tab order, heading levels, alt text notes)
-- [ ] Edge cases documented (long names, missing data, permission variations)
+- [ ] 5 つの画面状態すべて（空、読み込み中、成功、エラー、部分）が表現されている
+- [ ] ナビゲーションがすべての画面で一貫している
+- [ ] コンテンツ階層が明確である — 最も重要な情報が最も目立つ
+- [ ] インタラクティブな要素が明らかにクリック/タップ可能である
+- [ ] モバイルとデスクトップのレイアウトが考慮されている（詳細にワイヤーフレーム化するのが一方だけであっても）
+- [ ] アクセシビリティの注記がある（タブ順序、見出しレベル、代替テキストのメモ）
+- [ ] エッジケースが文書化されている（長い名前、データの欠落、権限の違い）
 
 ## Common Mistakes
-- Wireframing only the happy path with perfect data
-- Using placeholder text that hides layout problems (real content is longer/shorter)
-- Skipping mobile layout until development
-- Treating wireframes as final design — they should invite feedback and iteration
-- Not annotating interaction behavior (what happens on click, hover, swipe)
+- 完璧なデータでのハッピーパスだけをワイヤーフレーム化する
+- レイアウトの問題を隠してしまうプレースホルダーテキストを使う（実際のコンテンツはもっと長い/短い）
+- モバイルレイアウトを開発段階まで後回しにする
+- ワイヤーフレームを最終デザインとして扱う — ワイヤーフレームはフィードバックと反復を促すべきものである
+- インタラクションの挙動（クリック、ホバー、スワイプで何が起きるか）を注記しない

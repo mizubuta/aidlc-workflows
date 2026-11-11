@@ -29,109 +29,107 @@ outputs: workspace classification (greenfield/brownfield), technology stack dete
 
 # Workspace Detection
 
-Runs deterministically inside `aidlc-utility init`. The detection rules in Step 3 below are the source of truth for the scanner's classification logic.
+`aidlc-utility init` の中で決定的に実行される。以下の Step 3 の検出ルールが、スキャナーの分類ロジックにおける信頼できる情報源である。
 
 ## Steps
 
 ### Step 1: Update State
 
-1. Update `<record>/aidlc-state.md`: set `Current Stage` to `detecting workspace`
-2. Mark workspace-detection as `[-]` in progress
+1. `<record>/aidlc-state.md` を更新する: `Current Stage` を `detecting workspace` に設定する
+2. workspace-detection を `[-]`（進行中）としてマークする
 
 ### Step 2: Scan Workspace
 
-The scanner checks top-level files plus known source directories (`src/`, `app/`, `lib/`, `pages/`, `components/`, `tests/`), excluding the harness directories (`.claude/`, `.kiro/`, `.codex/`, `.opencode/`, `.aidlc/`, `.cursor/`), `aidlc/`, `node_modules/`, `.git/`, `dist/`, `build/`, `.next/`, `target/`, `vendor/`.
+スキャナーは、トップレベルのファイルと既知のソースディレクトリ（`src/`、`app/`、`lib/`、`pages/`、`components/`、`tests/`）を調べる。ただし、ハーネスのディレクトリ（`.claude/`、`.kiro/`、`.codex/`、`.opencode/`、`.aidlc/`、`.cursor/`）、`aidlc/`、`node_modules/`、`.git/`、`dist/`、`build/`、`.next/`、`target/`、`vendor/` は除外する。
 
-It also never counts a file AI-DLC wrote whole into the folder, such as Cursor's root `install.ts`: each installed harness lists these as whole-file root integrations in `<harness directory>/tools/data/aidlc-projection.json`, and the scanner reads that list. A root `install.ts` with no installed harness claiming it is the project's own code and still counts.
+また、AI-DLC がフォルダーに丸ごと書き込んだファイル（Cursor のルートにある `install.ts` など）も決して数えない。インストールされた各ハーネスは、これらをファイル単位のルート統合として `<harness directory>/tools/data/aidlc-projection.json` に列挙しており、スキャナーはその一覧を読み込む。ルートにある `install.ts` のうち、インストール済みのどのハーネスも自分のものとして主張していないものは、プロジェクト自身のコードであり、引き続き数える。
 
-Nested-project fallback: when NO top-level signal fires (the layout that would otherwise classify greenfield), the scanner performs a deterministic recursive walk of arbitrarily-named container directories, capped at three levels below the workspace root. At every level it skips the excluded directories above, sample/documentation directories, known source-directory names, hidden dirs, symlinks, and non-directories, then re-applies the same signal set at each visited directory (including that directory's own known-source-dir recursion). Every brownfield hit within the cap has its languages/frameworks/build system merged into the result and its slash-joined relative path recorded as the nested root; the walker does not descend below a hit. When at least one hit is found, every visited git repository (a directory holding `.git`) with no hit at or below it is recorded as a nested root too, so a parent folder of several repos names all of them even when one holds only files outside the language list (such as `index.html`); this never changes the classification. This catches layouts such as `services/api/src/main.py` while avoiding duplicate file counts. The fallback never runs when the root already has a source signal.
+ネストしたプロジェクトのフォールバック: トップレベルのシグナルが**1 つも**検出されない場合（そのままなら greenfield と分類されるレイアウト）、スキャナーは任意の名前のコンテナディレクトリを決定的に再帰走査する。走査はワークスペースルートから 3 階層下までに制限される。各階層で、上記の除外ディレクトリ、サンプル/ドキュメント用ディレクトリ、既知のソースディレクトリ名、隠しディレクトリ、シンボリックリンク、ディレクトリ以外のものをスキップし、訪問した各ディレクトリで同じシグナル群を再適用する（そのディレクトリ自身の既知ソースディレクトリへの再帰も含む）。上限内で brownfield と判定されたヒットはすべて、その言語/フレームワーク/ビルドシステムが結果にマージされ、スラッシュで連結した相対パスがネストしたルートとして記録される。ウォーカーはヒットより下には降りない。少なくとも 1 つのヒットが見つかった場合、訪問した git リポジトリ（`.git` を持つディレクトリ）のうち、その位置または配下にヒットがないものもすべてネストしたルートとして記録される。これにより、複数のリポジトリをまとめた親フォルダーでは、言語リスト外のファイル（`index.html` など）しか持たないリポジトリがあっても、すべてのリポジトリが挙げられる。これが分類を変えることはない。この仕組みにより、ファイルの重複カウントを避けつつ、`services/api/src/main.py` のようなレイアウトを捉えられる。ルートにすでにソースのシグナルがある場合、フォールバックは決して実行されない。
 
-Scan signals:
-- Directory structure (top-level and key subdirectories)
-- Configuration files (package.json, pom.xml, build.gradle, Cargo.toml, pyproject.toml, etc.)
-- Build system files (Makefile, Dockerfile, docker-compose, CI/CD configs)
-- Package/dependency files (lock files, vendor directories)
-- Source code directories and their languages
-- Repo metadata (`.gitmodules` submodule declarations)
-- Test infrastructure (test directories, test config files, coverage config)
-- Documentation (README, docs/, wiki/)
+スキャンのシグナル:
+- ディレクトリ構造（トップレベルと主要なサブディレクトリ）
+- 設定ファイル（package.json、pom.xml、build.gradle、Cargo.toml、pyproject.toml など）
+- ビルドシステムのファイル（Makefile、Dockerfile、docker-compose、CI/CD の設定）
+- パッケージ/依存関係のファイル（ロックファイル、vendor ディレクトリ）
+- ソースコードのディレクトリとその言語
+- リポジトリのメタデータ（`.gitmodules` によるサブモジュール宣言）
+- テスト基盤（テストディレクトリ、テスト設定ファイル、カバレッジ設定）
+- ドキュメント（README、docs/、wiki/）
 
-**Exclude from analysis** (framework scaffolding, not application code):
-- The harness directory (`.claude/`, `.kiro/`, `.codex/`, `.opencode/`, `.aidlc/`, or `.cursor/`) — AI-DLC framework files (skills, agents, hooks, tools, knowledge)
-- `aidlc/` — AI-DLC workspace root (the space tree at `aidlc/spaces/<space>/...`)
-- The root files AI-DLC wrote whole (Cursor's `install.ts`), as listed by the installed harness (see above)
-- `node_modules/`, `.git/`
+**分析から除外するもの**（アプリケーションコードではなく、フレームワークの足場）:
+- ハーネスのディレクトリ（`.claude/`、`.kiro/`、`.codex/`、`.opencode/`、`.aidlc/`、または `.cursor/`）— AI-DLC フレームワークのファイル（スキル、エージェント、フック、ツール、ナレッジ）
+- `aidlc/` — AI-DLC のワークスペースルート（`aidlc/spaces/<space>/...` にあるスペースツリー）
+- AI-DLC が丸ごと書き込んだルートのファイル（Cursor の `install.ts`）。インストール済みのハーネスが列挙しているもの（上記参照）
+- `node_modules/`、`.git/`
 
 ### Step 3: Detect Project Type
 
-Classify based on the scanner's evidence:
+スキャナーが集めた根拠に基づいて分類する:
 
-Signals are evaluated at the root first; if none fires, the nested-project fallback re-evaluates the same signals in candidate container directories up to three levels below the root (see Step 2).
+シグナルはまずルートで評価される。どれも検出されない場合、ネストしたプロジェクトのフォールバックが、ルートから 3 階層下までの候補コンテナディレクトリで同じシグナルを再評価する（Step 2 を参照）。
 
-**Brownfield** — ANY of these indicators present:
-- Source code files exist (`.js`, `.ts`, `.jsx`, `.tsx`, `.py`, `.java`, `.go`, `.rs`, `.rb`, `.cs`, `.cpp`, `.c`, `.kt`, `.swift`, `.php`), infrastructure code included (`.tf`, `.hcl`, `.bicep`; Terraform's `.terraform.lock.hcl` is not counted)
-- Application framework configuration detected (next.config, vite.config, angular.json, etc.)
-- Package manifest with application dependencies (package.json with non-dev deps, requirements.txt, Cargo.toml, go.mod, pom.xml, etc.)
-- Application source directories exist (src/, app/, lib/, pages/, components/)
-- A parseable `.gitmodules` at the workspace root with at least one submodule path entry (repo metadata declares code even when the submodule dirs are not yet initialized)
+**Brownfield** — 次の指標の**いずれか**が存在する:
+- ソースコードファイルが存在する（`.js`、`.ts`、`.jsx`、`.tsx`、`.py`、`.java`、`.go`、`.rs`、`.rb`、`.cs`、`.cpp`、`.c`、`.kt`、`.swift`、`.php`）。インフラストラクチャのコードも含む（`.tf`、`.hcl`、`.bicep`。Terraform の `.terraform.lock.hcl` は数えない）
+- アプリケーションフレームワークの設定が検出される（next.config、vite.config、angular.json など）
+- アプリケーションの依存関係を含むパッケージマニフェストがある（dev 以外の依存を持つ package.json、requirements.txt、Cargo.toml、go.mod、pom.xml など）
+- アプリケーションのソースディレクトリが存在する（src/、app/、lib/、pages/、components/）
+- ワークスペースルートに解析可能な `.gitmodules` があり、少なくとも 1 つのサブモジュールパスのエントリを含む（サブモジュールのディレクトリがまだ初期化されていなくても、リポジトリのメタデータがコードの存在を宣言している）
 
-**Greenfield** — ALL of these must be true:
-- No source code files in any recognized language
-- No application framework configuration
-- No package manifest, OR manifest with only scaffolding/dev tooling
-- No application source directories
+**Greenfield** — 次の条件が**すべて**成り立たなければならない:
+- 認識対象のどの言語のソースコードファイルもない
+- アプリケーションフレームワークの設定がない
+- パッケージマニフェストがない、**または**マニフェストが足場/開発用ツールのみを含む
+- アプリケーションのソースディレクトリがない
 
-Does NOT make a project brownfield: README, .gitignore, LICENSE, editor configs, empty directories, CI/CD boilerplate without application code, the harness directory (`.claude/`, `.kiro/`, `.codex/`, `.opencode/`, `.aidlc/`, or `.cursor/`, AI-DLC framework), `aidlc/` directory (AI-DLC workspace artifacts), the root files AI-DLC wrote whole (Cursor's `install.ts`, opencode's `opencode.json`).
+プロジェクトを brownfield に**しない**もの: README、.gitignore、LICENSE、エディターの設定、空のディレクトリ、アプリケーションコードを伴わない CI/CD の定型ファイル、ハーネスのディレクトリ（`.claude/`、`.kiro/`、`.codex/`、`.opencode/`、`.aidlc/`、または `.cursor/`。AI-DLC フレームワーク）、`aidlc/` ディレクトリ（AI-DLC のワークスペース成果物）、AI-DLC が丸ごと書き込んだルートのファイル（Cursor の `install.ts`、opencode の `opencode.json`）。
 
 ### Step 4: Verify Classification
 
-The deterministic scanner applies the rules in Step 3 directly. The person's word on what the work is wins over the scan, and `Project Type Source` records who decided (`workspace scan` or `you`):
+決定的なスキャナーが Step 3 のルールを直接適用する。作業の性質について利用者が述べたことはスキャン結果より優先され、`Project Type Source` に誰が決めたか（`workspace scan` または `you`）が記録される:
 
-- At the start, `/aidlc --project-type brownfield` (or `greenfield`) with the request sets the type; the scan still fills in languages, frameworks, and build system.
-- Later, when the person says in their own words that the work is on existing code, or is a new project (for example a `create-next-app` scaffold they intend to treat as new), run `{{INVOKE}} engine orchestrate next --project-type brownfield` (or `greenfield`). The engine scans the folder again, records the type as theirs, refreshes Workspace State, and for existing code records repos added since creation and puts Reverse Engineering back on the plan; when the workflow is already past it, Reverse Engineering runs next and the workflow then returns to the stage the person was on. Never edit `Project Type` by hand.
-- When the scan set the work up as a new project and the folder gains code before Construction, `next` asks the person once which it is. Either answer is recorded as theirs, so it is not asked again.
+- 開始時に、リクエストとともに `/aidlc --project-type brownfield`（または `greenfield`）を指定すると、種別が設定される。その場合でも、言語、フレームワーク、ビルドシステムはスキャンによって埋められる。
+- 後になって、利用者が自分の言葉で、作業が既存コードに対するものである、あるいは新規プロジェクトである（たとえば、新規として扱うつもりの `create-next-app` の足場）と述べた場合は、`{{INVOKE}} engine orchestrate next --project-type brownfield`（または `greenfield`）を実行する。エンジンはフォルダーを再スキャンし、種別を利用者が決めたものとして記録し、Workspace State を更新する。既存コードの場合は、作成以降に追加されたリポジトリを記録し、Reverse Engineering を再びプランに組み込む。ワークフローがすでにそのステージを過ぎている場合は、次に Reverse Engineering が実行され、その後ワークフローは利用者がいたステージに戻る。`Project Type` を決して手で編集しない。
+- スキャンによって新規プロジェクトとして設定され、Construction の前にフォルダーにコードが追加された場合、`next` は利用者にどちらなのかを一度だけ尋ねる。どちらの回答も利用者が決めたものとして記録されるため、再び尋ねることはない。
 
 ### Step 5: Identify Technology Stack
 
-From the scan results, identify:
-- **Languages**: Primary and secondary languages detected
-- **Frameworks**: Web frameworks, libraries, UI toolkits
-- **Build Systems**: Build tools, task runners, package managers
-- **Test Infrastructure**: Test frameworks, coverage tools, test runners
+スキャン結果から次を特定する:
+- **言語**: 検出された主要言語と副次的な言語
+- **フレームワーク**: Web フレームワーク、ライブラリ、UI ツールキット
+- **ビルドシステム**: ビルドツール、タスクランナー、パッケージマネージャー
+- **テスト基盤**: テストフレームワーク、カバレッジツール、テストランナー
 
 ### Step 6: Update State and Audit
 
-1. Mark workspace-detection as `[x]` completed in `<record>/aidlc-state.md`
-2. Update Workspace State section with detected languages, frameworks, build system
-3. The engine records WORKSPACE_SCANNED in the audit trail, with the scan results and classification; never append it yourself
+1. `<record>/aidlc-state.md` で workspace-detection を `[x]`（完了）としてマークする
+2. 検出した言語、フレームワーク、ビルドシステムで Workspace State セクションを更新する
+3. エンジンが、スキャン結果と分類を含めて WORKSPACE_SCANNED を監査証跡に記録する。自分で追記しては決してならない
 
 ### Step 6a: Relay the Submodule Warning (if present)
 
-When the creation output carries the uninitialized-submodules warning (the scanner
-found a `.gitmodules` whose submodule paths are empty/uninitialized), relay it to
-the user verbatim and tell them to run `git submodule update --init --recursive`
-before proceeding, since reverse-engineering needs the code on disk. Do NOT offer
-to run the command yourself, and do NOT block auto-proceed - this is an advisory
-relay only.
+作成時の出力に未初期化サブモジュールの警告が含まれている場合（スキャナーが、サブモジュールのパスが空/未初期化の
+`.gitmodules` を見つけた場合）は、その警告をそのままユーザーに伝え、
+作業を進める前に `git submodule update --init --recursive` を実行するよう伝える。reverse-engineering はディスク上のコードを必要とするためである。
+コマンドを自分で実行すると申し出ては**ならない**。また、自動進行をブロックしては**ならない**。これは助言としての
+伝達にすぎない。
 
 ### Step 7: Auto-Proceed
 
-This stage has NO approval gate — it auto-proceeds to the next stage (state-init).
+このステージには承認ゲートが**ない**。次のステージ（state-init）へ自動的に進む。
 
 ## Sensors
 
-This stage runs the workspace scanner inside `aidlc-utility init`. It
-emits classification state, not agent-authored markdown — so the
-frontmatter `sensors:` list is empty.
+このステージは `aidlc-utility init` の中でワークスペーススキャナーを実行する。
+出力するのは分類の状態であり、エージェントが作成する Markdown ではない。そのため、
+frontmatter の `sensors:` リストは空である。
 
-Imports: none.
+インポート: なし。
 
-A customised discovery report should import the relevant manifests here.
+カスタマイズした検出レポートでは、関連するマニフェストをここでインポートすること。
 
 ## Learn
 
-When `directive.protocol_modules` lists `learnings`, follow
-`stage-protocol-learnings.md`: keep the diary at `directive.memory_path` while
-working, and take the learnings step before the approval gate; that module says
-when it asks the person anything. When the module is absent, skip both the diary
-and the step.
+`directive.protocol_modules` に `learnings` が含まれている場合は、
+`stage-protocol-learnings.md` に従う。作業中は `directive.memory_path` に日誌を付け、
+承認ゲートの前に学習ステップを実施する。そのモジュールが、利用者に何かを尋ねるタイミングを定めている。
+モジュールがない場合は、日誌とステップの両方を省略する。

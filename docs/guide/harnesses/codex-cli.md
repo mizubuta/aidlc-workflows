@@ -1,69 +1,69 @@
 # AI-DLC on Codex CLI
 
-The Codex runtime is one of the framework's harness distributions, for the
-OpenAI **Codex CLI** harness. One deterministic core, many harnesses: the
-engine, state machine, audit log, graph, swarm referee, and learnings gate are
-byte-identical across every distribution — only the shell differs. The
-source/development tree is **generated** into ignored local `dist/codex/` from
-`core/` + `harness/codex/` by `bun scripts/package.ts codex`; never hand-edit it.
+Codex ランタイムは、OpenAI **Codex CLI** ハーネス向けの、フレームワークのハーネス配布物の
+1 つです。決定論的なコアは 1 つ、ハーネスは多数。エンジン、ステートマシン、監査ログ、グラフ、
+スウォームのレフェリー、学びのゲートは、すべての配布物でバイト単位で同一であり、
+異なるのはシェルだけです。ソース/開発用のツリーは、`bun scripts/package.ts codex` によって
+`core/` + `harness/codex/` から、無視対象のローカル `dist/codex/` に**生成**されます。
+決して手で編集しないでください。
 
-The project's `.codex/config.toml` sets `developer_instructions` to the Codex
-onboarding, as documented in the
-[Codex configuration reference](https://developers.openai.com/codex/config-reference/).
-A trusted-project Codex session receives this onboarding without reading a file.
-`.codex/onboarding.md` keeps the same content as a human-readable copy. The
-harness-neutral root `AGENTS.md` block lists that copy and is shared with other
-installed harnesses whose engine directories differ.
+プロジェクトの `.codex/config.toml` は、
+[Codex configuration reference](https://developers.openai.com/codex/config-reference/)
+に記載されているとおり、`developer_instructions` に Codex 用のオンボーディングを設定します。
+信頼済みプロジェクトの Codex セッションは、ファイルを読まずにこのオンボーディングを受け取ります。
+`.codex/onboarding.md` は、同じ内容を人間が読める写しとして保持します。
+ハーネス中立のルート `AGENTS.md` ブロックはその写しを一覧に載せ、エンジンディレクトリが
+異なる他のインストール済みハーネスとも共有されます。
 
-In a fresh Codex session ask for the AI-DLC commands for this harness — the answer
-should name `$aidlc` and `.agents/skills/` without reading `.codex/onboarding.md`;
-`$aidlc --doctor` verifies the readable copy.
+新しい Codex セッションで、このハーネスの AI-DLC コマンドを尋ねてみてください。
+答えは `.codex/onboarding.md` を読まずに `$aidlc` と `.agents/skills/` を挙げるはずです。
+`$aidlc --doctor` は読み取り可能な写しを検証します。
 
 ### Root instruction overrides
 
-In each directory, Codex checks `AGENTS.override.md` before `AGENTS.md` and
-selects the first existing file (see
-[Codex's file selection](https://github.com/openai/codex/blob/rust-v0.163.0/codex-rs/core/src/agents_md.rs)).
-An empty or whitespace-only override contributes no instructions; it does not
-fall back to `AGENTS.md`. A directory named `AGENTS.override.md` is not selected,
-while a symlink to an instruction file is.
+Codex は各ディレクトリで、`AGENTS.md` より先に `AGENTS.override.md` を確認し、
+最初に存在したファイルを選択します（
+[Codex のファイル選択](https://github.com/openai/codex/blob/rust-v0.163.0/codex-rs/core/src/agents_md.rs)
+を参照）。空または空白のみのオーバーライドは何の指示も提供せず、`AGENTS.md` に
+フォールバックすることもありません。`AGENTS.override.md` という名前のディレクトリは選択されませんが、
+指示ファイルへのシンボリックリンクは選択されます。
 
-Doctor checks the root file Codex selects and names it when an override takes
-precedence. A missing or changed AI-DLC block produces an advisory warning.
-It also reports damaged blocks in `AGENTS.md` that would stop config or refresh,
-even when Codex loads the override. Doctor does not edit either file.
+Doctor は Codex が選択するルートファイルを確認し、オーバーライドが優先される場合はその名前を示します。
+AI-DLC ブロックが欠けているか変更されている場合は、助言的な警告を出します。
+また、Codex がオーバーライドを読み込む場合でも、config や refresh を止めてしまう
+`AGENTS.md` 内の破損したブロックを報告します。Doctor はどちらのファイルも編集しません。
 
-`AGENTS.override.md` stays yours: AI-DLC never writes it, and config and session
-start keep AI-DLC's block in `AGENTS.md`. Copying that block into the override is
-optional, because Codex gets AI-DLC's own instructions from `.codex/config.toml`
-either way. If you want Codex to read the block too, copy the
-`<!-- BEGIN AI-DLC:agents -->` through `<!-- END AI-DLC:agents -->` block from
-`AGENTS.md` into the override, keeping your own text, and copy it again after an
-update changes it. For a damaged or duplicate block, replace that block and its
-broken marker lines rather than adding another copy.
+`AGENTS.override.md` はあなたのものです。AI-DLC はこれを決して書き込まず、config と
+セッション開始時の処理は AI-DLC のブロックを `AGENTS.md` に保ちます。そのブロックを
+オーバーライドにコピーするかどうかは任意です。Codex はいずれにしても `.codex/config.toml` から
+AI-DLC 自身の指示を受け取るからです。Codex にブロックも読ませたい場合は、
+`AGENTS.md` の `<!-- BEGIN AI-DLC:agents -->` through `<!-- END AI-DLC:agents -->`（開始マーカーから終了マーカーまで）のブロックを、
+自分のテキストを残したままオーバーライドにコピーし、アップデートでブロックが変わったら
+もう一度コピーしてください。ブロックが破損または重複している場合は、さらにコピーを追加するのではなく、
+そのブロックと壊れたマーカー行を置き換えてください。
 
 ## Prerequisites
 
-- **Codex CLI >= 0.145.0** - earlier releases defer compact-source
-  `SessionStart` after a mid-turn auto-compaction, so one model continuation
-  can run without the restored workflow mission. Releases before 0.139.0 also
-  lack reliable subagent role attribution and hyphenated agent-TOML resolution.
-  `/aidlc --doctor` advises on the pin. Check with `codex --version`.
-- **bun** only when generating or running the source/development `dist/`
-  projection. Native installs and versioned release runtimes are
-  self-contained.
-- **A Git repository for the target project** — Codex discovers project
-  `.codex/hooks.json` only inside one. The native installer and AI-DLC runtime
-  themselves do not depend on Git.
-- **A model provider** — the shipped project `config.toml` does not select one.
-  Codex inherits provider, credentials, model, context window, and reasoning
-  effort from `~/.codex/config.toml`. Agent roles inherit the selected model;
-  balanced reviewers retain only their medium reasoning-effort cap.
-  Configure the model provider in that user-level file; Codex ignores
-  project-level `model_provider` and `model_providers`. Other settings, such as
-  `model`, in a trusted project's `.codex/config.toml` take precedence over user
-  configuration, so add project-level model keys only for intentional shared
-  overrides.
+- **Codex CLI >= 0.145.0** - それより前のリリースでは、ターン途中の自動コンパクションの後に
+  compact ソースの `SessionStart` が遅延するため、ワークフローのミッションが復元されないまま
+  モデルの継続が 1 回実行されることがあります。0.139.0 より前のリリースでは、さらに
+  サブエージェントのロール帰属と、ハイフン付きのエージェント TOML の解決が信頼できません。
+  `/aidlc --doctor` がバージョン指定について助言します。`codex --version` で確認してください。
+- **bun** は、ソース/開発用の `dist/` 投影を生成または実行する場合にのみ必要です。
+  ネイティブインストールとバージョン付きリリースのランタイムは、
+  自己完結しています。
+- **対象プロジェクトの Git リポジトリ** — Codex はプロジェクトの
+  `.codex/hooks.json` を Git リポジトリ内でのみ検出します。ネイティブインストーラーと
+  AI-DLC ランタイム自体は Git に依存しません。
+- **モデルプロバイダー** — 同梱のプロジェクト `config.toml` はプロバイダーを選択しません。
+  Codex は、プロバイダー、認証情報、モデル、コンテキストウィンドウ、推論努力度を
+  `~/.codex/config.toml` から引き継ぎます。エージェントのロールは選択されたモデルを引き継ぎ、
+  balanced のレビュアーは medium の推論努力度の上限だけを保持します。
+  モデルプロバイダーはそのユーザーレベルのファイルで設定してください。Codex は
+  プロジェクトレベルの `model_provider` と `model_providers` を無視します。その他の設定
+  （`model` など）は、信頼済みプロジェクトの `.codex/config.toml` にあればユーザー設定より
+  優先されるため、プロジェクトレベルのモデルキーは、意図して共有するオーバーライドの場合にのみ
+  追加してください。
 
 ## Install
 
@@ -82,52 +82,53 @@ aidlc doctor
 codex
 ```
 
-The installer verifies the release metadata, executable, and all-harness runtime archive against the published SHA-256 checksums. The installed runtime does not require Bun, Node.js, or Git. Harness selection happens in `aidlc config`.
+インストーラーは、リリースのメタデータ、実行ファイル、全ハーネス対応のランタイムアーカイブを、公開されている SHA-256 チェックサムと照合して検証します。インストールされたランタイムには Bun、Node.js、Git は不要です。ハーネスの選択は `aidlc config` で行います。
 
-On Windows, download `install.ps1`, allow scripts in that PowerShell window
-with `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force`, and run
-`& $installer`. See [Windows installation](../18-install-and-lifecycle.md#windows-powershell)
-for account scope, automatic User PATH registration, and `-NoModifyPath`.
-For an air-gapped package, use
-`install.sh --from <release-directory> --offline` on Unix or
-`& $installer -From <release-directory> -Offline` on Windows, after the same
-`Set-ExecutionPolicy` line.
+Windows では、`install.ps1` をダウンロードし、その PowerShell ウィンドウで
+`Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force` によりスクリプトを許可してから、
+`& $installer` を実行します。アカウントのスコープ、User PATH への自動登録、`-NoModifyPath` については
+[Windows installation](../18-install-and-lifecycle.md#windows-powershell)
+を参照してください。
+エアギャップ環境向けのパッケージでは、同じ
+`Set-ExecutionPolicy` の行を実行した後、Unix では
+`install.sh --from <release-directory> --offline` を、Windows では
+`& $installer -From <release-directory> -Offline` を使います。
 
-`aidlc config` projects the Codex shell, merges the AI-DLC blocks in `.gitignore`
-and `AGENTS.md`, and writes `.codex/config.toml`, hooks, permission rules, and
-the matching `.codex/trust-seed.toml`. Codex requires one project-specific hook
-trust action before those hooks run:
+`aidlc config` は Codex シェルを投影し、`.gitignore` と `AGENTS.md` の AI-DLC ブロックを
+マージし、`.codex/config.toml`、フック、権限ルール、対応する `.codex/trust-seed.toml` を
+書き込みます。それらのフックが実行される前に、Codex ではプロジェクト固有のフック信頼操作が
+1 回必要です:
 
-- Start `codex` and choose **Trust all and continue** at the hooks dialog (if
-  you passed it, type `/hooks` in Codex, press `t` to trust all, then press
-  Esc; it counts for your next message in the same chat); or
-- Replace `<PROJECT_DIR>` in `.codex/trust-seed.toml` with the absolute project
-  path and merge its complete `[hooks.state]` set into
-  `$CODEX_HOME/config.toml`. Replace an existing set for that hooks path rather
-  than appending duplicate TOML tables.
+- `codex` を起動し、フックのダイアログで **Trust all and continue** を選びます（ダイアログを
+  通り過ぎてしまった場合は、Codex で `/hooks` と入力し、`t` を押してすべてを信頼してから
+  Esc を押します。これは同じチャットの次のメッセージから有効になります）。または
+- `.codex/trust-seed.toml` の `<PROJECT_DIR>` をプロジェクトの絶対パスに置き換え、
+  その `[hooks.state]` の一式をすべて `$CODEX_HOME/config.toml` にマージします。
+  そのフックのパスに既存の一式がある場合は、重複した TOML テーブルを追加するのではなく
+  置き換えてください。
 
-Keep the generated `.codex/config.toml` project-scoped; do not merge it into
-`~/.codex/config.toml`, because `developer_instructions` carries this project's
-AI-DLC onboarding. Keep provider and model settings in your user config. Then
-run `$aidlc --doctor` in Codex.
+生成された `.codex/config.toml` はプロジェクトスコープのままにしてください。
+`~/.codex/config.toml` にマージしてはいけません。`developer_instructions` がこのプロジェクトの
+AI-DLC オンボーディングを運んでいるからです。プロバイダーとモデルの設定はユーザー設定に置きます。
+その後、Codex で `$aidlc --doctor` を実行してください。
 
-The generated `sandbox_mode = "workspace-write"` is a top-level TOML setting,
-not a member of `[shell_environment_policy]`. AI-DLC tracks it as one of its own
-entries alongside `developer_instructions`: provider answers leave it unchanged,
-and a refresh keeps a value you set (with a note when a release ships a
-different one) and puts the shipped value back when the key was removed; the
-rest of the file stays yours. Selecting the current provider removes only
-attributable legacy Bedrock defaults; it does not change the sandbox policy.
+生成される `sandbox_mode = "workspace-write"` はトップレベルの TOML 設定であり、
+`[shell_environment_policy]` のメンバーではありません。AI-DLC はこれを
+`developer_instructions` と並ぶ自身の項目の 1 つとして管理します。プロバイダーの回答では変更されず、
+refresh ではあなたが設定した値が保たれ（リリースが別の値を同梱した場合は注記が出ます）、
+キーが削除されていれば同梱の値が戻されます。ファイルの残りの部分はあなたのものです。
+現在のプロバイダーを選択すると、帰属が明らかな旧来の Bedrock の既定値だけが削除されます。
+サンドボックスのポリシーは変わりません。
 
 ### Versioned manual-copy alternative
 
-Download and extract a specific release's `aidlc-copy-runtime-X.Y.Z.tar.gz` as described in
-[Install and Lifecycle: Copy Channel](../18-install-and-lifecycle.md#copy-channel),
-then set `RUNTIME_ROOT` to the extracted `runtime/` directory.
+[Install and Lifecycle: Copy Channel](../18-install-and-lifecycle.md#copy-channel)
+の説明に従って特定リリースの `aidlc-copy-runtime-X.Y.Z.tar.gz` をダウンロードして展開し、
+`RUNTIME_ROOT` を展開した `runtime/` ディレクトリに設定します。
 
-1. Copy the distribution into your project (which must be a **git
-   repository** — Codex only discovers a project `.codex/hooks.json` inside
-   one):
+1. 配布物をプロジェクトにコピーします（プロジェクトは **git
+   リポジトリ**でなければなりません — Codex はプロジェクトの `.codex/hooks.json` を
+   Git リポジトリ内でのみ検出します）:
 
    ```bash
    cp -r "$RUNTIME_ROOT/codex/.codex/"  your-project/.codex/
@@ -135,45 +136,45 @@ then set `RUNTIME_ROOT` to the extracted `runtime/` directory.
    cp -r "$RUNTIME_ROOT/codex/aidlc/"   your-project/aidlc/      # the workspace shell (spaces/default/memory) — a sibling of .codex/, not inside it
    ```
 
-   The `aidlc/` directory is the workspace shell — it ships the pre-built
-   `aidlc/spaces/default/memory/` method tree the engine reads. It is a
-   **sibling** of `.codex/`, so copy it separately (or copy the whole
-   `$RUNTIME_ROOT/codex/` tree at once). `$aidlc --doctor` fails its "workspace shell
-   ready" check if it is missing.
+   `aidlc/` ディレクトリはワークスペースシェルです。エンジンが読む、事前ビルド済みの
+   `aidlc/spaces/default/memory/` メソッドツリーを同梱しています。これは `.codex/` の
+   **兄弟**ディレクトリなので、別途コピーしてください（または
+   `$RUNTIME_ROOT/codex/` ツリー全体を一度にコピーします）。これがないと、`$aidlc --doctor` の
+   "workspace shell ready" チェックが失敗します。
 
-2. Run the copy's own setup once, from the project:
+2. プロジェクトから、コピーに含まれるセットアップを 1 回実行します:
 
    ```bash
    bun .codex/tools/aidlc.ts config --from "$RUNTIME_ROOT" --harness codex
    ```
 
-   It adds AI-DLC's lines to your `AGENTS.md` and `.gitignore`, after
-   everything already there (or creates them), before your first workflow:
-   the per-clone audit shards under each intent's `audit/` are committed
-   deliberately (each clone writes its own `<host>-<clone>.md`, so concurrent
-   appends never git-conflict), while per-user cursors and machine-local
-   runtime state stay ignored.
+   これにより、最初のワークフローの前に、`AGENTS.md` と `.gitignore` の既存の内容の後ろに
+   AI-DLC の行が追加されます（ファイルがなければ作成されます）。各インテントの
+   `audit/` 配下にあるクローンごとの監査シャードは意図的にコミットされます
+   （各クローンは自分の `<host>-<clone>.md` に書き込むので、同時に追記しても
+   git の競合は起きません）。一方、ユーザーごとのカーソルとマシンローカルの
+   ランタイム状態は無視対象のままです。
 
-3. Trust the project and pre-seed hook trust. Codex never runs untrusted
-   hooks (the `--dangerously-bypass-hook-trust` flag does not run them
-   either). Either run one interactive TUI session and choose "Trust all and
-   continue" at the hooks dialog, or pre-seed deterministically from the
-   AI-DLC source checkout. Install its pinned development dependencies once,
-   then generate the entries:
+3. プロジェクトを信頼し、フックの信頼情報を事前に登録します。Codex は信頼されていない
+   フックを決して実行しません（`--dangerously-bypass-hook-trust` フラグでも実行されません）。
+   対話型の TUI セッションを 1 回実行してフックのダイアログで "Trust all and
+   continue" を選ぶか、AI-DLC のソースチェックアウトから決定論的に事前登録します。
+   固定バージョンの開発依存関係を一度インストールしてから、
+   エントリを生成します:
 
    ```bash
    bun install --frozen-lockfile
    bun scripts/package.ts codex trust --project "/abs/path/to/your project"
    ```
 
-   The command prints ready-to-paste `[hooks.state]` entries for
-   `$CODEX_HOME/config.toml`
-   (each hash covers the hook's event, its matcher, its command, and its
-   timeout, as Codex hashes them, not the path: the printed entries are exact
-   for the copied `hooks.json`). The command serializes the complete
-   output as TOML, so quoted paths, spaces, and Windows backslashes are
-   preserved. If the hook manifest is not at `<project>/.codex/hooks.json`,
-   pass its exact path explicitly:
+   このコマンドは、`$CODEX_HOME/config.toml` にそのまま貼り付けられる
+   `[hooks.state]` エントリを出力します
+   （各ハッシュは、Codex のハッシュ方式に従ってフックのイベント、マッチャー、コマンド、
+   タイムアウトを対象とし、パスは対象にしません。そのため、出力されるエントリは
+   コピーした `hooks.json` に対して正確です）。コマンドは出力全体を
+   TOML としてシリアライズするので、引用符付きのパス、空白、Windows のバックスラッシュは
+   保持されます。フックマニフェストが `<project>/.codex/hooks.json` にない場合は、
+   その正確なパスを明示的に渡します:
 
    ```bash
    bun scripts/package.ts codex trust \
@@ -181,131 +182,128 @@ then set `RUNTIME_ROOT` to the extracted `runtime/` directory.
      --hooks-json "/abs/custom path/hooks.json"
    ```
 
-   Quote both arguments in the shell. `--hooks-json` is used verbatim as the
-   Codex trust identity; do not normalize or replace it after generating the
-   entries. Paste the command's complete stdout into the user config. If
-   entries for the same `hooks.json` path already exist, replace that full set;
-   do not append a second copy because duplicate TOML tables invalidate the
-   entire config.
+   シェルではどちらの引数も引用符で囲んでください。`--hooks-json` は Codex の信頼 ID として
+   そのまま使われます。エントリを生成した後で正規化したり置き換えたりしないでください。
+   コマンドの標準出力をすべてユーザー設定に貼り付けます。同じ `hooks.json` のパスの
+   エントリがすでにある場合は、その一式全体を置き換えてください。
+   重複した TOML テーブルは設定全体を無効にするので、2 つ目のコピーを追記してはいけません。
 
-   Re-run this trust command whenever an AI-DLC upgrade changes `.codex/hooks.json`,
-   including upgrades that add a new matcher. Replace the old tables before
-   opening a fresh Codex session; otherwise Codex asks again about the changed
-   hooks when it starts (seen on Codex 0.160.0).
+   AI-DLC のアップグレードで `.codex/hooks.json` が変わったときは、新しいマッチャーを追加する
+   アップグレードも含めて、この信頼コマンドを再実行してください。新しい Codex セッションを
+   開く前に古いテーブルを置き換えます。そうしないと、Codex は起動時に変更されたフックについて
+   再度尋ねます（Codex 0.160.0 で確認）。
 
-4. Back in `your-project/` (step 3 ran from the AI-DLC source checkout), keep
-   the shipped config at `.codex/config.toml` in the trusted project. Do not
-   merge it into `~/.codex/config.toml`: its `developer_instructions` carries
-   this project's AI-DLC onboarding. Verify with:
+4. `your-project/` に戻り（ステップ 3 は AI-DLC のソースチェックアウトで実行しました）、
+   同梱の設定を信頼済みプロジェクトの `.codex/config.toml` に置いたままにします。
+   `~/.codex/config.toml` にマージしてはいけません。その `developer_instructions` が
+   このプロジェクトの AI-DLC オンボーディングを運んでいるからです。次のコマンドで検証します:
 
    ```bash
    cd your-project
    bun .codex/tools/aidlc-utility.ts doctor
    ```
 
-The versioned runtime uses the native `aidlc` command. Framework developers who
-need the Bun-shaped projection can clone the repository, run
-`bun install --frozen-lockfile` and `bun scripts/package.ts`, then use the
-ignored local `dist/codex/` output. The source-checkout trust generator is
-specific to those Bun-shaped hook commands and is not used by the native
-runtime.
+バージョン付きランタイムは、ネイティブの `aidlc` コマンドを使います。Bun 形式の投影が必要な
+フレームワーク開発者は、リポジトリをクローンし、
+`bun install --frozen-lockfile` と `bun scripts/package.ts` を実行してから、
+無視対象のローカル `dist/codex/` の出力を使えます。ソースチェックアウトの信頼情報ジェネレーターは
+Bun 形式のフックコマンドに固有のものであり、ネイティブランタイムでは
+使われません。
 
 ## Refresh and version skew
 
-`aidlc update` updates the machine runtime but does not rewrite projects.
-`aidlc doctor` compares the project runtime stamp with the selected engine.
-Between workflows, preview and apply the project refresh:
+`aidlc update` はマシンのランタイムを更新しますが、プロジェクトは書き換えません。
+`aidlc doctor` は、プロジェクトのランタイムスタンプを選択されたエンジンと比較します。
+ワークフローとワークフローの間に、プロジェクトの refresh をプレビューしてから適用します:
 
 ```bash
 aidlc config --dry-run
 aidlc config
 ```
 
-Config preserves user-owned content and reports local framework edits as
-conflicts. A refresh while a workflow is open is done and says your open work
-carries on. Upgrade and rollback remain safe during a workflow because they do
-not touch project files. A refresh can change Codex hook identities, so
-approve the new trust dialog or replace the matching trust-seed entries after
-config when Codex requests it.
+config はユーザーが所有する内容を保持し、フレームワークのファイルへのローカルな編集は
+競合として報告します。ワークフローが開いている間に refresh すると、refresh は完了し、
+開いている作業はそのまま続くと伝えます。アップグレードとロールバックはプロジェクトのファイルに
+触れないため、ワークフロー中でも安全です。refresh によって Codex のフック ID が変わることがあるので、
+Codex が求めたら、config の後で新しい信頼ダイアログを承認するか、対応する trust-seed の
+エントリを置き換えてください。
 
 ## Use
 
-Invoke the orchestrator with `$aidlc` (or `/skills` → aidlc) followed by a
-scope or description — same commands as the Claude harness (`$aidlc --status`,
-`$aidlc --config [section]`, `$aidlc --help`, and related forms). Stage runners are explicit-only:
-`$aidlc-domain-design`, `$aidlc-bugfix`, etc. (they are excluded from
-implicit skill matching so 37 runner descriptions don't pollute the index).
+オーケストレーターは `$aidlc`（または `/skills` → aidlc）の後にスコープまたは説明を続けて
+呼び出します。コマンドは Claude ハーネスと同じです（`$aidlc --status`、
+`$aidlc --config [section]`、`$aidlc --help` など）。ステージランナーは明示的な呼び出し専用です:
+`$aidlc-domain-design`、`$aidlc-bugfix` など（37 個のランナーの説明でインデックスが
+汚れないよう、暗黙のスキルマッチングから除外されています）。
 
 ## Harness differences vs Claude Code
 
-- **Gates** render via the `request_user_input` tool when the shipped config
-  flags enable it, with a numbered-prose fallback otherwise (answer with a
-  number or free text). Gate semantics live in the engine either way. Codex
-  still marks that picker as under development, so the shipped
-  `.codex/config.toml` turns it on and turns off Codex's start-up warning
-  about it; while you work in this project, that also hides the warning for
-  any other under-development feature. For numbered prose gates in one
-  session, start Codex with
-  `codex -c features.default_mode_request_user_input=false`.
-- **Status line, the project's choice**: workflow position rides the
-  `update_plan` tool (the `task-progress` status line item) and
-  `$aidlc --status`. AI-DLC's status line is off until someone chooses it: setup
-  asks once, and `$aidlc --statusline on|off` (or `aidlc config --statusline
-  on|off`) adds or removes AI-DLC's `[tui]` `status_line` line in the shared
-  `.codex/config.toml`, for everyone working in the project. Codex has no
-  per-person settings file in a project, so each person can instead add task
-  progress to their own status line with Codex's `/statusline`.
-- **A question box that runs out**: Codex closes its question box after
-  about two minutes with no answer. Nothing is answered for you: when you
-  come back, the same question is waiting in the chat.
-- **Git under the sandbox**: `workspace-write` keeps `.git` read-only
-  in-sandbox by design. Interactive sessions auto-escalate, and the shipped
-  `.codex/rules/default.rules` pre-allows `git worktree`/`commit`/`add`.
-  Headless runs (CI) need
-  `writable_roots = ["<main repo>/.git"]` — template in the shipped
-  `config.toml` (linked worktrees resolve into `<main>/.git/worktrees/*`,
-  so it must be the main repo's `.git`).
-- **Network under the sandbox**: the shipped `.codex/config.toml` sets
-  `network_access = true` under `[sandbox_workspace_write]`, so a command
-  Codex runs in its sandbox in this project can reach the network (to
-  install packages or fetch dependencies), whatever your own Codex default
-  is. To keep it closed in this project, set `network_access = false` there;
-  a refresh keeps the value you set. For one session only, start Codex with
-  `codex -c sandbox_workspace_write.network_access=false`.
-- **Swarm floor = developer subagents**: one `aidlc-developer-agent`
-  subagent per emitted Construction Unit, side by side, each working in the
-  isolated worktree for that Unit's Bolt, with the same deterministic
-  referee. They run inside your sandbox with your approval setting. The test
-  command you approved they run through AI-DLC's own `swarm check`, which the
-  shipped rules allow, so it runs without asking and outside the sandbox. `AIDLC_USE_SWARM=1` has no Workflow tool here
-  and loud-degrades (`SWARM_DEGRADED` is audited).
-- **Only what you type in the main chat counts as your reply.** Codex sends a
-  subagent's brief, and every follow-up the agent sends it, through the same
-  prompt hook as your messages, and does the same for its own reviewers
-  (`/review`, auto-review), marked with the subagent's id or its own thread's
-  transcript. AI-DLC never
-  counts those as your turn: they do not satisfy an approval and are not read
-  as your answer or your requested changes. If you switch to a subagent's own
-  thread (`/subagents`) and type there, that message is for the worker, so it
-  does not answer the main chat's question either.
-- **Session lifecycle**: Codex has no SessionEnd event; an unclosed session
-  is reconciled as an inferred `SESSION_ENDED` audit row at the next session
-  start. After compaction, Codex emits SessionStart with `source=compact`;
-  that supported event re-injects the workflow mission before the first
-  post-compaction continuation. This immediate drain is why AI-DLC requires
-  Codex >= 0.145.0.
-- **Artifact audit fidelity**: in headless `codex exec` runs the model often
-  writes files via shell heredocs, which bypass the `apply_patch` hook
-  matcher — `ARTIFACT_*` rows can be sparse. Interactive TUI sessions (where
-  the system prompt mandates `apply_patch`) are the high-fidelity audit mode.
-- **AIDLC rule layers** live at the workspace root under `aidlc/spaces/<active-space>/memory/` (one hand-editable source, identical on every harness). Codex has no ambient include for them: the engine reads the active space's files and hands each step its rules (`config.toml` ships `AIDLC_RULES_DIR` empty, which the engine reads as none, so a project copied from 2.11.0 refreshes with its own tool; a space an earlier release's line names is emptied by the next `aidlc config`). Codex's native `.codex/rules/` directory holds Starlark permission rules, distinct from the AIDLC method.
-- **No welcome message**: the Claude harness renders the Phases/Stages/Scopes
-  onboarding banner from `settings.json` `companyAnnouncements` at session start;
-  Codex has no equivalent. The session-start path injects workflow context only.
-- **MCP servers**: Codex reads MCP definitions from `[mcp_servers.<name>]`
-  tables in `config.toml` (project `.codex/config.toml` or `~/.codex/config.toml`)
-  — add the servers you need there. The shipped config declares **none** (the
-  Claude harness ships five via `.mcp.json`; Codex ships zero by default).
+- **ゲート**は、同梱の設定フラグで有効になっている場合は `request_user_input` ツールで
+  レンダリングされ、そうでない場合は番号付きの散文にフォールバックします（番号または
+  自由記述で答えます）。いずれの場合もゲートのセマンティクスはエンジンにあります。Codex は
+  そのピッカーをまだ開発中としているため、同梱の
+  `.codex/config.toml` はそれを有効にし、それに関する Codex の起動時の警告を
+  無効にします。このプロジェクトで作業している間は、他の開発中の機能に関する警告も
+  表示されなくなります。1 つのセッションで番号付き散文のゲートを使うには、
+  `codex -c features.default_mode_request_user_input=false` で Codex を起動します。
+- **ステータスライン（プロジェクトの選択）**: ワークフローの位置は
+  `update_plan` ツール（`task-progress` ステータスライン項目）と
+  `$aidlc --status` で示されます。AI-DLC のステータスラインは、誰かが選ぶまでオフです。セットアップ時に
+  一度尋ねられ、`$aidlc --statusline on|off`（または `aidlc config --statusline
+  on|off`）で、共有の `.codex/config.toml` にある AI-DLC の `[tui]` `status_line` 行を
+  追加または削除します。これはプロジェクトで作業する全員に適用されます。Codex には
+  プロジェクト内の個人別設定ファイルがないため、代わりに各自が Codex の `/statusline` で
+  自分のステータスラインにタスクの進捗を追加できます。
+- **時間切れになる質問ボックス**: Codex は、回答がないまま約 2 分経つと質問ボックスを
+  閉じます。勝手に回答されることはありません。戻ってくると、
+  同じ質問がチャットで待っています。
+- **サンドボックス下の Git**: `workspace-write` は設計上、サンドボックス内で `.git` を
+  読み取り専用に保ちます。対話セッションは自動的に権限を昇格し、同梱の
+  `.codex/rules/default.rules` は `git worktree`/`commit`/`add` を事前に許可しています。
+  ヘッドレス実行（CI）では
+  `writable_roots = ["<main repo>/.git"]` が必要です — テンプレートは同梱の
+  `config.toml` にあります（リンクされたワークツリーは `<main>/.git/worktrees/*` に解決されるため、
+  メインリポジトリの `.git` でなければなりません）。
+- **サンドボックス下のネットワーク**: 同梱の `.codex/config.toml` は
+  `[sandbox_workspace_write]` の下で `network_access = true` を設定しているため、このプロジェクトで
+  Codex がサンドボックス内で実行するコマンドは、あなた自身の Codex の既定値にかかわらず
+  ネットワークに到達できます（パッケージのインストールや依存関係の取得のため）。
+  このプロジェクトで閉じたままにするには、そこで `network_access = false` を設定します。
+  refresh は設定した値を保持します。1 つのセッションだけなら、
+  `codex -c sandbox_workspace_write.network_access=false` で Codex を起動します。
+- **スウォームの下限 = 開発者サブエージェント**: 生成された Construction のユニットごとに
+  `aidlc-developer-agent` サブエージェントが 1 つずつ並行して動き、それぞれがそのユニットの
+  Bolt 用の隔離されたワークツリーで作業し、同じ決定論的なレフェリーが付きます。サブエージェントは
+  あなたのサンドボックス内で、あなたの承認設定に従って実行されます。あなたが承認したテスト
+  コマンドは AI-DLC 自身の `swarm check` を通じて実行され、同梱のルールがそれを許可しているので、
+  確認なしにサンドボックスの外で実行されます。ここでは `AIDLC_USE_SWARM=1` に対応する Workflow ツールがなく、
+  明示的に機能低下します（`SWARM_DEGRADED` が監査ログに記録されます）。
+- **メインチャットで入力したものだけがあなたの返答として扱われます。** Codex は
+  サブエージェントへのブリーフと、エージェントがそれに送るすべてのフォローアップを、あなたの
+  メッセージと同じプロンプトフックを通じて送り、自身のレビュアー
+  （`/review`、自動レビュー）についても同様にします。それらにはサブエージェントの ID か、
+  自身のスレッドのトランスクリプトが付いています。AI-DLC は
+  それらを決してあなたのターンとして数えません。承認を満たすことはなく、あなたの回答や
+  変更要求として読まれることもありません。サブエージェント自身のスレッド（`/subagents`）に
+  切り替えてそこで入力した場合、そのメッセージはワーカー向けなので、
+  メインチャットの質問への回答にもなりません。
+- **セッションのライフサイクル**: Codex には SessionEnd イベントがありません。閉じられなかったセッションは、
+  次のセッション開始時に、推定の `SESSION_ENDED` 監査行として整合されます。コンパクション後、
+  Codex は `source=compact` 付きの SessionStart を発行します。このサポートされたイベントにより、
+  コンパクション後の最初の継続の前にワークフローのミッションが再注入されます。この即時の処理が、
+  AI-DLC が Codex >= 0.145.0 を必要とする理由です。
+- **成果物の監査の忠実度**: ヘッドレスの `codex exec` 実行では、モデルがシェルのヒアドキュメントで
+  ファイルを書くことが多く、これは `apply_patch` フックのマッチャーを迂回するため、
+  `ARTIFACT_*` 行がまばらになることがあります。対話型の TUI セッション（システムプロンプトが
+  `apply_patch` を必須としている）が、忠実度の高い監査モードです。
+- **AIDLC のルールレイヤー**は、ワークスペースルートの `aidlc/spaces/<active-space>/memory/` にあります（手で編集できる唯一のソースで、どのハーネスでも同一）。Codex にはそれらを常時取り込む仕組みがありません。エンジンがアクティブなスペースのファイルを読み、各ステップにそのルールを渡します（`config.toml` は `AIDLC_RULES_DIR` を空で同梱しており、エンジンはこれを「なし」と解釈します。そのため 2.11.0 からコピーされたプロジェクトは自身のツールで refresh されます。以前のリリースの行が指定しているスペースは、次の `aidlc config` で空になります）。Codex ネイティブの `.codex/rules/` ディレクトリは Starlark の権限ルールを保持するもので、AIDLC のメソッドとは別物です。
+- **ウェルカムメッセージなし**: Claude ハーネスは、セッション開始時に `settings.json` の
+  `companyAnnouncements` から Phases/Stages/Scopes のオンボーディングバナーをレンダリングします。
+  Codex には同等の仕組みがありません。セッション開始の処理はワークフローのコンテキストだけを注入します。
+- **MCP サーバー**: Codex は `config.toml`（プロジェクトの `.codex/config.toml` または `~/.codex/config.toml`）の
+  `[mcp_servers.<name>]` テーブルから MCP の定義を読み込みます。
+  必要なサーバーはそこに追加してください。同梱の設定は**何も**宣言していません（
+  Claude ハーネスは `.mcp.json` で 5 つを同梱しますが、Codex は既定で 0 個です）。
 
 ## Regenerating
 
@@ -314,21 +312,21 @@ bun scripts/package.ts codex          # regenerate dist/codex from core/ + harne
 bun scripts/package.ts --check        # build twice and byte-compare (every harness)
 ```
 
-Core `.ts` files are byte-identical to their `core/tools/` and `core/hooks/`
-sources (pinned by `tests/unit/t150-codex-packaging.test.ts`); prose carries the
-`{{HARNESS_DIR}}` token the packager substitutes to `.codex` (plus the
-`rules/` → `aidlc-rules/` rename), the one permitted transform class. The live
-end-to-end journey is `tests/e2e/t-exec-codex-status.serial.test.ts` (gate:
-`AIDLC_CODEX_EXEC_LIVE=1`).
+コアの `.ts` ファイルは、`core/tools/` と `core/hooks/` にあるソースとバイト単位で同一です
+（`tests/unit/t150-codex-packaging.test.ts` で固定されています）。散文には、パッケージャーが
+`.codex` に置換する `{{HARNESS_DIR}}` トークンが含まれます（加えて
+`rules/` → `aidlc-rules/` の名前変更）。これが許可された唯一の変換の種類です。ライブの
+エンドツーエンドのジャーニーは `tests/e2e/t-exec-codex-status.serial.test.ts` です（ゲート:
+`AIDLC_CODEX_EXEC_LIVE=1`）。
 
 ## Next steps
 
-Installed and trusted? The methodology is the same on every harness — keep going
-with the neutral chapters:
+インストールと信頼の設定は済みましたか？ 方法論はどのハーネスでも同じです。ハーネス中立の
+章に進みましょう:
 
-- [Your First Workflow](../02-your-first-workflow.md) — an annotated end-to-end run.
-- [Phases and Stages](../04-phases-and-stages.md) — the 5 phases and 33 stages.
-- [Scopes, Depth, and Test Strategy](../05-scopes-and-depth.md) — right-sizing a run.
-- [Glossary](../glossary.md) — every term defined.
+- [最初のワークフロー](../02-your-first-workflow.md) — 注釈付きのエンドツーエンドの実行例。
+- [フェーズとステージ](../04-phases-and-stages.md) — 5 つのフェーズと 33 のステージ。
+- [スコープ、深さ、テスト戦略](../05-scopes-and-depth.md) — 実行の規模を適切に決める。
+- [用語集](../glossary.md) — すべての用語の定義。
 
-Other harnesses: [Running AI-DLC on Kiro](kiro.md) · [AI-DLC on Cursor](cursor.md) · [the harness family index](README.md).
+その他のハーネス: [Kiro で AI-DLC を実行する](kiro.md) · [Cursor での AI-DLC](cursor.md) · [ハーネスファミリーの索引](README.md)。

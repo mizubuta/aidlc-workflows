@@ -1,139 +1,139 @@
 # Architecture Patterns
 
 ## Purpose
-Select the right architectural style for your system's requirements. No pattern is universally best — each encodes trade-offs between complexity, scalability, team autonomy, and operational cost.
+システムの要件に合ったアーキテクチャスタイルを選択する。どこでも最善というパターンはない — 各パターンには、複雑さ、スケーラビリティ、チームの自律性、運用コストの間のトレードオフが組み込まれている。
 
 ## Pattern Overview
 
-| Pattern | Best For | Team Size | Complexity |
+| パターン | 適している対象 | チーム規模 | 複雑さ |
 |---------|----------|-----------|------------|
-| Modular Monolith | Most new projects, small-medium teams | 1-4 teams | Low-Medium |
-| Microservices | Large orgs, independent deployment needs | 5+ teams | High |
-| Serverless | Event-driven workloads, variable traffic | Any | Medium |
-| Event-Driven | Async workflows, loose coupling, audit trails | 2+ teams | Medium-High |
-| CQRS | Read-heavy with complex queries, separate scaling needs | 2+ teams | High |
-| Hexagonal | Testability, swappable infrastructure, long-lived systems | Any | Medium |
+| Modular Monolith | ほとんどの新規プロジェクト、小〜中規模のチーム | 1〜4 チーム | 低〜中 |
+| Microservices | 大規模な組織、独立したデプロイが必要な場合 | 5 チーム以上 | 高 |
+| Serverless | イベント駆動のワークロード、変動するトラフィック | 任意 | 中 |
+| Event-Driven | 非同期のワークフロー、疎結合、監査証跡 | 2 チーム以上 | 中〜高 |
+| CQRS | 複雑なクエリを伴う読み取り中心の処理、別々のスケーリングが必要な場合 | 2 チーム以上 | 高 |
+| Hexagonal | テスト容易性、交換可能なインフラ、長期間使われるシステム | 任意 | 中 |
 
 ## Modular Monolith
 
 ### Description
-A single deployable unit with well-defined internal module boundaries. Modules communicate through explicit interfaces, not shared database tables.
+内部のモジュール境界が明確に定義された、単一のデプロイ単位。モジュール同士は、共有のデータベーステーブルではなく明示的なインターフェースを通じて通信する。
 
 ### When to Use
-- Starting a new product (default choice)
-- Team is small (fewer than 20 developers)
-- Domain boundaries are not yet clear
-- Deployment simplicity is valued
+- 新しいプロダクトを始めるとき（デフォルトの選択肢）
+- チームが小さい（開発者が 20 人未満）
+- ドメインの境界がまだ明確でない
+- デプロイの単純さが重視される
 
 ### Key Rules
-- Each module owns its data (separate schemas or schema prefixes)
-- Modules communicate via defined interfaces (not direct database queries across modules)
-- Module dependencies are acyclic and explicitly declared
-- Extract to microservices later when boundaries are proven
+- 各モジュールが自身のデータを所有する（スキーマを分けるか、スキーマのプレフィックスを分ける）
+- モジュール同士は定義されたインターフェースを介して通信する（モジュールをまたいでデータベースを直接クエリしない）
+- モジュールの依存関係は非循環とし、明示的に宣言する
+- 境界が実証されてから、後でマイクロサービスに切り出す
 
 ### Trade-offs
-- (+) Simple deployment, debugging, and testing
-- (+) Refactoring across modules is straightforward
-- (-) Scaling is all-or-nothing (cannot scale one module independently)
-- (-) Technology choices are shared across all modules
+- (+) デプロイ、デバッグ、テストが単純
+- (+) モジュールをまたぐリファクタリングが容易
+- (-) スケーリングは全体単位でしかできない（1 つのモジュールだけを独立してスケールできない）
+- (-) 技術の選択がすべてのモジュールで共通になる
 
 ## Microservices
 
 ### Description
-Independently deployable services, each owning a bounded context with its own data store.
+それぞれが独自のデータストアを持つ境界づけられたコンテキストを所有する、独立してデプロイ可能なサービス群。
 
 ### When to Use
-- Multiple teams need to deploy independently
-- Different parts of the system have very different scaling needs
-- Polyglot technology requirements
-- Organization has mature DevOps and observability practices
+- 複数のチームが独立してデプロイする必要がある
+- システムの部分ごとにスケーリングの要件が大きく異なる
+- 複数の技術スタック（ポリグロット）が必要
+- 組織に成熟した DevOps とオブザーバビリティのプラクティスがある
 
 ### Key Rules
-- Each service owns its database — no shared data stores
-- Services communicate via APIs or events, never direct database access
-- Design for failure: every remote call can fail
-- Deploy independently with backward-compatible API changes
+- 各サービスが自身のデータベースを所有する — データストアを共有しない
+- サービス同士は API またはイベントで通信し、データベースに直接アクセスしない
+- 障害を前提に設計する: すべてのリモート呼び出しは失敗しうる
+- 後方互換性のある API 変更により、独立してデプロイする
 
 ### Trade-offs
-- (+) Independent deployment, scaling, and technology choice
-- (+) Team autonomy and clear ownership boundaries
-- (-) Distributed system complexity (network failures, data consistency, debugging)
-- (-) Operational overhead (monitoring, deployment pipelines per service)
-- (-) Integration testing is difficult
+- (+) デプロイ、スケーリング、技術選択を独立して行える
+- (+) チームの自律性と明確な所有境界
+- (-) 分散システムの複雑さ（ネットワーク障害、データ整合性、デバッグ）
+- (-) 運用のオーバーヘッド（サービスごとの監視、デプロイパイプライン）
+- (-) 統合テストが難しい
 
 ## Serverless
 
 ### Description
-Application logic runs in ephemeral, event-triggered functions managed by the cloud provider. No server provisioning or management.
+アプリケーションロジックは、クラウドプロバイダーが管理する、イベントでトリガーされる一時的な関数で実行される。サーバーのプロビジョニングや管理は不要。
 
 ### When to Use
-- Event-driven workloads (file processing, webhooks, scheduled tasks)
-- Highly variable traffic with long idle periods
-- Rapid prototyping with minimal infrastructure
-- Cost optimization for low or bursty traffic
+- イベント駆動のワークロード（ファイル処理、Webhook、スケジュールされたタスク）
+- 長いアイドル期間を伴う、変動の大きいトラフィック
+- 最小限のインフラでの迅速なプロトタイピング
+- 少量またはバースト的なトラフィックに対するコスト最適化
 
 ### Key Rules
-- Functions should be stateless — use external stores for state
-- Keep cold start impact low (small bundles, provisioned concurrency for latency-sensitive paths)
-- Design for idempotency — events may be delivered more than once
-- Set concurrency limits to protect downstream systems
+- 関数はステートレスにする — 状態は外部ストアを使う
+- コールドスタートの影響を小さく保つ（小さなバンドル、レイテンシに敏感な経路にはプロビジョンド同時実行）
+- 冪等性を前提に設計する — イベントは複数回配信されることがある
+- 下流のシステムを保護するため、同時実行数の上限を設定する
 
 ### Trade-offs
-- (+) Zero infrastructure management, pay-per-use pricing
-- (+) Automatic scaling to zero and to peak
-- (-) Cold start latency (problematic for synchronous user-facing requests)
-- (-) Vendor lock-in to cloud provider's function runtime and event sources
-- (-) Debugging distributed function chains is difficult
-- (-) Execution time limits (15 minutes on AWS Lambda)
+- (+) インフラ管理が不要で、従量課金
+- (+) ゼロからピークまで自動的にスケールする
+- (-) コールドスタートのレイテンシ（ユーザー向けの同期リクエストでは問題になる）
+- (-) クラウドプロバイダーの関数ランタイムとイベントソースへのベンダーロックイン
+- (-) 分散した関数チェーンのデバッグが難しい
+- (-) 実行時間の上限（AWS Lambda では 15 分）
 
 ## Event-Driven Architecture
 
 ### Description
-Components communicate by producing and consuming events through a message broker. Producers do not know about consumers.
+コンポーネントは、メッセージブローカーを通じてイベントを発行・消費することで通信する。プロデューサーはコンシューマーについて知らない。
 
 ### When to Use
-- Loose coupling between components is essential
-- Workflows are asynchronous (order processing, notifications, data pipelines)
-- Audit trails and event replay are needed
-- Multiple consumers need to react to the same event
+- コンポーネント間の疎結合が不可欠
+- ワークフローが非同期（注文処理、通知、データパイプライン）
+- 監査証跡とイベントのリプレイが必要
+- 複数のコンシューマーが同じイベントに反応する必要がある
 
 ### Key Patterns
-- **Event Notification**: Signal that something happened; consumer fetches details
-- **Event-Carried State Transfer**: Event contains all data the consumer needs
-- **Event Sourcing**: Store the sequence of events as the source of truth (not current state)
+- **Event Notification**: 何かが起きたことを通知し、詳細はコンシューマーが取得する
+- **Event-Carried State Transfer**: コンシューマーが必要とするすべてのデータをイベントに含める
+- **Event Sourcing**: （現在の状態ではなく）イベントの列を信頼できる情報源として保存する
 
 ### Trade-offs
-- (+) Loose coupling, independent scalability, natural audit trail
-- (-) Eventual consistency (not all components see changes simultaneously)
-- (-) Event ordering and deduplication complexity
-- (-) Debugging event flows requires distributed tracing
+- (+) 疎結合、独立したスケーラビリティ、自然な監査証跡
+- (-) 結果整合性（すべてのコンポーネントが同時に変更を認識するわけではない）
+- (-) イベントの順序と重複排除の複雑さ
+- (-) イベントフローのデバッグには分散トレーシングが必要
 
 ## CQRS (Command Query Responsibility Segregation)
 
 ### Description
-Separate the write model (commands that change state) from the read model (queries that return data). Each can use different data stores and schemas optimized for their purpose.
+書き込みモデル（状態を変更するコマンド）を読み取りモデル（データを返すクエリ）から分離する。それぞれが、目的に最適化された別々のデータストアとスキーマを使える。
 
 ### When to Use
-- Read and write patterns are very different (read-heavy with complex projections)
-- Read and write sides need to scale independently
-- Domain model is complex and queries require flattened/denormalized views
+- 読み取りと書き込みのパターンが大きく異なる（複雑なプロジェクションを伴う読み取り中心の処理）
+- 読み取り側と書き込み側を独立してスケールする必要がある
+- ドメインモデルが複雑で、クエリにはフラット化/非正規化したビューが必要
 
 ### Key Rules
-- Commands validate business rules and write to the write store
-- Events propagate changes to the read store (eventually consistent)
-- Read models are disposable — they can be rebuilt from the event stream
-- Accept eventual consistency between write and read sides
+- コマンドはビジネスルールを検証し、書き込みストアに書き込む
+- イベントが変更を読み取りストアに伝播する（結果整合性）
+- 読み取りモデルは使い捨てであり、イベントストリームから再構築できる
+- 書き込み側と読み取り側の間の結果整合性を受け入れる
 
 ### Trade-offs
-- (+) Optimized read and write performance independently
-- (+) Read models tailored to specific UI needs without compromising domain model
-- (-) Increased complexity (two models, synchronization, eventual consistency)
-- (-) Overkill for simple CRUD applications
+- (+) 読み取りと書き込みの性能をそれぞれ独立して最適化できる
+- (+) ドメインモデルを損なわずに、特定の UI のニーズに合わせた読み取りモデルを作れる
+- (-) 複雑さが増す（2 つのモデル、同期、結果整合性）
+- (-) 単純な CRUD アプリケーションには過剰
 
 ## Hexagonal Architecture (Ports and Adapters)
 
 ### Description
-Business logic at the center, surrounded by ports (interfaces) and adapters (implementations). External systems connect through adapters; business logic never depends on infrastructure.
+ビジネスロジックを中心に置き、その周りをポート（インターフェース）とアダプター（実装）が囲む。外部システムはアダプターを通じて接続し、ビジネスロジックは決してインフラに依存しない。
 
 ### Structure
 ```
@@ -143,28 +143,28 @@ Adapters (Infrastructure)
 ```
 
 ### When to Use
-- Business logic is complex and must be testable in isolation
-- Infrastructure may change (swap database, replace message broker, change cloud provider)
-- Long-lived systems where technology choices will evolve
+- ビジネスロジックが複雑で、単独でテスト可能でなければならない
+- インフラが変わる可能性がある（データベースの交換、メッセージブローカーの置き換え、クラウドプロバイダーの変更）
+- 技術の選択が変化していく、長期間使われるシステム
 
 ### Key Rules
-- Domain layer has zero dependencies on frameworks or infrastructure
-- All external interactions go through port interfaces defined by the domain
-- Adapters implement ports and translate between domain and external formats
-- Tests can use in-memory adapters (no database, no network required)
+- ドメイン層はフレームワークやインフラへの依存を一切持たない
+- 外部とのやり取りはすべて、ドメインが定義したポートのインターフェースを経由する
+- アダプターはポートを実装し、ドメインと外部の形式の間で変換する
+- テストではインメモリのアダプターを使える（データベースもネットワークも不要）
 
 ## Migration Paths
 
-| From | To | Approach |
+| 移行元 | 移行先 | アプローチ |
 |------|----|----------|
-| Monolith | Modular Monolith | Identify module boundaries, enforce interface contracts, separate data |
-| Modular Monolith | Microservices | Extract one module at a time (strangler fig pattern), starting with the least coupled |
-| Monolith | Serverless | Extract event-driven workflows first (background jobs, file processing) |
-| Microservices | Modular Monolith | Consolidate when services are too small, team boundaries have shifted, or operational cost exceeds benefit |
+| Monolith | Modular Monolith | モジュールの境界を特定し、インターフェースの契約を強制し、データを分離する |
+| Modular Monolith | Microservices | 最も結合度の低いものから始めて、一度に 1 つのモジュールを切り出す（ストラングラーフィグパターン） |
+| Monolith | Serverless | まずイベント駆動のワークフロー（バックグラウンドジョブ、ファイル処理）を切り出す |
+| Microservices | Modular Monolith | サービスが小さすぎる、チームの境界が変わった、または運用コストが利点を上回る場合に統合する |
 
 ## Decision Framework
-1. Start with a modular monolith unless you have proven reasons not to
-2. Extract to microservices only when team autonomy or independent scaling demands it
-3. Use serverless for event-driven workloads and glue code, not for core request-response APIs
-4. Apply CQRS only when read and write models genuinely diverge
-5. Use hexagonal architecture in the domain layer regardless of the outer architecture style
+1. そうしない確かな理由がない限り、モジュラーモノリスから始める
+2. チームの自律性や独立したスケーリングが必要になったときにだけ、マイクロサービスに切り出す
+3. サーバーレスはイベント駆動のワークロードやグルーコードに使い、中核となるリクエスト/レスポンス型の API には使わない
+4. CQRS は、読み取りモデルと書き込みモデルが本当に乖離する場合にのみ適用する
+5. 外側のアーキテクチャスタイルにかかわらず、ドメイン層にはヘキサゴナルアーキテクチャを使う

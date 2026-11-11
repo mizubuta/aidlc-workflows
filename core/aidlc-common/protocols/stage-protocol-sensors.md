@@ -1,62 +1,55 @@
 # Sensors Protocol Module
 
-Load this module when the engine lists `sensors` in `directive.protocol_modules`: `directive.ceremony.sensors` is `on`.
+エンジンが `directive.protocol_modules` に `sensors` を挙げたとき、つまり `directive.ceremony.sensors` が `on` のときに、このモジュールを読み込む。
 
 ### A blocking gate sensor at the approval gate
 
-At stage-protocol.md section 2, Part 0 step 2:
-- When `directive.ceremony.sensors === "on"`, if the report (or a Unit checkpoint's `verify`) instead refuses because a blocking gate sensor found issues or could not produce a verified pass, the approval gate is NOT open. At a checkpoint the refusal names the `--unit` for `log decision` and `log answer` and the `verify` to retry, and, when the person overrode the same check at an earlier Unit, a line to say just before the question; use those as written, with `<check>` filled as the refusal says. In interactive mode, run `{{INVOKE}} engine log decision --stage <slug> --decision "Blocking gate sensor failure" --options "Fix findings,Override blocking sensors"` and present those two options as a separate structured question. END YOUR TURN.
-- **Fix findings**: after the human selects it, record `aidlc-log.ts answer --stage <slug> --details "Fix findings"` (with the refusal's `--unit` at a checkpoint), fix the named findings or evaluation failure, then retry what the refusal named with no override.
-- **Override blocking sensors**: after the human selects it, record `aidlc-log.ts answer --stage <slug> --details "Override blocking sensors"` (with the refusal's `--unit` at a checkpoint), then run the retry the refusal names, with `--override-blocking-sensors --user-input "Override blocking sensors"`. The state tool requires the exact offered option, a `HUMAN_TURN`, and the matching decision/answer receipt; a bare flag fails. Never offer or attempt this option under `Construction Autonomy Mode: autonomous`: unattended runs halt loudly.
-- **One check named to switch off**: there is no switch for one check, only all of the work's checks (`{{INVOKE}} engine orchestrate next --sensors off`). When the person asks to switch one check off, ask once which they mean: log the check's question again with a third option, `--options "Fix findings,Override blocking sensors,Switch all checks off for this work"`, say that an Override covers this stage's findings (at a checkpoint, this Unit's), and take their pick as above; for the switch, run `next --sensors off` and follow its step. Never ask which they meant a second time: a request to switch this check off again at a later Unit takes their earlier pick, as that Unit's refusal says.
+stage-protocol.md のセクション 2、Part 0 の手順 2 において:
+- `directive.ceremony.sensors === "on"` のとき、ブロッキングのゲートセンサーが問題を検出した、または検証済みの合格を出せなかったために report（あるいはユニットのチェックポイントの `verify`）が拒否された場合、承認ゲートは開いていない（NOT open）。チェックポイントでは、拒否メッセージが `log decision` と `log answer` に使う `--unit` と再試行すべき `verify` を示し、利用者が以前のユニットで同じチェックをオーバーライドしていた場合は、質問の直前に伝える1行も示す。それらは書かれたとおりに使い、`<check>` は拒否メッセージの指示どおりに埋める。対話モードでは `{{INVOKE}} engine log decision --stage <slug> --decision "Blocking gate sensor failure" --options "Fix findings,Override blocking sensors"` を実行し、その2つの選択肢を独立した構造化質問として提示する。ターンを終了する（END YOUR TURN）。
+- **Fix findings**: 人間がこれを選択した後、`aidlc-log.ts answer --stage <slug> --details "Fix findings"` を記録し（チェックポイントでは拒否メッセージの `--unit` を付ける）、指摘された検出事項または評価の失敗を修正してから、拒否メッセージが示したものをオーバーライドなしで再試行する。
+- **Override blocking sensors**: 人間がこれを選択した後、`aidlc-log.ts answer --stage <slug> --details "Override blocking sensors"` を記録し（チェックポイントでは拒否メッセージの `--unit` を付ける）、拒否メッセージが示す再試行を `--override-blocking-sensors --user-input "Override blocking sensors"` 付きで実行する。状態ツールは、提示した選択肢と完全に一致する文言、`HUMAN_TURN`、および対応する decision/answer の記録を要求する。フラグだけでは失敗する。`Construction Autonomy Mode: autonomous` のもとでは、この選択肢を決して提示も試行もしてはならない。無人実行は明示的に停止する。
+- **1つのチェックだけをオフにするよう求められた場合**: 1つのチェックだけを切り替える手段はなく、作業のすべてのチェックをまとめて切り替えるもの（`{{INVOKE}} engine orchestrate next --sensors off`）しかない。利用者が1つのチェックをオフにするよう求めたら、どちらの意味かを1回だけ尋ねる。3つ目の選択肢を加えて、チェックの質問を再度記録し（`--options "Fix findings,Override blocking sensors,Switch all checks off for this work"`）、Override はこのステージ（チェックポイントではこのユニット）の検出事項を対象とすることを伝え、選ばれたものを上記のとおり処理する。切り替えの場合は `next --sensors off` を実行し、その手順に従う。どちらの意味かを2回尋ねてはならない。以降のユニットで再びこのチェックをオフにするよう求められた場合は、そのユニットの拒否メッセージが示すとおり、以前の選択を適用する。
 
 ### Sensor Imports
 
-The instructions in this section apply only when `directive.ceremony.sensors === "on"`. When it is `"off"`, `sensors_applicable` is empty: no sensor correction, rerun, gate-blocking, or sensor-override instructions apply. Ordinary artifact verification and approval gates remain required.
+このセクションの指示は `directive.ceremony.sensors === "on"` の場合にのみ適用される。`"off"` の場合、`sensors_applicable` は空であり、センサーによる修正、再実行、ゲートのブロック、センサーのオーバーライドに関する指示は一切適用されない。通常の成果物の検証と承認ゲートは引き続き必須である。
 
-A stage's `sensors:` frontmatter list is its complete set of imported checks.
-Each named manifest defines its file match, command, time budget, `fire_on`
-timing, and `default_severity`; only sensors imported by the stage are eligible
-to run. `fire_on: write` runs during matching writes and remains advisory in
-this release, even when the manifest declares `blocking`. `fire_on: gate` runs
-against matching declared deliverables when the stage enters or re-enters its
-approval gate, and its advisory checks run once before that, when the
-documents are written and handed on: the review request, or the report that
-opens the gate when no review took them first, comes back as a `print` that
-names what a check found and the same command. That step is yours: fix what
-is yours in those documents, then run the command again. It goes on without
-checking again; the gate checks again and says what is left.
-Advisory outcomes emit their audit rows but do not stop the
-gate; a gate the engine approves itself under Construction autonomy runs only
-its blocking sensors, since advisory evidence has no reader there. A blocking gate sensor requires a verified pass: findings, unavailable
-evaluation, malformed output, and timeouts refuse gate entry until the issue
-is fixed or the human-backed override flow above completes. Autonomous mode
-cannot override a blocking sensor.
+ステージの `sensors:` frontmatter リストが、そのステージがインポートするチェックの完全な集合である。
+指定された各マニフェストは、ファイルの照合条件、コマンド、時間予算、`fire_on`
+のタイミング、`default_severity` を定義する。実行対象になるのは、そのステージがインポートしたセンサーだけである。
+`fire_on: write` は照合する書き込みの際に実行され、マニフェストが `blocking` を宣言していても、
+このリリースでは助言（advisory）にとどまる。`fire_on: gate` は、ステージが承認ゲートに入る、または再び入るときに、
+照合する宣言済みの成果物に対して実行される。その助言的チェックは、それより前、
+ドキュメントが書かれて引き渡されるときに1回実行される。レビュー依頼、またはレビューが先に受け取らなかった場合は
+ゲートを開く report が、チェックの検出内容と同じコマンドを示す `print` として返ってくる。
+その手順はあなたの担当である。それらのドキュメントのうち自分の担当部分を修正し、コマンドを再実行する。
+その後は再チェックせずに進み、ゲートが再チェックして残りを伝える。
+助言的な結果は監査ログの行を出力するが、ゲートを止めない。Construction の自律モードでエンジン自身が承認するゲートでは、
+助言的な証拠を読む者がいないため、ブロッキングセンサーだけが実行される。ブロッキングのゲートセンサーは検証済みの合格を要求する。
+検出事項、評価不能、不正な出力、タイムアウトはいずれも、問題が修正されるか、上記の人間による
+オーバーライドの流れが完了するまで、ゲートへの進入を拒否する。自律モードでは
+ブロッキングセンサーをオーバーライドできない。
 
-Failed checks emit a `SENSOR_FAILED` audit row and write findings to
-`<record>/.aidlc-engine/sensors/<stage-slug>/<sensor>-<fire-id>.md`. A check
-whose script crashed or could not start emits `SENSOR_COULD_NOT_RUN`: it checked
-nothing.
+失敗したチェックは `SENSOR_FAILED` の監査ログ行を出力し、検出事項を
+`<record>/.aidlc-engine/sensors/<stage-slug>/<sensor>-<fire-id>.md` に書き込む。スクリプトが
+クラッシュした、または起動できなかったチェックは `SENSOR_COULD_NOT_RUN` を出力する。そのチェックは
+何も検査していない。
 
-When a gate opens, or is shown again, the engine's reply names each check that
-still fails on a declared output, and in one line the checks that could not run,
-in its `narration`
-on its own line after what the stage produced: say it to the person with the
-approval question, never claim coverage a
-check reports against or could not run (every requirement traced, every section
-present, the code type-checks), and
-when they ask for changes, correct from that detail file. A Unit's own gate
-names that Unit's outputs and writes only; with Sensors off,
-nothing is said about checks.
+ゲートが開くとき、または再表示されるとき、エンジンの応答は、宣言済みの出力に対してまだ失敗している各チェックと、
+実行できなかったチェックを1行で、`narration` の中で
+ステージが生成したものの後の独立した行に示す。それを承認の質問とともに利用者に伝える。
+チェックが不合格を報告している、または実行できなかった範囲について、網羅していると主張してはならない（すべての要件を追跡済み、すべてのセクションが
+存在、コードが型チェックを通る、など）。
+利用者が変更を求めたら、その詳細ファイルに基づいて修正する。ユニット自身のゲートは
+そのユニットの出力と書き込みだけを示す。センサーがオフの場合、
+チェックについては何も言わない。
 
-`required-sections` requires the `##` headings of a markdown output's
-template when one applies (stage-protocol.md, Template overrides), and nothing
-without one.
+`required-sections` は、テンプレートが適用される場合、Markdown 出力のテンプレートにある `##` 見出しを要求する
+（stage-protocol.md、Template overrides）。テンプレートがない場合は何も要求しない。
 
-`upstream-coverage` compares output prose with the stage's `consumes:`
-frontmatter. Every required artefact that exists must be referenced so the
-output shows which upstream inputs informed it; an optional one
-(`required: false`) is not checked unless the stage marks it `cited: true`. Stages with no required or cited `consumes:` pass
-this check trivially. The compact `Imports:` and `Upstream targets:` lines in
-each stage file are the local summary; frontmatter remains authoritative when
-checks are resolved.
+`upstream-coverage` は、出力の散文をステージの `consumes:`
+frontmatter と比較する。存在する必須の成果物はすべて参照されていなければならず、
+これにより出力がどの上流の入力に基づいたかがわかる。任意のもの
+（`required: false`）は、ステージが `cited: true` を付けない限りチェックされない。必須または cited の `consumes:` を持たないステージは、
+このチェックに自明に合格する。各ステージファイルにある簡潔な `Imports:` と `Upstream targets:` の行は
+ローカルな要約であり、チェックを解決する際は frontmatter が正となる。

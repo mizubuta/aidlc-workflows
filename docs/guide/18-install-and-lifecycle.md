@@ -1,70 +1,29 @@
 # Install and Lifecycle
 
-The native release channel installs an `aidlc` command and one
-or more harness runtimes. `aidlc config` then creates or refreshes a project from
-that local runtime. The installed command and config path do not require Bun or
-Node.js. GitHub CLI (`gh`) is optional. A compatible version adds signed
-attestation verification; missing or older versions do not block installation.
+ネイティブのリリースチャネルは、`aidlc` コマンドと 1 つ以上のハーネスランタイムをインストールします。続いて `aidlc config` が、そのローカルランタイムからプロジェクトを作成または更新します。インストールされたコマンドと config の処理に Bun や Node.js は必要ありません。GitHub CLI（`gh`）は任意です。互換性のあるバージョンがあれば署名付きアテステーションの検証が追加されますが、存在しない場合や古いバージョンの場合でもインストールは妨げられません。
 
-This chapter describes the native install lifecycle available in this release.
-The planned `aidlc setup` experience, npm package, and package-manager formulas
-are not available yet. Manual-copy users install Bun and take the versioned,
-Bun-invoking runtime from `aidlc-copy-runtime-X.Y.Z.tar.gz`; they do not need the
-native `aidlc` command.
+この章では、本リリースで利用できるネイティブのインストールライフサイクルを説明します。計画中の `aidlc setup` による体験、npm パッケージ、パッケージマネージャー用のフォーミュラはまだ提供されていません。手動コピーで利用する場合は Bun をインストールし、`aidlc-copy-runtime-X.Y.Z.tar.gz` からバージョン付きの Bun 起動型ランタイムを取り出します。ネイティブの `aidlc` コマンドは必要ありません。
 
 ## Install
 
-Release assets cover:
+リリースアセットの対象は次のとおりです。
 
-- macOS x64 and arm64
-- Linux x64 and arm64, with glibc and musl builds
+- macOS x64 および arm64
+- Linux x64 および arm64（glibc ビルドと musl ビルド）
 - Windows x64
 
-Native installs are per-user. The Unix installer refuses root and does not need
-`sudo`. Where root is the only user, such as a container image without `USER`,
-a CI container job, or a cloud agent sandbox whose setup script runs as root,
-pass `--allow-root` (or set `AIDLC_ALLOW_ROOT=1`) to install under root's own
-`$HOME`. The opt-in is still refused under `sudo` (`SUDO_USER` is set), when
-`$HOME` is unset or not owned by root (a symlinked home is followed), and when
-`AIDLC_BIN_DIR` or `AIDLC_INSTALL_ROOT` points outside root's home, so
-`sudo sh install.sh` from a normal account keeps failing and a root install never
-becomes system-wide. A release from before `--allow-root` cannot uninstall
-itself as root; installing it, or activating it as root with `aidlc use`,
-`update` or `rollback`, proceeds with a warning that names the way to remove it
-later: its own `aidlc update`, then `aidlc uninstall --allow-root`.
-`aidlc uninstall` takes the same `--allow-root` opt-in with the same limits.
-Windows installation targets the account running PowerShell. Run it
-from a normal PowerShell window. A window opened with "Run as administrator"
-under UAC is warned that installing as administrator is less safe, because
-another program running as the same account could interfere with files the
-elevated installer runs, and asked to confirm. `-Yes` confirms without a prompt;
-a non-interactive run without `-Yes` (including `-Json` and `-Quiet`) stops with
-that guidance. `aidlc uninstall` gives the same warning but asks nothing: at a
-terminal it prints the warning before it removes anything, and with `--yes` the
-warning is in its result. Sessions that already hold a full administrator
-token without UAC elevation, such as the built-in Administrator on Windows
-Server, see no warning. Running PowerShell with another account's credentials
-installs for that account. There is no all-users mode.
+ネイティブインストールはユーザー単位です。Unix インストーラーは root を拒否し、`sudo` を必要としません。`USER` のないコンテナイメージ、CI のコンテナジョブ、セットアップスクリプトを root で実行するクラウドのエージェントサンドボックスなど、root が唯一のユーザーである環境では、`--allow-root` を渡す（または `AIDLC_ALLOW_ROOT=1` を設定する）と root 自身の `$HOME` 配下にインストールできます。このオプトインでも、`sudo` 配下（`SUDO_USER` が設定されている）の場合、`$HOME` が未設定か root の所有でない場合（シンボリックリンクのホームはたどります）、`AIDLC_BIN_DIR` または `AIDLC_INSTALL_ROOT` が root のホームの外を指している場合は拒否されます。そのため、通常のアカウントからの `sudo sh install.sh` は引き続き失敗し、root でのインストールがシステム全体に及ぶことはありません。`--allow-root` より前のリリースは root として自分自身をアンインストールできません。そのリリースをインストールする場合や、`aidlc use`、`update`、`rollback` で root として有効化する場合は警告付きで続行し、その警告で後から削除する方法（そのリリース自身の `aidlc update` を実行してから `aidlc uninstall --allow-root`）を示します。`aidlc uninstall` も同じ制限付きで同じ `--allow-root` オプトインを受け付けます。
+Windows のインストールは PowerShell を実行しているアカウントを対象とします。通常の PowerShell ウィンドウから実行してください。UAC 配下で「管理者として実行」で開いたウィンドウでは、管理者としてインストールすると安全性が下がる（同じアカウントで動く別のプログラムが、昇格したインストーラーが実行するファイルに干渉できる）という警告が表示され、確認を求められます。`-Yes` を付けるとプロンプトなしで確認したことになります。`-Yes` のない非対話実行（`-Json` や `-Quiet` を含む）は、その案内を表示して停止します。`aidlc uninstall` も同じ警告を出しますが、何も尋ねません。ターミナルでは何かを削除する前に警告を表示し、`--yes` を付けた場合は結果に警告が含まれます。Windows Server の組み込み Administrator のように、UAC の昇格なしで完全な管理者トークンを持つセッションでは警告は表示されません。別のアカウントの資格情報で PowerShell を実行すると、そのアカウント向けにインストールされます。全ユーザー向けのモードはありません。
 
-Alpine Linux's musl asset follows Bun's own runtime contract: Bun's musl build,
-like Node.js, requires the system `libgcc` and `libstdc++` packages. Fully
-static Bun musl compile targets remain an upstream-tracked feature rather than
-an available target today. Install the prerequisites before running the
-installer or binary:
+Alpine Linux 用の musl アセットは Bun 自身のランタイム要件に従います。Bun の musl ビルドは Node.js と同様に、システムの `libgcc` および `libstdc++` パッケージを必要とします。完全に静的な Bun の musl コンパイルターゲットは、現時点では利用可能なターゲットではなく、上流で追跡中の機能です。インストーラーまたはバイナリを実行する前に、前提パッケージをインストールしてください。
 
 ```sh
 apk add libgcc libstdc++
 ```
 
-This prerequisite applies to both x64 and arm64 Alpine systems. Installing the
-system packages may require administrator rights, but the AI-DLC install itself
-still runs as the target user. The installer detects the corresponding loader
-failure and prints the command above; it never runs `apk` or installs system
-packages. The upstream Bun tracking includes `oven-sh/bun#15829` and
-`oven-sh/bun#29681`.
+この前提条件は x64 と arm64 の両方の Alpine システムに当てはまります。システムパッケージのインストールには管理者権限が必要な場合がありますが、AI-DLC のインストール自体は引き続き対象ユーザーとして実行します。インストーラーは対応するローダーの失敗を検出して上記のコマンドを表示しますが、`apk` を実行したりシステムパッケージをインストールしたりすることはありません。上流の Bun での追跡には `oven-sh/bun#15829` と `oven-sh/bun#29681` があります。
 
-The installer includes every harness runtime together, for `--harness`
-`claude`, `codex`, `copilot`, `cursor`, `kiro`, `kiro-v2`, and `opencode`:
+インストーラーには、`--harness` の `claude`、`codex`、`copilot`、`cursor`、`kiro`、`kiro-v2`、`opencode` 用のすべてのハーネスランタイムがまとめて含まれています。
 
 ```bash
 tmp="$(mktemp -d)"
@@ -87,22 +46,10 @@ rm -rf "$tmp"
 export PATH="$HOME/.local/bin:$PATH"
 ```
 
-An online run needs `curl` or `wget`; every run needs `sha256sum` or `shasum`.
-GitHub CLI is optional and used only when it supports the release's required
-attestation flags.
-It installs
-versions under `${XDG_DATA_HOME:-$HOME/.local/share}/aidlc/versions/` and
-writes `$HOME/.local/bin/aidlc`, a small launcher that runs the active version,
-by default. AI-DLC's own plugin catalogue sits beside the versions, at
-`${XDG_DATA_HOME:-$HOME/.local/share}/aidlc/plugins/`; the installer prints its
-full path (see [Plugins](#plugins)).
+オンラインで実行するには `curl` または `wget` が必要で、どの実行でも `sha256sum` または `shasum` が必要です。GitHub CLI は任意で、リリースに必要なアテステーション用フラグをサポートしている場合にのみ使われます。
+デフォルトでは、バージョンを `${XDG_DATA_HOME:-$HOME/.local/share}/aidlc/versions/` 配下にインストールし、有効なバージョンを実行する小さなランチャーである `$HOME/.local/bin/aidlc` を書き込みます。AI-DLC 自身のプラグインカタログはバージョンと並んで `${XDG_DATA_HOME:-$HOME/.local/share}/aidlc/plugins/` に置かれ、インストーラーがそのフルパスを表示します（[プラグイン](#plugins)を参照）。
 
-The installer does not edit a shell startup file unless
-`--profile <absolute-path-under-$HOME>` is explicit. That option writes or
-updates one `BEGIN AI-DLC:PATH` block transactionally and preserves the rest
-of the file. The profile cannot be inside the AI-DLC install or command roots;
-existing markers must be unique, exact full lines, and ordered begin-before-end.
-Malformed marker layouts are refused without changing the profile.
+インストーラーは、`--profile <absolute-path-under-$HOME>` が明示されない限りシェルの起動ファイルを編集しません。このオプションを指定すると、`BEGIN AI-DLC:PATH` ブロックを 1 つトランザクションとして書き込みまたは更新し、ファイルの残りの部分は保持します。プロファイルを AI-DLC のインストールルートやコマンドルートの中に置くことはできません。既存のマーカーは一意で、行全体と完全に一致し、begin が end より前に来る順序である必要があります。マーカーの配置が不正な場合は、プロファイルを変更せずに拒否します。
 
 ### Windows PowerShell
 
@@ -118,178 +65,87 @@ Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force
 Remove-Item -Recurse -Force $download
 ```
 
-`install.ps1` is not signed, and Windows PowerShell runs a script file only
-when the execution policy allows it: on Windows 10 and 11 the default is
-`Restricted`, which runs no script file. The `Set-ExecutionPolicy` line allows
-scripts in this PowerShell window, and in PowerShell started from it, until you
-close it; your saved execution policy is not changed. A Group Policy execution
-policy (a `MachinePolicy` or `UserPolicy` row in `Get-ExecutionPolicy -List`;
-when both are set, `MachinePolicy` is the one in effect) overrides that line.
-Unless that policy is `Bypass`, the line then prints an error: Windows
-PowerShell names it `ExecutionPolicyOverride`, and in English it says the
-policy was `updated … successfully, but the setting is overridden`. Under
-`Bypass`, `RemoteSigned` or `Unrestricted` the installer still runs. Under
-`AllSigned` it refuses the installer as not digitally signed, and under
-`Restricted` because running scripts is disabled: ask your administrator how to
-install it.
+`install.ps1` は署名されておらず、Windows PowerShell は実行ポリシーが許可する場合にのみスクリプトファイルを実行します。Windows 10 および 11 の既定値は `Restricted` で、どのスクリプトファイルも実行しません。`Set-ExecutionPolicy` の行は、この PowerShell ウィンドウと、そこから起動した PowerShell で、ウィンドウを閉じるまでスクリプトの実行を許可します。保存されている実行ポリシーは変更されません。グループポリシーによる実行ポリシー（`Get-ExecutionPolicy -List` の `MachinePolicy` または `UserPolicy` の行。両方が設定されている場合は `MachinePolicy` が有効）は、この行より優先されます。そのポリシーが `Bypass` でない限り、この行はエラーを表示します。Windows PowerShell ではそのエラー名は `ExecutionPolicyOverride` で、英語ではポリシーが `updated … successfully, but the setting is overridden`（正常に更新されたが設定が上書きされている）と表示されます。`Bypass`、`RemoteSigned`、`Unrestricted` の下ではインストーラーはそれでも実行されます。`AllSigned` の下ではデジタル署名がないとしてインストーラーを拒否し、`Restricted` の下ではスクリプトの実行が無効になっているとして拒否します。インストール方法を管理者に問い合わせてください。
 
-Windows installs versions under `%LOCALAPPDATA%\aidlc\versions\` and keeps the
-`aidlc` command in `%LOCALAPPDATA%\aidlc\bin\`: `aidlc.exe`, a copy of the AI-DLC
-binary that starts the active version, and the `aidlc.cmd` shim beside it.
-PowerShell, CMD and Git Bash all run `aidlc.exe` for a bare `aidlc`, which
-hands the active version its arguments as your shell gave them, with no cmd.exe
-in between reading `&`, `^`, `|`, `<`, `>` or `%NAME%` in them. AI-DLC's own
-plugin catalogue is in `%LOCALAPPDATA%\aidlc\plugins\`. After successful
-verification and installation, the installer registers that bin directory in the current
-account's persistent User PATH, preserving existing entries and avoiding
-duplicates on reruns. It also updates the current PowerShell process and
-notifies Windows of the environment change, so programs started afterwards
-find `aidlc`. A terminal app or IDE that was already open (Kiro, VS Code,
-Cursor) keeps the PATH it started with: quit it fully and reopen it before using
-`aidlc` or AI-DLC's hooks there. A new tab or Reload Window inside it is not
-enough.
-It does not change Machine PATH or edit a PowerShell profile.
+Windows ではバージョンを `%LOCALAPPDATA%\aidlc\versions\` 配下にインストールし、`aidlc` コマンドを `%LOCALAPPDATA%\aidlc\bin\` に置きます。そこには、有効なバージョンを起動する AI-DLC バイナリのコピーである `aidlc.exe` と、その隣の `aidlc.cmd` シムがあります。PowerShell、CMD、Git Bash はいずれも、素の `aidlc` に対して `aidlc.exe` を実行します。これはシェルから渡された引数をそのまま有効なバージョンに渡すため、間に cmd.exe が入って引数内の `&`、`^`、`|`、`<`、`>`、`%NAME%` を解釈することはありません。AI-DLC 自身のプラグインカタログは `%LOCALAPPDATA%\aidlc\plugins\` にあります。検証とインストールが成功すると、インストーラーはその bin ディレクトリを現在のアカウントの永続的なユーザー PATH に登録します。既存のエントリは保持し、再実行しても重複させません。また、現在の PowerShell プロセスも更新し、環境の変更を Windows に通知するので、その後に起動したプログラムは `aidlc` を見つけられます。すでに開いていたターミナルアプリや IDE（Kiro、VS Code、Cursor）は起動時の PATH を保持し続けます。そこで `aidlc` や AI-DLC のフックを使う前に、完全に終了してから開き直してください。その中で新しいタブを開いたり Reload Window を実行したりするだけでは不十分です。
+マシン PATH の変更や PowerShell プロファイルの編集は行いません。
 
-Successful human output starts with `Installed`, the version, the account,
-and the installed command path. Next, run `aidlc config` from your project
-directory. When the installer added the PATH entry, it also says to quit and
-reopen any terminal app or IDE that was already open.
+成功時の人間向け出力は、`Installed`、バージョン、アカウント、インストールされたコマンドのパスで始まります。次に、プロジェクトのディレクトリで `aidlc config` を実行してください。インストーラーが PATH エントリを追加した場合は、すでに開いていたターミナルアプリや IDE を終了して開き直すようにも案内します。
 
-The installer writes `windows-path.json` under the install root only when it
-adds a User PATH entry. This ownership record survives reruns, including
-`-NoModifyPath`, so uninstall can remove the entry later. An entry that was
-already present is not claimed. Both `aidlc uninstall` and
-`aidlc uninstall --purge` remove the recorded entry while preserving pre-existing
-entries and later unrelated PATH changes.
+インストーラーは、ユーザー PATH エントリを追加した場合にのみ、インストールルート配下に `windows-path.json` を書き込みます。この所有記録は `-NoModifyPath` を含む再実行後も残るため、後でアンインストール時にエントリを削除できます。すでに存在していたエントリは所有を主張しません。`aidlc uninstall` と `aidlc uninstall --purge` はどちらも、記録されたエントリを削除し、以前から存在したエントリや後から行われた無関係な PATH の変更は保持します。
 
-If another `aidlc` command takes precedence in persistent PATH, the result
-names it and gives the installed command's full path. Resolve that PATH
-conflict or invoke the installed command directly. If PATH registration fails,
-the installer reports that the files were installed but PATH still needs
-configuration, with a recovery instruction and exit code 1.
+永続的な PATH で別の `aidlc` コマンドが優先される場合、結果にそのコマンドを示し、インストールしたコマンドのフルパスを表示します。その PATH の競合を解消するか、インストールしたコマンドを直接呼び出してください。PATH の登録に失敗した場合、インストーラーはファイルはインストールされたが PATH の設定がまだ必要であることを、復旧手順と終了コード 1 とともに報告します。
 
-To skip **both persistent and current-process PATH changes**, replace
-`& $installer` above with `& $installer -NoModifyPath`. The installer prints
-a direct command to run without PATH registration. For the default location:
+**永続的な PATH と現在のプロセスの PATH の両方の変更**をスキップするには、上記の `& $installer` を `& $installer -NoModifyPath` に置き換えます。インストーラーは、PATH 登録なしで実行するための直接のコマンドを表示します。既定の場所の場合は次のとおりです。
 
 ```powershell
 & "$env:LOCALAPPDATA\aidlc\bin\aidlc.exe" config
 ```
 
-Use the printed command path if you changed the install location. Rerun the
-installer without `-NoModifyPath` to enable automatic PATH registration. The
-switch does not undo an earlier registration or erase its ownership record.
+インストール先を変更した場合は、表示されたコマンドパスを使ってください。PATH の自動登録を有効にするには、`-NoModifyPath` なしでインストーラーを再実行します。このスイッチは、以前の登録を元に戻したり、その所有記録を消したりはしません。
 
-PowerShell installer parameters use their native names, such as `-Version`, `-From`, `-Offline`,
-`-ReleaseBaseUrl`, `-CaBundle`, `-NoModifyPath`, `-Yes`, `-Quiet`, `-Json`, and `-NoColor`.
+PowerShell インストーラーのパラメーターは、`-Version`、`-From`、`-Offline`、`-ReleaseBaseUrl`、`-CaBundle`、`-NoModifyPath`、`-Yes`、`-Quiet`、`-Json`、`-NoColor` のように、ネイティブの名前を使います。
 
-An installer downloaded from a versioned release URL defaults to that exact
-release, including previews. The `latest/download` installer continues to
-select the latest stable release. An explicit `--version` / `-Version`
-selection overrides the packaged default, while `--from` / `-From` reads the
-version from the local release manifest.
+バージョン付きのリリース URL からダウンロードしたインストーラーは、プレビューを含め、既定でそのリリースそのものを選びます。`latest/download` のインストーラーは引き続き最新の安定版リリースを選びます。明示的な `--version` / `-Version` の指定はパッケージに組み込まれた既定値より優先され、`--from` / `-From` はローカルのリリースマニフェストからバージョンを読み取ります。
 
 ### Automation
 
-Installation asks no harness question. Human and non-interactive runs install
-the same binary plus all harness runtimes.
+インストール時にハーネスについて質問することはありません。人間による実行でも非対話実行でも、同じバイナリとすべてのハーネスランタイムをインストールします。
 
-For temporary or isolated Windows installs, pass `-NoModifyPath` and invoke
-the reported command path directly to keep the temporary bin directory out
-of User PATH and the current process.
+一時的または隔離された Windows インストールでは、`-NoModifyPath` を渡し、報告されたコマンドパスを直接呼び出してください。そうすれば、一時的な bin ディレクトリがユーザー PATH や現在のプロセスに入りません。
 
-PowerShell `-Json` emits one result with `schemaVersion: 1`, `ok`, `code`,
-`status`, and `message`. After the files are installed, `data` contains:
+PowerShell の `-Json` は、`schemaVersion: 1`、`ok`、`code`、`status`、`message` を含む結果を 1 つ出力します。ファイルのインストール後、`data` には次の内容が含まれます。
 
-| Field | Meaning |
+| フィールド | 意味 |
 |-------|---------|
-| `installed` | `true`, including when the subsequent PATH step fails |
-| `ready` | Whether the recommended command is ready to use; `false` for a PATH conflict or failure |
-| `version`, `account`, `installRoot`, `command` | Installed version, Windows account, install root, and full command path |
+| `installed` | `true`。後続の PATH ステップが失敗した場合も含む |
+| `ready` | 推奨コマンドがすぐに使えるかどうか。PATH の競合や失敗の場合は `false` |
+| `version`, `account`, `installRoot`, `command` | インストールしたバージョン、Windows アカウント、インストールルート、コマンドのフルパス |
 | `path.scope` | `"user"` |
-| `path.status` | `"updated"`, `"unchanged"`, `"skipped"`, `"conflict"`, or `"failed"` |
-| `path.changed` | Whether this run changed persistent User PATH |
-| `path.owned` | Whether this run confirmed installer ownership; `null` when `-NoModifyPath` leaves an earlier record unassessed |
-| `nextSteps` | An array of instructions, including project configuration or PATH recovery |
+| `path.status` | `"updated"`、`"unchanged"`、`"skipped"`、`"conflict"`、または `"failed"` |
+| `path.changed` | この実行で永続的なユーザー PATH を変更したかどうか |
+| `path.owned` | この実行でインストーラーの所有を確認したかどうか。`-NoModifyPath` により以前の記録が評価されないままの場合は `null` |
+| `nextSteps` | プロジェクトの設定や PATH の復旧を含む手順の配列 |
 
-Successful registration or an existing matching PATH normally uses
-`status: "ok"` and exit code 0. If Windows cannot notify other applications,
-the result uses `status: "warning"` with `data.ready: true` and a conditional
-sign-out instruction. A persistent command conflict uses `status: "warning"`,
-exit code 0, and `data.ready: false`; automation should inspect readiness as
-well as the exit code. `-NoModifyPath` uses `status: "ok"`, `path.status: "skipped"`, and
-`data.ready: true`, with a direct command in `nextSteps`. A PATH failure after
-installation uses `status: "failed"`, exit code 1, `data.installed: true`, and
-`data.ready: false`.
+登録の成功、または一致する PATH がすでに存在する場合は、通常 `status: "ok"` と終了コード 0 になります。Windows が他のアプリケーションに通知できない場合、結果は `status: "warning"` と `data.ready: true` になり、条件付きでサインアウトの手順が示されます。永続的なコマンドの競合は `status: "warning"`、終了コード 0、`data.ready: false` になります。自動化では終了コードだけでなく準備状態も確認してください。`-NoModifyPath` の場合は `status: "ok"`、`path.status: "skipped"`、`data.ready: true` となり、`nextSteps` に直接のコマンドが入ります。インストール後に PATH の処理が失敗した場合は `status: "failed"`、終了コード 1、`data.installed: true`、`data.ready: false` になります。
 
 ### Installer Options
 
-| Unix | PowerShell | Meaning |
+| Unix | PowerShell | 意味 |
 |------|------------|---------|
-| `--version <version>` | `-Version <version>` | Install one exact release instead of latest: a stable `x.y.z` or a preview `x.y.z-preview.YYYYMMDD.N` id |
-| `--from <dir>` | `-From <dir>` | Read a flat release set locally and imply offline mode |
-| `--offline` | `-Offline` | Forbid network access; requires `--from` / `-From` |
-| `--release-base-url <url>` | `-ReleaseBaseUrl <url>` | Use a compatible release mirror |
-| `--ca-bundle <absolute-path>` | `-CaBundle <absolute-path>` | Use a custom CA bundle |
-| `--profile <absolute-path>` | Not available | Transactionally add the Unix PATH block |
-| Not available | `-NoModifyPath` | Skip persistent User PATH and current-process PATH changes; print a direct command |
-| `--allow-root` (or `AIDLC_ALLOW_ROOT=1`) | Not available | Install as root where root is the only user (container, CI job, agent sandbox). Still refused under `sudo`, with `$HOME` unset or not owned by root, and with `AIDLC_BIN_DIR` or `AIDLC_INSTALL_ROOT` outside root's home. A release from before `--allow-root` is installed with a warning, because it cannot uninstall itself as root |
-| `--yes` | `-Yes` | Automation mode; it does not bypass integrity checks. On Windows it also replaces an `aidlc` in the bin directory that AI-DLC did not write, keeping that file as a backup |
-| `--quiet` | `-Quiet` | Suppress progress and emit one result line |
-| `--json` | `-Json` | Suppress progress and emit one schema-versioned JSON result |
-| `--no-color` | `-NoColor` | Disable color output |
-| `--help` | Not exposed | Print Unix installer usage |
+| `--version <version>` | `-Version <version>` | 最新版ではなく特定のリリースをインストールする。安定版の `x.y.z` またはプレビューの `x.y.z-preview.YYYYMMDD.N` の ID |
+| `--from <dir>` | `-From <dir>` | フラットなリリースセットをローカルから読み込み、オフラインモードを暗黙的に有効にする |
+| `--offline` | `-Offline` | ネットワークアクセスを禁止する。`--from` / `-From` が必要 |
+| `--release-base-url <url>` | `-ReleaseBaseUrl <url>` | 互換性のあるリリースミラーを使う |
+| `--ca-bundle <absolute-path>` | `-CaBundle <absolute-path>` | カスタムの CA バンドルを使う |
+| `--profile <absolute-path>` | 利用不可 | Unix の PATH ブロックをトランザクションとして追加する |
+| 利用不可 | `-NoModifyPath` | 永続的なユーザー PATH と現在のプロセスの PATH の変更をスキップし、直接のコマンドを表示する |
+| `--allow-root` (or `AIDLC_ALLOW_ROOT=1`) | 利用不可 | root が唯一のユーザーである環境（コンテナ、CI ジョブ、エージェントサンドボックス）で root としてインストールする。`sudo` 配下、`$HOME` が未設定か root の所有でない場合、`AIDLC_BIN_DIR` または `AIDLC_INSTALL_ROOT` が root のホームの外にある場合は引き続き拒否する。`--allow-root` より前のリリースは root として自分自身をアンインストールできないため、警告付きでインストールする |
+| `--yes` | `-Yes` | 自動化モード。整合性チェックは回避しない。Windows では、bin ディレクトリにある AI-DLC が書き込んでいない `aidlc` も置き換え、そのファイルをバックアップとして残す |
+| `--quiet` | `-Quiet` | 進捗表示を抑え、結果を 1 行で出力する |
+| `--json` | `-Json` | 進捗表示を抑え、スキーマバージョン付きの JSON 結果を 1 つ出力する |
+| `--no-color` | `-NoColor` | カラー出力を無効にする |
+| `--help` | 非公開 | Unix インストーラーの使い方を表示する |
 
-`AIDLC_RELEASE_BASE_URL` and `AIDLC_CA_BUNDLE` provide installer defaults;
-explicit options win. `AIDLC_RELEASE_REPOSITORY` selects both the GitHub
-repository used for default downloads and the repository trusted by provenance
-verification. It defaults to `awslabs/aidlc-workflows`.
-`AIDLC_RELEASE_WORKFLOW` overrides the trusted signer workflow. By default,
-installers select `<AIDLC_RELEASE_REPOSITORY>/.github/workflows/release.yml`
-for stable versions and
-`<AIDLC_RELEASE_REPOSITORY>/.github/workflows/preview-release.yml` for preview
-versions. Set the override explicitly for a fork or mirror whose workflow path
-differs, together with its release base URL; changing the download URL alone
-does not change the provenance trust root. `AIDLC_GH_BIN` selects an explicit
-GitHub CLI executable for both installers. If that executable is missing or
-lacks `--signer-workflow`, `--source-ref`, or `--source-digest`, provenance
-verification is skipped while checksum verification remains mandatory.
+`AIDLC_RELEASE_BASE_URL` と `AIDLC_CA_BUNDLE` はインストーラーの既定値を与えます。明示的なオプションが優先されます。`AIDLC_RELEASE_REPOSITORY` は、既定のダウンロードに使う GitHub リポジトリと、来歴（provenance）検証で信頼するリポジトリの両方を選びます。既定値は `awslabs/aidlc-workflows` です。
+`AIDLC_RELEASE_WORKFLOW` は信頼する署名者ワークフローを上書きします。既定では、インストーラーは安定版に `<AIDLC_RELEASE_REPOSITORY>/.github/workflows/release.yml` を、プレビュー版に `<AIDLC_RELEASE_REPOSITORY>/.github/workflows/preview-release.yml` を選びます。ワークフローのパスが異なるフォークやミラーでは、そのリリースベース URL とあわせて上書きを明示的に設定してください。ダウンロード URL だけを変えても来歴の信頼の起点は変わりません。`AIDLC_GH_BIN` は、両方のインストーラーで使う GitHub CLI の実行ファイルを明示的に選びます。その実行ファイルが存在しないか、`--signer-workflow`、`--source-ref`、`--source-digest` に対応していない場合、来歴の検証はスキップされますが、チェックサムの検証は引き続き必須です。
 
-Fork releases need no GitHub App or additional repository. The tag workflow
-publishes to the same repository with its short-lived `GITHUB_TOKEN`. Its final
-job uses the `release` environment, which can require reviewer approval before
-publication.
+フォークでのリリースに GitHub App や追加のリポジトリは必要ありません。タグのワークフローは、有効期間の短い `GITHUB_TOKEN` を使って同じリポジトリに公開します。最後のジョブは `release` 環境を使うため、公開前にレビュアーの承認を必須にできます。
 
-`AIDLC_INSTALL_ROOT` and `AIDLC_BIN_DIR` override the machine and command
-locations. Those paths must be absolute on Unix. On Windows, the selected bin
-directory is registered in the current account's User PATH unless
-`-NoModifyPath` is set. The PowerShell installer also honors `AIDLC_OFFLINE=1`;
-the Unix installer requires the explicit `--offline` or `--from` spelling.
+`AIDLC_INSTALL_ROOT` と `AIDLC_BIN_DIR` は、マシンとコマンドの配置場所を上書きします。Unix ではこれらのパスは絶対パスである必要があります。Windows では、`-NoModifyPath` が設定されていない限り、選択した bin ディレクトリが現在のアカウントのユーザー PATH に登録されます。PowerShell インストーラーは `AIDLC_OFFLINE=1` にも従います。Unix インストーラーでは明示的に `--offline` または `--from` と書く必要があります。
 
 ### Release Authentication
 
-The installer:
+インストーラーは次の処理を行います。
 
-1. Downloads or reads `version.json`, `checksums.txt`, and
-   `aidlc-release.intoto.jsonl`.
-2. When a compatible GitHub CLI is available, verifies the `checksums.txt`
-   attestation against the repository and signer workflow on `github.com`,
-   even when the GitHub CLI's default host is a GitHub Enterprise host.
-3. Verifies the `version.json` SHA-256, reads its version id and source
-   identity, and rejects an explicit version mismatch before downloading or
-   executing a release binary.
-4. Requires `sourceRef` to equal `refs/tags/v<version>` for stable releases or
-   `refs/heads/main` for previews and, when provenance verification is
-   available, re-verifies the attestation against that ref and the
-   authenticated `sourceDigest`.
-5. Verifies the selected binary and harness archives by SHA-256 and declared
-   byte length.
-6. Lets the verified binary validate and transactionally install the release.
+1. `version.json`、`checksums.txt`、`aidlc-release.intoto.jsonl` をダウンロードまたは読み込む。
+2. 互換性のある GitHub CLI が利用できる場合、`github.com` 上のリポジトリと署名者ワークフローに対して `checksums.txt` のアテステーションを検証する。GitHub CLI の既定ホストが GitHub Enterprise のホストであっても同様。
+3. `version.json` の SHA-256 を検証し、そのバージョン ID とソースの識別情報を読み取り、明示的に指定したバージョンと一致しない場合はリリースバイナリをダウンロードまたは実行する前に拒否する。
+4. `sourceRef` が、安定版では `refs/tags/v<version>`、プレビューでは `refs/heads/main` と等しいことを要求し、来歴の検証が利用できる場合は、その ref と認証済みの `sourceDigest` に対してアテステーションを再検証する。
+5. 選択したバイナリとハーネスのアーカイブを、SHA-256 と宣言されたバイト長で検証する。
+6. 検証済みのバイナリにリリースを検証させ、トランザクションとしてインストールさせる。
 
-To authenticate the bootstrap script itself before execution, use a current
-GitHub CLI. The `github.com/` repository prefix and `--hostname github.com`
-keep these commands on github.com when your `gh` defaults to a GitHub
-Enterprise host:
+実行前にブートストラップスクリプト自体を認証するには、最新の GitHub CLI を使ってください。`gh` の既定が GitHub Enterprise のホストになっている場合でも、`github.com/` というリポジトリの接頭辞と `--hostname github.com` によって、これらのコマンドは github.com に対して実行されます。
 
 ```bash
 tmp="$(mktemp -d)"
@@ -306,35 +162,17 @@ sh "$tmp/install.sh" --version "${tag#v}"
 rm -rf "$tmp"
 ```
 
-Metadata is limited to 1 MiB and individual release assets to 1 GiB. Asset
-names cannot contain paths. Archive extraction rejects links, special files,
-path traversal, absolute paths, duplicate entries, and oversized expansion.
+メタデータは 1 MiB、個々のリリースアセットは 1 GiB に制限されています。アセット名にパスを含めることはできません。アーカイブの展開では、リンク、特殊ファイル、パストラバーサル、絶対パス、重複エントリ、過大な展開を拒否します。
 
-The release workflow assembles the candidate once. Staging and Unix/Windows
-lifecycle jobs verify `checksums.txt` and test those bytes without signing
-permissions. They add a job-local verifier fixture because the real
-attestation is created after those tests. The fixture is never uploaded.
-`publish` re-verifies the candidate, attests it, exports
-`aidlc-release.intoto.jsonl`, validates the complete inventory, and uploads one
-workflow artifact. `release` rechecks the tag and checksums, creates the GitHub
-Release in this repository with `GITHUB_TOKEN`, and compares the local and
-remote asset inventories. The bundle remains outside `version.json` and
-`checksums.txt`: those files cover the installable artifacts, while the bundle
-is its own Sigstore trust channel.
-Online transport enforces TLS and every install enforces SHA-256; compatible
-GitHub CLI versions add signed provenance verification. OS code-signing and
-notarization are not part of the release. See
-[Supply-Chain Security](../reference/19-supply-chain-security.md).
+リリースワークフローは候補を一度だけ組み立てます。ステージングと Unix/Windows のライフサイクルジョブは、署名の権限なしで `checksums.txt` を検証し、そのバイト列をテストします。実際のアテステーションはそれらのテストの後に作成されるため、これらのジョブはジョブローカルの検証用フィクスチャを追加します。このフィクスチャがアップロードされることはありません。
+`publish` は候補を再検証してアテストし、`aidlc-release.intoto.jsonl` をエクスポートし、インベントリ全体を検証して、ワークフローの成果物を 1 つアップロードします。`release` はタグとチェックサムを再確認し、`GITHUB_TOKEN` を使ってこのリポジトリに GitHub Release を作成し、ローカルとリモートのアセットインベントリを比較します。バンドルは `version.json` と `checksums.txt` の外にあります。これらのファイルはインストール可能な成果物を対象とし、バンドルはそれ自体が Sigstore の信頼チャネルです。
+オンラインの転送では TLS を強制し、すべてのインストールで SHA-256 を強制します。互換性のある GitHub CLI のバージョンでは、署名付きの来歴検証が追加されます。OS のコード署名と公証はリリースに含まれません。[サプライチェーンセキュリティ](../reference/19-supply-chain-security.md)を参照してください。
 
-The installer refuses an existing mixed-ownership command. It also yields to
-an existing Homebrew or Nix command instead of replacing it. This project does
-not yet ship those package-manager channels; use the owning manager or choose
-an explicit empty `AIDLC_BIN_DIR`.
+インストーラーは、所有者が混在する既存のコマンドを拒否します。また、既存の Homebrew や Nix のコマンドは置き換えずに譲ります。このプロジェクトはまだそれらのパッケージマネージャーのチャネルを提供していません。所有しているマネージャーを使うか、空の `AIDLC_BIN_DIR` を明示的に選んでください。
 
 ## Configure or Refresh a Project
 
-Run config before opening the harness. [Getting Started](01-getting-started.md#2-set-up-your-project)
-shows each screen of a first setup:
+ハーネスを開く前に config を実行してください。[はじめに](01-getting-started.md#2-set-up-your-project)で、初回セットアップの各画面を紹介しています。
 
 ```bash
 cd your-project
@@ -343,195 +181,77 @@ aidlc config
 aidlc doctor
 ```
 
-`aidlc config` is transactional and works from the release already on this
-machine; it downloads a release the project needs only when you agree at the
-prompt or pass `--download`. It creates the selected harness
-tree, the `aidlc/` workspace shell, root integrations, a projection stamp, and
-an ownership baseline. It does not create a workflow intent.
+`aidlc config` はトランザクションとして動作し、このマシンにすでにあるリリースを使って処理します。プロジェクトが必要とするリリースをダウンロードするのは、プロンプトで同意した場合か `--download` を渡した場合だけです。選択したハーネスのツリー、`aidlc/` ワークスペースの外枠、ルートの統合、プロジェクション（projection）のスタンプ、所有権のベースラインを作成します。ワークフローのインテントは作成しません。
 
-Every harness runtime is installed, so outside a terminal a first setup or a
-preview names its harness with `--harness <name>`; at a terminal, config uses
-the one harness it detects or asks which one.
-When the project has more than one harness, a command that sets up, previews,
-or refreshes one of them names it with `--harness <name>`. The one exception
-is recording or clearing a bypass with `aidlc config flags --bypass` or
-`--clear-bypass` and nothing else to change: a bypass belongs to the project,
-not to one harness. See
-[Root Integrations and Ownership](#root-integrations-and-ownership) for which
-harnesses can coexist and how their shipped `.gitignore` entries are combined.
+すべてのハーネスランタイムがインストールされているため、ターミナル外で初回セットアップやプレビューを行う場合は `--harness <name>` でハーネスを指定します。ターミナルでは、config は検出した 1 つのハーネスを使うか、どれを使うかを尋ねます。
+プロジェクトに複数のハーネスがある場合、そのうちの 1 つをセットアップ、プレビュー、更新するコマンドでは `--harness <name>` でハーネスを指定します。唯一の例外は、他に変更するものがない状態で `aidlc config flags --bypass` または `--clear-bypass` によってバイパスを記録またはクリアする場合です。バイパスは 1 つのハーネスではなくプロジェクトに属するためです。どのハーネスが共存できるか、また同梱の `.gitignore` エントリがどのように統合されるかについては、[ルートの統合と所有権](#root-integrations-and-ownership)を参照してください。
 
-A run that writes one harness from a release then names every other installed
-harness that is on another release, with the one command that brings it to the
-release just written, whether or not work is open:
+あるリリースから 1 つのハーネスを書き込んだ実行では、続けて、別のリリースのままになっているインストール済みの他のハーネスをすべて示し、作業が開いているかどうかにかかわらず、書き込んだばかりのリリースにそろえるためのコマンドを 1 つ示します。
 
 ```
   Kiro CLI (.kiro) is still on 2.9.0. To bring it to 2.10.0: `aidlc config --harness kiro-v2`.
 ```
 
-When the files passed to `--from` hold that harness, the command reuses them.
-Otherwise a copied project's line says to get that release's copy runtime file
-first, because `--download` on a copied harness that is already installed
-fetches the release it already has, and a native project's line names the
-`aidlc config --pin` that installs that release.
-A git worktree of a checkout that is registered on the machine is the same
-project: its pinned commands run the release its own `.aidlc-version` names,
-when the machine holds it, and register it, so a worktree a host makes per
-session never asks for `config --pin` again, even when its branch pins a
-different release than the checkout. The main checkout itself, and another
-clone, register a changed pin only through `config --pin`, as before.
+`--from` に渡したファイルにそのハーネスが含まれている場合、コマンドはそれを再利用します。それ以外の場合、コピーしたプロジェクトでは、まずそのリリースのコピーランタイムファイルを入手するよう案内します。すでにインストールされているコピーしたハーネスに `--download` を使っても、すでに持っているリリースを取得するだけだからです。ネイティブのプロジェクトでは、そのリリースをインストールする `aidlc config --pin` を示します。
+マシンに登録されているチェックアウトの git worktree は同じプロジェクトとして扱われます。その worktree のピン留めされたコマンドは、マシンにそのリリースがあれば worktree 自身の `.aidlc-version` が示すリリースを実行し、それを登録します。そのため、ホストがセッションごとに作る worktree は、ブランチがチェックアウトと異なるリリースにピン留めしていても、再び `config --pin` を求めることはありません。メインのチェックアウト自体や別のクローンでは、これまでどおり `config --pin` によってのみ変更されたピンを登録します。
 
-After a successful scaffold or refresh, config runs a cheap installed-result
-sweep. It checks only the non-interactive hook PATH, host trust files, and
-recorded provider actions; it does not spawn the harness CLI or contact a
-provider. The transaction still exits 0. Non-TTY human output names every
-outstanding item and the exact `aidlc config runtime`, `aidlc config trust`, or
-`aidlc config providers --check` follow-up. Two items have no AI-DLC command
-that does them, so their line names the person's own step instead: Codex's own
-hook trust (in Codex, type `/hooks`, press `t` to trust all, then press Esc),
-and on Kiro IDE a settings file with an error (fix the error in the file it
-names; its `command`, `config trust --check`, only checks the result). JSON
-includes `data.outstandingActions`, where such an item also carries that `step`. Quiet output stays one line when clean and appends
-one outstanding-actions line when follow-up is required, plus one `Warning:`
-line for each ignore rule that hides committed records.
+スキャフォールドまたは更新が成功した後、config は低コストのインストール結果チェックを実行します。確認するのは、非対話のフック用 PATH、ホストの信頼ファイル、記録済みのプロバイダーアクションだけで、ハーネスの CLI を起動したりプロバイダーに接続したりはしません。トランザクションは引き続き終了コード 0 で終わります。非 TTY の人間向け出力では、未対応の項目すべてと、それに対応する `aidlc config runtime`、`aidlc config trust`、`aidlc config providers --check` のフォローアップを正確に示します。2 つの項目には対応する AI-DLC コマンドがないため、その行では利用者自身が行う手順を示します。Codex 自身のフックの信頼（Codex で `/hooks` と入力し、`t` を押してすべてを信頼し、Esc を押す）と、Kiro IDE でエラーのある設定ファイル（示されたファイルのエラーを修正する。その `command` である `config trust --check` は結果を確認するだけ）です。JSON には `data.outstandingActions` が含まれ、このような項目にはその `step` も含まれます。quiet 出力は、問題がなければ 1 行のままで、フォローアップが必要な場合は未対応アクションの行を 1 行追加し、さらにコミット済みの記録を隠している ignore ルールごとに `Warning:` の行を 1 行追加します。
 
-On a human TTY, a bare first run (`aidlc config` with no flag; a flag such as
-`--harness`, `--dry-run`, `--yes`, or `--json` skips the wizard) starts with
-detection rather than questions:
-installed harness CLIs on `PATH`, project state, local AWS credentials and
-regions, and the non-interactive hook runtime. With one detected harness, the
-wizard names it and offers three choices: recommended defaults, six-step
-customization, or exit with nothing written. Multiple detected harnesses get a
-numbered harness picker first; no detected harness gets the complete picker
-without a default. A Kiro CLI at 2.24.1 or later counts for both Kiro
-harnesses. The picker lists Kiro CLI (V2) (`--harness kiro-v2`): it pins no
-engine and is built for Kiro CLI's v2 engine. It lists Kiro (`--harness kiro`),
-for Kiro IDE and Kiro CLI on its v3 engine. Of the two, Kiro CLI (V2) comes first, so Enter
-takes it unless an earlier detected harness leads the list or setup runs in a
-harness editor's own terminal, whose harness comes first.
+人間が使う TTY では、引数なしの初回実行（フラグなしの `aidlc config`。`--harness`、`--dry-run`、`--yes`、`--json` などのフラグを付けるとウィザードはスキップされる）は、質問ではなく検出から始まります。検出対象は、`PATH` 上にインストールされたハーネスの CLI、プロジェクトの状態、ローカルの AWS 資格情報とリージョン、非対話のフックランタイムです。ハーネスが 1 つ検出された場合、ウィザードはその名前を示し、推奨の既定値、6 ステップのカスタマイズ、何も書き込まずに終了、の 3 つの選択肢を提示します。複数のハーネスが検出された場合は、まず番号付きのハーネス選択が表示されます。ハーネスが検出されなかった場合は、既定値なしで完全な選択肢が表示されます。2.24.1 以降の Kiro CLI は、両方の Kiro ハーネスとして数えられます。選択肢には Kiro CLI (V2)（`--harness kiro-v2`）が表示されます。これはエンジンをピン留めせず、Kiro CLI の v2 エンジン向けに作られています。また Kiro（`--harness kiro`）も表示され、こちらは Kiro IDE と v3 エンジン上の Kiro CLI 向けです。この 2 つのうち Kiro CLI (V2) が先に表示されるため、より前に検出されたハーネスが一覧の先頭にある場合や、ハーネスのエディター自身のターミナルでセットアップを実行していてそのハーネスが先頭に来る場合を除き、Enter を押すと Kiro CLI (V2) が選ばれます。
 
-Before any setup choices, the wizard probes the project filesystem using
-temporary files and directories, then removes them. It checks transaction
-locking, exclusive file creation, regular-file `fsync`, mutable append and
-readback, descriptor/path identity, file replacement by rename, directory
-rename, Unix `chmod`, and runtime workflow-lock coordination. Unsupported
-directory `fsync` is tolerated. These checks detect unavailable operations;
-success cannot certify atomicity or crash durability. A failed probe stops
-setup with storage remediation and nothing written (a probe that cannot be
-removed is named instead); see
-[Config fails with a storage error](15-troubleshooting.md#config-fails-with-a-storage-error).
+セットアップの選択肢を示す前に、ウィザードは一時的なファイルとディレクトリを使ってプロジェクトのファイルシステムを調べ、その後それらを削除します。トランザクションのロック、排他的なファイル作成、通常ファイルの `fsync`、可変ファイルへの追記と読み戻し、ディスクリプターとパスの同一性、リネームによるファイル置換、ディレクトリのリネーム、Unix の `chmod`、ランタイムのワークフローロックの連携を確認します。ディレクトリの `fsync` がサポートされていなくても許容します。これらのチェックは利用できない操作を検出するためのもので、成功してもアトミック性やクラッシュ時の永続性を保証するものではありません。調査に失敗すると、ストレージの対処方法を示し、何も書き込まずにセットアップを停止します（削除できなかった調査用ファイルがある場合はその名前を示します）。[config がストレージエラーで失敗する](15-troubleshooting.md#config-fails-with-a-storage-error)を参照してください。
 
-Recommended defaults preserve the harness's current model provider.
-Customization walks Harness, Model provider, Model effort preset, Plugins, MCP
-servers, and the model-preset settings layer. The provider step offers keeping
-the current provider first and Amazon Bedrock second. On the Kiro CLI (V2) row, step
-2 is Session model instead: it lists your Kiro account's models and saves the
-chosen model, with the preset's session effort, in your personal Kiro settings,
-last, after every AI-DLC step. Under Kiro auto, recommended defaults ask that
-one model question; see
-[Kiro CLI (V2) session model and effort](harnesses/kiro.md#kiro-cli-v2-session-model-and-effort).
-For the Kiro row, see [First run](harnesses/kiro.md#first-run).
-Every numbered prompt but that complete picker has
-a bracketed default, invalid input re-asks in place, and each answer is echoed.
-A check-your-answers table accepts Enter to apply or a step number to edit. No
-files are written before that final gate. After apply, gerund receipts name the
-project files and model-preset settings layer,
-genuinely blocking actions follow, then the wizard prints the exact harness
-launch and first workflow command.
+推奨の既定値では、ハーネスの現在のモデルプロバイダーを維持します。カスタマイズでは、Harness、Model provider、Model effort preset、Plugins、MCP servers、モデルプリセットの設定レイヤーを順に設定します。プロバイダーのステップでは、1 番目に現在のプロバイダーの維持、2 番目に Amazon Bedrock を提示します。Kiro CLI (V2) の行では、ステップ 2 は代わりに Session model になります。Kiro アカウントのモデルを一覧表示し、選んだモデルをプリセットのセッション effort とともに、AI-DLC のすべてのステップの後、最後に個人の Kiro 設定に保存します。Kiro が auto の場合、推奨の既定値ではそのモデルについての質問を 1 つだけ行います。[Kiro CLI (V2) のセッションモデルと effort](harnesses/kiro.md#kiro-cli-v2-session-model-and-effort)を参照してください。
+Kiro の行については[初回実行](harnesses/kiro.md#first-run)を参照してください。
+完全な選択肢以外の番号付きプロンプトにはすべて角括弧付きの既定値があり、無効な入力ではその場で再度尋ね、各回答は復唱されます。回答の確認表では、Enter で適用、ステップ番号で編集ができます。この最終ゲートより前にファイルが書き込まれることはありません。適用後は、プロジェクトのファイルとモデルプリセットの設定レイヤーを示す進行形の受領表示が出て、続いて本当に対応が必要なアクションが示され、最後にハーネスの起動コマンドと最初のワークフローコマンドが正確に表示されます。
 
-Step 3 also offers a fourth option, `unchanged`, which records no preset and
-preserves existing model settings; projects without model policy use shipped
-defaults. `balanced` remains the recommended default, except on Kiro IDE,
-Cursor, and GitHub Copilot: every agent there uses your session's model and
-effort, so setup recommends and defaults to `unchanged`, and the rerun map
-shows Models as `[ok]`, naming the host session.
+ステップ 3 では 4 つ目の選択肢 `unchanged` も提示されます。これはプリセットを記録せず、既存のモデル設定を維持します。モデルのポリシーがないプロジェクトでは同梱の既定値を使います。推奨の既定値は引き続き `balanced` ですが、Kiro IDE、Cursor、GitHub Copilot は例外です。これらではすべてのエージェントがセッションのモデルと effort を使うため、セットアップは `unchanged` を推奨して既定値とし、再実行時のマップでは Models をホストのセッション名とともに `[ok]` と表示します。
 
-An existing-project rerun keeps the eight-row map for Harnesses, Models,
-Runtime, Flags, Project, Providers, Trust, and Workspace. Rows are lowercase
-`[ok]` or `[needs]`; one default-yes gate walks only Models, Runtime,
-Providers, and Trust findings. Workspace is reported, never walked: a missing
-`aidlc/spaces/default/memory/` shell is repaired by an explicit
-`aidlc config --harness <name>` refresh, not by a question, and while the shell
-is incomplete the gate is not offered at all: its sections would either fail on
-the missing directory or, with no-op answers, rebuild nothing. The ledger then
-leads with the rebuild command. On a Bun-invoking projection, one copied from the
-`runtime/<name>/` root of `aidlc-copy-runtime-X.Y.Z.tar.gz` or from a checkout's
-`dist/<name>/` tree, there is no installed runtime to refresh from, so that
-command also carries `--download`, which fetches and verifies the copy runtime
-for the project's release; a native install refreshes from its installed
-runtime without it. A missing
-`aidlc/` root is counted once: the Trust section's own
-`workspace-root-missing` issue is folded into the Workspace row. The Providers
-row reads `[ok]` with no recorded answer on Kiro CLI and Kiro IDE, which provide
-their own model access, and on GitHub Copilot and Cursor, where no answer means
-the session's own model access (for example `model access comes with your GitHub
-Copilot session`); `aidlc config providers` records Amazon Bedrock there if you
-bring your own (on Cursor, only the IDE takes Bedrock keys). On GitHub Copilot, Cursor, and Kiro IDE the Models row
-reads `[ok]` and names the host, for example `every agent uses your GitHub
-Copilot session's model and effort`: a preset changes nothing on those hosts
-(on Kiro only one agent's own model and effort apply), so there is no policy to
-ask for, and a recorded one is named as not
-applying there. See [Choosing a Model and Effort](#choosing-a-model-and-effort).
-Runtime leads with the immediate action and points to
-`aidlc config runtime --show` for diagnostics. The closing ledger is a compact
-label-to-command list. Section-named commands, non-TTY runs, `--dry-run`,
-`--json`, and `--quiet` keep their deterministic output and never render the
-interactive wizard.
+既存プロジェクトでの再実行では、Harnesses、Models、Runtime、Flags、Project、Providers、Trust、Workspace の 8 行のマップを表示します。各行は小文字の `[ok]` または `[needs]` です。既定が yes のゲートが 1 つあり、Models、Runtime、Providers、Trust の指摘だけを順に確認します。Workspace は報告するだけで、順に確認はしません。`aidlc/spaces/default/memory/` の外枠が欠けている場合は、質問ではなく `aidlc config --harness <name>` による明示的な更新で修復されます。外枠が不完全な間はゲート自体を提示しません。各セクションが存在しないディレクトリで失敗するか、何もしない回答では何も再構築されないためです。その場合、最後の一覧は再構築コマンドから始まります。Bun 起動型のプロジェクション（`aidlc-copy-runtime-X.Y.Z.tar.gz` の `runtime/<name>/` ルートや、チェックアウトの `dist/<name>/` ツリーからコピーしたもの）では、更新元となるインストール済みランタイムがないため、そのコマンドには `--download` も付きます。これはプロジェクトのリリース用のコピーランタイムを取得して検証します。ネイティブインストールではこのフラグなしでインストール済みのランタイムから更新します。`aidlc/` ルートが存在しない場合は 1 回だけ数えられます。Trust セクション自身の `workspace-root-missing` の問題は Workspace の行にまとめられます。Providers の行は、独自にモデルアクセスを提供する Kiro CLI と Kiro IDE、および回答がない場合にセッション自身のモデルアクセスを意味する GitHub Copilot と Cursor では、記録された回答がなくても `[ok]` と表示されます（例: `model access comes with your GitHub
+Copilot session`）。独自の Amazon Bedrock を使う場合は、`aidlc config providers` がそこに記録します（Cursor では IDE だけが Bedrock のキーを受け付けます）。GitHub Copilot、Cursor、Kiro IDE では Models の行が `[ok]` と表示され、ホストの名前を示します（例: `every agent uses your GitHub
+Copilot session's model and effort`）。これらのホストではプリセットは何も変えない（Kiro では 1 つのエージェント自身のモデルと effort だけが適用される）ため、尋ねるべきポリシーがなく、記録済みのポリシーはそこでは適用されないと示されます。[モデルと effort の選び方](#choosing-a-model-and-effort)を参照してください。
+Runtime では、すぐに行うべきアクションを先頭に示し、診断には `aidlc config runtime --show` を案内します。最後の一覧は、ラベルとコマンドを対応させた簡潔なリストです。セクション名を指定したコマンド、非 TTY の実行、`--dry-run`、`--json`、`--quiet` では決定的な出力を維持し、対話型のウィザードは表示しません。
 
 ### Config Options
 
-| Option | Meaning |
+| オプション | 意味 |
 |--------|---------|
-| `--project-dir <path>` | Target this project instead of the current directory |
-| `--harness <name>` | Select an installed harness runtime |
-| `--from <dir-or-tgz>` | Use local release files instead of an installed runtime: `aidlc-copy-runtime-X.Y.Z.tar.gz` (checked against a `.sha256` beside it), its extracted `runtime/` folder, or one projection directory or archive |
-| `--download` | Fetch and verify the release the project needs when this machine lacks it, then finish the command; applying a dry run's plan token needs it again |
-| `--mcp defaults\|none` | Add or omit Claude's optional shipped MCP entries |
-| `--dry-run` | Calculate the complete plan without creating the target directory or changing bytes |
-| `--plan-token <token>` | Apply only the exact plan approved from a JSON dry run |
-| `--show` | Show settings without changing anything: with no section, every section in turn (`aidlc config --show`; `--json` prints one object keyed by section, each value what that section's `--show --json` prints); with a section, that section alone |
-| `--force` | Replace locally modified framework-owned files and managed blocks where that policy permits |
-| `--yes` | Confirm an otherwise unrecognized target directory or a section mutation; it does not imply MCP consent or choose a section answer |
-| `--json` | Emit one result object with counts, actions, `data.notes`, and `data.planToken` |
-| `--quiet` | Emit one summary or remediation line |
-| `--no-color` | Disable color output |
+| `--project-dir <path>` | 現在のディレクトリではなく、このプロジェクトを対象にする |
+| `--harness <name>` | インストール済みのハーネスランタイムを選ぶ |
+| `--from <dir-or-tgz>` | インストール済みランタイムの代わりにローカルのリリースファイルを使う。`aidlc-copy-runtime-X.Y.Z.tar.gz`（隣にある `.sha256` で確認する）、それを展開した `runtime/` フォルダー、または 1 つのプロジェクションのディレクトリかアーカイブ |
+| `--download` | このマシンにプロジェクトが必要とするリリースがない場合に取得・検証してからコマンドを完了する。ドライランのプラントークンを適用する際にも再度必要 |
+| `--mcp defaults\|none` | Claude 用の任意の同梱 MCP エントリを追加または省略する |
+| `--dry-run` | 対象ディレクトリを作成せず、バイトも変更せずに、完全なプランを計算する |
+| `--plan-token <token>` | JSON のドライランで承認されたプランそのものだけを適用する |
+| `--show` | 何も変更せずに設定を表示する。セクションを指定しない場合はすべてのセクションを順に表示し（`aidlc config --show`。`--json` ではセクションをキーとする 1 つのオブジェクトを出力し、各値はそのセクションの `--show --json` の出力と同じ）、セクションを指定した場合はそのセクションだけを表示する |
+| `--force` | ポリシーが許す範囲で、ローカルで変更されたフレームワーク所有のファイルと管理ブロックを置き換える |
+| `--yes` | 認識されない対象ディレクトリやセクションの変更を確認する。MCP への同意を意味したり、セクションの回答を選んだりはしない |
+| `--json` | 件数、アクション、`data.notes`、`data.planToken` を含む結果オブジェクトを 1 つ出力する |
+| `--quiet` | 要約または対処方法を 1 行で出力する |
+| `--no-color` | カラー出力を無効にする |
 
-`--project-dir`, `--json`, `--quiet`, `--no-color`, `--yes`, `--offline` and
-`--verbose` are AI-DLC's own options: put them with the command you are running,
-as `aidlc config --project-dir /work/shop` or `aidlc doctor --json`. A word of
-your own that happens to look like one of them is still your word, so
-`/aidlc add a --project-dir flag to the CLI` asks for that work with every word
-you typed kept.
+`--project-dir`、`--json`、`--quiet`、`--no-color`、`--yes`、`--offline`、`--verbose` は AI-DLC 自身のオプションです。`aidlc config --project-dir /work/shop` や `aidlc doctor --json` のように、実行するコマンドと一緒に指定してください。あなた自身の言葉がたまたまこれらのどれかに似ていても、それはあなたの言葉として扱われます。そのため `/aidlc add a --project-dir flag to the CLI` は、入力したすべての語をそのまま保ったまま、その作業を依頼したことになります。
 
 ### Model Policy
 
-`aidlc config models` records model policy in the selected settings layer
-(`aidlc.settings.json` for `--project`) and applies it through the normal config
-plan, confirmation, and transaction. It never contacts a model
-provider. On Kiro CLI, choosing a session model asks Kiro CLI for your account's
-model list and that model's effort levels; with `--yes`, only `--session-model`
-does.
+`aidlc config models` は、選択した設定レイヤー（`--project` の場合は `aidlc.settings.json`）にモデルのポリシーを記録し、通常の config のプラン、確認、トランザクションを通じて適用します。モデルプロバイダーに接続することはありません。Kiro CLI では、セッションモデルを選ぶと、アカウントのモデル一覧とそのモデルの effort レベルを Kiro CLI に問い合わせます。`--yes` を付けた場合に問い合わせるのは `--session-model` だけです。
 
-The public groups are:
+公開されているグループは次のとおりです。
 
-| Group | Agents | Shipped tier |
+| グループ | エージェント | 同梱のティア |
 |-------|--------|--------------|
-| Deciding | 9 design, implementation, product, security, and quality agents | judgment |
-| Reviewing | product lead and architecture reviewer | balanced |
-| Writing up | delivery, pipeline and deploy, and operations | templated |
+| Deciding | 設計、実装、プロダクト、セキュリティ、品質の 9 エージェント | judgment |
+| Reviewing | プロダクトリードとアーキテクチャレビュアー | balanced |
+| Writing up | デリバリー、パイプラインとデプロイ、運用 | templated |
 
-Policy resolves per agent in this order:
+ポリシーはエージェントごとに次の順序で解決されます。
 
-1. Per-agent exception
-2. Group dial, set directly or through a preset
-3. Shipped tier default
-4. Session inherit
+1. エージェントごとの例外
+2. グループのダイヤル（直接設定、またはプリセット経由）
+3. 同梱のティアの既定値
+4. セッションからの継承
 
-Pins bind in both directions. A pinned agent stays pinned if the session later
-moves to a larger model. The framework never raises an agent above the session
-on its own. With no recorded policy, Deciding and Writing up inherit; only the
-measured reviewing tier baseline ships a step-down. The first-run wizard's
-default choice records the `balanced` preset, which sets all three groups to
-medium effort; on Kiro IDE, Cursor, and GitHub Copilot it records no preset.
+ピン留めは双方向に効きます。ピン留めされたエージェントは、後でセッションがより大きなモデルに移っても、ピン留めされたままです。フレームワークが自らエージェントをセッションより上に引き上げることはありません。ポリシーが記録されていない場合、Deciding と Writing up は継承します。一段下げた設定を同梱しているのは、計測に基づく reviewing ティアのベースラインだけです。初回実行ウィザードの既定の選択肢は `balanced` プリセットを記録し、3 つのグループすべてを medium の effort に設定します。Kiro IDE、Cursor、GitHub Copilot ではプリセットを記録しません。
 
 ```bash
 aidlc config models --show
@@ -543,186 +263,76 @@ aidlc config models --keep --yes
 aidlc config models --session-model claude-opus-4.8   # Kiro CLI: your personal session model
 ```
 
-A change ends with what changed, its undo command and who picks it up (plus
-any setup step still outstanding); `--json` and `--quiet` output are unchanged.
+変更の最後には、何が変わったか、元に戻すコマンド、誰がそれを反映するか（さらに未完了のセットアップ手順があればそれも）が示されます。`--json` と `--quiet` の出力は変わりません。
 
-On Claude Code, Codex, opencode and Kiro CLI, while no policy is recorded, setup
-asks about models at each refresh until you answer (on Kiro IDE, Cursor and
-GitHub Copilot it never asks). Keeping the models as they are is an answer too:
-Enter at the models question, `unchanged` at first-run setup, or `--keep`
-records it in `<harness>/tools/data/harness.json` beside the providers answer,
-so setup stops asking; `--reset` clears it.
+Claude Code、Codex、opencode、Kiro CLI では、ポリシーが記録されていない間、回答するまで更新のたびにセットアップがモデルについて尋ねます（Kiro IDE、Cursor、GitHub Copilot では尋ねません）。モデルを現状のままにすることも回答の 1 つです。モデルの質問で Enter、初回セットアップで `unchanged`、または `--keep` を選ぶと、プロバイダーの回答と並んで `<harness>/tools/data/harness.json` に記録され、セットアップは尋ねなくなります。`--reset` で消去されます。
 
-`--show --json` prints every agent's effective model, effort, and provenance.
-`--check` is the CI inverse and exits non-zero when the recorded policy is not
-fully reflected in the harness surfaces. On Kiro IDE, Cursor and GitHub Copilot,
-where a preset changes nothing, a recorded effort it cannot write is left to the
-session, as in `aidlc doctor`, and does not fail the check. On Cursor and GitHub
-Copilot, where the session sets every agent's model and effort, a clean check
-says so, as `aidlc doctor` does, instead of calling the recorded policy
-reflected.
+`--show --json` は、すべてのエージェントの実効モデル、effort、その出所を出力します。`--check` は CI 向けの逆方向のチェックで、記録されたポリシーがハーネスの設定面に完全に反映されていない場合に非ゼロで終了します。プリセットが何も変えない Kiro IDE、Cursor、GitHub Copilot では、書き込めない記録済みの effort は `aidlc doctor` と同様にセッションに委ねられ、チェックの失敗にはなりません。セッションがすべてのエージェントのモデルと effort を決める Cursor と GitHub Copilot では、問題がない場合のチェックは、記録済みのポリシーが反映されたとは言わず、`aidlc doctor` と同様にその旨を伝えます。
 
-Model and flag policy resolves leaf-by-leaf through this hierarchy:
+モデルとフラグのポリシーは、次の階層を通じて葉ごとに解決されます。
 
-1. Shipped defaults in the tier and preset tables
-2. Machine `${AIDLC_INSTALL_ROOT:-~/.local/share/aidlc}/aidlc.settings.json`
-3. Project `aidlc.settings.json`
-4. Personal `aidlc.settings.local.json`
-5. Environment variables
+1. ティア表とプリセット表にある同梱の既定値
+2. マシンの `${AIDLC_INSTALL_ROOT:-~/.local/share/aidlc}/aidlc.settings.json`
+3. プロジェクトの `aidlc.settings.json`
+4. 個人の `aidlc.settings.local.json`
+5. 環境変数
 
-Bypasses add up instead of overriding: a switch is on while any of the three
-files records it.
+バイパスは上書きではなく加算されます。3 つのファイルのいずれかに記録されていれば、そのスイッチは有効です。
 
-The project file is committed team policy. The local file is personal: AI-DLC's
-managed `.gitignore` block lists it, and on an install whose `.gitignore`
-predates that, the config command that creates it adds it to the clone's own
-`.git/info/exclude` instead. Neither file counts as the team's code. Mutations
-require exactly one of `--project`, `--local`, or `--global`, except a bypass:
-`--bypass` with no layer records in the local file, and `--clear-bypass` with
-no layer, typed at your own terminal, clears every file that records it (run by
-the agent from a chat it clears only the local file and names the project or
-machine file that still keeps the check off). The interactive wizard asks for the
-layer and recommends project policy inside a repository. Outside a recognized
-project only the machine layer is valid, so `--global` is inferred. `--show`
-labels each effective value with its winning source.
+プロジェクトのファイルは、コミットされるチームのポリシーです。ローカルのファイルは個人用です。AI-DLC が管理する `.gitignore` ブロックにこのファイルが含まれており、`.gitignore` がそれより古いインストールでは、このファイルを作成する config コマンドが代わりにクローン自身の `.git/info/exclude` に追加します。どちらのファイルもチームのコードとしては扱われません。変更には `--project`、`--local`、`--global` のうちちょうど 1 つが必要です。ただしバイパスは例外で、レイヤーなしの `--bypass` はローカルのファイルに記録し、レイヤーなしの `--clear-bypass` は自分のターミナルで入力した場合、それを記録しているすべてのファイルからクリアします（チャットからエージェントが実行した場合はローカルのファイルだけをクリアし、チェックを無効にしたままのプロジェクトまたはマシンのファイルを示します）。対話型ウィザードはレイヤーを尋ね、リポジトリ内ではプロジェクトのポリシーを推奨します。認識されたプロジェクトの外ではマシンのレイヤーだけが有効なので、`--global` が推定されます。`--show` は各実効値に、それを決めた出所のラベルを付けます。
 
-All three files use one strict schema. Unknown keys fail closed, and
-update/release keys such as `offline` and `release-base-url` are machine-only.
-Editors can reference the generated
-`<harness>/tools/data/aidlc-settings.schema.json`; no defaults settings file is
-written.
+3 つのファイルはすべて 1 つの厳密なスキーマを使います。未知のキーは安全側に倒して失敗し、`offline` や `release-base-url` などの更新・リリース用のキーはマシン専用です。エディターからは生成された `<harness>/tools/data/aidlc-settings.schema.json` を参照できます。既定値の設定ファイルは書き込まれません。
 
-Three immutable effort-only presets ship:
+変更不可で effort のみを指定するプリセットが 3 つ同梱されています。
 
-| Preset | Deciding | Reviewing | Writing up |
+| プリセット | Deciding | Reviewing | Writing up |
 |--------|----------|-----------|------------|
-| `thorough` | session effort | `xhigh` | session effort |
-| `balanced` (wizard default) | `medium` | `medium` | `medium` |
+| `thorough` | セッションの effort | `xhigh` | セッションの effort |
+| `balanced`（ウィザードの既定値） | `medium` | `medium` | `medium` |
 | `minimal` | `medium` | `medium` | `low` |
 
-Presets never set model IDs. Explicit group dials and per-agent exceptions can
-override the preset's efforts. On Kiro CLI, which runs each session on one
-model, each preset is one session effort instead: `minimal` low, `balanced`
-medium, `thorough` xhigh, or the model's next level down
-([Kiro CLI (V2) session model and effort](harnesses/kiro.md#kiro-cli-v2-session-model-and-effort)).
+プリセットがモデル ID を設定することはありません。明示的なグループのダイヤルとエージェントごとの例外で、プリセットの effort を上書きできます。各セッションを 1 つのモデルで実行する Kiro CLI では、各プリセットは代わりに 1 つのセッション effort になります。`minimal` は low、`balanced` は medium、`thorough` は xhigh、またはそのモデルの 1 段下のレベルです（[Kiro CLI (V2) のセッションモデルと effort](harnesses/kiro.md#kiro-cli-v2-session-model-and-effort)）。
 
-On upgrade, an install that recorded `preset: balanced` or `preset: minimal`
-picks up these efforts the next time its projections are regenerated. After
-`aidlc update`, run `aidlc config --yes` in each project to reapply the
-recorded policy (open work carries on), or explicitly select it with
-`aidlc config models --preset balanced --project --yes` (substitute `minimal`
-as needed). Update changes only the machine runtime; doctor and
-`aidlc config models --check` report issues without applying changes. Installs
-with no recorded model policy keep the shipped tier defaults and are unaffected.
+アップグレード時、`preset: balanced` または `preset: minimal` を記録したインストールは、次にプロジェクションが再生成されたときにこれらの effort を反映します。`aidlc update` の後は、各プロジェクトで `aidlc config --yes` を実行して記録済みのポリシーを再適用するか（開いている作業はそのまま続きます）、`aidlc config models --preset balanced --project --yes`（必要に応じて `minimal` に置き換える）で明示的に選んでください。update が変更するのはマシンのランタイムだけです。doctor と `aidlc config models --check` は問題を報告しますが、変更は適用しません。モデルのポリシーが記録されていないインストールは同梱のティアの既定値を維持し、影響を受けません。
 
-Derive a project profile from a preset or an existing profile:
+プリセットまたは既存のプロファイルから、プロジェクトのプロファイルを派生させます。
 
 ```bash
 aidlc config models --from thorough --reviewing-effort medium \
   --save-as my-profile --project --yes
 ```
 
-Presets and profiles contain group efforts only. Raw model IDs are allowed only
-on per-agent exceptions. `--yes` confirms a mutation but never chooses a
-policy. Without decisive flags, a TTY opens the model policy wizard; a non-TTY
-run fails with usage guidance.
+プリセットとプロファイルに含まれるのはグループの effort だけです。生のモデル ID を指定できるのはエージェントごとの例外だけです。`--yes` は変更を確認しますが、ポリシーを選ぶことはありません。決め手となるフラグがない場合、TTY ではモデルポリシーのウィザードが開き、非 TTY の実行は使い方の案内を表示して失敗します。
 
-Harnesses receive only settings they can read. Codex clamps `max` effort down
-to `xhigh`. opencode clamps `xhigh` down to `high`. On Kiro CLI a preset sets
-one effort for the whole interactive session, saved with the session model in your personal
-Kiro settings
-([Kiro CLI (V2) session model and effort](harnesses/kiro.md#kiro-cli-v2-session-model-and-effort));
-explicit group dials have no Kiro surface, and a per-agent model exception
-carries its effort through the project's `chat.modelDefaults`, which then
-replaces your personal effort map in that project. An effort set on Kiro CLI
-without a model is kept for other tools, and the command says so in one line.
-Kiro IDE, Cursor, and GitHub Copilot have no surface for a preset or a group
-effort, so setup records no preset there. On Kiro, `aidlc config models --agent`
-still sets one agent's own model and effort
-([One agent on its own model and effort](harnesses/kiro.md#one-agent-on-its-own-model-and-effort)).
-On Cursor and Copilot a model or effort you set anyway is kept for teammates on
-tools that apply it, writes no inert keys, and the command says in one line that
-this tool uses the model you choose in its own model picker. On those three,
-every agent uses the session's model and effort (on Kiro, unless a model or
-effort is set for that agent): the setup check and `aidlc doctor` say so
-instead of asking for a policy, and doctor warns only about an agent model
-recorded for that harness by name.
+ハーネスには、読み取れる設定だけが渡されます。Codex は `max` の effort を `xhigh` に切り下げます。opencode は `xhigh` を `high` に切り下げます。Kiro CLI では、プリセットは対話セッション全体に 1 つの effort を設定し、セッションモデルとともに個人の Kiro 設定に保存されます（[Kiro CLI (V2) のセッションモデルと effort](harnesses/kiro.md#kiro-cli-v2-session-model-and-effort)）。明示的なグループのダイヤルに対応する Kiro の設定面はありません。エージェントごとのモデルの例外は、その effort をプロジェクトの `chat.modelDefaults` を通じて渡し、そのプロジェクトでは個人の effort マップを置き換えます。Kiro CLI でモデルなしに設定した effort は他のツールのために保持され、コマンドはその旨を 1 行で伝えます。
+Kiro IDE、Cursor、GitHub Copilot にはプリセットやグループの effort を反映する設定面がないため、セットアップはそこではプリセットを記録しません。Kiro では、`aidlc config models --agent` で引き続き 1 つのエージェント自身のモデルと effort を設定できます（[1 つのエージェントを独自のモデルと effort で動かす](harnesses/kiro.md#one-agent-on-its-own-model-and-effort)）。Cursor と Copilot では、それでも設定したモデルや effort は、それを適用するツールを使うチームメイトのために保持されますが、効果のないキーは書き込まず、このツールは独自のモデルピッカーで選んだモデルを使う旨をコマンドが 1 行で伝えます。この 3 つでは、すべてのエージェントがセッションのモデルと effort を使います（Kiro では、そのエージェントにモデルや effort が設定されていない限り）。セットアップのチェックと `aidlc doctor` はポリシーを尋ねる代わりにその旨を伝え、doctor が警告するのは、そのハーネス名を指定して記録されたエージェントのモデルについてだけです。
 
-Model policy is agent-scoped. Stage files never carry model or effort keys;
-scopes continue to own stage criticality.
+モデルのポリシーはエージェント単位です。ステージのファイルがモデルや effort のキーを持つことはなく、ステージの重要度は引き続きスコープが管理します。
 
 ### Choosing a Model and Effort
 
-AI-DLC works best with a capable reasoning model; the recommended model is
-Claude Opus 4.8. Where you set the model and effort depends on the harness:
+AI-DLC は高性能な推論モデルで最もよく機能します。推奨モデルは Claude Opus 4.8 です。モデルと effort を設定する場所はハーネスによって異なります。
 
-- **GitHub Copilot, Cursor, and Kiro IDE:** in the host, for the whole session.
-  Every agent uses the model and effort of the chat you run `/aidlc` in, and
-  nothing AI-DLC records changes that, except on Kiro, where
-  `aidlc config models --agent` sets one agent's own model and effort
-  ([One agent on its own model and effort](harnesses/kiro.md#one-agent-on-its-own-model-and-effort));
-  set it there rather than with a `model:` line by hand, which
-  `aidlc config models --check` reports as drift. On Copilot a `model:` pin in an agent's `.md` file
-  is not portable, because the CLI and VS Code read model names differently.
-- **Claude Code, Codex CLI, and opencode:** the session's model and effort
-  drive the conductor and every agent that inherits; `aidlc config models`
-  can set agent efforts (the `balanced` preset sets them to medium) and
-  per-agent exceptions.
-- **Kiro CLI:** the session model and its one effort. `aidlc config models`
-  saves them in your personal Kiro settings (a preset sets the effort:
-  `minimal` low, `balanced` medium, `thorough` extra-high); `/model` and
-  `/effort` change them inside Kiro. A `/model` switch reaches the agents the
-  conductor dispatches only once you save it with
-  `/model set-current-as-default`. Recommended setup keeps an effort you
-  already saved for your model. On Kiro IDE's row setup saves Kiro CLI's
-  session model only ([First run](harnesses/kiro.md#first-run)). See
-  [Kiro CLI (V2) session model and effort](harnesses/kiro.md#kiro-cli-v2-session-model-and-effort).
+- **GitHub Copilot、Cursor、Kiro IDE:** ホスト側で、セッション全体に対して設定します。
+  すべてのエージェントは `/aidlc` を実行したチャットのモデルと effort を使い、AI-DLC が記録する内容でそれが変わることはありません。例外は Kiro で、`aidlc config models --agent` で 1 つのエージェント自身のモデルと effort を設定できます（[1 つのエージェントを独自のモデルと effort で動かす](harnesses/kiro.md#one-agent-on-its-own-model-and-effort)）。`model:` 行を手で書くのではなく、こちらで設定してください。手書きの行は `aidlc config models --check` がドリフトとして報告します。Copilot では、エージェントの `.md` ファイル内の `model:` によるピン留めは、CLI と VS Code でモデル名の読み方が異なるため移植性がありません。
+- **Claude Code、Codex CLI、opencode:** セッションのモデルと effort が、コンダクターと継承するすべてのエージェントを動かします。`aidlc config models` でエージェントの effort（`balanced` プリセットでは medium に設定）とエージェントごとの例外を設定できます。
+- **Kiro CLI:** セッションモデルとその 1 つの effort です。`aidlc config models` はそれらを個人の Kiro 設定に保存します（プリセットが effort を設定します。`minimal` は low、`balanced` は medium、`thorough` は extra-high）。Kiro の中では `/model` と `/effort` で変更できます。`/model` による切り替えがコンダクターのディスパッチするエージェントに届くのは、`/model set-current-as-default` で保存した後だけです。推奨のセットアップでは、そのモデル用にすでに保存してある effort を維持します。Kiro IDE の行では、セットアップは Kiro CLI のセッションモデルだけを保存します（[初回実行](harnesses/kiro.md#first-run)）。[Kiro CLI (V2) のセッションモデルと effort](harnesses/kiro.md#kiro-cli-v2-session-model-and-effort)を参照してください。
 
-If your organization offers only a mid-tier model, such as a Claude Sonnet
-model, without Opus:
+組織で Opus がなく、Claude Sonnet のような中位のモデルしか提供されていない場合は、次のようにします。
 
-- **Start the session at medium effort.** A workflow runs many turns, and
-  higher effort makes the model think longer on every one of them, so high or
-  maximum effort makes the whole run much slower and more expensive. Medium is
-  what the `balanced` preset gives agents on harnesses that can set them.
-- **Raise effort only for a stage that needs it,** for example Code Generation
-  on a hard Unit, then lower it again. On GitHub Copilot, Cursor, Kiro IDE,
-  and Kiro CLI that is the session's effort (on Kiro IDE, unless an effort is
-  set for the developer agent). On Claude Code, Codex CLI, and
-  opencode, Code Generation runs on the developer agent, which follows the
-  session only while no preset or effort is recorded for it. Otherwise its
-  effort is the recorded one: to raise it, record it, for example
-  `aidlc config models --agent developer --effort high --project --yes`. That
-  works while a workflow is open too: config rewrites the developer agent's
-  file, and the harness uses it the next time it starts the agent (Claude Code
-  does so at the agent's next start; a step already running keeps what it
-  started with). The command prints the one that puts it back (for one
-  agent's setting, `--effort default`, which removes only that setting).
-- **Change model or effort between stages, in a new chat.** See
-  [Changing Model Mid-Workflow](11-session-management.md#changing-model-mid-workflow).
+- **セッションは medium の effort で始めます。** ワークフローは多くのターンを実行し、effort を上げるとモデルはそのすべてのターンで長く考えるため、high や最大の effort では実行全体が大幅に遅く高コストになります。medium は、エージェントの effort を設定できるハーネスで `balanced` プリセットが与える値です。
+- **effort を上げるのは、それが必要なステージだけにします。** たとえば難しいユニットの Code Generation で上げ、その後また下げます。GitHub Copilot、Cursor、Kiro IDE、Kiro CLI では、それはセッションの effort です（Kiro IDE では、developer エージェントに effort が設定されていない限り）。Claude Code、Codex CLI、opencode では、Code Generation は developer エージェントで実行され、このエージェントはプリセットや effort が記録されていない間だけセッションに従います。それ以外の場合、effort は記録された値です。上げるには、たとえば `aidlc config models --agent developer --effort high --project --yes` のように記録します。これはワークフローが開いている間でも機能します。config が developer エージェントのファイルを書き換え、ハーネスは次にそのエージェントを起動するときにそれを使います（Claude Code ではエージェントの次回起動時。すでに実行中のステップは開始時の設定を維持します）。コマンドは元に戻すためのコマンドを表示します（1 つのエージェントの設定の場合は `--effort default` で、その設定だけを削除します）。
+- **モデルや effort の変更は、ステージの間に新しいチャットで行います。** [ワークフロー途中でのモデル変更](11-session-management.md#changing-model-mid-workflow)を参照してください。
 
-Running a workshop? The [Facilitator Guide](facilitator-guide.md) covers the
-readiness check and keeping each run small.
+ワークショップを運営する場合は、[ファシリテーターガイド](facilitator-guide.md)で準備状況のチェックと各実行を小さく保つ方法を説明しています。
 
 ### In-session alias
 
-`/aidlc --config [section]` is the conversational alias for these same config
-sections. The conductor reads the current JSON state before asking, gathers
-only the changes you want, and lands each accepted section through one exact
-`aidlc config <section> <explicit value flags> --yes` command. Leaving a
-section unchanged runs no command. After landing or declining, the alias stops;
-it never advances or resumes workflow work.
+`/aidlc --config [section]` は、これと同じ config セクションに対する会話型のエイリアスです。コンダクターは尋ねる前に現在の JSON の状態を読み、希望する変更だけを集め、受け入れられた各セクションを、厳密に 1 つの `aidlc config <section> <explicit value flags> --yes` コマンドで反映します。セクションを変更しない場合はコマンドを実行しません。反映または辞退の後、エイリアスは停止します。ワークフローの作業を前進させたり再開したりすることはありません。
 
 ### Runtime Diagnostics
 
-`aidlc config runtime` checks the environment that project hooks actually use.
-On Linux it derives a non-interactive baseline from `getconf PATH` plus the
-`PATH` lines of `/etc/environment`, `ENV_PATH` in `/etc/login.defs`, and
-`environment.d`. On macOS it uses `getconf PATH` plus `/etc/paths` and
-`/etc/paths.d`. On Windows it reads the User and Machine PATH without loading a
-shell profile. It then resolves the command required by the installed hook
-bytes (`bun` for copy projections or `aidlc` for native projections) and checks
-the selected harness CLI.
+`aidlc config runtime` は、プロジェクトのフックが実際に使う環境を確認します。Linux では、`getconf PATH` に加えて、`/etc/environment` の `PATH` 行、`/etc/login.defs` の `ENV_PATH`、`environment.d` から非対話のベースラインを導き出します。macOS では `getconf PATH` に加えて `/etc/paths` と `/etc/paths.d` を使います。Windows では、シェルのプロファイルを読み込まずにユーザー PATH とマシン PATH を読み取ります。その後、インストールされたフックのバイト列が必要とするコマンド（コピー版プロジェクションでは `bun`、ネイティブプロジェクションでは `aidlc`）を解決し、選択したハーネスの CLI を確認します。
 
 ```bash
 aidlc config runtime --show
@@ -731,33 +341,16 @@ aidlc config runtime --record-paths --yes
 aidlc config runtime --reset --yes
 ```
 
-`--record-paths` records the resolved answers in `harness.json`. It does not
-rewrite hook commands. Host permission rules and Codex hook trust bind the bare
-`bun` or `aidlc` command prefix, so replacing it with an absolute path would
-invalidate the existing trust contract. When a command is interactive-only or
-absent, the section gives a platform-specific PATH instruction instead.
+`--record-paths` は、解決した結果を `harness.json` に記録します。フックのコマンドは書き換えません。ホストの許可ルールと Codex のフックの信頼は、素の `bun` または `aidlc` コマンドの接頭辞に結び付いているため、それを絶対パスに置き換えると既存の信頼の取り決めが無効になります。コマンドが対話時にしか使えない場合や存在しない場合、このセクションは代わりにプラットフォームごとの PATH の手順を示します。
 
-`/aidlc --doctor` shows the same probe as its `Runtime hook PATH` row. When the
-command is only on the current shell's PATH but this project's hooks are firing
-(a heartbeat under `.aidlc-engine/hooks-health/` from the last ten minutes that
-is not stale, from a launch that has not ended since), the row passes and names when they last fired: the harness
-evidently hands its hooks that PATH. Otherwise it warns, names the directory
-the command was found in, and says that a harness started from a terminal
-needs no change and that editing `.bashrc` or `.zshrc` does not change the
-check.
+`/aidlc --doctor` は、同じ調査結果を `Runtime hook PATH` 行として表示します。コマンドが現在のシェルの PATH にしかないものの、このプロジェクトのフックが発火している場合（`.aidlc-engine/hooks-health/` 配下に、直近 10 分以内の古くないハートビートがあり、それがその後終了していない起動によるもの）、この行は合格となり、フックが最後に発火した時刻を示します。ハーネスはその PATH をフックに渡しているとみなせるためです。それ以外の場合は警告し、コマンドが見つかったディレクトリを示したうえで、ターミナルから起動したハーネスでは変更が不要であること、`.bashrc` や `.zshrc` を編集してもこのチェックは変わらないことを伝えます。
 
-The harness CLI check requires `claude`, `kiro-cli >= 2.6.0`, `codex >= 0.145.0`, or
-`opencode` for their matching harnesses. Copilot CLI and the Cursor `agent` CLI
-are advisory because those installs may be driven only by VS Code or the IDE.
-The Kiro distribution (`--harness kiro`) requires no separate CLI; `kiro-cli` is optional there, needed only to run AI-DLC from a terminal, and is checked against 2.24.1 when present.
+ハーネスの CLI のチェックでは、対応するハーネスに応じて `claude`、`kiro-cli >= 2.6.0`、`codex >= 0.145.0`、`opencode` が必要です。Copilot CLI と Cursor の `agent` CLI は、それらのインストールが VS Code や IDE からしか使われない場合があるため、参考扱いです。
+Kiro のディストリビューション（`--harness kiro`）では別の CLI は不要です。`kiro-cli` はそこでは任意で、ターミナルから AI-DLC を実行する場合にのみ必要であり、存在する場合は 2.24.1 に対して確認されます。
 
 ### Provider Diagnostics
 
-`aidlc config providers` records provider answers for this project install.
-Keeping the provider already configured in the harness is the default answer.
-Amazon Bedrock is an explicit opt-in. Kiro CLI and Kiro IDE are not asked because
-model access comes with Kiro. `other` remains available for a manually configured
-provider and carries an acknowledgement reminder.
+`aidlc config providers` は、このプロジェクトのインストールに対するプロバイダーの回答を記録します。ハーネスですでに設定されているプロバイダーを維持するのが既定の回答です。Amazon Bedrock は明示的なオプトインです。Kiro CLI と Kiro IDE では、モデルアクセスが Kiro に含まれているため尋ねません。手動で設定したプロバイダー向けに `other` も引き続き利用でき、確認を促すリマインダーが付きます。
 
 ```bash
 aidlc config providers --provider current --yes
@@ -769,104 +362,51 @@ aidlc config providers --mark-done bedrock-model-access --yes
 aidlc config providers --reset --yes
 ```
 
-`--region`, `--profile`, and `--opencode-default` apply only when the recorded or selected provider is `amazon-bedrock`.
+`--region`、`--profile`、`--opencode-default` は、記録済みまたは選択したプロバイダーが `amazon-bedrock` の場合にのみ適用されます。
 
-Credential detection is offline only. It inspects AWS environment variables,
-`~/.aws/config`, `~/.aws/credentials`, role and container credential variables,
-and the AWS SSO cache. It never calls STS, Bedrock, a model endpoint, or any
-other network service.
+資格情報の検出はオフラインでのみ行います。AWS の環境変数、`~/.aws/config`、`~/.aws/credentials`、ロールやコンテナの資格情報の変数、AWS SSO のキャッシュを調べます。STS、Bedrock、モデルのエンドポイント、その他のネットワークサービスを呼び出すことはありません。
 
-Recorded Bedrock answers apply through the normal staged config transaction:
+記録された Bedrock の回答は、通常のステージング付き config トランザクションを通じて適用されます。
 
-| Harness | Recorded answer application |
+| ハーネス | 記録された回答の適用 |
 |---------|-----------------------------|
-| Claude Code | Enables Bedrock and writes `AWS_REGION` plus optional `AWS_PROFILE` in your own `.claude/settings.local.json` (git ignores it; the profile is not recorded in `harness.json`); also keeps the AWS MCP URL and `AWS_REGION` metadata in `.mcp.json` on the same region |
-| Codex CLI | Records the choice and instructs the user to keep provider, credentials, and model in `~/.codex/config.toml` |
-| Kiro CLI | No provider answer; model access comes with Kiro |
-| Kiro IDE | No provider answer; model access comes with Kiro |
-| opencode | Offers to write `provider.amazon-bedrock.options.region/profile` to `opencode.json`; `--opencode-default yes|no` records the answer |
-| GitHub Copilot | Records acknowledgement of the manual BYOK environment setup |
-| Cursor | Records acknowledgement of the manual provider and model-picker setup |
+| Claude Code | Bedrock を有効にし、自分専用の `.claude/settings.local.json` に `AWS_REGION` と任意の `AWS_PROFILE` を書き込む（git はこのファイルを無視し、プロファイルは `harness.json` に記録されない）。また `.mcp.json` 内の AWS MCP の URL と `AWS_REGION` メタデータも同じリージョンに合わせる |
+| Codex CLI | 選択を記録し、プロバイダー、資格情報、モデルを `~/.codex/config.toml` に保持するよう利用者に案内する |
+| Kiro CLI | プロバイダーの回答なし。モデルアクセスは Kiro に含まれる |
+| Kiro IDE | プロバイダーの回答なし。モデルアクセスは Kiro に含まれる |
+| opencode | `provider.amazon-bedrock.options.region/profile` を `opencode.json` に書き込むことを提案する。`--opencode-default yes|no` がその回答を記録する |
+| GitHub Copilot | 手動の BYOK 環境設定を確認したことを記録する |
+| Cursor | 手動のプロバイダーとモデルピッカーの設定を確認したことを記録する |
 
-Bedrock model access and IAM permission verification cannot be automated
-offline. The record therefore carries named pending actions. `--show` lists
-them, `--check` stays non-zero while they are pending, and
-`--mark-done <id>` records completion. Codex provider setup remains explicitly
-self-attested after completion because the effective user configuration and
-alternate credential channels cannot be resolved offline; `--check` returns
-success with that warning instead of describing the setup as verified.
-`--provider current` preserves the harness's configured provider and removes
-only Bedrock values AI-DLC can attribute to its shipped defaults or the previous
-record from Claude, Codex, or opencode project files. Customized Claude model
-aliases are preserved. A customized legacy Codex Bedrock block is also preserved;
-`--check` reports a warning when it still names that provider instead of calling
-the configuration clean. `--provider other` records a manually configured
-non-Bedrock provider and reports that setup as pending until `--acknowledge` is
-supplied. `--reset` removes exact legacy AI-DLC Bedrock defaults or values written
-for the previous recorded answer from Claude, Codex, and opencode project files;
-unproven values are preserved. On Claude Code, `--provider current`, `--provider other` and `--reset` also
-take the Bedrock switch and region out of your `.claude/settings.local.json`; an
-`AWS_PROFILE` there stays, and the command says so.
+Bedrock のモデルアクセスと IAM 権限の検証は、オフラインでは自動化できません。そのため記録には名前付きの保留アクションが含まれます。`--show` はそれらを一覧表示し、`--check` は保留中の間は非ゼロのままで、`--mark-done <id>` は完了を記録します。Codex のプロバイダー設定は、実効的なユーザー設定や別の資格情報チャネルをオフラインでは解決できないため、完了後も明示的に自己申告のままです。`--check` は設定を検証済みとは言わず、その警告付きで成功を返します。
+`--provider current` はハーネスで設定済みのプロバイダーを維持し、Claude、Codex、opencode のプロジェクトファイルから、AI-DLC が同梱の既定値または以前の記録によるものと判断できる Bedrock の値だけを削除します。カスタマイズされた Claude のモデルエイリアスは保持されます。カスタマイズされた従来の Codex の Bedrock ブロックも保持されます。そのブロックがまだそのプロバイダーを指している場合、`--check` は設定に問題がないとは言わず、警告を報告します。`--provider other` は手動で設定した Bedrock 以外のプロバイダーを記録し、`--acknowledge` が渡されるまでその設定を保留中として報告します。`--reset` は、Claude、Codex、opencode のプロジェクトファイルから、AI-DLC の従来の Bedrock の既定値そのもの、または以前に記録された回答のために書き込まれた値を削除します。由来を確認できない値は保持されます。Claude Code では、`--provider current`、`--provider other`、`--reset` は `.claude/settings.local.json` から Bedrock のスイッチとリージョンも取り除きます。そこにある `AWS_PROFILE` は残り、コマンドはその旨を伝えます。
 
-On Claude Code each person's Bedrock answer is their own. A teammate's clone
-carries the project's record but none of your settings, and `aidlc config providers
---check` and doctor warn them once that Bedrock is recorded but not turned on
-for them. A project set up by an earlier release keeps the answer in the shared
-`.claude/settings.json` until someone answers `aidlc config providers` again,
-which moves it to their own file and says so; a refresh or update leaves it.
+Claude Code では、Bedrock の回答は各個人のものです。チームメイトのクローンにはプロジェクトの記録は含まれますが、あなたの設定は含まれないため、`aidlc config providers
+--check` と doctor は、Bedrock が記録されているものの自分には有効になっていないことを一度だけ警告します。以前のリリースでセットアップしたプロジェクトは、誰かが改めて `aidlc config providers` に回答するまで、共有の `.claude/settings.json` に回答を保持します。回答した時点でその人自身のファイルに移され、その旨が伝えられます。更新やアップデートではそのまま残ります。
 
-The question is worded for the harness in front of you, so each install offers
-the two paths that actually exist for it:
+質問は目の前のハーネスに合わせた文言になっているため、各インストールでは、そのハーネスに実際に存在する 2 つの選択肢が提示されます。
 
-| Harness | `amazon-bedrock` records |
+| ハーネス | `amazon-bedrock` が記録する内容 |
 |---------|--------------------------|
-| Claude Code | the AWS region and profile in your own `settings.local.json`, and the AWS MCP region in `.mcp.json` when present |
-| Codex CLI | the AWS region and profile in the project record, then guides user-level provider setup in `$CODEX_HOME/config.toml` |
-| OpenCode | the AWS region and profile, and offers to write them to `opencode.json` |
-| GitHub Copilot | that you set the Copilot BYOK provider variables yourself |
-| Cursor | that you configure the provider in Cursor yourself |
+| Claude Code | 自分専用の `settings.local.json` に AWS のリージョンとプロファイル、存在する場合は `.mcp.json` に AWS MCP のリージョン |
+| Codex CLI | プロジェクトの記録に AWS のリージョンとプロファイルを記録し、その後 `$CODEX_HOME/config.toml` でのユーザーレベルのプロバイダー設定を案内する |
+| OpenCode | AWS のリージョンとプロファイルを記録し、それを `opencode.json` に書き込むことを提案する |
+| GitHub Copilot | Copilot の BYOK プロバイダー変数を自分で設定したこと |
+| Cursor | Cursor でプロバイダーを自分で設定したこと |
 
 
-Kiro CLI and Kiro IDE provide their own model access, so AI-DLC configures no
-model provider for them. `aidlc config providers` states that model access
-comes with Kiro and asks nothing; so does the first-run wizard on Kiro IDE when
-`kiro-cli` cannot be read, while on Kiro CLI, and on Kiro IDE with a readable
-`kiro-cli`, its step 2 chooses Kiro CLI's session model instead. Provider flags are
-refused, and the Providers row reads `[ok]` regardless of a legacy record.
-`aidlc config providers --reset --yes` clears a record left by an earlier build.
-`builtin` records from the previous build still load and read as harness-managed,
-with no pending actions. Legacy Kiro Bedrock records are also ignored, including
-their pending actions, and nothing is written from them. The `aws-mcp` region in
-`.kiro/settings/mcp.json` is plain MCP configuration, not a model-provider
-answer: whatever region that file carries, whether an earlier build's Bedrock
-answer put it there or you did, is kept across refreshes, and `--reset` leaves
-the file alone.
+Kiro CLI と Kiro IDE は独自のモデルアクセスを提供するため、AI-DLC はそれらのモデルプロバイダーを設定しません。`aidlc config providers` はモデルアクセスが Kiro に含まれていることを伝え、何も尋ねません。`kiro-cli` を読み取れない場合の Kiro IDE での初回実行ウィザードも同様です。一方、Kiro CLI、および読み取り可能な `kiro-cli` がある Kiro IDE では、ウィザードのステップ 2 で代わりに Kiro CLI のセッションモデルを選びます。プロバイダーのフラグは拒否され、従来の記録があっても Providers の行は `[ok]` と表示されます。
+以前のビルドが残した記録は `aidlc config providers --reset --yes` で消去できます。以前のビルドの `builtin` の記録は引き続き読み込まれ、保留アクションなしのハーネス管理として扱われます。従来の Kiro の Bedrock の記録も、保留アクションを含めて無視され、そこから何かが書き込まれることはありません。`.kiro/settings/mcp.json` 内の `aws-mcp` のリージョンは通常の MCP 設定であり、モデルプロバイダーの回答ではありません。以前のビルドの Bedrock の回答によるものであれ、あなたが設定したものであれ、そのファイルにあるリージョンは更新をまたいで保持され、`--reset` はそのファイルに触れません。
 
-Every other harness asks whether to keep its current provider or opt in to
-Amazon Bedrock. Keeping the current provider is the default, including when AWS
-credentials are detected. Copilot and Cursor reach Bedrock through their own
-BYOK or provider settings, which AI-DLC tracks as a pending action rather than
-performs.
+他のすべてのハーネスでは、現在のプロバイダーを維持するか、Amazon Bedrock にオプトインするかを尋ねます。AWS の資格情報が検出された場合も含め、現在のプロバイダーを維持するのが既定です。Copilot と Cursor は独自の BYOK やプロバイダー設定を通じて Bedrock に接続します。AI-DLC はそれを実行するのではなく、保留アクションとして追跡します。
 
-On Kiro, `--check` says no answer is needed and exits zero even with a legacy
-record. On GitHub Copilot and Cursor with no answer, `--check` and `doctor` say
-no answer is needed because model access comes with the session, and `--check`
-names the command that records your own Amazon Bedrock access. On every other unrecorded
-section it names that state instead of reporting a verified answer, and still
-exits zero because the shipped fallback bytes remain valid.
+Kiro では、`--check` は回答が不要であることを伝え、従来の記録があってもゼロで終了します。回答のない GitHub Copilot と Cursor では、モデルアクセスがセッションに含まれているため、`--check` と `doctor` は回答が不要であることを伝え、`--check` は独自の Amazon Bedrock アクセスを記録するためのコマンドを示します。それ以外の未記録のセクションでは、検証済みの回答を報告する代わりにその状態を示し、同梱のフォールバックのバイト列が引き続き有効であるため、やはりゼロで終了します。
 
-On these harnesses `keep current` is the first answer and the default.
-`amazon-bedrock` is the second answer. Re-entering the section with the recorded
-answer preserves it: Bedrock keeps its region and profile unless you explicitly
-replace them, while `other` keeps its pending manual-setup action. Pending
-actions can still be completed with `--mark-done`.
+これらのハーネスでは、`keep current` が 1 番目の回答で既定値です。`amazon-bedrock` は 2 番目の回答です。記録済みの回答のままセクションに入り直すと、その回答は保持されます。Bedrock は明示的に置き換えない限りリージョンとプロファイルを維持し、`other` は手動設定の保留アクションを維持します。保留アクションは引き続き `--mark-done` で完了できます。
 
 ### Trust Diagnostics
 
-`aidlc config trust` reads and verifies host-native trust. It never regenerates
-trust seeds, permission rules, or IDE settings; its only writes outside the
-project are Kiro IDE's and Kiro CLI's Workflows switches and Kiro IDE's
-default terminal on Windows, and only when you ask for them.
+`aidlc config trust` は、ホストネイティブの信頼を読み取って検証します。信頼のシード、許可ルール、IDE の設定を再生成することはありません。プロジェクト外への書き込みは、Kiro IDE と Kiro CLI の Workflows スイッチ、および Windows での Kiro IDE の既定のターミナルだけで、それも要求した場合に限ります。
 
 ```bash
 aidlc config trust --show
@@ -878,75 +418,26 @@ aidlc config trust --kiro-cli-workflows off --yes   # Kiro CLI; or: on
 aidlc config trust --kiro-terminal powershell --yes   # Kiro IDE on Windows
 ```
 
-For Kiro IDE, `--show` and `--check` also read Kiro's Workflows switch
-(`kiroAgent.workflows.enabled` in Kiro's user settings, so it covers all your
-projects; while it is on, AI-DLC's reviews and helpers do not run).
-`--kiro-workflows off|on` changes that one key and keeps every other byte of
-the file. While Workflows is on and you have not answered on this computer,
-setup asks once and `aidlc config --yes` turns it off; your answer is kept in
-`kiro-ide-workflows` in the AI-DLC install folder, so no other project asks
-again. When that settings file has an error AI-DLC cannot read past, Kiro may
-still read Workflows as on, so `--show` says it could not be read, `--check`
-and setup warn until the file reads again (whatever you answered before), and
-the next Kiro IDE chat tells you once; fix the error in that file. On the same
-Kiro row, `--show` and `--check` also read Kiro CLI's own Workflows switch
-(`chat.enableWorkflows` in your Kiro CLI settings, read through `kiro-cli
-settings`), which takes the same tools away in Kiro CLI chats;
-`--kiro-cli-workflows off|on` sets it through Kiro CLI, and its answer is kept
-in `kiro-cli-workflows`, apart from Kiro IDE's. With no Kiro CLI answering, it
-is not shown. See [Kiro's Workflows feature](harnesses/kiro.md#kiros-workflows-feature-stops-ai-dlcs-reviews-and-helpers).
+Kiro IDE では、`--show` と `--check` は Kiro の Workflows スイッチも読み取ります（Kiro のユーザー設定の `kiroAgent.workflows.enabled` で、すべてのプロジェクトに適用されます。これが有効な間は AI-DLC のレビューやヘルパーが動作しません）。`--kiro-workflows off|on` はそのキー 1 つだけを変更し、ファイルの他のバイトはすべて保持します。Workflows が有効で、このコンピューターでまだ回答していない場合、セットアップは一度だけ尋ね、`aidlc config --yes` はそれを無効にします。回答は AI-DLC のインストールフォルダー内の `kiro-ide-workflows` に保存されるため、他のプロジェクトで再び尋ねられることはありません。その設定ファイルに AI-DLC が読み進められないエラーがある場合、Kiro は Workflows を有効として読む可能性があります。そのため、`--show` は読み取れなかったことを伝え、`--check` とセットアップはファイルが再び読めるようになるまで（以前の回答にかかわらず）警告し、次の Kiro IDE のチャットで一度だけ通知されます。そのファイルのエラーを修正してください。同じ Kiro の行で、`--show` と `--check` は Kiro CLI 自身の Workflows スイッチ（Kiro CLI の設定の `chat.enableWorkflows`。`kiro-cli
+settings` を通じて読み取る）も読み取ります。これは Kiro CLI のチャットで同じツールを使えなくします。`--kiro-cli-workflows off|on` は Kiro CLI を通じてこれを設定し、その回答は Kiro IDE とは別に `kiro-cli-workflows` に保存されます。Kiro CLI が応答しない場合は表示されません。[Kiro の Workflows 機能](harnesses/kiro.md#kiros-workflows-feature-stops-ai-dlcs-reviews-and-helpers)を参照してください。
 
-On Windows, Kiro IDE runs its agent's commands in your default terminal profile
-(`terminal.integrated.defaultProfile.windows` in Kiro's user settings). While
-it is Command Prompt (where Kiro shows a command's reply only when it finishes
-within a second, so most AI-DLC replies come back empty) and you have not
-answered on this computer, setup asks once whether to set it to PowerShell,
-`aidlc config --yes` sets it, and `--kiro-terminal powershell` sets it on its
-own (and says so when it already is PowerShell); each changes that one key and
-keeps every other byte of the file, and your answer is kept in
-`kiro-ide-terminal` in the AI-DLC install folder. See
-[Command Prompt as Kiro's terminal](harnesses/kiro.md#command-prompt-as-kiros-terminal-on-windows).
+Windows では、Kiro IDE はエージェントのコマンドを既定のターミナルプロファイル（Kiro のユーザー設定の `terminal.integrated.defaultProfile.windows`）で実行します。それがコマンドプロンプト（Kiro はコマンドが 1 秒以内に終了した場合にしか応答を表示しないため、AI-DLC のほとんどの応答が空で返ってくる）で、このコンピューターでまだ回答していない場合、セットアップは PowerShell に設定するかどうかを一度だけ尋ねます。`aidlc config --yes` はそれを設定し、`--kiro-terminal powershell` は単独でそれを設定します（すでに PowerShell の場合はその旨を伝えます）。いずれもそのキー 1 つだけを変更してファイルの他のバイトはすべて保持し、回答は AI-DLC のインストールフォルダー内の `kiro-ide-terminal` に保存されます。[Kiro のターミナルとしてのコマンドプロンプト](harnesses/kiro.md#command-prompt-as-kiros-terminal-on-windows)を参照してください。
 
-For Codex, the check requires the complete project-specific trust seed entry
-set in `$CODEX_HOME/config.toml`. The two supported remedies are one TUI
-`Trust all and continue` pass or replacing `<PROJECT_DIR>` and merging the
-complete seed. Until then zero Codex hooks fire.
-`--dangerously-bypass-hook-trust` does not fire untrusted hooks, and appending
-a second seed set produces invalid TOML.
+Codex では、`$CODEX_HOME/config.toml` にプロジェクト固有の信頼シードのエントリ一式がすべて揃っていることがチェックの条件です。サポートされている対処方法は 2 つで、TUI で `Trust all and continue` を一度実行するか、`<PROJECT_DIR>` を置き換えてシード全体をマージするかです。それまでは Codex のフックは 1 つも発火しません。`--dangerously-bypass-hook-trust` を使っても信頼されていないフックは発火せず、2 つ目のシード一式を追記すると TOML として不正になります。
 
-For the Kiro distribution, trust ships in the conductor's `permissions`
-(`.kiro/agents/aidlc-aidlc.md`), so the check adds nothing there; Kiro IDE 1.x no
-longer reads `.vscode/settings.json` `kiroAgent.trustedCommands`. `--show` lists
-the selected harness's trust and allowlist files.
+Kiro のディストリビューションでは、信頼はコンダクターの `permissions`（`.kiro/agents/aidlc-aidlc.md`）に同梱されているため、チェックで追加するものはありません。Kiro IDE 1.x は `.vscode/settings.json` の `kiroAgent.trustedCommands` を読み取らなくなりました。`--show` は、選択したハーネスの信頼ファイルと許可リストのファイルを一覧表示します。
 
-For Copilot, the check reads the Copilot CLI's `trustedFolders` (in
-`config.json` under `COPILOT_HOME`, else `%USERPROFILE%\.copilot` on Windows
-and `~/.copilot` elsewhere) and warns when it does not cover the project; a
-folder above the project counts. VS Code never reads that list: its hooks need
-a trusted workspace and the Chat: Use Hooks setting on, which AI-DLC cannot
-see, so the Trust row names them. When the CLI has not trusted the project,
-`aidlc config trust` (and the setup walk) says how: run `copilot` in the
-project once and choose "Yes, and remember this folder for future sessions".
-AI-DLC never edits the CLI's `config.json` itself, since trusting a folder lets
-its code run.
+Copilot では、チェックは Copilot CLI の `trustedFolders`（`COPILOT_HOME` 配下の `config.json`。未設定なら Windows では `%USERPROFILE%\.copilot`、それ以外では `~/.copilot`）を読み取り、プロジェクトが含まれていない場合に警告します。プロジェクトより上位のフォルダーも対象として数えます。VS Code はその一覧を読みません。VS Code のフックには信頼されたワークスペースと、Chat: Use Hooks 設定の有効化が必要ですが、AI-DLC からはそれらを確認できないため、Trust の行でそれらを示します。CLI がプロジェクトを信頼していない場合、`aidlc config trust`（およびセットアップの確認手順）がその方法を伝えます。プロジェクトで一度 `copilot` を実行し、"Yes, and remember this folder for future sessions"（はい、今後のセッションのためにこのフォルダーを記憶する）を選んでください。フォルダーを信頼するとそのコードの実行を許すことになるため、AI-DLC が CLI の `config.json` を自ら編集することはありません。
 
-The trust check also verifies the project siblings that copy installs often
-miss: `aidlc/` for every harness, `.agents/` for Codex, and the `.aidlc/`
-engine for opencode and Copilot.
+信頼のチェックでは、コピーによるインストールで漏れがちなプロジェクト内の兄弟ディレクトリも確認します。すべてのハーネスの `aidlc/`、Codex の `.agents/`、opencode と Copilot の `.aidlc/` エンジンです。
 
-Doctor also classifies the installed instruction file against the config
-ownership baseline. An intact managed block reports `block present, user
-content preserved`; a missing block or file says to run `aidlc config`; a
-hand-modified managed block or framework-owned whole file reports a conflict.
-A line written in place of the onboarding's `# AI-DLC` title is not one: it
-is the project's own (see below). The row follows the invoking harness when
-more than one harness tree is present.
+doctor は、インストールされた指示ファイルを config の所有権ベースラインと照らして分類します。管理ブロックが損なわれていなければ `block present, user
+content preserved` と報告します。ブロックやファイルがない場合は `aidlc config` を実行するよう伝えます。手で変更された管理ブロックや、フレームワーク所有のファイル全体が変更されている場合は競合として報告します。
+オンボーディングの `# AI-DLC` タイトルの代わりに書かれた行は競合にはなりません。それはプロジェクト自身のものです（後述）。複数のハーネスのツリーがある場合、この行は呼び出したハーネスに従います。
 
 ### Project Flags
 
-`aidlc config flags` records project answers for default scope, swarm mode,
-hook debug, sensor timeout, question retention, and explicit guard bypasses or
-ceremony kill switches:
+`aidlc config flags` は、既定のスコープ、スウォームモード、フックのデバッグ、センサーのタイムアウト、質問の保持期間、明示的なガードのバイパスやセレモニーの停止スイッチについて、プロジェクトの回答を記録します。
 
 ```bash
 aidlc config flags --default-scope <installed-scope> \
@@ -958,26 +449,14 @@ aidlc config flags --check
 aidlc config flags --reset --project --yes
 ```
 
-Real environment variables always win. Existing tools and hooks first read the
-environment and then resolve local, project, and machine settings when the
-variable is absent. This keeps CI and one-shot shell exports scriptable.
+実際の環境変数が常に優先されます。既存のツールとフックは、まず環境を読み、変数がない場合にローカル、プロジェクト、マシンの設定を解決します。これにより、CI や一時的なシェルの export をスクリプトから扱いやすく保ちます。
 
-`--question-retention-days <days|unlimited>` controls how long AI-DLC keeps its
-copy of a request for a question that was never answered. The default is
-unlimited unless a positive integer is recorded. With a value set, copies older
-than that many days are removed the next time AI-DLC does work (status, help,
-and other queries never remove anything), and an expired question is refused if
-it is answered. Passing `unlimited` removes
-the value from the selected settings layer without changing other flags.
-`AIDLC_QUESTION_RETENTION_DAYS` is the matching environment override.
+`--question-retention-days <days|unlimited>` は、回答されなかった質問について、AI-DLC がその依頼の写しをどれだけの期間保持するかを制御します。正の整数が記録されていない限り、既定値は無制限です。値を設定すると、その日数より古い写しは、次に AI-DLC が作業を行ったときに削除され（status、help、その他の問い合わせでは何も削除されません）、期限切れの質問に回答しても拒否されます。`unlimited` を渡すと、他のフラグを変えずに、選択した設定レイヤーからその値を削除します。
+`AIDLC_QUESTION_RETENTION_DAYS` が対応する環境変数での上書きです。
 
-Default scope names are read from the installed scope files. The section does
-not branch on a built-in scope name, so scope renames and plugin scopes remain
-data. On Claude Code, config also rewrites the staged
-`AWS_AIDLC_DEFAULT_SCOPE` value in `.claude/settings.json`; otherwise the
-shipped session environment would shadow the lower-precedence record.
+既定のスコープ名は、インストールされたスコープファイルから読み取ります。このセクションは組み込みのスコープ名で分岐しないため、スコープの名前変更やプラグインのスコープもデータとして扱われます。Claude Code では、config は `.claude/settings.json` 内のステージングされた `AWS_AIDLC_DEFAULT_SCOPE` の値も書き換えます。そうしないと、同梱のセッション環境が優先度の低い記録を覆い隠してしまうためです。
 
-The recordable bypass set includes the documented recovery and ceremony switches:
+記録できるバイパスには、文書化された復旧用とセレモニー用のスイッチが含まれます。
 
 - `AIDLC_SKIP_ARTIFACT_GUARD`
 - `AIDLC_SKIP_HUMAN_PRESENCE_GUARD`
@@ -988,34 +467,19 @@ The recordable bypass set includes the documented recovery and ceremony switches
 - `AIDLC_DISABLE_REVIEWER_SCOPE_HOOK`
 - `AIDLC_DISABLE_REVIEW_FREEZE_HOOK`
 - `AIDLC_DISABLE_USAGE_TRACKING`
-- `AIDLC_DISABLE_SENSORS` — disables sensor execution and sensor gate checks
-- `AIDLC_DISABLE_LEARNINGS` — disables the stage learnings ritual
-- `AIDLC_DISABLE_SUMMARY_CONFIRMATION` — disables the separate summary-confirmation checkpoint, not stage approval
+- `AIDLC_DISABLE_SENSORS` — センサーの実行とセンサーゲートのチェックを無効にする
+- `AIDLC_DISABLE_LEARNINGS` — ステージの学びの手順を無効にする
+- `AIDLC_DISABLE_SUMMARY_CONFIRMATION` — 独立したサマリー確認のチェックポイントを無効にする（ステージの承認は無効にしない）
 
-The wizard never offers bypasses. They require an explicit `--bypass <name>`;
-`--show` surfaces every enabled bypass and its guard-weakening consequence.
-Recording or clearing one prints only what changed with its undo command and
-the line for the check it switched (plus any setup step still outstanding);
-`--json` and `--quiet` output are unchanged.
-Every bypass except usage tracking, sensors, and learnings takes a check away
-from the person, so while one is on AI-DLC says so in one line: on the next
-step, at the start of every chat (not on opencode, which shows no session-start
-context), in `--show`, and in the doctor Flags row. The
-line names the check, since when, how it was set, and the `--clear-bypass`
-command that turns it back on (see "Environment kill switches" in
-[CLI commands](12-cli-commands.md)).
+ウィザードがバイパスを提示することはありません。バイパスには明示的な `--bypass <name>` が必要です。`--show` は有効なバイパスをすべて、ガードが弱まる影響とともに表示します。
+記録またはクリアした場合は、何が変わったかと元に戻すコマンド、切り替えたチェックについての行（さらに未完了のセットアップ手順があればそれも）だけを表示します。`--json` と `--quiet` の出力は変わりません。
+使用状況の追跡、センサー、学び以外のバイパスはすべて利用者からチェックを奪うため、いずれかが有効な間、AI-DLC はその旨を 1 行で伝えます。伝える場所は、次のステップ、すべてのチャットの開始時（セッション開始時のコンテキストを表示しない opencode を除く）、`--show`、doctor の Flags 行です。その行では、チェックの名前、いつから、どのように設定されたか、チェックを元に戻す `--clear-bypass` コマンドを示します（[CLI コマンド](12-cli-commands.md)の「Environment kill switches」を参照）。
 
-Four of these switch off a fence for the whole machine. When the problem is one
-piece of work rather than one machine, `/aidlc config set guard.<fence> off`
-lowers a single fence for that work only, records it, and puts it back for the
-next piece of work. See
-[Guard Policy](13-customization.md#guard-policy) and
-[The five fences](13-customization.md#the-five-fences).
+このうち 4 つは、マシン全体でフェンスを無効にします。問題がマシン全体ではなく 1 つの作業にある場合は、`/aidlc config set guard.<fence> off` を使うと、その作業に限って 1 つのフェンスを下げ、それを記録し、次の作業では元に戻します。[ガードポリシー](13-customization.md#guard-policy)と[5 つのフェンス](13-customization.md#the-five-fences)を参照してください。
 
 ### Project Choices
 
-`aidlc config project` records the installed plugin selection, MCP consent,
-and the shell-completion answer:
+`aidlc config project` は、インストールするプラグインの選択、MCP への同意、シェル補完についての回答を記録します。
 
 ```bash
 aidlc config project --plugins aidlc,test-pro --mcp none \
@@ -1025,74 +489,37 @@ aidlc config project --check
 aidlc config project --reset --yes
 ```
 
-On a copy-channel projection, `config project` applies plugin, MCP, and
-completion choices from the project's own files at the release it already
-has, so it needs no download. Turning MCP back on reads the shipped server list
-the harness folder keeps. It needs the release only when the project is pinned
-to another one, or when that list is missing from the harness folder; it then
-asks at a terminal, and scripts add `--download`.
-`--from <path>` instead uses files you downloaded: `aidlc-copy-runtime-X.Y.Z.tar.gz`,
-its extracted `runtime/` folder, or one harness root. Servers you added to
-`.mcp.json` yourself are never recorded or removed.
+コピーチャネルのプロジェクションでは、`config project` はプラグイン、MCP、補完の選択を、プロジェクトがすでに持っているリリースのプロジェクト自身のファイルから適用するため、ダウンロードは不要です。MCP を再び有効にする場合は、ハーネスのフォルダーが保持している同梱のサーバー一覧を読み取ります。リリースが必要になるのは、プロジェクトが別のリリースにピン留めされている場合か、その一覧がハーネスのフォルダーにない場合だけです。その場合、ターミナルでは確認を求め、スクリプトでは `--download` を付けます。
+`--from <path>` を使うと、代わりにダウンロード済みのファイル（`aidlc-copy-runtime-X.Y.Z.tar.gz`、それを展開した `runtime/` フォルダー、または 1 つのハーネスルート）を使います。自分で `.mcp.json` に追加したサーバーが記録されたり削除されたりすることはありません。
 
-Plugin names are discovered from the installed graph, scopes, and plugin
-sidecars. They are not hardcoded. The selection continues to use the existing
-top-level `plugins` array in `harness.json`, so graph and runner regeneration
-use the same selection seam as plugin composition. A project change while a
-workflow is open is done, like any refresh (see "Refresh Safety"), and says
-what changed with the command that puts the earlier choice back when one
-command can say it. Turning off a plugin that open work needs names that work:
-it continues once the plugin is on again. Add `--dry-run` to the same command to preview its plan
-without changing project or settings files.
+プラグイン名は、インストールされたグラフ、スコープ、プラグインのサイドカーから検出されます。ハードコードはされていません。選択には引き続き `harness.json` の既存のトップレベルの `plugins` 配列を使うため、グラフとランナーの再生成は、プラグインの合成と同じ選択の仕組みを使います。ワークフローが開いている間のプロジェクトの変更は、他の更新と同様に実行され（「Refresh Safety」を参照）、何が変わったかと、1 つのコマンドで表せる場合は以前の選択に戻すコマンドを伝えます。開いている作業が必要とするプラグインを無効にすると、その作業の名前が示されます。その作業はプラグインが再び有効になると続行します。同じコマンドに `--dry-run` を付けると、プロジェクトや設定ファイルを変更せずにプランをプレビューできます。
 
-MCP consent remains `defaults` or `none`. A non-interactive project mutation
-with no earlier consent records `none`, unless `.mcp.json` already holds a
-shipped server as shipped: then it records `defaults` and keeps the servers
-there, adding none. `--yes` only confirms the mutation and never adds MCP
-entries.
+MCP への同意は引き続き `defaults` または `none` です。以前の同意がない非対話のプロジェクト変更では `none` を記録します。ただし、`.mcp.json` に同梱どおりの同梱サーバーがすでにある場合は、`defaults` を記録してそこにあるサーバーを維持し、何も追加しません。`--yes` は変更を確認するだけで、MCP のエントリを追加することはありません。
 
-On Claude Code, `.mcp.json` is the consent-managed surface: `--check` verifies
-both `defaults` and `none`, and later plain config refreshes reapply the answer.
-Kiro CLI always ships `.kiro/settings/mcp.json`; `defaults` is satisfied by
-that file and its five shipped servers, while `none` is an instruct-only
-preference and does not remove a framework-owned file. The current Codex,
-opencode, Copilot, Kiro IDE, and Cursor distributions ship no MCP surface, so
-their recorded answer is informational and does not make `--check`
-permanently red. `--show` names the actual MCP file whenever one exists.
+Claude Code では、`.mcp.json` が同意によって管理される設定面です。`--check` は `defaults` と `none` の両方を検証し、その後の通常の config の更新で回答が再適用されます。Kiro CLI は常に `.kiro/settings/mcp.json` を同梱しています。`defaults` はそのファイルと 5 つの同梱サーバーで満たされ、`none` は案内のみの希望でありフレームワーク所有のファイルを削除しません。現在の Codex、opencode、Copilot、Kiro IDE、Cursor のディストリビューションは MCP の設定面を同梱していないため、記録された回答は参考情報であり、`--check` が恒常的に失敗することはありません。`--show` は、実際の MCP ファイルが存在する場合は常にその名前を示します。
 
-Completions are instruction-only and write no machine files. Native installs
-print commands such as:
+補完は案内のみで、マシン上のファイルは書き込みません。ネイティブインストールでは次のようなコマンドを表示します。
 
 ```bash
 eval "$(aidlc system completions bash)"
 ```
 
-Copy-channel installs print the matching Bun invocation, for example:
+コピーチャネルのインストールでは、対応する Bun の呼び出しを表示します。例:
 
 ```bash
 eval "$(bun .claude/tools/aidlc.ts system completions bash)"
 ```
 
-Fish uses `... completions fish | source`; PowerShell uses
-`... completions powershell | Out-String | Invoke-Expression`.
+Fish では `... completions fish | source`、PowerShell では `... completions powershell | Out-String | Invoke-Expression` を使います。
 
-An existing project stamp fixes the harness for a refresh. A fresh interactive
-project prompts for a harness; a non-interactive run requires `--harness`.
-If `.aidlc-version` exists, config
-requires a source at that exact version with the matching project harness.
+既存のプロジェクトのスタンプがある場合、更新時のハーネスはそれで決まります。新しいプロジェクトでは、対話時はハーネスを尋ね、非対話の実行では `--harness` が必要です。
+`.aidlc-version` が存在する場合、config はそのバージョンと完全に一致し、プロジェクトのハーネスにも一致するソースを必要とします。
 
-Config recognizes directories containing `.git`, `package.json`, `Cargo.toml`,
-`go.mod`, or `pyproject.toml`, or an AI-DLC harness tree already set up there.
-Outside those shapes, interactive mode asks for confirmation and
-non-interactive mode requires `--project-dir`.
+config は、`.git`、`package.json`、`Cargo.toml`、`go.mod`、`pyproject.toml` のいずれかを含むディレクトリ、またはすでに AI-DLC のハーネスツリーがセットアップされているディレクトリを認識します。それ以外の場合、対話モードでは確認を求め、非対話モードでは `--project-dir` が必要です。
 
-Claude's optional MCP integration defaults to `none` without a TTY. A human
-TTY is prompted when no prior choice exists. `--yes` and `--json` do not grant
-MCP consent. Reliable automation supplies `--project-dir`, `--harness`, and
-`--mcp defaults|none` explicitly; JSON controls output but does not disable
-TTY prompts by itself.
+Claude 用の任意の MCP 統合は、TTY がない場合は既定で `none` になります。人間が使う TTY では、以前の選択がない場合に確認を求めます。`--yes` と `--json` は MCP への同意を与えません。確実な自動化では、`--project-dir`、`--harness`、`--mcp defaults|none` を明示的に指定します。JSON は出力を制御するだけで、それだけで TTY のプロンプトを無効にはしません。
 
-For exact scripted approval:
+スクリプトで厳密に承認するには、次のようにします。
 
 ```bash
 token=$(
@@ -1103,362 +530,127 @@ aidlc config --project-dir "$PWD" --harness claude --mcp none \
   --plan-token "$token" --json
 ```
 
-Use identical source and behavior options for both calls. Source bytes,
-options, or project state changing after the preview changes the token and
-the apply fails closed.
+両方の呼び出しで同じソースと動作のオプションを使ってください。プレビューの後にソースのバイト列、オプション、プロジェクトの状態が変わるとトークンが変わり、適用は安全側に倒して失敗します。
 
 ### Refresh Safety
 
-Any `aidlc config` you run while work is open is done, not refused, parked
-workflows included. A settings change (`config models`, `flags`, `runtime`,
-`providers`, and `trust`) reads the project's own files and brings in no
-release. Each prints what changed and, where one command
-puts the earlier value back, that command. A model or flag change also names
-the open workflows that pick it up: a bypass, hook debug, the sensor timeout,
-and question retention apply right away, with no restart; models and swarm
-apply from the next step (a step already running keeps what it started with),
-except that on Kiro CLI a model or effort change applies from your next Kiro CLI
-session, since a running one keeps what it started with;
-a default scope applies to new work only, and a saved model profile changes
-nothing until `--from` loads it. The runtime, providers, and trust answers
-print no workflow line, and neither does a command that records or clears a
-bypass no other settings file records while its variable is set in the
-environment the command runs in, whatever else it changes: open work reads the
-environment of the editor or CLI it runs in, which the command cannot see.
+作業が開いている間に実行した `aidlc config` は、保留中のワークフローを含め、拒否されずに実行されます。設定の変更（`config models`、`flags`、`runtime`、`providers`、`trust`）はプロジェクト自身のファイルを読み、リリースを取り込みません。それぞれ、何が変わったかと、1 つのコマンドで以前の値に戻せる場合はそのコマンドを表示します。モデルやフラグの変更では、それを反映する開いているワークフローも示します。バイパス、フックのデバッグ、センサーのタイムアウト、質問の保持期間は再起動なしですぐに適用されます。モデルとスウォームは次のステップから適用されます（すでに実行中のステップは開始時の設定を維持します）。ただし Kiro CLI では、実行中のセッションは開始時の設定を維持するため、モデルや effort の変更は次の Kiro CLI セッションから適用されます。
+既定のスコープは新しい作業にのみ適用され、保存したモデルのプロファイルは `--from` で読み込むまで何も変えません。runtime、providers、trust の回答ではワークフローの行は表示されません。また、コマンドを実行する環境でその変数が設定されている間に、他のどの設定ファイルにも記録されていないバイパスを記録またはクリアするコマンドも、他に何を変更するかにかかわらず、ワークフローの行を表示しません。開いている作業は、それが動いているエディターや CLI の環境を読み取りますが、コマンドからはその環境が見えないためです。
 
-A refresh that brings in release files (a plain `aidlc config`, `--from`,
-`--download`, `config project`, or the update a pinned project needs first)
-is done too, and says so:
+リリースファイルを取り込む更新（素の `aidlc config`、`--from`、`--download`、`config project`、またはピン留めされたプロジェクトが最初に必要とするアップデート）も実行され、その旨が伝えられます。
 
 ```
   Updated. Your open work (default/add-login) carries on.
 ```
 
-When the new release does a stage you already finished differently and nothing
-of yours changed, your work stands and nothing asks you to redo it. If the stage
-now needs a document it did not need before, your next step says so once, for
-example "AI-DLC now does Functional Design differently from when yours ran; your
+新しいリリースが、すでに完了したステージを異なる方法で行うようになっていても、あなたの側で何も変わっていなければ、作業はそのまま有効で、やり直しを求められることはありません。そのステージが以前は不要だったドキュメントを必要とするようになった場合は、次のステップで一度だけ伝えられます。例: "AI-DLC now does Functional Design differently from when yours ran; your
 work stands, and `/aidlc --stage functional-design` goes back to it (the stages
-after it reopen too)." Otherwise it is not said, and `/aidlc --status` shows that
-line. A change to your own work keeps its usual question.
+after it reopen too)."（AI-DLC は、あなたの実行時とは異なる方法で Functional Design を行うようになりました。作業はそのまま有効で、上記のコマンドでそのステージに戻れます。その後のステージも再び開かれます。）それ以外の場合は伝えられず、`/aidlc --status` にその行が表示されます。あなた自身の作業に対する変更では、通常どおりの質問が行われます。
 
-When the files came from another release, the next line says how to go back:
+ファイルが別のリリースから来た場合は、次の行で戻し方が示されます。
 
 ```
   To go back: `aidlc config --pin 2.9.0 --yes` (this pins the version for everyone on the project; `aidlc config --unpin` removes the pin).
 ```
 
-On a project that is already pinned it gives only the `--pin` part. On a
-copied project the line names the earlier release's file instead: get
-`aidlc-copy-runtime-2.9.0.tar.gz` and its `.sha256` into one folder, then run
-`bun .claude/tools/aidlc.ts config --from <that file> --yes`. A harness
-added beside open work comes from the files you name, and its line names the
-folder it added (`Added .codex. Your open work (...) carries on.`); no command
-removes a harness, so there is no undo line.
+すでにピン留めされているプロジェクトでは、`--pin` の部分だけが示されます。コピーしたプロジェクトでは、代わりに以前のリリースのファイルが示されます。`aidlc-copy-runtime-2.9.0.tar.gz` とその `.sha256` を 1 つのフォルダーに入れてから、`bun .claude/tools/aidlc.ts config --from <that file> --yes` を実行してください。開いている作業と並べて追加したハーネスは、指定したファイルから取り込まれ、その行では追加したフォルダーが示されます（`Added .codex. Your open work (...) carries on.`）。ハーネスを削除するコマンドはないため、元に戻す行はありません。
 
-Refresh preserves:
+更新では次のものを保持します。
 
-- all workspace records, audit shards, knowledge, and other project files
-  absent from the shipped projection
-- existing `aidlc/active-space` and space memory files, which are
-  project-owned seeds
-- every non-identity sibling key in mutable `tools/data/harness.json`,
-  including plugin selection and future policy records
-- plugin-composed files and recorded stage contributions, then regenerates
-  graph, runner, scope, and compiled table surfaces
-- upstream-authored orchestrator prose while rebuilding its compiled stage and
-  scope regions from the preserved project composition
-- what a host tool installs for itself inside a folder AI-DLC manages, such as
-  the `package.json`, `.gitignore`, and `node_modules/` (links included)
-  opencode writes under `.opencode/` at its first start: config never copies,
-  owns, or removes these
-- the agent files in `.kiro/agents` that Kiro CLI upgraded for its 3.0 engine
-  (Kiro keeps each file it replaced beside it as `.json.bak`, then
-  `.json.bak.1` and on): a refresh keeps them as Kiro left them, says so in one
-  line, and brings in the rest of the release; `aidlc config --harness kiro-v2
-  --force` takes the release's versions, and Kiro upgrades them again the next
-  time it starts on its 3.0 engine. When the release changes what such a file
-  allows (it drops an allow entry or adds a deny entry the file Kiro upgraded
-  from had), the refresh puts the release's version back by itself, provided
-  Kiro upgrades it again by itself at its next 3.0 start (its auto-upgrade is
-  on: `chat.enableAutoAgentUpgrade` is true in your own Kiro settings, as
-  **Enable auto-upgrade** at Kiro's first 3.0 start saves it), that file is
-  the one AI-DLC wrote there, and nobody changed Kiro's copy since Kiro wrote it
-  (the `kiroUpgrade` stamp Kiro writes into the file still matches it; for a
-  copy Kiro did not stamp, every field but `tools`, `hooks` and `permissions`
-  is still the file's own); otherwise it keeps Kiro's copy and says, in one line,
-  that the file still allows what an older release allowed and that `--force`
-  takes the release's version. When the release no longer ships such a file,
-  the file Kiro upgraded from is the one AI-DLC wrote there and its stamp still
-  matches, the refresh removes it like any file the release no longer ships,
-  keeps Kiro's backups of it, and says so in one line
+- 同梱のプロジェクションに含まれない、すべてのワークスペースの記録、監査ログのシャード、ナレッジ、その他のプロジェクトファイル
+- 既存の `aidlc/active-space` とスペースのメモリファイル（プロジェクト所有のシード）
+- 可変の `tools/data/harness.json` 内の、識別情報以外のすべての兄弟キー（プラグインの選択や将来のポリシー記録を含む）
+- プラグインが合成したファイルと記録されたステージへの寄与。そのうえで、グラフ、ランナー、スコープ、コンパイル済みの表を再生成する
+- 上流で作成されたオーケストレーターの散文。保持されたプロジェクトの構成から、コンパイル済みのステージとスコープの領域を再構築する
+- AI-DLC が管理するフォルダー内に、ホストのツールが自分用にインストールするもの。たとえば opencode が初回起動時に `.opencode/` 配下に書き込む `package.json`、`.gitignore`、`node_modules/`（リンクを含む）。config がこれらをコピー、所有、削除することはない
+- Kiro CLI が 3.0 エンジン用にアップグレードした `.kiro/agents` 内のエージェントファイル（Kiro は置き換えた各ファイルをその隣に `.json.bak`、次に `.json.bak.1` というように残します）。更新ではそれらを Kiro が残したまま保持し、その旨を 1 行で伝え、リリースの残りを取り込みます。`aidlc config --harness kiro-v2
+  --force` を使うとリリースのバージョンが採用され、Kiro は次に 3.0 エンジンで起動したときに再びそれらをアップグレードします。リリースがそのようなファイルの許可内容を変更する場合（Kiro のアップグレード元のファイルにあった allow エントリを削除するか、deny エントリを追加する場合）、更新は次の条件をすべて満たすときに限り、リリースのバージョンを自動的に元に戻します。Kiro が次の 3.0 起動時に自動的に再アップグレードすること（自動アップグレードが有効、つまり自分の Kiro 設定で `chat.enableAutoAgentUpgrade` が true であること。Kiro の初回 3.0 起動時の **Enable auto-upgrade** で保存されます）、そのファイルが AI-DLC がそこに書き込んだものであること、Kiro が書き込んで以降誰も Kiro のコピーを変更していないこと（Kiro がファイルに書き込む `kiroUpgrade` スタンプがまだ一致していること。Kiro がスタンプしていないコピーの場合は、`tools`、`hooks`、`permissions` 以外のすべてのフィールドがまだファイル本来のものであること）です。それ以外の場合は Kiro のコピーを保持し、そのファイルが古いリリースの許可内容をまだ許可していること、および `--force` でリリースのバージョンを採用できることを 1 行で伝えます。リリースがそのようなファイルを同梱しなくなり、Kiro のアップグレード元のファイルが AI-DLC がそこに書き込んだものでスタンプもまだ一致している場合、更新は、リリースが同梱しなくなった他のファイルと同様にそのファイルを削除し、Kiro によるバックアップは残し、その旨を 1 行で伝えます
 
-Under `aidlc/`, install and refresh copy only those seeds. The clone identity,
-sessions, engine health, and other per-machine state are never copied from the
-installed runtime or recorded in the install baseline.
+`aidlc/` 配下では、インストールと更新はそれらのシードだけをコピーします。クローンの識別情報、セッション、エンジンの健全性、その他のマシンごとの状態は、インストール済みのランタイムからコピーされることも、インストールのベースラインに記録されることもありません。
 
-Locally modified framework-owned files conflict against the prior baseline.
-`--force` replaces those files with the refreshed candidate, including local
-edits to hand-authored orchestrator prose. It does not claim unrelated
-project content. Line endings alone are not a local change: Git rewrites them
-on checkout (Git for Windows checks LF files out as CRLF by default), so a
-clone, branch switch, stash pop, or new worktree of a configured project
-refreshes without conflicts. `aidlc doctor` names the files a refresh would
-refuse in its `AI-DLC files` row.
+ローカルで変更されたフレームワーク所有のファイルは、以前のベースラインと照らして競合となります。`--force` は、手書きのオーケストレーターの散文へのローカルな編集も含め、それらのファイルを更新後の候補で置き換えます。無関係なプロジェクトの内容の所有を主張することはありません。改行コードの違いだけではローカルな変更とはみなしません。Git はチェックアウト時に改行コードを書き換える（Git for Windows は既定で LF のファイルを CRLF としてチェックアウトする）ため、設定済みプロジェクトのクローン、ブランチの切り替え、stash pop、新しい worktree は競合なしで更新されます。`aidlc doctor` は、更新が拒否するファイルを `AI-DLC files` の行で示します。
 
-One line is the exception. Claude Code's `.claude/CLAUDE.md` and AI-DLC's part
-of Copilot's `AGENTS.md` open with a `# AI-DLC` title (earlier releases shipped
-`# Project Name <!-- Replace with your project name -->` there). When the only
-change is a line written in the title's place, a refresh keeps that line and
-updates the rest, with no conflict. Any other change conflicts as above. The
-project's name, notes and rules belong in
-`aidlc/spaces/<space>/memory/project.md`, which every tool reads.
+1 行だけ例外があります。Claude Code の `.claude/CLAUDE.md` と、Copilot の `AGENTS.md` のうち AI-DLC の部分は、`# AI-DLC` というタイトルで始まります（以前のリリースではそこに `# Project Name <!-- Replace with your project name -->` を同梱していました）。変更がタイトルの位置に書かれた行だけの場合、更新はその行を残して残りを更新し、競合にはなりません。それ以外の変更は上記のとおり競合になります。プロジェクトの名前、メモ、ルールは、すべてのツールが読み取る `aidlc/spaces/<space>/memory/project.md` に書いてください。
 
-An unchanged framework file the new release no longer ships is removed, and
-config names each one: the refresh prints `Removed N files that are no longer
-part of AI-DLC <version>:` and the list, and `--dry-run` prints the same list
-as `Will remove`. Several files in one folder show as one line. When git
-tracks every removed file, config also names `git restore <path>` to get one
-back; later refreshes leave a restored file alone. In JSON these actions carry
-`detail: "no longer shipped"`.
+新しいリリースが同梱しなくなった、変更されていないフレームワークのファイルは削除され、config はそれぞれの名前を示します。更新では `Removed N files that are no longer
+part of AI-DLC <version>:` とその一覧を表示し、`--dry-run` は同じ一覧を `Will remove` として表示します。1 つのフォルダー内の複数のファイルは 1 行で表示されます。削除されたファイルをすべて git が追跡している場合、config はファイルを 1 つ戻すための `git restore <path>` も示します。その後の更新では、戻したファイルには触れません。JSON では、これらのアクションに `detail: "no longer shipped"` が付きます。
 
-`.claude/settings.json` belongs to the project; AI-DLC contributes entries
-rather than owning the whole file. Release refreshes, including those
-accompanying provider, scope, or model answers, merge those entries without
-ownership conflicts, and `--force` does not change this.
+`.claude/settings.json` はプロジェクトに属します。AI-DLC はファイル全体を所有するのではなく、エントリを提供します。リリースによる更新（プロバイダー、スコープ、モデルの回答に伴うものを含む）は、所有権の競合なしにそれらのエントリをマージし、`--force` でもこれは変わりません。
 
-For Claude, refresh restores AI-DLC hook registrations to their shipped
-events, matchers, and commands, then appends your own hook groups. It puts the
-shipped `permissions.allow` entries first and keeps your additional allow
-entries, `deny`, `ask`, and other permission keys. Retired shipped allow
-entries are not removed automatically. A status line your team set there is
-kept. AI-DLC's own `statusLine` is no longer shipped in this file: a refresh
-takes it out, and each clone that had it keeps it in that person's own
-`.claude/settings.local.json` (said once when it covers their own status line).
-Otherwise it appears only when someone turns it on with `--statusline on`.
-`companyAnnouncements`
-is refreshed when absent or still matching its shipped baseline, otherwise
-your value is kept. Delete either custom key and refresh to take the shipped
-one. Environment and other top-level settings (including `disableAllHooks`)
-stay yours, except for values attributed to recorded provider or project
-answers.
+Claude では、更新は AI-DLC のフック登録を同梱どおりのイベント、マッチャー、コマンドに戻し、その後にあなた自身のフックグループを追加します。同梱の `permissions.allow` エントリを先頭に置き、あなたが追加した allow エントリ、`deny`、`ask`、その他の許可関連のキーを保持します。廃止された同梱の allow エントリが自動的に削除されることはありません。チームがそこに設定したステータスラインは保持されます。AI-DLC 自身の `statusLine` はこのファイルに同梱されなくなりました。更新ではそれを取り除き、それを持っていた各クローンでは、その人自身の `.claude/settings.local.json` に保持します（その人自身のステータスラインを覆う場合は一度だけ伝えます）。
+それ以外の場合は、誰かが `--statusline on` で有効にしたときにだけ表示されます。
+`companyAnnouncements` は、存在しない場合か、同梱のベースラインと一致したままの場合に更新され、それ以外の場合はあなたの値が保持されます。どちらかのカスタムキーを削除して更新すると、同梱の値が採用されます。環境やその他のトップレベルの設定（`disableAllHooks` を含む）は、記録されたプロバイダーやプロジェクトの回答に由来する値を除き、あなたのものとして残ります。
 
-`.codex/config.toml` belongs to the project as well; AI-DLC contributes its
-settings key by key: `developer_instructions`, `sandbox_mode`,
-`suppress_unstable_features_warning`, `tool_output_token_limit`, and the keys
-it ships in the `[shell_environment_policy]`, `[sandbox_workspace_write]`, `[agents]`,
-`[features]`, and `[tools]` tables. AI-DLC's `[tui]` `status_line` is the
-project's choice (`--statusline on|off`): a refresh never ships, retires or
-changes it. A refresh, including those
-accompanying provider, scope, or model answers, changes only those keys and
-keeps every other byte: your own keys (also inside AI-DLC's tables), your own
-tables (such as `[agents.<role>]` or `[mcp_servers.<name>]`), comments, order,
-and spelling. An AI-DLC value nobody changed takes the release's value; a value
-you changed stays yours, with a note when a release ships a different one
-(delete the key and refresh to take it); a deleted AI-DLC key comes back, with
-a note. An `AIDLC_RULES_DIR` value an earlier release shipped is emptied, at
-whichever space a switch left it, and your own keys in its table stay; a folder
-of your own there stays yours. A project that
-already has its own `.codex/config.toml` keeps it on first install, and AI-DLC
-adds its settings. A file the refresh cannot merge safely (it does not parse,
-or uses one of AI-DLC's table names for something else, such as an array of
-tables) still reports a conflict; `--force` then restores AI-DLC's tables while
-retaining unrelated project-owned fields. An explicit `--from` selects that
-source instead of the project's copy.
+`.codex/config.toml` もプロジェクトに属します。AI-DLC は設定をキー単位で提供します。`developer_instructions`、`sandbox_mode`、`suppress_unstable_features_warning`、`tool_output_token_limit`、および `[shell_environment_policy]`、`[sandbox_workspace_write]`、`[agents]`、`[features]`、`[tools]` の各テーブルで同梱しているキーです。AI-DLC の `[tui]` の `status_line` はプロジェクトの選択（`--statusline on|off`）であり、更新でそれを同梱、廃止、変更することはありません。プロバイダー、スコープ、モデルの回答に伴うものを含め、更新はそれらのキーだけを変更し、他のバイトはすべて保持します。保持されるのは、あなた自身のキー（AI-DLC のテーブル内のものも含む）、あなた自身のテーブル（`[agents.<role>]` や `[mcp_servers.<name>]` など）、コメント、順序、表記です。誰も変更していない AI-DLC の値はリリースの値を採用します。あなたが変更した値はあなたのものとして残り、リリースが異なる値を同梱している場合は注記が付きます（キーを削除して更新すると採用されます）。削除された AI-DLC のキーは注記付きで復元されます。以前のリリースが同梱していた `AIDLC_RULES_DIR` の値は、切り替えによってどのスペースに残っていても空にされ、そのテーブル内のあなた自身のキーは残ります。そこにあるあなた自身のフォルダーもあなたのものとして残ります。すでに独自の `.codex/config.toml` を持っているプロジェクトでは、初回インストール時にそれを保持し、AI-DLC は自分の設定を追加します。更新で安全にマージできないファイル（解析できない、または AI-DLC のテーブル名をテーブルの配列など別の用途に使っている）は引き続き競合として報告されます。その場合、`--force` は無関係なプロジェクト所有のフィールドを保持しつつ AI-DLC のテーブルを復元します。明示的な `--from` を指定すると、プロジェクトのコピーではなくそのソースが選ばれます。
 
-Human output prints `Note:` when AI-DLC entries in `.claude/settings.json` or
-`.codex/config.toml` were restored or added, and when your own value for one of
-them (a custom Claude announcement, or a Codex key) was kept
-while this release ships a different one; JSON output exposes the same
-messages in `data.notes`. To restore them, use `aidlc config --harness claude`
-or `aidlc config --harness codex`, not the bare interactive setup walk.
-Copy-channel projects also pass `--from <the runtime/<harness> root you copied
-from>`.
+`.claude/settings.json` や `.codex/config.toml` の AI-DLC のエントリが復元または追加された場合、また、このリリースが異なる値を同梱しているのにそのいずれかに対するあなた自身の値（カスタムの Claude のアナウンス、または Codex のキー）が保持された場合、人間向けの出力には `Note:` が表示されます。JSON 出力では同じメッセージが `data.notes` に含まれます。これらを復元するには、引数なしの対話型セットアップではなく、`aidlc config --harness claude` または `aidlc config --harness codex` を使ってください。
+コピーチャネルのプロジェクトでは、さらに `--from <the runtime/<harness> root you copied
+from>` も渡します。
 
-`opencode.json` belongs to the team: config adds AI-DLC's entries to it and
-keeps every other key, value, comment, and line. Provider answers edit only
-the entries AI-DLC wrote.
+`opencode.json` はチームに属します。config は AI-DLC のエントリをそこに追加し、他のキー、値、コメント、行はすべて保持します。プロバイダーの回答で編集されるのは、AI-DLC が書き込んだエントリだけです。
 
 ### Root Integrations and Ownership
 
-| Surface | Harnesses | Policy |
+| 設定面 | ハーネス | ポリシー |
 |---------|-----------|--------|
-| `.gitignore` | All | Own one marked AI-DLC block containing the union of installed harnesses' shipped entries; preserve every byte outside it |
-| `.mcp.json` / `mcpServers` | Claude | Add or remove only consented, baseline-owned entries; preserve user keys and overrides |
-| `.kiro/settings/mcp.json` / `mcpServers` | Kiro CLI | Per server, as `.mcp.json`: follow the release only for AI-DLC's servers you have not changed; keep the servers you add and a shipped server you turn on; a file the project already had at setup is merged, not refused |
-| `AGENTS.md` | Kiro CLI, Kiro IDE, Codex, Cursor, OpenCode, Copilot | One marked block; harness-neutral and shared (`shared: "identical"`) except Copilot, whose block carries its `@`-imports; preserve project instructions |
-| `opencode.json` | OpenCode | `json-entries`: add AI-DLC's entries (`$schema`, its `skills.paths` and `instructions` strings, its `permission` rules) only where absent, its rules for the team's own commands (the asks before `rm -r...` and `git push`) first in a map so the team's rules after them still decide; keep the team's model, provider, own instructions and rules, comments, and layout; record what AI-DLC wrote, follow or retire only entries still holding that value. A file AI-DLC wrote whole in an earlier release is adopted. The copy runtime leaves this file out; its setup (or the first session where setup never ran) adds AI-DLC's part |
-| `.vscode/settings.json` | Copilot | `jsonc-settings`: add `chat.agent.maxRequests` (200) only when the project does not set it; never change a value someone else set, other keys, or comments; record only what AI-DLC added, and on retirement remove it only while it holds the value AI-DLC wrote; once added, a key the team takes out of a file it keeps is not added back. The copy runtime leaves this file out |
+| `.gitignore` | すべて | インストールされたハーネスの同梱エントリを合わせたものを含む、マーク付きの AI-DLC ブロックを 1 つ所有する。その外側のバイトはすべて保持する |
+| `.mcp.json` / `mcpServers` | Claude | 同意済みでベースラインが所有するエントリだけを追加・削除する。ユーザーのキーと上書きは保持する |
+| `.kiro/settings/mcp.json` / `mcpServers` | Kiro CLI | `.mcp.json` と同様にサーバー単位で扱う。変更していない AI-DLC のサーバーだけリリースに追従し、追加したサーバーや有効にした同梱サーバーは保持する。セットアップ時にプロジェクトがすでに持っていたファイルは拒否せずにマージする |
+| `AGENTS.md` | Kiro CLI, Kiro IDE, Codex, Cursor, OpenCode, Copilot | マーク付きのブロックを 1 つ。ハーネスに依存せず共有される（`shared: "identical"`）。ただし Copilot は例外で、そのブロックには `@` によるインポートが含まれる。プロジェクトの指示は保持する |
+| `opencode.json` | OpenCode | `json-entries`: AI-DLC のエントリ（`$schema`、その `skills.paths` と `instructions` の文字列、その `permission` ルール）を存在しない場合にだけ追加する。チーム自身のコマンドに対するルール（`rm -r...` と `git push` の前の確認）はマップの先頭に置き、その後のチームのルールが引き続き判定できるようにする。チームのモデル、プロバイダー、独自の指示とルール、コメント、レイアウトは保持する。AI-DLC が書き込んだものを記録し、まだその値を保っているエントリだけを追従または廃止する。以前のリリースで AI-DLC がファイル全体を書き込んだものは引き継ぐ。コピーランタイムにはこのファイルは含まれず、そのセットアップ（またはセットアップが実行されなかった場合は最初のセッション）で AI-DLC の部分を追加する |
+| `.vscode/settings.json` | Copilot | `jsonc-settings`: プロジェクトが `chat.agent.maxRequests` を設定していない場合にだけ（200 で）追加する。他者が設定した値、他のキー、コメントは決して変更しない。AI-DLC が追加したものだけを記録し、廃止時には AI-DLC が書き込んだ値を保っている間だけ削除する。一度追加した後、チームが保持しているファイルからそのキーを取り除いた場合は再追加しない。コピーランタイムにはこのファイルは含まれない |
 
-**More than one harness in a project.** Harnesses may coexist when their engine
-directories differ and they do not share an exclusive managed block. `AGENTS.md`
-is neutral and byte-identical (`shared: "identical"`) across Kiro CLI, Kiro IDE,
-Codex, Cursor, and OpenCode, so any of those with distinct engine directories
-may coexist. Codex's harness-specific onboarding is injected through
-`developer_instructions` in the project `.codex/config.toml` when the project is
-trusted, with `.codex/onboarding.md` as its readable copy.
-Claude Code may coexist with any other harness. Copilot's `AGENTS.md`
-stays exclusive: pairing it with another harness that ships that block is refused
-with `cannot coexist in one project`, regardless of which is installed first.
-Kiro CLI and Kiro IDE still share `.kiro/`, and OpenCode and Copilot share `.aidlc/`,
-so those pairs cannot coexist. Kiro CLI and Kiro IDE can replace each other
-instead: in a project that has one of them, `aidlc config --harness kiro`
-(or `--harness kiro-v2`) switches `.kiro/` to the other in place. A plain
-`aidlc config` refresh keeps whichever Kiro harness the project has; on a Kiro
-CLI (V2) project, `--harness kiro` switches it to Kiro (at a terminal it asks
-first; with `--yes` it says so once and switches; without a terminal, or
-under `--quiet` or `--json`, it changes nothing and prints both commands, the
-switch with `--yes` and the refresh with `--harness kiro-v2`; a dry run's
-`--plan-token` applies the switch as planned), so a script that refreshes
-a Kiro CLI (V2) project passes `--harness kiro-v2`. AI-DLC 2.11.3 and
-earlier, and the 2.11.4 previews of 2026-11-04 and 2026-11-05, read the two
-names the other way (Kiro CLI (V2) is `--harness kiro`, Kiro is
-`--harness kiro-ide`, and `kiro-v2` is unknown); `--harness kiro-ide` names
-Kiro on those releases and on this one. When a copied project's own tool from 2.11.1 or
-later among them hands a refresh to newer files' own config ([Copy Channel](#copy-channel)),
-`--harness kiro` reaches it as Kiro CLI (V2), so on a Kiro project the switch
-is asked the same way, in that tool's names: at a terminal it asks first;
-with `--yes` it says so once and switches; without a terminal, or under
-`--quiet` or `--json`, it changes nothing and prints both commands for the
-tool you ran, the switch with `--yes` and the refresh with
-`--harness kiro-ide`; a dry run's `--plan-token` applies the switch as
-planned. A copied tool from 2.11.0 or earlier hands no refresh over: it
-reads `--harness kiro` itself, as Kiro CLI (V2), and asks none of this. The
-switch is a
-refresh planned from the installed row's ownership baseline: it removes the files
-only that row shipped, keeps `aidlc/`, reports a locally modified file it would
-replace or remove as a conflict, and, like any refresh, is done while work is open.
-An agent file in `.kiro/agents` that Kiro CLI upgraded for its 3.0 engine is not
-a local change when the file Kiro upgraded from is the one AI-DLC wrote and
-nobody changed Kiro's copy since (its `kiroUpgrade` stamp still matches it):
-switching to Kiro removes it with the rest, keeps Kiro's `.json.bak`
-backups, and says so in one line. A copy Kiro did not stamp stays a conflict.
-Switching to Kiro names every `.kiro/hooks/*.json` file AI-DLC does not
-own: Kiro runs those on its v3 engine (`kiro-cli --v3`) and in Kiro IDE. When there is one, the switch applies
-only with your approval of that exact set of files: answer the prompt in a
-terminal, or run the switch with `--dry-run`, review the files, and apply it with
-the `--plan-token` that dry run prints. A hook file AI-DLC does not own added, removed, renamed, or
-changed after that review stops the switch, including one that appears before
-the switch takes its transaction lock or while it commits its files, which rolls
-the switch back; so does a change that leaves a dropped plugin's own
-registration, which the switch recognises and does not name, no longer
-recognised as that plugin's (one removed leaves Kiro less to run, so it does not
-stop the switch). The switch refuses when `.kiro/hooks` is
-a link or a file (before reading anything under it), or when a hook entry
-AI-DLC does not own is a link or anything other than a regular file, rather
-than follow it. It needs that baseline
-(`.kiro/tools/data/aidlc-manifest.json`). Without one, refresh the installed row
-with `aidlc config --harness <installed>` first; the same holds for a baseline
-recorded before AI-DLC listed only the files it ships there, which a refresh
-brings up to date. The switch never changes a damaged one: move it aside
-yourself (the printed step names its full path), then run that refresh. A
-switch that clears the trust review names the `config trust --harness <row>`
-command that records it again. A release passed with `--from`
-and no `--harness` never switches the row. OpenCode and Copilot are not switched
-this way. For an older installed harness whose root block
-is not shared, the `predates shared onboarding` error suggests refreshing it with
-`aidlc config --harness <name>` first. This is a hint for an older sibling, not a
-promise that refreshing enables coexistence: if it still refuses afterwards,
-the sibling's block is exclusive. Copilot's block stays exclusive after refresh.
-A refresh source that no longer
-declares `AGENTS.md` shared is also refused while another installed harness shares
-it: `refusing to refresh <harness> from a release whose AGENTS.md is not shared`.
-Use a release that declares the block shared; `--force` cannot bypass this guard.
-A shared `AGENTS.md` block owned by a sibling from a different release is a
-conflict, not a deferred update. The error names the refresh order: refresh the
-selected harness from the same release as its sibling, or refresh the sibling
-from the selected release first.
-Cursor's manual-copy installer is single-harness (private `AIDLC CURSOR` markers,
-no `aidlc config` ownership baseline); multi-harness projects must add Cursor with
-`aidlc config --harness cursor` instead.
+**1 つのプロジェクトに複数のハーネスを置く場合。** ハーネスは、エンジンのディレクトリが異なり、排他的な管理ブロックを共有しない場合に共存できます。`AGENTS.md` は Kiro CLI、Kiro IDE、Codex、Cursor、OpenCode の間で中立かつバイト単位で同一（`shared: "identical"`）なので、エンジンのディレクトリが異なるものどうしであれば共存できます。Codex 固有のオンボーディングは、プロジェクトが信頼されている場合にプロジェクトの `.codex/config.toml` の `developer_instructions` を通じて注入され、`.codex/onboarding.md` がその読める写しです。
+Claude Code は他のどのハーネスとも共存できます。Copilot の `AGENTS.md` は排他的なままです。そのブロックを同梱する別のハーネスと組み合わせると、どちらを先にインストールしたかにかかわらず `cannot coexist in one project` で拒否されます。
+Kiro CLI と Kiro IDE は引き続き `.kiro/` を共有し、OpenCode と Copilot は `.aidlc/` を共有するため、これらの組み合わせは共存できません。Kiro CLI と Kiro IDE は代わりに互いを置き換えることができます。どちらか一方があるプロジェクトで `aidlc config --harness kiro`（または `--harness kiro-v2`）を実行すると、`.kiro/` がその場でもう一方に切り替わります。素の `aidlc config` による更新では、プロジェクトにある方の Kiro ハーネスが維持されます。Kiro CLI (V2) のプロジェクトでは、`--harness kiro` で Kiro に切り替わります（ターミナルでは先に確認を求めます。`--yes` を付けると一度だけその旨を伝えて切り替えます。ターミナルがない場合や `--quiet` または `--json` の場合は何も変更せず、`--yes` 付きの切り替えと `--harness kiro-v2` による更新の両方のコマンドを表示します。ドライランの `--plan-token` は計画どおりに切り替えを適用します）。そのため、Kiro CLI (V2) のプロジェクトを更新するスクリプトでは `--harness kiro-v2` を渡します。AI-DLC 2.11.3 以前、および 2026-11-04 と 2026-11-05 の 2.11.4 プレビューでは、2 つの名前を逆に読みます（Kiro CLI (V2) が `--harness kiro`、Kiro が `--harness kiro-ide` で、`kiro-v2` は未知の名前）。`--harness kiro-ide` は、それらのリリースでも本リリースでも Kiro を指します。そのうち 2.11.1 以降のリリースで、コピーしたプロジェクト自身のツールが更新をより新しいファイル自身の config に引き渡す場合（[コピーチャネル](#copy-channel)）、`--harness kiro` は Kiro CLI (V2) として届きます。そのため Kiro のプロジェクトでは、切り替えはそのツールの名前で同じように確認されます。ターミナルでは先に確認を求めます。`--yes` を付けると一度だけその旨を伝えて切り替えます。ターミナルがない場合や `--quiet` または `--json` の場合は何も変更せず、実行したツール向けに、`--yes` 付きの切り替えと `--harness kiro-ide` による更新の両方のコマンドを表示します。ドライランの `--plan-token` は計画どおりに切り替えを適用します。2.11.0 以前のコピーしたツールは更新を引き渡しません。`--harness kiro` を自分で Kiro CLI (V2) として読み、こうした確認は行いません。
+切り替えは、インストールされている行の所有権ベースラインから計画される更新です。その行だけが同梱していたファイルを削除し、`aidlc/` は保持し、置き換えまたは削除することになるローカルで変更されたファイルは競合として報告し、他の更新と同様に作業が開いている間でも実行されます。
+Kiro CLI が 3.0 エンジン用にアップグレードした `.kiro/agents` 内のエージェントファイルは、Kiro のアップグレード元のファイルが AI-DLC が書き込んだもので、その後誰も Kiro のコピーを変更していない（`kiroUpgrade` スタンプがまだ一致している）場合、ローカルな変更とはみなされません。Kiro への切り替えではそれを他のファイルと一緒に削除し、Kiro の `.json.bak` バックアップは残し、その旨を 1 行で伝えます。Kiro がスタンプしていないコピーは競合のままです。
+Kiro への切り替えでは、AI-DLC が所有していない `.kiro/hooks/*.json` ファイルをすべて示します。Kiro はそれらを v3 エンジン（`kiro-cli --v3`）と Kiro IDE で実行します。そのようなファイルがある場合、切り替えはそのファイル一式をあなたが承認した場合にのみ適用されます。ターミナルでプロンプトに回答するか、`--dry-run` で切り替えを実行してファイルを確認し、そのドライランが表示する `--plan-token` で適用してください。確認後に AI-DLC が所有していないフックファイルが追加、削除、名前変更、変更されると、切り替えは停止します。切り替えがトランザクションのロックを取得する前や、ファイルをコミットしている最中に現れたものも含まれ、その場合は切り替えをロールバックします。削除されたプラグイン自身の登録（切り替えはこれを認識し、名前を示しません）が、そのプラグインのものとして認識されなくなる変更でも同様です（削除によって Kiro が実行するものが減る場合は切り替えを止めません）。`.kiro/hooks` がリンクやファイルである場合（その配下を読む前に判定）、または AI-DLC が所有していないフックのエントリがリンクや通常ファイル以外のものである場合、切り替えはそれをたどらずに拒否します。切り替えにはそのベースライン（`.kiro/tools/data/aidlc-manifest.json`）が必要です。ベースラインがない場合は、まず `aidlc config --harness <installed>` でインストールされている行を更新してください。AI-DLC が同梱するファイルだけをそこに記録するようになる前に記録されたベースラインも同様で、更新によって最新の状態になります。切り替えが壊れたベースラインを変更することはありません。表示された手順にフルパスが示されるので、自分でそれを別の場所に移してから、その更新を実行してください。信頼の確認をクリアする切り替えでは、それを再び記録するための `config trust --harness <row>` コマンドが示されます。`--from` で渡したリリースに `--harness` がない場合、行が切り替わることはありません。OpenCode と Copilot はこの方法では切り替えられません。
+ルートのブロックが共有されていない古いインストール済みハーネスについては、`predates shared onboarding` エラーが、まず `aidlc config --harness <name>` で更新するよう提案します。これは古い兄弟ハーネス向けのヒントであり、更新すれば共存できるという約束ではありません。更新後も拒否される場合、その兄弟のブロックは排他的です。Copilot のブロックは更新後も排他的なままです。
+`AGENTS.md` を共有と宣言しなくなった更新元は、別のインストール済みハーネスがそれを共有している間は拒否されます: `refusing to refresh <harness> from a release whose AGENTS.md is not shared`。
+ブロックを共有と宣言しているリリースを使ってください。`--force` でもこのガードは回避できません。
+別のリリースの兄弟ハーネスが所有する共有の `AGENTS.md` ブロックは、延期された更新ではなく競合です。エラーは更新の順序を示します。選択したハーネスを兄弟と同じリリースから更新するか、先に兄弟を選択したリリースから更新してください。
+Cursor の手動コピー用インストーラーは単一ハーネス用です（専用の `AIDLC CURSOR` マーカーを使い、`aidlc config` の所有権ベースラインはありません）。複数ハーネスのプロジェクトでは、代わりに `aidlc config --harness cursor` で Cursor を追加する必要があります。
 
-`.gitignore` declares `shared: "union"`, so `aidlc config` writes one block combining every installed
-harness's shipped entries; extra entries appear under `# <harness> harness`.
-Adding a harness combines an unchanged sibling-owned block when that sibling's
-shipped block copy is available (`merge (combined with <harness>)`); older
-installs without that copy keep ownership until refreshed. Each harness records
-the same combined block hash on its next config invocation.
-Once more than one harness is present, every `aidlc config` invocation needs
-`--harness <name>`, except recording or clearing a bypass on its own.
+`.gitignore` は `shared: "union"` を宣言しているため、`aidlc config` はインストールされたすべてのハーネスの同梱エントリを組み合わせたブロックを 1 つ書き込みます。追加のエントリは `# <harness> harness` の下に表示されます。
+ハーネスを追加すると、兄弟ハーネスの同梱ブロックの写しが利用できる場合、その兄弟が所有する未変更のブロックと結合されます（`merge (combined with <harness>)`）。その写しを持たない古いインストールでは、更新されるまで所有権を保持します。各ハーネスは、次に config を呼び出したときに同じ結合済みブロックのハッシュを記録します。
+複数のハーネスがある場合、すべての `aidlc config` の呼び出しで `--harness <name>` が必要です。ただし、バイパスだけを記録またはクリアする場合は例外です。
 
-`aidlc doctor` compares the release each harness tree records in
-`tools/data/aidlc-stamp.json`. When they differ it warns `Harness trees on
-different releases`, names each tree's release, and gives the commands that
-bring the others level. A pinned project's trees are brought to the pin, as
-config refreshes every tree to it; on a copied project that is
-`bun <harness-dir>/tools/aidlc.ts config --harness <name> --download`. Without
-a pin, natively that is `aidlc config --harness <name>` for each tree not on the
-engine's release. On a copied project each tree runs its own release, so the
-others are refreshed from the newest tree's release, its
-`aidlc-copy-runtime-<version>.tar.gz` passed with `--from`; a tree no config run has
-recorded first takes one `--download` refresh at its own release. Open work
-carries on through the refresh, so there is no need to wait for it to finish.
+`aidlc doctor` は、各ハーネスツリーが `tools/data/aidlc-stamp.json` に記録しているリリースを比較します。異なる場合は `Harness trees on
+different releases` と警告し、各ツリーのリリースを示し、他のツリーをそろえるためのコマンドを示します。ピン留めされたプロジェクトでは、config がすべてのツリーをピンに合わせて更新するのと同様に、ツリーをピンにそろえます。コピーしたプロジェクトでは、それは `bun <harness-dir>/tools/aidlc.ts config --harness <name> --download` です。ピンがない場合、ネイティブではエンジンのリリースにないツリーごとに `aidlc config --harness <name>` を実行します。コピーしたプロジェクトでは各ツリーが自分のリリースを実行するため、他のツリーは最も新しいツリーのリリースから、その `aidlc-copy-runtime-<version>.tar.gz` を `--from` で渡して更新します。まだどの config の実行も記録していないツリーは、まず自分のリリースで `--download` による更新を 1 回行います。開いている作業は更新をまたいで続くため、完了を待つ必要はありません。
 
-AI-DLC's `.gitignore` lines are its own entries only. Earlier releases also
-put a generic template (logs, `node_modules`, `dist`, editor files) at the top
-of that block; the first refresh after upgrading keeps those lines in your part
-of the file, above AI-DLC's, and says so once, so nothing they ignored becomes
-visible to git. A copy that config never ran in gets the same AI-DLC block, and
-an `AGENTS.md` block, from the copy's own `tools/data/root-blocks/` when its
-first chat starts or work is first created; config later treats a block that
-is exactly what a release shipped as its own. opencode's entries in
-`opencode.json` arrive from the same folder at the same moment.
+AI-DLC の `.gitignore` の行は、AI-DLC 自身のエントリだけです。以前のリリースでは、そのブロックの先頭に汎用のテンプレート（ログ、`node_modules`、`dist`、エディターのファイル）も置いていました。アップグレード後の最初の更新では、それらの行を AI-DLC の部分より上の、あなたの部分に残し、一度だけその旨を伝えます。そのため、それらが無視していたものが git から見えるようになることはありません。config が一度も実行されていないコピーでは、最初のチャットの開始時または最初に作業を作成したときに、コピー自身の `tools/data/root-blocks/` から同じ AI-DLC ブロックと `AGENTS.md` のブロックが追加されます。その後 config は、リリースが同梱したものと完全に一致するブロックを自分のものとして扱います。`opencode.json` 内の opencode のエントリも、同じタイミングで同じフォルダーから追加されます。
 
-Known unmarked files and JSON entries from historical shipped projections are
-adopted only when their exact recorded SHA-256 signature matches. Any other
-unmarked content is the team's, whatever it says about AI-DLC: config preserves
-it as a prefix and appends a fresh managed block; no rename or deletion is
-needed. A root file that is not valid UTF-8 (`.gitignore`, `AGENTS.md` or any other
-AI-DLC merges into) remains untouched and requires an encoding conversion before
-config can merge it safely.
+過去に同梱したプロジェクションに含まれていた既知のマークなしファイルや JSON のエントリは、記録されている SHA-256 の署名と完全に一致する場合にのみ引き継がれます。それ以外のマークなしの内容は、AI-DLC について何が書かれていてもチームのものです。config はそれを先頭部分として保持し、新しい管理ブロックを後ろに追加します。名前の変更や削除は不要です。有効な UTF-8 でないルートファイル（`.gitignore`、`AGENTS.md`、その他 AI-DLC がマージするもの）は手を付けずに残され、config が安全にマージできるようにするには文字コードの変換が必要です。
 
-Inside a Git repository, config also checks whether a user-owned rule hides
-committed workflow records, including during `--dry-run`. A rule such as
-`aidlc/` does: config still finishes, and ends with a note naming the rule's
-file, line, and hidden record paths (`memory/**`, `codekb/**`, `intents.json`,
-`aidlc-state.md`, and `audit/*.md`), because new ones will not reach teammates;
-files git already tracks keep being committed. The first-run setup and
-`--quiet` output show the same finding. The rule is yours, so config never rewrites or
-refuses it; narrow it if the hiding is not intended. This check skips when Git
-is unavailable or the project is not a Git repository.
+Git リポジトリ内では、config は `--dry-run` の間も含め、ユーザーが所有するルールがコミット済みのワークフローの記録を隠していないかも確認します。`aidlc/` のようなルールは記録を隠します。config はそれでも完了しますが、新しい記録がチームメイトに届かなくなるため、最後にそのルールのファイル、行、隠れている記録のパス（`memory/**`、`codekb/**`、`intents.json`、`aidlc-state.md`、`audit/*.md`）を示す注記を出します。git がすでに追跡しているファイルは引き続きコミットされます。初回セットアップと `--quiet` の出力でも同じ指摘が表示されます。ルールはあなたのものなので、config がそれを書き換えたり拒否したりすることはありません。意図した隠し方でなければ、ルールの範囲を狭めてください。Git が利用できない場合やプロジェクトが Git リポジトリでない場合、このチェックはスキップされます。
 
-`/aidlc --doctor` repeats this check beside the uncommitted-records check.
-Its **Workspace record visibility** advisory names the same rule and hidden
-paths if an ignore rule is added after config succeeds. The warning does not
-change doctor's exit code and is absent when no records are hidden or Git
-cannot check the project.
+`/aidlc --doctor` は、コミットされていない記録のチェックと並んでこのチェックを繰り返します。その **Workspace record visibility** の助言は、config の成功後に ignore ルールが追加された場合に、同じルールと隠れているパスを示します。この警告は doctor の終了コードを変えず、記録が隠れていない場合や Git がプロジェクトを確認できない場合は表示されません。
 
-`--force` can replace a modified, baseline-owned managed block or managed
-harness file. It cannot overwrite a
-user-owned JSON value, including the team's own entries in `opencode.json`. Malformed JSON, malformed or duplicate
-markers, non-regular-file targets, and retired owned content whose integrity
-cannot be proved are hard conflicts.
+`--force` は、変更された、ベースラインが所有する管理ブロックや管理対象のハーネスファイルを置き換えることができます。`opencode.json` 内のチーム自身のエントリを含め、ユーザーが所有する JSON の値を上書きすることはできません。不正な JSON、不正または重複したマーカー、通常ファイルでない対象、整合性を証明できない廃止済みの所有コンテンツは、確定的な競合です。
 
-Every planned path receives one action:
+計画されたすべてのパスには、アクションが 1 つ割り当てられます。
 
-| Action | Meaning |
+| アクション | 意味 |
 |--------|---------|
-| `create` | Add an absent framework path |
-| `update` | Refresh framework-owned bytes |
-| `merge` | Reconcile a managed block, JSON map, or JSON array |
-| `preserve` | Keep current or project-owned bytes |
-| `remove` | Remove content previously owned by the baseline and retired upstream |
-| `conflict` | Refuse because ownership or integrity cannot be proved |
+| `create` | 存在しないフレームワークのパスを追加する |
+| `update` | フレームワーク所有のバイト列を更新する |
+| `merge` | 管理ブロック、JSON のマップ、JSON の配列を調整する |
+| `preserve` | 現在のバイト列やプロジェクト所有のバイト列を保持する |
+| `remove` | 以前ベースラインが所有し、上流で廃止された内容を削除する |
+| `conflict` | 所有権や整合性を証明できないため拒否する |
 
-Successful config prints the host-specific next step:
+config が成功すると、ホストごとの次のステップが表示されます。
 
-| Harness | Next step |
+| ハーネス | 次のステップ |
 |---------|-----------|
-| Claude Code | Open Claude Code in this project (if it is already open in this folder, exit it and start it again) and run `/aidlc --doctor` |
-| Kiro CLI | Run `kiro-cli --v2` (Kiro CLI 2.21.4 or later; for an older one, see [Kiro CLI (V2) prerequisites](harnesses/kiro.md#kiro-cli-v2-prerequisites)), then `/aidlc --doctor` |
-| Kiro IDE | Open this project in Kiro IDE; if the Restricted Mode banner shows at the top of the window and you know what is in this folder, select Manage on it, then Trust; run `Developer: Reload Window` from the Command Palette (Ctrl+Shift+P, or Cmd+Shift+P on macOS), choose the aidlc agent in the chat panel's agent picker, then run `/aidlc --doctor` (in Kiro CLI, start `kiro-cli --v3` in the project instead; if Kiro asks whether you trust this workspace and you know what is in this folder, choose "Trust, continue"; then run `/aidlc --doctor`) |
-| Codex CLI | Run `codex` (when it asks about hooks, choose Trust all and continue), then `$aidlc --doctor` |
-| OpenCode | Run `opencode`, then `/aidlc --doctor` |
+| Claude Code | このプロジェクトで Claude Code を開き（このフォルダーですでに開いている場合は終了して起動し直す）、`/aidlc --doctor` を実行する |
+| Kiro CLI | `kiro-cli --v2` を実行し（Kiro CLI 2.21.4 以降。それより古い場合は [Kiro CLI (V2) の前提条件](harnesses/kiro.md#kiro-cli-v2-prerequisites)を参照）、続いて `/aidlc --doctor` を実行する |
+| Kiro IDE | このプロジェクトを Kiro IDE で開く。ウィンドウ上部に Restricted Mode のバナーが表示され、このフォルダーの中身を把握している場合は、バナーの Manage を選び、続いて Trust を選ぶ。コマンドパレット（Ctrl+Shift+P、macOS では Cmd+Shift+P）から `Developer: Reload Window` を実行し、チャットパネルのエージェントピッカーで aidlc エージェントを選んでから `/aidlc --doctor` を実行する（Kiro CLI では、代わりにプロジェクトで `kiro-cli --v3` を起動する。このワークスペースを信頼するかを Kiro が尋ね、このフォルダーの中身を把握している場合は "Trust, continue" を選ぶ。その後 `/aidlc --doctor` を実行する） |
+| Codex CLI | `codex` を実行し（フックについて尋ねられたら Trust all and continue を選ぶ）、続いて `$aidlc --doctor` を実行する |
+| OpenCode | `opencode` を実行し、続いて `/aidlc --doctor` を実行する |
 
-On the Kiro row (Kiro IDE and Kiro CLI on v3), when Kiro CLI 2.24.1 or later is
-on your PATH and config runs outside Kiro IDE (not in its terminal), the next
-step names Kiro CLI first: start `kiro-cli --v3` in this project, then run
-`/aidlc --doctor`, with the Kiro IDE steps after it.
+Kiro の行（Kiro IDE と v3 上の Kiro CLI）では、Kiro CLI 2.24.1 以降が PATH にあり、config を Kiro IDE の外（そのターミナル以外）で実行した場合、次のステップでは Kiro CLI が先に示されます。このプロジェクトで `kiro-cli --v3` を起動してから `/aidlc --doctor` を実行し、その後に Kiro IDE の手順が続きます。
 
 ## Update and Version Selection
 

@@ -42,75 +42,74 @@ outputs: ci-config.md, quality-gates.md, ci-pipeline-questions.md (under this st
 
 ### Step 1: Load Prior Context
 
-- Read build/test results from `<record>/construction/build-and-test/` (if exists)
-- Read code summary from `<record>/construction/{unit-name}/code-generation/` (if exists)
-- Read infrastructure design from `<record>/construction/infrastructure-design/` (if exists)
-- Read workspace profile for existing CI configuration
+- `<record>/construction/build-and-test/` からビルド/テスト結果を読み込む（存在する場合）
+- `<record>/construction/{unit-name}/code-generation/` からコードサマリーを読み込む（存在する場合）
+- `<record>/construction/infrastructure-design/` からインフラストラクチャ設計を読み込む（存在する場合）
+- 既存の CI 設定を把握するためにワークスペースプロファイルを読み込む
 
-When code-generation or build-and-test did not run for this intent (a stage the person skipped), their inputs are absent: base the pipeline stages on the workspace's existing build/test setup (detected from the repo itself) instead — never invent the content of a missing artifact.
+このインテントで code-generation または build-and-test が実行されなかった場合（利用者がスキップしたステージ）、それらの入力は存在しない。その場合は、パイプラインのステージをワークスペースの既存のビルド/テスト構成（リポジトリ自体から検出したもの）に基づかせる。欠けている成果物の内容を決して捏造しない。
 
 ### Step 2: Generate Clarifying Questions
 
-Create `<record>/construction/ci-pipeline/ci-pipeline-questions.md` with questions:
-- What CI tool is in use (CodePipeline, CodeBuild, GitHub Actions, Jenkins)?
-- What is the branch strategy?
-- What quality gates are required before merge?
-- What artifact repositories are used (ECR, CodeArtifact, S3)?
+`<record>/construction/ci-pipeline/ci-pipeline-questions.md` を作成し、次の質問を記載する:
+- どの CI ツールを使用しているか（CodePipeline、CodeBuild、GitHub Actions、Jenkins）?
+- ブランチ戦略は何か?
+- マージ前に必要な品質ゲートは何か?
+- どの成果物リポジトリを使用しているか（ECR、CodeArtifact、S3）?
 
-Follow stage-protocol.md question flow.
+stage-protocol.md の質問フローに従う。
 
 ### Step 3: Collect and Analyze Answers
 
-Validate CI choices against existing infrastructure and team capabilities.
+CI の選択を、既存のインフラストラクチャおよびチームの能力と照らして検証する。
 
 ### Step 4: Generate Artifacts
 
-Create CI pipeline configuration (buildspec.yml, workflow YAML, or equivalent), quality gate definitions, and artifact repository configuration.
+CI パイプラインの設定（buildspec.yml、ワークフロー YAML、または同等のもの）、品質ゲートの定義、成果物リポジトリの設定を作成する。
 
 ### Step 5: Phase Boundary Verification
 
-Run Construction → Operation verification check:
-- Read
-  `<record>/construction/build-and-test/cross-unit-traceability.md`.
-- Read every
-  `<record>/construction/*/code-generation/traceability.json`.
-- Confirm all Units built and tested, all code-generation tables have no
-  unresolved findings, and the cross-Unit FR/NFR/AC gate passed.
-- Confirm the CI quality gates enforce the build and test commands recorded by
-  Build and Test.
-- Write the boundary verdict to
-  `<record>/verification/phase-check-construction.md`.
+Construction → Operation の検証チェックを実行する:
+- 次を読み込む:
+  `<record>/construction/build-and-test/cross-unit-traceability.md`。
+- 次のすべてを読み込む:
+  `<record>/construction/*/code-generation/traceability.json`。
+- すべてのユニットがビルドおよびテストされていること、すべての code-generation の表に
+  未解決の指摘がないこと、ユニット横断の FR/NFR/AC ゲートが合格したことを確認する。
+- CI の品質ゲートが、Build and Test が記録したビルドおよびテストのコマンドを
+  強制していることを確認する。
+- 境界の判定結果を次に書き込む:
+  `<record>/verification/phase-check-construction.md`。
 
-If any traceability file is missing or any unresolved finding remains, stop
-the Construction → Operation transition and revisit the owning stage.
+トレーサビリティファイルが欠けている、または未解決の指摘が残っている場合は、
+Construction → Operation への遷移を中止し、担当ステージに戻る。
 
 ### Step 6: Completion Handoff
 
-Hand completion to `stage-protocol.md` via
-`{{INVOKE}} engine orchestrate report --stage ci-pipeline --result <outcome>`.
-That `report` call owns every lifecycle transition and advancement; never perform one in prose, and never narrate this bookkeeping to the user.
+`{{INVOKE}} engine orchestrate report --stage ci-pipeline --result <outcome>` を通じて、
+完了を `stage-protocol.md` に引き渡す。
+その `report` 呼び出しが、ライフサイクルの遷移と前進をすべて担う。散文の中で遷移を実行してはならず、この記録処理をユーザーに説明してもならない。
 
 ### Step 7: Present Completion & Request Approval
 
-Completion emoji: :gear:
-Review path: `<record>/construction/ci-pipeline/`
-Standard 2-option approval (Approve / Request Changes).
+完了絵文字: :gear:
+レビューパス: `<record>/construction/ci-pipeline/`
+標準の 2 択承認（Approve / Request Changes）。
 
 ## Sensors
 
-This stage's outputs are markdown design artefacts under `<record>/construction/ci-pipeline/`. Some sections include code samples that the code-shape sensors can also flag.
+このステージの出力は、`<record>/construction/ci-pipeline/` 配下の Markdown の設計成果物である。一部のセクションにはコードサンプルが含まれ、コード形状のセンサーがそれを指摘することもある。
 
-Imports: `required-sections`, `upstream-coverage`, `linter`, `type-check`.
+インポート: `required-sections`、`upstream-coverage`、`linter`、`type-check`。
 
-Upstream targets: `code-summary`, `build-and-test-summary`, `build-test-results`.
+上流のターゲット: `code-summary`、`build-and-test-summary`、`build-test-results`。
 
-`linter` and `type-check` inspect matching TypeScript/JavaScript snippets in
-the design outputs.
+`linter` と `type-check` は、設計出力内の該当する TypeScript/JavaScript の
+スニペットを検査する。
 
 ## Learn
 
-When `directive.protocol_modules` lists `learnings`, follow
-`stage-protocol-learnings.md`: keep the diary at `directive.memory_path` while
-working, and take the learnings step before the approval gate; that module says
-when it asks the person anything. When the module is absent, skip both the diary
-and the step.
+`directive.protocol_modules` に `learnings` が含まれている場合は、
+`stage-protocol-learnings.md` に従う。作業中は `directive.memory_path` に日誌を付け、
+承認ゲートの前に学びのステップを実行する。そのモジュールが、いつ利用者に何かを尋ねるかを
+規定している。モジュールがない場合は、日誌とステップの両方をスキップする。

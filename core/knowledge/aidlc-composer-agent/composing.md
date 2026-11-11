@@ -1,218 +1,215 @@
 # Composing a Workflow Plan
 
-The composer's job is to fit the CEREMONY to the TASK: propose the minimum
-viable workflow - the least sufficient EXECUTE set that still produces every
-artifact the task's outcome depends on. Both directions of error are real:
-skipping a load-bearing stage has a cost someone pays later, and including
-overlapping ceremony "just in case" collapses a composed grid back toward the
-stock `feature` scope and defeats the point of composing. Every EXECUTE and
-every SKIP must be justified against the entropy profile; neither default
-caution nor default economy is acceptable.
+コンポーザーの仕事は、セレモニーをタスクに合わせることである。つまり、最小限で
+実行可能なワークフロー、すなわちタスクの成果が依存するすべての成果物をなお生成できる、
+最も少ない十分な EXECUTE セットを提案することである。誤りはどちらの方向にも実際に起こる。
+負荷を支えるステージをスキップすれば、後で誰かがそのコストを払うことになり、
+「念のため」に重複するセレモニーを含めれば、組み立てたグリッドが
+標準の `feature` スコープへと逆戻りし、組み立てる意味がなくなる。すべての EXECUTE と
+すべての SKIP は、エントロピープロファイルに照らして正当化されなければならない。既定の
+慎重さも、既定の節約も、受け入れられない。
 
 ## How to read a task
 
-- **Score before you select.** Estimate the five entropy components (intent
-  ambiguity, structural uncertainty, verification entropy, risk, unresolved
-  assumptions) from the task and the structural evidence BEFORE looking at
-  any stock scope. The component bands - not keyword vibes - drive which
-  stages carry positive expected value.
-- **Incremental vs net-new.** A bug fix, a refactor, a security patch, and a
-  hardening pass work WITHIN an existing system: they need to understand what
-  exists (reverse-engineering on brownfield, or CodeKB evidence where indexed),
-  state what "done" means, and change-plus-verify (code-generation,
-  build-and-test). They do not need market-research, user-stories, or
-  domain-design - those discover and shape a product that already exists.
-- **Net-new surface.** A new feature, product, or service needs the discovery
-  arc: intent-capture, scope-definition, then the inception design stages in
-  proportion to how much NEW structure it introduces.
-- **Operational outcome.** Deployment, observability, incident-response, and
-  performance stages belong on the plan when the task's DONE lives in an
-  environment, not in the repo. A plan that builds but never ships closes no
-  operational task.
-- **Brownfield vs greenfield changes the WHOLE grid**, not one stage: a
-  brownfield feature leans on existing structure and can compress discovery;
-  a greenfield feature has nothing to reverse-engineer and everything to
-  scope.
+- **選ぶ前にスコアを付ける。** 標準スコープを見る前に、タスクと構造上の証拠から
+  5 つのエントロピー要素（インテントの
+  あいまいさ、構造の不確実性、検証のエントロピー、リスク、未解決の
+  前提）を見積もる。どのステージが正の期待値を持つかを決めるのは、キーワードから受ける印象ではなく、
+  要素のバンドである。
+- **インクリメンタルか新規か。** バグ修正、リファクタリング、セキュリティパッチ、
+  ハードニングは、既存システムの中で作業する。必要なのは、何が存在するかを理解すること
+  （brownfield ではリバースエンジニアリング、インデックス済みの場合は CodeKB の証拠）、
+  「完了」が何を意味するかを述べること、そして変更と検証（code-generation、
+  build-and-test）である。market-research、user-stories、
+  domain-design は不要である。これらは、すでに存在するプロダクトを発見し形作るためのものだからである。
+- **新規の領域。** 新しい機能、プロダクト、サービスには発見の
+  流れが必要である。intent-capture、scope-definition、そして新たに導入する構造の量に
+  応じた Inception の設計ステージである。
+- **運用上の成果。** タスクの完了がリポジトリではなく環境の中にある場合、
+  デプロイ、オブザーバビリティ、インシデント対応、パフォーマンスのステージをプランに含める。
+  ビルドするだけで出荷しないプランは、
+  運用上のタスクを何も完了させない。
+- **Brownfield か greenfield かはグリッド全体を変える**。1 つのステージだけではない。
+  brownfield の機能は既存の構造に頼ることができ、発見を圧縮できる。
+  greenfield の機能にはリバースエンジニアリングする対象がなく、すべてを
+  スコープ定義する必要がある。
 
 ## Grid discipline
 
-- Every required consume must have its producer on the EXECUTE set (the
-  validator enforces it; in-flight strict mode rejects). Never balance a
-  starved input by silently adding the producer - name the addition in the
-  rationale so the human sees the plan grow and why.
-- Stages are data-coupled, not just ordered: check `consumes`/`produces` in
-  the stage graph before cutting anything mid-arc.
-- Fold overlapping stages: when two stages both reduce the same component,
-  one is a justified stage and the other is a fold candidate. Keep the spine
-  (core, verification, and the single load-bearing discovery/design stage for
-  a high component); fold framing/discovery stages whose output another
-  EXECUTE stage already delivers, and name the un-SKIP trigger.
-- For front/report composition, prefer a stock scope when the final proposal's
-  validator-computed `nearest_stock` distance is within 2 flips (adopt and
-  revalidate the stock grid, then rebuild the summary and decision table from
-  that final grid; note the dropped flips at the gate). The earlier mechanical
-  screen's distance is advisory and never overrides evidence-driven folds. A
-  human edit to an adopted stock grid converts it to custom so the edit is
-  carried to creation. When no stock scope fits the final proposal, synthesize
-  - do not force a bad match.
-- Neither route writes a scope file. A custom plan runs on the stock scope the
-  validator names (`base_scope`) with its stage changes (`plan_changes`) and,
-  when that scope runs another depth, the plan's own (`creation_depth`, from
-  the `depth` the proposal names), for this piece of work only, so nothing
-  piles up in the scope library. The
-  person can keep a plan they like: "Approve and save as scope" at the gate, or
-  "save this plan as <name>" later, and the engine writes the scope then.
-- In-flight recomposition never adopts a stock scope. Preserve the running
-  workflow's scope, depth, and frozen actions, then return only the strict-
-  validated pending delta as exact `changes.skip` / `changes.add` arrays for
-  the conductor's `recompose` command.
+- 必須の consume にはすべて、その生成元が EXECUTE セットに含まれていなければならない（
+  バリデーターがこれを強制し、実行中の strict モードは却下する）。入力の不足を、
+  生成元を黙って追加することで埋めてはならない。追加したことを
+  根拠に明記し、人間がプランの拡大とその理由を見られるようにする。
+- ステージは順序だけでなくデータでも結合している。流れの途中で何かを削る前に、
+  ステージグラフの `consumes`/`produces` を確認する。
+- 重複するステージは畳み込む。2 つのステージが同じ要素を減らす場合、
+  一方は正当化されたステージで、もう一方は畳み込みの候補である。背骨は残す
+  （コア、検証、そして高い要素に対して負荷を支える単一の発見/設計
+  ステージ）。出力を別の EXECUTE ステージがすでに提供している
+  フレーミング/発見のステージは畳み込み、SKIP を解除するトリガーを明記する。
+- front/report の組み立てでは、最終提案について
+  バリデーターが計算した `nearest_stock` の距離が 2 フリップ以内なら、標準スコープを優先する（
+  標準グリッドを採用して再検証し、その最終グリッドからサマリーと判断表を
+  作り直す。落としたフリップはゲートで注記する）。それより前の機械的な
+  スクリーニングの距離は参考情報であり、証拠に基づく畳み込みを決して覆さない。採用した
+  標準グリッドを人間が編集すると、それはカスタムに変換され、その編集が
+  作成時に引き継がれる。最終提案に合う標準スコープがない場合は、合成する。
+  - 悪い一致を無理に当てはめない。
+- どちらの経路もスコープファイルは書かない。カスタムプランは、
+  バリデーターが指定する標準スコープ（`base_scope`）上で、そのステージ変更（`plan_changes`）とともに実行される。
+  そのスコープが別の深さで実行される場合は、プラン自身の深さ（提案が指定する `depth` から得た `creation_depth`）で実行される。
+  これはこの作業単位に限られるため、
+  スコープライブラリに何も溜まらない。
+  利用者は気に入ったプランを保存できる。ゲートで "Approve and save as scope" を選ぶか、
+  後で "save this plan as <name>" と伝えれば、エンジンがその時点でスコープを書き込む。
+- 実行中の再構成では、標準スコープを決して採用しない。実行中の
+  ワークフローのスコープ、深さ、凍結されたアクションを保持し、strict に
+  検証した保留中の差分だけを、
+  コンダクターの `recompose` コマンド用の正確な `changes.skip` / `changes.add` 配列として返す。
 
 ## Guard Policy
 
-Every proposal names ONE Guard Policy value with a 1-2 sentence rationale the
-person reads on the gate row: in their words, what happens when an input
-changes after approval, what else the value lets go (off also stands aside the
-checks on how agents move the workflow and what a reviewer reads), and why that
-suits this work, never internal field or tool names such as `custom_start`; a
-team memory file that locks strict is named. The value decides
-two things: what happens when an input changes after the human approved or
-confirmed something, and how far the automatic checks stand aside for the
-agents. `strict` lowers
-no fences and reopens that approval; `relaxed`
-records the change once, tells the human in one line, continues, and stands the
-plan-approval and review-freeze checks aside; `off` does that and stands the
-state-transition and reviewer-scope checks aside as well. No value removes a
-gate and none of them touches human presence. The conductor still asks every
-approval question; the value also decides which fences stop undirected work,
-and each pass through a lowered fence records a `GUARD_STOOD_ASIDE` row.
+すべての提案は、Guard Policy の値を 1 つ指定し、利用者がゲートの行で読む 1〜2 文の根拠を
+付ける。根拠では、利用者の言葉で、承認後に入力が
+変わったときに何が起きるか、その値がほかに何を手放すか（off は、エージェントがワークフローを
+どう進めるか、レビュアーが何を読むかのチェックも退かせる）、そしてなぜそれが
+この作業に合うかを述べる。`custom_start` のような内部のフィールド名やツール名は決して使わない。
+strict に固定しているチームのメモリーファイルがあれば、それを明記する。値が決めるのは
+次の 2 つである。人間が何かを承認または確認した後に入力が変わったとき何が起きるか、そして
+自動チェックがエージェントに対してどこまで退くか。`strict` は
+フェンスを 1 つも下げず、その承認を再開する。`relaxed` は
+変更を 1 回記録し、人間に 1 行で伝え、続行し、
+plan-approval と review-freeze のチェックを退かせる。`off` はそれに加えて、
+state-transition と reviewer-scope のチェックも退かせる。どの値もゲートを
+取り除かず、どの値も人間の関与には触れない。コンダクターは引き続きすべての
+承認の質問を尋ねる。値は、どのフェンスが指示のない作業を止めるかも決め、
+下げられたフェンスを通過するたびに `GUARD_STOOD_ASIDE` の行が記録される。
 
-- A matched stock scope carries its own default, which the validator echoes
-  as `matched_start.guard_policy` (the core defaults are strict on enterprise
-  and off on the rest; a plugin scope has its own). Adopt it and say so, and
-  keep a stricter value the human asked for on every re-dispatch.
-- For a custom grid, copy the validator's `custom_start.guard_policy`, the
-  classic scope's default (`off` in core), and keep it: a custom plan runs
-  with the guards a person gets without composing, and the human raises it on
-  the gate row if they want more (keep their value on every re-dispatch).
-  Under a memory layer that declares strict, propose strict. Without a
-  `custom_start` echo, start from `matched_start.guard_policy`.
-  `validate-grid --custom` picks a `base_scope` whose default is that value
-  or lower (any stock scope serves strict), so creation carries it.
-- In-flight, the running intent's value stays as it is; the human flips it
-  from chat, never the composer.
-- The human sees the value as its own gate row and can flip it before
-  approving a front composition. In-flight, the row is read-only: a
-  recompose lands only stage skips and adds, so the proposal names the route
-  (when the person asks to raise or lower it, the conductor runs
-  `{{INVOKE}} engine config set guard-policy <value> --message <id>`, `<id>` the message they asked in). Changing scope alone
-  never lowers the running policy.
-  A memory layer that declares strict wins over any proposal; the
-  validator and the intent-create command both refuse a relaxed or off value
-  under it.
-- Intent creation reads Guard Policy from the scope the plan runs on; the
-  conductor passes `--guard-policy` for `strict` or `relaxed`, raising a lower
-  base default, and never for `off`. A flip below a matched proposal's stock
-  default is an edit: convert it to custom and revalidate, and the base the
-  validator picks carries the value at creation; no setter runs afterwards. A
-  flip above it keeps the proposal matched, and creation applies it.
+- 一致した標準スコープは独自の既定値を持ち、バリデーターはそれを
+  `matched_start.guard_policy` として返す（コアの既定値は enterprise で strict、
+  それ以外で off。プラグインのスコープは独自の値を持つ）。それを採用してその旨を述べ、
+  人間が求めたより厳しい値は、再ディスパッチのたびに維持する。
+- カスタムグリッドでは、バリデーターの `custom_start.guard_policy`、すなわち
+  classic スコープの既定値（コアでは `off`）をコピーして維持する。カスタムプランは、
+  組み立てずに利用者が得るのと同じガードで実行され、人間はさらに求めるなら
+  ゲートの行で引き上げる（その値は再ディスパッチのたびに維持する）。
+  strict を宣言するメモリー層の下では、strict を提案する。
+  `custom_start` の返却がない場合は、`matched_start.guard_policy` から始める。
+  `validate-grid --custom` は、既定値がその値以下である `base_scope` を選ぶ
+  （strict にはどの標準スコープでも対応できる）ため、作成時にそれが引き継がれる。
+- 実行中は、実行中のインテントの値はそのまま維持される。それを切り替えるのは
+  チャットでの人間であり、コンポーザーでは決してない。
+- 人間はこの値を独立したゲートの行として見て、front の組み立てを承認する前に
+  切り替えられる。実行中は、その行は読み取り専用である。
+  再構成で反映されるのはステージのスキップと追加だけなので、提案は経路を明記する
+  （利用者が引き上げや引き下げを求めたら、コンダクターが
+  `{{INVOKE}} engine config set guard-policy <value> --message <id>` を実行する。`<id>` は利用者が依頼したメッセージである）。スコープを変更するだけでは、
+  実行中のポリシーが下がることは決してない。
+  strict を宣言するメモリー層は、どの提案よりも優先される。
+  バリデーターとインテント作成コマンドの両方が、その下での relaxed や off の値を拒否する。
+- インテントの作成時には、プランが実行されるスコープから Guard Policy を読み込む。
+  コンダクターは `strict` または `relaxed` の場合に `--guard-policy` を渡して、より低い
+  ベースの既定値を引き上げる。`off` の場合は決して渡さない。一致した提案の標準の
+  既定値より下への切り替えは編集である。カスタムに変換して再検証すれば、
+  バリデーターが選ぶベースが作成時にその値を引き継ぐ。その後にセッターは実行されない。
+  それより上への切り替えでは提案は一致のまま保たれ、作成時に適用される。
 
 ## Scope settings
 
-The grid decides which stages run; six scope settings decide how much
-ceremony runs inside them. Every front/report proposal names all six in its
-`scopeSettings` member, in the scope file's own words, with a 1-2 sentence
-`scopeSettingsRationale`:
+グリッドはどのステージを実行するかを決め、6 つのスコープ設定はその中でどれだけの
+セレモニーを実行するかを決める。すべての front/report の提案は、その
+`scopeSettings` メンバーで 6 つすべてを、スコープファイル自身の言葉で指定し、1〜2 文の
+`scopeSettingsRationale` を付ける:
 
-| Setting | Values | What turning it down removes |
+| 設定 | 値 | 下げると取り除かれるもの |
 |---------|--------|------------------------------|
-| `sensors` | `on`, `off` | Automatic sensor runs (claim sources, required sections, upstream coverage, traceability, lint, type check) and their gate checks |
-| `learnings` | `on`, `off` | The stage learnings read/write ritual |
-| `summary_confirmation` | `on`, `off` | The separate "Looks correct" checkpoint before a stage writes its artifacts |
-| `plan_approval` | `on`, `off` | The person's approval of each code plan before it is built; off builds the plan as written with one line naming it |
-| `collaborators` | `on`, `off` | The support agents (collaborators) a stage dispatches; off has the lead of every stage work alone: no blind spokes, no mob round, and a pipeline's lead becomes its only link |
-| `review_cap` | `adversarial`, `advisory`, `none` | `advisory`: each stage review becomes one pass whose findings the human reads at the gate; `none`: no stage reviewer is dispatched in the gated flow |
+| `sensors` | `on`, `off` | 自動のセンサー実行（主張の出典、必須セクション、上流カバレッジ、トレーサビリティ、lint、型チェック）とそのゲートチェック |
+| `learnings` | `on`, `off` | ステージの学びの読み書きの手順 |
+| `summary_confirmation` | `on`, `off` | ステージが成果物を書き込む前の、独立した "Looks correct" チェックポイント |
+| `plan_approval` | `on`, `off` | ビルド前の各コードプランに対する利用者の承認。off ではプランが書かれたとおりにビルドされ、そのことを 1 行で示す |
+| `collaborators` | `on`, `off` | ステージがディスパッチするサポートエージェント（コラボレーター）。off では各ステージのリードが単独で作業する。ブラインドスポークもモブラウンドもなく、パイプラインのリードがその唯一のリンクになる |
+| `review_cap` | `adversarial`, `advisory`, `none` | `advisory`: 各ステージのレビューは 1 回のパスになり、その指摘を人間がゲートで読む。`none`: ゲート付きのフローでステージレビュアーをディスパッチしない |
 
-- A matched proposal starts from its stock scope's values, which the
-  validator echoes as `matched_start.scope_settings`. A value you or the
-  human change applies to this piece of work only, since no scope file is written: the final validate-grid run
-  echoes the values that differ from the stock scope the plan runs on as
-  `creation_settings`, typed values the conductor turns into creation flags.
-  Any value can change, reviews included: a review level set for the piece of
-  work replaces its scope's ceiling.
-- Validate the final grid with the chosen values and its route (`--matched
-  <scope>` or `--custom`); either flag makes the six settings and the Guard
-  Policy required, and the validator checks each against the words the scope
-  loader accepts.
-- For a custom grid, start from the validator's `custom_start.scope_settings`:
-  the classic scope's values (in core, summary confirmation and collaborators
-  off, reviews advisory, the rest on), whichever stock scope the plan runs on. The plan
-  picks its own stages; only the ceremony starts from classic. Without a
-  `custom_start` echo, start from `matched_start.scope_settings`. A
-  matched proposal that the human's edit turns custom keeps the Guard Policy
-  and settings the gate showed, with their change applied. Either
-  way, move a setting only when the entropy profile gives a reason, the same
-  way a SKIP needs one:
-  - `sensors`: keep on when verification entropy is MED or higher, the work
-    is regulated, or later stages trace back to these artifacts. Off fits a
-    throwaway spike or the lightest run, where nobody will check the artifacts
-    against their sources.
-  - `learnings`: keep on for work in a codebase the team will keep changing.
-    Off fits a one-off change where the ritual costs more than it returns.
-  - `summary_confirmation`: reading the consolidated answers back is how a
-    misunderstanding gets caught before generation. A matched plan keeps it on
-    when intent ambiguity or unresolved assumptions are MED or higher; a
-    custom plan turns it on only when either is HIGH. Off fits work whose
-    answers are already unambiguous.
-  - `plan_approval`: keep the value you start from (the matched stock
-    scope's, or a custom plan's `custom_start`). Never propose turning it off:
-    the validator rejects off where the scope the plan runs on asks, because
-    only the person turns plan approval off.
-  - `collaborators`: keep the value you start from (as shipped, on only for
-    enterprise). Propose `on` only when the person asks for the specialists;
-    off runs every stage with the lead agent only.
-  - `review_cap`: `adversarial` when risk or verification entropy is HIGH or
-    the work is regulated; `advisory` when both are MED or lower and the human
-    will read the findings at the gate; `none` only when both are LOW and the
-    change is small enough for the human to review directly.
-- No value removes a gate, a required question, human-turn authority, or the
-  audit trail; `plan_approval: off` removes only the plan stop, and a
-  memory-held strict Guard Policy keeps it on. A global kill switch
-  (`AIDLC_DISABLE_SENSORS=1`, `AIDLC_DISABLE_LEARNINGS=1`,
-  `AIDLC_DISABLE_SUMMARY_CONFIRMATION=1`, `AIDLC_DISABLE_PLAN_APPROVAL_GUARD=1`,
-  `AIDLC_DISABLE_COLLABORATORS=1`) still forces its ceremony off
-  whatever the scope says. The validator names one that forces an `on` value
-  off on this machine; mark that value in the gate row, since the scope stores
-  `on` but the ceremony will not run until the switch is cleared. When none is
-  set, the proposal says nothing about kill switches.
-- The human sees the six values as one gate row, and whatever they ask for
-  there is done. A change keeps the route and applies to this piece of work;
-  only lowering a matched proposal's Guard Policy makes it custom. Plan
-  approval keeps the value the plan starts from: only the person turns it
-  off. When they ask at the gate, in their own words, to skip plan
-  approval, the harness records it and creation turns it off, so the proposal
-  stays as it is. A plan the person saves as a scope stores the
-  values in its frontmatter as `sensors:`, `learnings:`,
-  `summary_confirmation:`, `plan_approval:`, `collaborators:`, and `review_cap:`.
-- In-flight, the settings are not part of the recompose. Leave a settings
-  request out of the stage delta and return `settingsChanges`, typed values
-  the conductor shows on the gate and applies only on the human's approval;
-  return only what the request asks for. The keys are `sensors`, `learnings`,
-  `summary_confirmation`, and `collaborators` (`on`/`off`), `plan_approval` (`on`
-  only: the person turns it off in their own words), and `review`
-  (`adversarial`/`advisory`/`none`). Full reviews on a capped scope is `"review": "adversarial"`; no
-  stage changes. When `engine config get <key>` reports `from env
-  AIDLC_DISABLE_<NAME>`, a kill switch on this machine overrides every
-  setting: return no change and say in one line that it has to be removed
-  outside the agent. Never look for where it is set; shell startup files,
-  environment listings, and harness settings files can hold credentials.
-  Never put command text in `settingsChanges` or `creationSettings`.
+- 一致した提案は標準スコープの値から始まり、バリデーターはそれを
+  `matched_start.scope_settings` として返す。あなたや人間が変更した値は、
+  スコープファイルが書かれないため、この作業単位にのみ適用される。最終的な validate-grid の実行は、
+  プランが実行される標準スコープと異なる値を
+  `creation_settings` として返す。これは、コンダクターが作成フラグに変換する型付きの値である。
+  どの値も変更でき、レビューも含まれる。作業単位に設定したレビューレベルは、
+  そのスコープの上限を置き換える。
+- 最終グリッドは、選んだ値とその経路（`--matched
+  <scope>` または `--custom`）で検証する。どちらのフラグでも 6 つの設定と Guard
+  Policy が必須になり、バリデーターはそれぞれを、スコープ
+  ローダーが受け付ける語と照合する。
+- カスタムグリッドでは、バリデーターの `custom_start.scope_settings` から始める。
+  これは、プランがどの標準スコープ上で実行されるかにかかわらず、classic スコープの値（コアでは、summary confirmation と collaborators が
+  off、レビューは advisory、残りは on）である。プランは
+  自分のステージを選び、セレモニーだけが classic から始まる。
+  `custom_start` の返却がない場合は、`matched_start.scope_settings` から始める。
+  人間の編集によってカスタムになった一致した提案は、ゲートが示した Guard Policy と
+  設定を、その変更を適用したうえで維持する。いずれの
+  場合も、設定を動かすのは、SKIP に理由が必要なのと同じように、エントロピープロファイルが
+  理由を与えるときだけにする:
+  - `sensors`: 検証のエントロピーが MED 以上、作業が
+    規制対象、または後のステージがこれらの成果物に遡って追跡する場合は on のままにする。off が合うのは、
+    誰も成果物を出典と照合しない、使い捨てのスパイクや最も軽い実行である。
+  - `learnings`: チームが今後も変更し続けるコードベースでの作業では on のままにする。
+    off が合うのは、手順のコストが見返りを上回る一度きりの変更である。
+  - `summary_confirmation`: 統合した回答を読み返すことで、
+    生成前に誤解が見つかる。一致したプランでは、インテントの
+    あいまいさまたは未解決の前提が MED 以上なら on のままにする。
+    カスタムプランでは、どちらかが HIGH の場合にのみ on にする。off が合うのは、
+    回答がすでにあいまいでない作業である。
+  - `plan_approval`: 開始時の値（一致した標準
+    スコープの値、またはカスタムプランの `custom_start`）を維持する。off にすることを決して提案しない。
+    プランが実行されるスコープがそれを求めている場合、バリデーターは off を却下する。
+    プラン承認を off にするのは利用者だけだからである。
+  - `collaborators`: 開始時の値を維持する（出荷時は
+    enterprise でのみ on）。利用者がスペシャリストを求めた場合にのみ `on` を提案する。
+    off では、すべてのステージをリードエージェントだけで実行する。
+  - `review_cap`: リスクまたは検証のエントロピーが HIGH であるか、
+    作業が規制対象である場合は `adversarial`。両方が MED 以下で、人間が
+    ゲートで指摘を読む場合は `advisory`。両方が LOW で、
+    変更が人間が直接レビューできるほど小さい場合にのみ `none`。
+- どの値も、ゲート、必須の質問、人間のターンの権限、
+  監査証跡を取り除かない。`plan_approval: off` が取り除くのはプランでの停止だけであり、
+  メモリーで保持された strict の Guard Policy はそれを on に保つ。グローバルなキルスイッチ
+  （`AIDLC_DISABLE_SENSORS=1`、`AIDLC_DISABLE_LEARNINGS=1`、
+  `AIDLC_DISABLE_SUMMARY_CONFIRMATION=1`、`AIDLC_DISABLE_PLAN_APPROVAL_GUARD=1`、
+  `AIDLC_DISABLE_COLLABORATORS=1`）は、スコープの記述にかかわらず、
+  そのセレモニーを強制的に off にする。このマシンで `on` の値を強制的に off にしているものがあれば、
+  バリデーターがそれを指摘する。ゲートの行でその値に印を付ける。スコープは
+  `on` を保存しているが、スイッチが解除されるまでセレモニーは実行されないからである。何も
+  設定されていない場合、提案はキルスイッチについて何も述べない。
+- 人間は 6 つの値を 1 つのゲートの行として見て、そこで求めたことは
+  すべて実行される。変更は経路を維持し、この作業単位に適用される。
+  一致した提案の Guard Policy を下げた場合にのみ、提案はカスタムになる。プラン
+  承認は、プランの開始時の値を維持する。それを off にするのは利用者だけである。
+  利用者がゲートで、自分の言葉でプラン承認のスキップを求めた場合は、
+  ハーネスがそれを記録し、作成時に off になるため、提案は
+  そのまま保たれる。利用者がスコープとして保存したプランは、
+  その値を frontmatter に `sensors:`、`learnings:`、
+  `summary_confirmation:`、`plan_approval:`、`collaborators:`、`review_cap:` として保存する。
+- 実行中は、設定は再構成の一部ではない。設定の
+  依頼はステージの差分に含めず、`settingsChanges` を返す。これは、
+  コンダクターがゲートで示し、人間が承認した場合にのみ適用する型付きの値である。
+  依頼された内容だけを返す。キーは `sensors`、`learnings`、
+  `summary_confirmation`、`collaborators`（`on`/`off`）、`plan_approval`（`on`
+  のみ。off にするのは利用者自身の言葉による）、そして `review`
+  （`adversarial`/`advisory`/`none`）である。上限付きのスコープでフルレビューを行うには `"review": "adversarial"` とし、
+  ステージの変更はない。`engine config get <key>` が `from env
+  AIDLC_DISABLE_<NAME>` と報告する場合、このマシンのキルスイッチがすべての
+  設定を上書きしている。変更は返さず、それはエージェントの外で取り除く必要があると
+  1 行で伝える。それがどこで設定されているかを決して探さない。シェルの起動ファイル、
+  環境変数の一覧、ハーネスの設定ファイルには資格情報が含まれていることがある。
+  `settingsChanges` や `creationSettings` にコマンドのテキストを決して入れない。
 
 ## Rationale quality
 
-The gate is only as good as the rationale. For each SKIP write one line a
-human can veto: the stage, what it would have produced, and why this task
-does not need that artifact (below-threshold component, or the
-task/artifact/EXECUTE stage that already covers it). For each EXECUTE name
-the component it reduces and that no other EXECUTE stage already delivers
-that reduction. "Not needed" is not a rationale; "no new UI surface, so
-refined-mockups produces nothing this task consumes" is.
+ゲートの質は根拠の質で決まる。各 SKIP については、人間が
+拒否できる 1 行を書く。ステージ、それが生成したはずのもの、そしてなぜこのタスクに
+その成果物が不要なのか（しきい値を下回る要素、または
+それをすでにカバーしているタスク/成果物/EXECUTE ステージ）である。各 EXECUTE については、
+それが減らす要素と、その削減をほかの EXECUTE ステージがまだ提供していないことを
+明記する。「不要」は根拠ではない。「新しい UI 領域がないため、
+refined-mockups はこのタスクが消費するものを何も生成しない」が根拠である。

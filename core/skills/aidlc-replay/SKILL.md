@@ -15,67 +15,66 @@ classification: read-only
 
 ## Purpose
 
-Turn a workflow's audit trail and artefacts into a readable story: what
-was decided, in what order, and why. For async review, for stakeholders
-who weren't present, or as a post-session record. Not a raw log dump.
+ワークフローの監査証跡と成果物を、読みやすいストーリーに変換する。何が、
+どの順序で、なぜ決定されたのかを示す。非同期レビュー、その場にいなかった
+ステークホルダー向け、あるいはセッション後の記録として使う。生ログのダンプではない。
 
 ## Classification
 
-Read-only. This skill renders the narrative to the terminal and writes
-**no file**. It never advances the workflow stage pointer and never
-emits an audit event.
+読み取り専用。このスキルはナラティブをターミナルに出力し、ファイルは
+**一切書き込まない**。ワークフローのステージポインタを進めることはなく、
+監査イベントを発行することも決してない。
 
 ## The counting rule
 
-All counts and aggregates — number of stages, per-phase breakdown,
-duration, approved/failed/pending tallies, learnings captured — come
-from the tool, not from eyeballing files:
+すべての件数と集計値（ステージ数、フェーズ別の内訳、所要時間、
+承認済み/失敗/保留の集計、記録された学び）は、ファイルを目で数えるのではなく
+ツールから取得する:
 
 ```bash
 {{INVOKE}} engine runtime summary --json
 ```
 
-The narrative prose (what happened, key decisions, reasoning) is yours
-to synthesise from the active record's audit shards and artefacts. The
-skeleton numbers are the tool's. Never hand-count stages or artefacts
-when the tool already reports the figure.
+ナラティブの散文（何が起きたか、主要な決定、その理由）は、アクティブな記録の
+監査シャードと成果物から、あなたが組み立てる。骨格となる数値はツールのものを使う。
+ツールがすでに数値を報告している場合は、ステージや成果物を決して手で数えてはならない。
 
 ## Steps
 
 ### Step 1: Read the aggregates
 
-Run `{{INVOKE}} engine runtime summary --json`.
+`{{INVOKE}} engine runtime summary --json` を実行する。
 
-If it exits non-zero (no `runtime-graph.json` yet), print:
+非ゼロで終了した場合（まだ `runtime-graph.json` がない場合）は、次を出力する:
 
 ```
 No session data yet — start a workflow with /aidlc before running
 /aidlc-replay.
 ```
 
-and STOP. Otherwise keep the parsed JSON; you'll cite its fields for
-every number in the report.
+そして停止する（STOP）。それ以外の場合は、パースした JSON を保持しておく。レポート内の
+すべての数値について、そのフィールドを引用する。
 
 ### Step 2: Read the narrative sources
 
-Resolve `<active-space>` from `aidlc/active-space` (default `default`) and
-`<active-intent>` from
-`aidlc/spaces/<active-space>/intents/active-intent`. The active workflow
-record is
-`aidlc/spaces/<active-space>/intents/<active-intent>`.
+`aidlc/active-space` から `<active-space>` を解決し（デフォルトは `default`）、
+`aidlc/spaces/<active-space>/intents/active-intent` から
+`<active-intent>` を解決する。アクティブなワークフローの
+記録は
+`aidlc/spaces/<active-space>/intents/<active-intent>` である。
 
-- Every `.md` shard under `<record>/audit/` — the full event trail; order
-  events by their `Timestamp` fields for the narrative.
-- `<record>/aidlc-state.md` — the active-stage cursor.
-- The artefacts recursively under `<record>/<phase>/` — what each stage
-  produced, including per-unit Construction outputs.
+- `<record>/audit/` 配下のすべての `.md` シャード — 完全なイベント証跡。ナラティブ用に、
+  イベントを `Timestamp` フィールドの順に並べる。
+- `<record>/aidlc-state.md` — アクティブステージのカーソル。
+- `<record>/<phase>/` 配下を再帰的にたどった成果物 — 各ステージが生成したもの
+  （ユニットごとの Construction の出力を含む）。
 
-These are your sources for *prose*. Do not derive counts from them when
-Step 1's JSON already carries the count.
+これらは *散文* のための情報源である。Step 1 の JSON がすでに件数を持っている場合は、
+これらから件数を導き出してはならない。
 
 ### Step 3: Render the replay
 
-Print the narrative to the terminal in this shape (write no file):
+次の形式でナラティブをターミナルに出力する（ファイルは書き込まない）:
 
 ```markdown
 # Session Replay
@@ -113,8 +112,8 @@ From user additions: {summary.learnings.from_user_addition}
 
 ### Step 4: Offer adjustments
 
-You may offer: "Want a different tone (more technical / more executive)
-or an added section?" — re-render to the terminal if asked. Do not loop
-on it; one offer is enough. If the user wants the replay saved, point
-them at `/aidlc-outcomes-pack` (the skill that writes a file) rather
-than writing one here.
+次のように提案してもよい: "Want a different tone (more technical / more executive)
+or an added section?"（別のトーン（より技術的 / より経営層向け）にするか、セクションを追加しますか？）
+— 求められたらターミナルに再出力する。この提案を繰り返してはならない。提案は1回で十分である。
+ユーザーがリプレイの保存を望む場合は、ここでファイルを書き込むのではなく、
+`/aidlc-outcomes-pack`（ファイルを書き込むスキル）を案内する。

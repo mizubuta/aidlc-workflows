@@ -37,56 +37,55 @@ outputs: team-assessment.md, skill-matrix.md, mob-composition.md, team-formation
 
 ### Step 1: Load Prior Context
 
-- Read scope definition from `<record>/ideation/scope-definition/`
-- Read feasibility assessment and constraint register (if exist)
-- Read intent backlog for work volume estimation
+- `<record>/ideation/scope-definition/` からスコープ定義を読み込む
+- フィージビリティ評価と制約レジスター（存在する場合）を読み込む
+- 作業量の見積もりのため、インテントバックログを読み込む
 
 ### Step 2: Generate Clarifying Questions
 
-Create `<record>/ideation/team-formation/team-formation-questions.md` with questions:
-- What teams and individuals are available?
-- What is the current capacity and utilization?
-- What skills are required vs. available?
-- Are there competing initiatives drawing from the same talent pool?
-- What is the preferred team topology?
-- What time zones and locations are team members in?
-- Are external partners, contractors, or AWS Professional Services needed?
-- Who are the decision-makers for each phase?
+次の質問を含む `<record>/ideation/team-formation/team-formation-questions.md` を作成する:
+- どのチームと個人が参加可能か？
+- 現在のキャパシティと稼働率はどの程度か？
+- 必要なスキルと保有しているスキルはそれぞれ何か？
+- 同じ人材プールを取り合う競合イニシアチブはあるか？
+- 望ましいチームトポロジーは何か？
+- チームメンバーはどのタイムゾーン・拠点にいるか？
+- 外部パートナー、契約者、AWS Professional Services は必要か？
+- 各フェーズの意思決定者は誰か？
 
-Follow stage-protocol.md question flow.
+stage-protocol.md の質問フローに従う。
 
 ### Step 3: Collect and Analyze Answers
 
-Run gap analysis between required skills and available skills.
+必要なスキルと保有スキルのギャップ分析を行う。
 
 ### Step 4: Generate Artifacts
 
-Create team availability assessment, skill matrix (with gap analysis), mob composition plan, RACI matrix, capacity allocation agreement, skill gap remediation plan, and onboarding checklist.
+チームの稼働可能性評価、スキルマトリクス（ギャップ分析付き）、モブ編成計画、RACI マトリクス、キャパシティ配分の合意書、スキルギャップ解消計画、オンボーディングチェックリストを作成する。
 
 ### Step 5: Completion Handoff
 
-Hand completion to `stage-protocol.md` via
-`{{INVOKE}} engine orchestrate report --stage team-formation --result <outcome>`.
-That `report` call owns every lifecycle transition and advancement; never perform one in prose, and never narrate this bookkeeping to the user.
+`{{INVOKE}} engine orchestrate report --stage team-formation --result <outcome>` を介して、
+完了処理を `stage-protocol.md` に引き渡す。
+その `report` 呼び出しが、ライフサイクルの遷移と前進をすべて担う。散文の中で遷移を実行してはならず、この記録処理をユーザーに説明してもならない。
 
 ### Step 6: Present Completion & Request Approval
 
-Completion emoji: :people_holding_hands:
-Review path: `<record>/ideation/team-formation/`
-Standard approval gate (Approve / Request Changes).
+完了時の絵文字: :people_holding_hands:
+レビューパス: `<record>/ideation/team-formation/`
+標準の承認ゲート（Approve / Request Changes）。
 
 ## Sensors
 
-This stage's outputs are markdown artefacts under `<record>/ideation/team-formation/`.
+このステージの出力は `<record>/ideation/team-formation/` 配下の Markdown 成果物である。
 
-Imports: `required-sections`, `upstream-coverage`.
+取り込み: `required-sections`, `upstream-coverage`.
 
-Upstream targets: `scope-document`, `intent-backlog`, `feasibility-assessment`.
+上流ターゲット: `scope-document`, `intent-backlog`, `feasibility-assessment`.
 
 ## Learn
 
-When `directive.protocol_modules` lists `learnings`, follow
-`stage-protocol-learnings.md`: keep the diary at `directive.memory_path` while
-working, and take the learnings step before the approval gate; that module says
-when it asks the person anything. When the module is absent, skip both the diary
-and the step.
+`directive.protocol_modules` に `learnings` が含まれる場合は、
+`stage-protocol-learnings.md` に従う。作業中は `directive.memory_path` に日誌を記録し、
+承認ゲートの前に学びのステップを実行する。そのモジュールに、いつ利用者に質問するかが
+定められている。モジュールがない場合は、日誌とステップの両方をスキップする。

@@ -49,57 +49,56 @@ outputs: dashboards.md, alarms.md, slo-config.md, log-queries.md, tracing-config
 
 ### Step 1: Load Prior Context
 
-- Read NFR design (observability strategy) from `<record>/construction/nfr-design/`
-- Read infrastructure design from `<record>/construction/infrastructure-design/`
-- Read deployment execution log from `<record>/operation/deployment-execution/`
+- `<record>/construction/nfr-design/` から NFR 設計（オブザーバビリティ戦略）を読み込む
+- `<record>/construction/infrastructure-design/` からインフラ設計を読み込む
+- `<record>/operation/deployment-execution/` からデプロイ実行ログを読み込む
 
-`express` skips NFR Design and Infrastructure Design by design. When those
-artifacts are absent, derive the minimum observable surface from approved
-requirements, the deployed application's workspace configuration, Build and
-Test results, and the Deployment Execution evidence. Ask for any SLO, signal,
-retention, or escalation decision that cannot be observed from those sources;
-never invent a missing design artifact. If no deployed target exists, this
-CONDITIONAL stage reports skipped.
+`express` は設計上、NFR Design と Infrastructure Design をスキップする。それらの
+成果物が存在しない場合は、承認済みの要件、デプロイ済みアプリケーションの
+ワークスペース設定、Build and Test の結果、Deployment Execution の証跡から、
+最小限の観測対象を導き出す。これらの情報源から観測できない SLO、シグナル、
+保持期間、エスカレーションの判断については質問する。
+欠けている設計成果物を決してでっち上げない。デプロイ済みのターゲットが存在しない場合、
+この CONDITIONAL ステージは skipped を報告する。
 
 ### Step 2: Generate Clarifying Questions
 
-Create questions file covering:
-- What are the golden signals to track (latency, traffic, errors, saturation)?
-- What SLOs/SLIs are defined?
-- What dashboard layouts does the team need?
-- What log retention and aggregation rules apply?
-- What distributed tracing instrumentation is needed?
+次の内容を扱う質問ファイルを作成する:
+- 追跡すべきゴールデンシグナル（レイテンシ、トラフィック、エラー、サチュレーション）は何か？
+- どのような SLO/SLI が定義されているか？
+- チームにはどのようなダッシュボードのレイアウトが必要か？
+- どのようなログの保持ルールと集約ルールが適用されるか？
+- どのような分散トレーシングの計装が必要か？
 
-Follow stage-protocol.md question flow.
+stage-protocol.md の質問フローに従う。
 
 ### Step 3: Generate Artifacts
 
-Create CloudWatch dashboard configurations, alarm definitions (with severity, SNS routing, escalation), SLO/SLI tracking configuration, CloudWatch Logs Insights saved queries, X-Ray tracing configuration, and anomaly detection configuration.
+CloudWatch ダッシュボードの設定、アラームの定義（重大度、SNS ルーティング、エスカレーションを含む）、SLO/SLI の追跡設定、CloudWatch Logs Insights の保存済みクエリ、X-Ray トレーシングの設定、異常検知の設定を作成する。
 
 ### Step 4: Completion Handoff
 
-Hand completion to `stage-protocol.md` via
-`{{INVOKE}} engine orchestrate report --stage observability-setup --result <outcome>`.
-That `report` call owns every lifecycle transition and advancement; never perform one in prose, and never narrate this bookkeeping to the user.
+`{{INVOKE}} engine orchestrate report --stage observability-setup --result <outcome>` を通じて、
+完了を `stage-protocol.md` に引き渡す。
+その `report` 呼び出しが、ライフサイクルの遷移と前進をすべて担う。散文の中で遷移を実行してはならず、この記録処理をユーザーに説明してもならない。
 
 ### Step 5: Present Completion & Request Approval
 
-Completion emoji: :eyes:
-Review path: `<record>/operation/observability-setup/`
-Standard 2-option approval (Approve / Request Changes).
+完了時の絵文字: :eyes:
+レビュー対象のパス: `<record>/operation/observability-setup/`
+標準の 2 択の承認（Approve / Request Changes）。
 
 ## Sensors
 
-This stage's outputs are markdown artefacts under `<record>/operation/observability-setup/`.
+このステージの出力は `<record>/operation/observability-setup/` 配下の Markdown 成果物である。
 
-Imports: `required-sections`, `upstream-coverage`.
+インポート: `required-sections`, `upstream-coverage`.
 
-Upstream targets: `performance-design`, `security-design`, `reliability-design`, `monitoring-design`, `infrastructure-specification`.
+上流の対象: `performance-design`, `security-design`, `reliability-design`, `monitoring-design`, `infrastructure-specification`.
 
 ## Learn
 
-When `directive.protocol_modules` lists `learnings`, follow
-`stage-protocol-learnings.md`: keep the diary at `directive.memory_path` while
-working, and take the learnings step before the approval gate; that module says
-when it asks the person anything. When the module is absent, skip both the diary
-and the step.
+`directive.protocol_modules` に `learnings` が含まれている場合は、
+`stage-protocol-learnings.md` に従う。作業中は `directive.memory_path` に日誌を付け、
+承認ゲートの前に学習ステップを実施する。そのモジュールが、利用者に何かを尋ねるタイミングを定めている。
+モジュールがない場合は、日誌とステップの両方を省略する。

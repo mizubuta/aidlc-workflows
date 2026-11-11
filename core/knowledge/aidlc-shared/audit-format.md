@@ -1,77 +1,74 @@
 # Audit Event Taxonomy
 
-**Event names MUST match this table exactly.** Do not invent new event types. For stage completions, ALWAYS use `STAGE_COMPLETED` — do not substitute stage-specific names like "Requirements Analysis Complete" or "Code Generated".
+**イベント名は必ずこの表と完全に一致させる。** 新しいイベント種別を作り出してはならない。ステージの完了には常に `STAGE_COMPLETED` を使い、"Requirements Analysis Complete" や "Code Generated" のようなステージ固有の名前で代用してはならない。
 
-Stage lifecycle is report-owned: the conductor requests gate, revision,
-completion, and skip outcomes through `tools/aidlc-orchestrate.ts report`.
-The state tool entries below are the engine's internal atomic emitters, not
-commands a stage or conductor invokes directly.
+ステージのライフサイクルは report が担う。コンダクターは、ゲート・修正・完了・スキップの各結果を
+`tools/aidlc-orchestrate.ts report` を通じて要求する。
+以下の state ツールの項目はエンジン内部のアトミックな発行元であり、
+ステージやコンダクターが直接呼び出すコマンドではない。
 
-> See [`docs/reference/12-state-machine.md`](../../../../docs/reference/12-state-machine.md) for the state transitions that emit each event. Events marked `✓` are MANDATORY and asserted by `tests/feature/t48-audit-event-emitters.sh`.
+> 各イベントを発行する状態遷移については [`docs/reference/12-state-machine.md`](../../../../docs/reference/12-state-machine.md) を参照。`✓` の付いたイベントは必須（MANDATORY）であり、`tests/feature/t48-audit-event-emitters.sh` で検証される。
 
 ## Naming Convention
 
-All event names follow `SUBJECT_PAST_VERB` — every event answers "what happened?"
+すべてのイベント名は `SUBJECT_PAST_VERB` 形式に従う。どのイベントも「何が起きたか？」に答える。
 
-The audit trail's purpose, owning commands, and read commands are explained in
-[Audit trail rules](../../aidlc-common/protocols/stage-protocol.md#audit-trail-rules).
-This registry names each event's emitter and data; it is not a file-writing
-template. Timestamp and event identity belong to the emitter.
+監査証跡の目的、それを担うコマンド、読み取り用コマンドについては
+[監査証跡のルール](../../aidlc-common/protocols/stage-protocol.md#audit-trail-rules) で説明している。
+このレジストリは各イベントの発行元とデータを示すものであり、ファイル書き込み用の
+テンプレートではない。タイムスタンプとイベントの識別は発行元が担う。
 
 ## Emitter-Owned Fields
 
-The structured renderer writes exactly one `Timestamp` and one `Event` line per
-block; callers must not supply either field. For compatibility, the generic
-`audit append --field Timestamp=...` form is still accepted, but its value is
-intentionally ignored. Historical shards are not rewritten: readers that parse
-whole files must split on `---` and use the first timestamp in each block, or
-deduplicate timestamp fields produced by older versions.
+構造化レンダラーは、ブロックごとにちょうど 1 つの `Timestamp` 行と 1 つの `Event` 行を書き込む。
+呼び出し側はどちらのフィールドも指定してはならない。互換性のため、汎用の
+`audit append --field Timestamp=...` 形式は引き続き受け付けるが、その値は
+意図的に無視される。過去のシャードは書き換えられない。ファイル全体を解析する読み取り側は、
+`---` で分割して各ブロックの最初のタイムスタンプを使うか、
+旧バージョンが生成したタイムスタンプフィールドの重複を除去しなければならない。
 
-**Person Reply.** Where an event carries `Person Reply`, it holds the person's own
-messages since the question was shown, each as the harness delivered it and
-trimmed, kept by the human-turn hook; the conductor's reading of them is the
-event's choice field. The hook keeps a bounded amount, so the field can be
-shorter than what was said:
-- A stage gate keeps up to 8 messages typed in that chat after the gate was
-  shown. When a ninth arrives, or one message is over 8000 characters, none of
-  them is attached: the field is absent and a change request records the
-  conductor's `--reason` instead.
-- Plan Approval keeps the latest 8 replies, each cut to 8000 characters.
-- A verification-command, Construction policy, or checkpoint question keeps the
-  replies joined in order, the last 8000 characters.
-- A picked option in a picker is kept only when it is one of a stage gate's own
-  choices; other picked labels are the conductor's text, not the person's words.
+**Person Reply.** イベントが `Person Reply` を持つ場合、そこには質問が表示されてからの
+利用者自身のメッセージが、ハーネスが届けたままの形でトリミングされて格納される。これは
+human-turn フックが保持したものであり、コンダクターによるその解釈はイベントの選択フィールドに入る。
+フックが保持する量には上限があるため、このフィールドは実際に発言された内容より
+短くなることがある:
+- ステージゲートは、ゲートが表示された後にそのチャットで入力されたメッセージを最大 8 件保持する。
+  9 件目が届いた場合、または 1 件のメッセージが 8000 文字を超えた場合は、どれも
+  添付されない。フィールドは存在せず、変更要求にはコンダクターの
+  `--reason` が代わりに記録される。
+- Plan Approval は最新の返信 8 件を、それぞれ 8000 文字に切り詰めて保持する。
+- verification-command、Construction ポリシー、チェックポイントの質問は、
+  返信を順に連結したものの末尾 8000 文字を保持する。
+- ピッカーで選ばれた選択肢は、それがステージゲート自身の選択肢である場合にのみ保持される。
+  それ以外の選択されたラベルはコンダクターのテキストであり、利用者の言葉ではない。
 
-**Message Ids.** A row whose Person Reply (or a stage change request's
-Feedback) holds the words of several messages names every one of them in
-`Message Ids`, oldest first and comma-separated, beside `Message Id` (the
-latest), so the row's words and its ids match. A row that stands on one
-message, or on the one the conductor named with `--message`, carries
-`Message Id` alone.
+**Message Ids.** Person Reply（またはステージ変更要求の Feedback）が複数のメッセージの言葉を
+含む行は、`Message Id`（最新のもの）に加えて、`Message Ids` にそのすべてを
+古い順にカンマ区切りで列挙する。これにより、行の言葉と ID が対応する。
+1 件のメッセージに基づく行、またはコンダクターが `--message` で指定したメッセージに基づく行は、
+`Message Id` のみを持つ。
 
-**Git Name.** A row that records a decision of the person's carries `Git Name`:
-the name their git reports for this project (`git config user.name`, the repo's
-own setting first, then their global one), the same name the Unit board shows.
-It says who was at the keyboard as git reports it. It is not a signature or
-proof of identity: anyone can set any name in git. AI-DLC only reads it; it
-never sets it, asks for it, or records an email. With no name in git, or in an
-unattended run (`AIDLC_UNATTENDED=1`), the field is absent and the row is what
-it would be without it. The rows that carry it:
-- `GATE_APPROVED` and `GATE_REJECTED` the person decided: a stage gate, a team
-  Unit gate, a Unit or batch checkpoint, a Unit merge gate, and the reopen a
-  jump of theirs writes; never an autonomous Construction decision (its
-  Build and Test loop-back included) or the revision backstop's `Recovered`
-  row.
-- `PLAN_APPROVAL_RECORDED`, `PLAN_APPROVAL_OVERRIDDEN`,
-  `SUMMARY_CONFIRMATION_RECORDED`, `VERIFICATION_COMMAND_RECORDED` and
-  `CONSTRUCTION_POLICY_RECORDED`.
-- `STAGE_JUMPED`, except one that lands in Construction while it runs on its own;
-  `STAGE_SKIPPED` and `UNIT_SKIPPED` whose Reason starts with
-  `the person asked to skip it`; `RECOMPOSED` for a skip the person asked for
-  or their approval at the compose question.
-- `GUARD_POLICY_SET`, `CEREMONY_SET`, `GUARD_DISABLED` and `GUARD_RESTORED`
-  with `Source: you`.
-- `CHANGE_ACCEPTED` that carries the person's `Message Id`.
+**Git Name.** 利用者の判断を記録する行は `Git Name` を持つ。これは、
+このプロジェクトで利用者の git が報告する名前（`git config user.name`。リポジトリ
+固有の設定を優先し、次にグローバル設定）であり、Unit ボードに表示される名前と同じである。
+これは git が報告する範囲で、誰がキーボードの前にいたかを示すものである。署名でも
+本人確認の証明でもない。git には誰でも任意の名前を設定できる。AI-DLC はこれを読み取るだけで、
+設定したり、尋ねたり、メールアドレスを記録したりすることは決してない。git に名前がない場合や、
+無人実行（`AIDLC_UNATTENDED=1`）の場合は、このフィールドは存在せず、行は
+フィールドがない場合と同じ内容になる。このフィールドを持つ行:
+- 利用者が判断した `GATE_APPROVED` と `GATE_REJECTED`: ステージゲート、チームの
+  Unit ゲート、Unit またはバッチのチェックポイント、Unit のマージゲート、および利用者の
+  ジャンプによって書き込まれる再オープン。自律的な Construction の判断（その
+  Build and Test のループバックを含む）や、修正バックストップの `Recovered`
+  行には決して付かない。
+- `PLAN_APPROVAL_RECORDED`、`PLAN_APPROVAL_OVERRIDDEN`、
+  `SUMMARY_CONFIRMATION_RECORDED`、`VERIFICATION_COMMAND_RECORDED`、
+  `CONSTRUCTION_POLICY_RECORDED`。
+- `STAGE_JUMPED`（Construction が自律的に実行中にそこへ着地するものを除く）。
+  Reason が `the person asked to skip it` で始まる `STAGE_SKIPPED` と `UNIT_SKIPPED`。
+  利用者が求めたスキップ、または compose の質問での利用者の承認による `RECOMPOSED`。
+- `Source: you` を持つ `GUARD_POLICY_SET`、`CEREMONY_SET`、`GUARD_DISABLED`、`GUARD_RESTORED`。
+- 利用者の `Message Id` を持つ `CHANGE_ACCEPTED`。
 
 ## Event Registry (134 events, 27 categories)
 
@@ -79,282 +76,279 @@ it would be without it. The rows that carry it:
 
 | Event | When | Required Fields | Emitter |
 |-------|------|-----------------|---------|
-| ✓ `WORKFLOW_STARTED` | Scope determined, workflow begins | Timestamp, Scope, Request; optional Source Baseline (`sha256:<listing-hash>` or `unbindable`); for a plan composed for this piece of work, Plan, Stages skipped, Stages added; for a plan the composer tailored, ARS Scores (`IAE 0.35, CSU 0.39, VE 0.40, R 0.35, UA 0.30`) and ARS Method (`codekb` or `fallback`) | `tools/aidlc-utility.ts intent-create` |
-| ✓ `WORKFLOW_COMPLETED` | All in-scope stages done | Timestamp, Scope, Details | `tools/aidlc-state.ts complete-workflow` |
-| ✓ `WORKFLOW_PARKED` | Workflow parked mid-flow for a later session (no stage advanced) | Timestamp, Stage; optional Person Reply (what the person said when they stopped, when the hook kept it), Message Id (the message that holds it) and Message Ids (see Message Ids above) | `tools/aidlc-state.ts park` |
-| ✓ `WORKFLOW_UNPARKED` | Park marker cleared on explicit `--resume` re-entry | Timestamp | `tools/aidlc-state.ts unpark` |
-| ✓ `WORKFLOW_ARCHIVED` | In-flight or completed intent retired by a human (`Status: Archived`, registry `archived`); record and audit shards preserved | Timestamp, Stage; optional Reason | `tools/aidlc-utility.ts intent archive` |
-| ✓ `WORKFLOW_UNARCHIVED` | Archived intent returned to `Running` / `in-flight`, or `Completed` / `complete` when it was archived complete | Timestamp, Stage | `tools/aidlc-utility.ts intent unarchive` |
-| `STATE_UPGRADED` | A record an earlier State Version wrote (7, from 2.1.x to 2.3.0) was brought up to the current one in place the first time the engine read it: renamed stages keep their checkbox and plan action, their record folders move to the new name, and an added stage is placed as the engine places any stage a newer release adds; nothing is asked or said | Timestamp, From, To, Renamed (`<old> to <new>`), Stages added, Moved (the record folders, or `none`), Original (the state as it was, kept beside it) | `tools/aidlc-state-upgrade.ts` (the engine's state read) |
-| `INTENT_REPOS_CHANGED` | A sibling repo was added to, or removed from, a piece of work that already records repos, at any stage (`intent add-repo <name>` / `intent remove-repo <name>`, or `intent set-repos <name,...>` for the whole set); a repo not cloned here yet was cloned and installed first, and a clone that failed records nothing; written to that intent's own shard | Timestamp, Stage, Repos (the set after the change), Added or Removed (the repo; set-repos lists every name), optional Cloned From (the address it was cloned from, userinfo masked), optional Reason (the agent's `--reason`), optional Person Words (the person's request, `--person-words`), optional Source Baseline Addition (`sha256:<listing-hash>` of the added repo's files at the add, which joins a stage-entry source baseline taken before it), set-repos' Named (`by the person`) | `tools/aidlc-utility.ts intent add-repo` / `intent remove-repo` / `intent set-repos` |
-| `INTENT_CHECKOUTS_CHANGED` | A checkout the work's code is kept in where the review would not otherwise see it (a worktree in the harness folder, or one outside the project) was recorded for the review, or taken out again (`intent add-checkout <path>` / `intent remove-checkout <path>`); written to that intent's own shard. The path is text for the record: only the intent's per-clone `.aidlc-engine/source-checkouts.json` is read as the setting | Timestamp, Stage, Path (as typed), Checkouts (the labels after the change, or `none`), and Added or Removed (the one label) | `tools/aidlc-utility.ts intent add-checkout` / `intent remove-checkout` |
+| ✓ `WORKFLOW_STARTED` | スコープが決まり、ワークフローが始まる | Timestamp, Scope, Request。任意で Source Baseline（`sha256:<listing-hash>` または `unbindable`）。この作業のために組み立てたプランでは Plan, Stages skipped, Stages added。コンポーザーが調整したプランでは ARS Scores（`IAE 0.35, CSU 0.39, VE 0.40, R 0.35, UA 0.30`）と ARS Method（`codekb` または `fallback`） | `tools/aidlc-utility.ts intent-create` |
+| ✓ `WORKFLOW_COMPLETED` | スコープ内のすべてのステージが完了 | Timestamp, Scope, Details | `tools/aidlc-state.ts complete-workflow` |
+| ✓ `WORKFLOW_PARKED` | 後のセッションのためにワークフローを途中で中断（どのステージも前進しない） | Timestamp, Stage。任意で Person Reply（利用者が中断したときに言ったこと。フックが保持した場合）、Message Id（それを含むメッセージ）、Message Ids（上記 Message Ids を参照） | `tools/aidlc-state.ts park` |
+| ✓ `WORKFLOW_UNPARKED` | 明示的な `--resume` による再開で中断マーカーが解除された | Timestamp | `tools/aidlc-state.ts unpark` |
+| ✓ `WORKFLOW_ARCHIVED` | 進行中または完了済みのインテントが人によって退役された（`Status: Archived`、レジストリは `archived`）。記録と監査シャードは保持される | Timestamp, Stage。任意で Reason | `tools/aidlc-utility.ts intent archive` |
+| ✓ `WORKFLOW_UNARCHIVED` | アーカイブされたインテントが `Running` / `in-flight` に戻された。完了状態でアーカイブされていた場合は `Completed` / `complete` に戻る | Timestamp, Stage | `tools/aidlc-utility.ts intent unarchive` |
+| `STATE_UPGRADED` | 以前の State Version（7、2.1.x から 2.3.0）が書いた記録を、エンジンが初めて読み込んだときにその場で現行版へ引き上げた。名前が変わったステージはチェックボックスとプランのアクションを保持し、記録フォルダーは新しい名前へ移動し、追加されたステージは、新しいリリースで追加されたステージと同じ方法で配置される。何も尋ねず、何も告げない | Timestamp, From, To, Renamed（`<old> to <new>`）, Stages added, Moved（記録フォルダー、または `none`）, Original（元の状態。その横に保存される） | `tools/aidlc-state-upgrade.ts`（エンジンの状態読み込み） |
+| `INTENT_REPOS_CHANGED` | すでにリポジトリを記録している作業に対し、任意のステージで兄弟リポジトリが追加または削除された（`intent add-repo <name>` / `intent remove-repo <name>`、またはセット全体に対する `intent set-repos <name,...>`）。まだここにクローンされていないリポジトリは先にクローンとインストールが行われ、クローンに失敗した場合は何も記録しない。そのインテント自身のシャードに書き込まれる | Timestamp, Stage, Repos（変更後のセット）, Added または Removed（対象リポジトリ。set-repos ではすべての名前を列挙）, 任意で Cloned From（クローン元のアドレス。userinfo はマスクされる）, 任意で Reason（エージェントの `--reason`）, 任意で Person Words（利用者の依頼。`--person-words`）, 任意で Source Baseline Addition（追加時点での追加リポジトリのファイルの `sha256:<listing-hash>`。その前に取得されたステージ開始時のソースベースラインに加わる）, set-repos の Named（`by the person`） | `tools/aidlc-utility.ts intent add-repo` / `intent remove-repo` / `intent set-repos` |
+| `INTENT_CHECKOUTS_CHANGED` | 作業のコードが、レビューから通常は見えない場所にあるチェックアウト（ハーネスフォルダー内のワークツリー、またはプロジェクト外のもの）について、レビュー用に記録された、または再び除外された（`intent add-checkout <path>` / `intent remove-checkout <path>`）。そのインテント自身のシャードに書き込まれる。パスは記録用のテキストであり、設定として読まれるのはインテントのクローンごとの `.aidlc-engine/source-checkouts.json` のみである | Timestamp, Stage, Path（入力されたまま）, Checkouts（変更後のラベル、または `none`）, Added または Removed（その 1 つのラベル） | `tools/aidlc-utility.ts intent add-checkout` / `intent remove-checkout` |
 
 ### Phase Lifecycle (4 events)
 
 | Event | When | Required Fields | Emitter |
 |-------|------|-----------------|---------|
-| ✓ `PHASE_STARTED` | Phase begins (first in-scope stage about to run) | Timestamp, Phase, Stage count, Scope | `tools/aidlc-utility.ts intent-create` (Init phase), `tools/aidlc-state.ts advance` (phase boundary) |
-| ✓ `PHASE_COMPLETED` | Crossed a phase boundary | Timestamp, From phase, To phase, Stages completed | `tools/aidlc-state.ts advance`, `tools/aidlc-state.ts complete-workflow` |
-| `PHASE_VERIFIED` | Traceability check at boundary | Timestamp, Phase boundary, Pass/fail, Issues | `tools/aidlc-state.ts advance`, `tools/aidlc-state.ts complete-workflow` |
-| `PHASE_SKIPPED` | Scope excludes phase, or a forward jump passes over it | Timestamp, Phase, Scope, Reason | `tools/aidlc-utility.ts intent-create` (per-phase scope eval), `tools/aidlc-jump.ts execute` (forward jump) |
+| ✓ `PHASE_STARTED` | フェーズが始まる（スコープ内の最初のステージが実行される直前） | Timestamp, Phase, Stage count, Scope | `tools/aidlc-utility.ts intent-create`（Init フェーズ）, `tools/aidlc-state.ts advance`（フェーズ境界） |
+| ✓ `PHASE_COMPLETED` | フェーズ境界を越えた | Timestamp, From phase, To phase, Stages completed | `tools/aidlc-state.ts advance`, `tools/aidlc-state.ts complete-workflow` |
+| `PHASE_VERIFIED` | 境界でのトレーサビリティ検査 | Timestamp, Phase boundary, Pass/fail, Issues | `tools/aidlc-state.ts advance`, `tools/aidlc-state.ts complete-workflow` |
+| `PHASE_SKIPPED` | スコープがフェーズを除外している、または前方ジャンプがそのフェーズを飛び越えた | Timestamp, Phase, Scope, Reason | `tools/aidlc-utility.ts intent-create`（フェーズごとのスコープ評価）, `tools/aidlc-jump.ts execute`（前方ジャンプ） |
 
 ### Stage Lifecycle (9 events)
 
 | Event | When | Required Fields | Emitter |
 |-------|------|-----------------|---------|
-| ✓ `STAGE_STARTED` | Stage enters `[-]` Active, or an isolated attempt opens | Timestamp, Stage, Agent; optional Source Baseline when the entered stage declares `workspace_requires`; isolated rows include Workflow (`single-stage:<slug>`) and Scope to bind completion to the selected ceremony policy; optional Answer Mode when the stage reuses the person's earlier answer mode instead of asking (e.g. `guide (reused from requirements-analysis)`) | `tools/aidlc-state.ts advance`, `tools/aidlc-utility.ts intent-create` (init stages), `tools/aidlc-orchestrate.ts next --single` (isolated attempts) |
-| `STAGE_AWAITING_APPROVAL` | Stage enters `[?]` (gate open) | Timestamp, Stage, Artifacts, `Next Stage` (the in-scope stage the approval continues to, as the gate reply computes it, or `none`), `Brief Digest` (`sha256:<hex>` of the review brief kept for this gate so far, under `.aidlc-engine/reviews/<stage>/.../briefs/`; usually `none` on a first open, since the agent renders the brief after this row, and set on a re-entry; the approval row carries the digest the person decided on), `Sensor State` (per applicable sensor and declared artifact, `<id>@<path>=passed|failed(<n>) [detail: <path>]|not-run`, failures first, at most 20 spelled out), `Open Decisions` (the count of decisions the artifacts left to the person in an `aidlc-decisions` block, with `Decisions` listing their ids; `unreadable (<file>)` for a block the engine could not read; nothing here refuses a gate), the gate's question record (`Question Id`, `Question Type: gate`, `Question Shows`: `sha256:` over the brief digest and the documents' fingerprint, and `Question Chat` when the command names its chat; see Question records), optional `Recovered=true` (backfilled gate row) or `Revalidated=true` (an already-open gate consumed a blocking-sensor override), optional `Review Kept` on a re-entry (the timestamp of the Request Changes it came back from with the review that request was made on, because nothing of the stage changed after it; that rejection then starts no new review attempt), Approves Together (the per-Unit stages, comma-separated, that the gate's one question named after every Unit was built under unit-major with Unit checkpoints off); a blocking-sensor override also carries Blocking Sensor Override, Blocking Sensor IDs, optional Blocking Sensor Detail Paths, and Blocking Sensor Reasons. Its authorization is the preceding exact `DECISION_RECORDED` → `HUMAN_TURN` → `QUESTION_ANSWERED` pair. | `tools/aidlc-state.ts gate-start` (organic, `--recovered` backfill, or override revalidation), `tools/aidlc-state.ts revise` (gate re-entry), `tools/aidlc-state.ts approve` (backstop re-entry after its opening guards pass) |
-| `STAGE_REVISING` | Stage enters `[R]` (user rejected gate) | Timestamp, Stage, Revision count, Feedback, optional `Recovered=true` (backfilled by the approve-time revision backstop) | `tools/aidlc-state.ts reject`, `tools/aidlc-state.ts approve` (backstop backfill) |
-| ✓ `STAGE_COMPLETED` | Stage finishes (`[x]`) | Timestamp, Stage, Details, Artifacts | `tools/aidlc-state.ts approve` (gated stages; also auto-advances to next), `tools/aidlc-state.ts advance` (non-gated stages), `tools/aidlc-utility.ts intent-create` (init stages) |
-| `STAGE_JUMPED` | Forward/backward/redo jump target reached | Timestamp, Direction, Source, Target, Scope; optional Source Baseline. Backward jumps also carry JSON arrays for Changed Upstream Artifacts, Invalidated Downstream Artifacts, and Invalidated Downstream Reviews; under `Unit Ownership: team`, a backward jump to a stage before the per-Unit block also carries `Unit Work: kept` (each Unit's per-Unit work stays with its claim) | `tools/aidlc-jump.ts execute` |
-| `STAGE_SKIPPED` | Current stage reports a justified skip, or under unit-major no unit owes the stage any more (each skipped or kind-vacuous), or a jump skips it (`[S]`) | Timestamp, Stage, Reason | `tools/aidlc-state.ts skip` (internally routed by `aidlc-orchestrate.ts report --result skipped`), `tools/aidlc-jump.ts execute` |
-| `STAGE_DEFINITION_CHANGED` | A finished stage's own definition changed (an AI-DLC update, a plugin, a stage edit) and nothing of the person's work did; the next step was spoken (it carried the line only when the stage now needs an input it did not need) | Timestamp, Stage, Validation Basis (the receipt for the new definition), Details (the line said, or that nothing was) | `aidlc-orchestrate.ts` |
-| `STAGE_OUTPUT_AMENDED` | A finished stage's own documents changed (content only, nothing else of the stage's did) before the person's next message after the one its approval names, with no decision since that names another message or none; the next step was spoken, and nothing was said | Timestamp, Stage, Validation Basis (the receipt for the files as they are), Message Id (the message the approval names), Details (`changed before the person's next message after <id>; receipt renewed`) | `aidlc-orchestrate.ts` |
-| `SOURCE_WORK_NOT_FOUND` | A code-producing stage (`workspace_requires`) found no new code where it looked: the project folder, the intent's recorded repos, child repos and worktrees found when the check runs, the linked worktrees of each of those, checkouts inside the project its root's git does not track, and the source changes since the stage attempt began. Outcome `told the agent`: the agent's own first report in this attempt was refused; `put to the person`: the approval question went to the person with the note (a later report, the person's own approval, or a first refusal that could not be recorded or read back); `stood aside`: Guard Policy off let the work carry on. One row per outcome per attempt; the approval rows carry the same note as `Source Work` | Timestamp, Stage, Run floor, Outcome, Looked In, Details (the line said, or what the agent was told) | `tools/aidlc-state.ts` (`verifyStageArtifacts`) |
+| ✓ `STAGE_STARTED` | ステージが `[-]` Active に入る、または分離された試行が開始される | Timestamp, Stage, Agent。入ったステージが `workspace_requires` を宣言している場合は任意で Source Baseline。分離された行には、完了を選択されたセレモニーポリシーに結び付けるための Workflow（`single-stage:<slug>`）と Scope が含まれる。ステージが回答モードを尋ねる代わりに利用者の以前の回答モードを再利用する場合は任意で Answer Mode（例: `guide (reused from requirements-analysis)`） | `tools/aidlc-state.ts advance`, `tools/aidlc-utility.ts intent-create`（init ステージ）, `tools/aidlc-orchestrate.ts next --single`（分離された試行） |
+| `STAGE_AWAITING_APPROVAL` | ステージが `[?]` に入る（ゲートが開く） | Timestamp, Stage, Artifacts, `Next Stage`（ゲートの返信が計算する、承認後に続くスコープ内のステージ、または `none`）, `Brief Digest`（このゲートについてこれまでに保持されたレビューブリーフの `sha256:<hex>`。保存先は `.aidlc-engine/reviews/<stage>/.../briefs/`。エージェントはこの行の後にブリーフを描画するため初回のオープンでは通常 `none` で、再入時に設定される。承認行には利用者が判断したときのダイジェストが入る）, `Sensor State`（適用されるセンサーと宣言された成果物ごとの `<id>@<path>=passed|failed(<n>) [detail: <path>]|not-run`。失敗を先頭に、最大 20 件まで明記）, `Open Decisions`（成果物が `aidlc-decisions` ブロックで利用者に委ねた判断の件数。`Decisions` にはその ID を列挙。エンジンが読めなかったブロックは `unreadable (<file>)`。ここではどれもゲートを拒否しない）, ゲートの質問記録（`Question Id`, `Question Type: gate`, `Question Shows`: ブリーフのダイジェストとドキュメントのフィンガープリントに対する `sha256:`, コマンドがチャットを指定する場合は `Question Chat`。Question records を参照）, 任意で `Recovered=true`（後から補完されたゲート行）または `Revalidated=true`（すでに開いているゲートがブロッキングセンサーのオーバーライドを消費した）, 再入時は任意で `Review Kept`（戻ってきた元の Request Changes のタイムスタンプと、その要求の対象となったレビュー。その後ステージに何の変更もなかったため。その場合、その却下は新しいレビュー試行を開始しない）, Approves Together（Unit チェックポイントがオフの unit-major で全 Unit が構築された後、ゲートの 1 つの質問が名指しした Unit ごとのステージ。カンマ区切り）。ブロッキングセンサーのオーバーライドには、Blocking Sensor Override, Blocking Sensor IDs, 任意で Blocking Sensor Detail Paths, Blocking Sensor Reasons も含まれる。その権限は、直前の正確な `DECISION_RECORDED` → `HUMAN_TURN` → `QUESTION_ANSWERED` の組である。 | `tools/aidlc-state.ts gate-start`（通常、`--recovered` による補完、またはオーバーライドの再検証）, `tools/aidlc-state.ts revise`（ゲートへの再入）, `tools/aidlc-state.ts approve`（オープン時のガードを通過した後のバックストップ再入） |
+| `STAGE_REVISING` | ステージが `[R]` に入る（ユーザーがゲートで却下した） | Timestamp, Stage, Revision count, Feedback, 任意で `Recovered=true`（承認時の修正バックストップによる補完） | `tools/aidlc-state.ts reject`, `tools/aidlc-state.ts approve`（バックストップによる補完） |
+| ✓ `STAGE_COMPLETED` | ステージが完了する（`[x]`） | Timestamp, Stage, Details, Artifacts | `tools/aidlc-state.ts approve`（ゲート付きステージ。次へも自動で前進する）, `tools/aidlc-state.ts advance`（ゲートなしのステージ）, `tools/aidlc-utility.ts intent-create`（init ステージ） |
+| `STAGE_JUMPED` | 前方・後方・やり直しのジャンプ先に到達した | Timestamp, Direction, Source, Target, Scope。任意で Source Baseline。後方ジャンプは Changed Upstream Artifacts, Invalidated Downstream Artifacts, Invalidated Downstream Reviews の JSON 配列も持つ。`Unit Ownership: team` の下で、Unit ごとのブロックより前のステージへ後方ジャンプする場合は `Unit Work: kept` も持つ（各 Unit の Unit ごとの作業はそのクレームとともに残る） | `tools/aidlc-jump.ts execute` |
+| `STAGE_SKIPPED` | 現在のステージが正当なスキップを報告した、unit-major の下でもはやどのユニットもそのステージを必要としなくなった（各ユニットがスキップ済みか、種類により空）、またはジャンプがそのステージをスキップした（`[S]`） | Timestamp, Stage, Reason | `tools/aidlc-state.ts skip`（内部的には `aidlc-orchestrate.ts report --result skipped` から呼ばれる）, `tools/aidlc-jump.ts execute` |
+| `STAGE_DEFINITION_CHANGED` | 完了済みステージ自身の定義が変わり（AI-DLC の更新、プラグイン、ステージの編集）、利用者の作業には何の変更もなかった。次のステップが告げられた（ステージが以前は不要だった入力を必要とするようになった場合にのみ、その旨の一文を含む） | Timestamp, Stage, Validation Basis（新しい定義に対するレシート）, Details（告げた一文、または何も告げなかったこと） | `aidlc-orchestrate.ts` |
+| `STAGE_OUTPUT_AMENDED` | 完了済みステージ自身のドキュメントが（内容のみ、ステージのそれ以外は何も変わらずに）、その承認が指すメッセージの次の利用者メッセージより前に変更され、その後に別のメッセージを指す判断や何も指さない判断がなかった。次のステップが告げられ、何も言わなかった | Timestamp, Stage, Validation Basis（現状のファイルに対するレシート）, Message Id（承認が指すメッセージ）, Details（`changed before the person's next message after <id>; receipt renewed`） | `aidlc-orchestrate.ts` |
+| `SOURCE_WORK_NOT_FOUND` | コードを生成するステージ（`workspace_requires`）が、探した場所で新しいコードを見つけられなかった。探す場所は、プロジェクトフォルダー、インテントに記録されたリポジトリ、検査時に見つかった子リポジトリとワークツリー、それぞれのリンクされたワークツリー、プロジェクトルートの git が追跡していないプロジェクト内のチェックアウト、およびステージ試行開始以降のソース変更である。Outcome が `told the agent` の場合: この試行でのエージェント自身の最初の報告が拒否された。`put to the person` の場合: 承認の質問が注記付きで利用者に提示された（後の報告、利用者自身の承認、または記録や読み戻しができなかった最初の拒否）。`stood aside` の場合: Guard Policy が off のため作業が続行された。試行ごと・結果ごとに 1 行。承認行には同じ注記が `Source Work` として入る | Timestamp, Stage, Run floor, Outcome, Looked In, Details（告げた一文、またはエージェントに伝えた内容） | `tools/aidlc-state.ts`（`verifyStageArtifacts`） |
 
 ### Session Events (6 events - hook-owned, independent of workflow lifecycle)
 
 | Event | When | Required Fields | Emitter |
 |-------|------|-----------------|---------|
-| `SESSION_STARTED` | A fresh session begins (source=startup or clear; on Kiro IDE, a chat's first prompt) | Timestamp, Source | `hooks/aidlc-session-start.ts` |
-| `SESSION_RESUMED` | An existing session resumes (source=resume; on Kiro IDE, a prompt that returns to an earlier chat) | Timestamp, Source | `hooks/aidlc-session-start.ts` |
-| `SESSION_COMPACTED` | Context compaction occurred | Timestamp, Current Stage, State Validity | `hooks/aidlc-validate-state.ts` (PreCompact) |
-| `SESSION_ENDED` | Claude Code session terminates | Timestamp, Reason, Session (when the host named the chat) | `hooks/aidlc-session-end.ts` |
-| `HUMAN_TURN` | A supported prompt-submit or answered-widget seam was observed (the approval/interview gate requires one since the last gate resolution, and a stage gate one sent since the stage started and after the gate was shown, or the message the agent names with `--message`); omitted when the driver declares `AIDLC_UNATTENDED=1` or the prompt arrives in a swarm worker's worktree (a worker's brief is the conductor's, never a person's turn), and never written for a prompt the host made (see `HOST_TURN`) | Timestamp, Session, `Origin: person`, `Source: typed` or `Source: picker` (how the turn arrived; absent on a legacy payload), optional `Message Id` (the hook's record of the message under `aidlc/.aidlc-sessions/messages/<id>.json`, absent when the record could not be written), optional `Reply: command` (the turn was only a command to AIDLC: its own command syntax, `/aidlc ...`, `/aidlc-<runner> ...` or `$aidlc ...` with a flag, scope, verb or noun the engine reads, or a typed switch; words alone after `/aidlc` or `$aidlc`, such as `/aidlc approve the code plan`, are a reply kept without the entry, and so is other text that starts with a slash) (an older record's `Reply: question` marked a question about a switch, such as "skip plan approval?"; nothing writes it now, the agent answers the question, and a reader treats it as a command turn). A decision on an open question does not count a command turn as a reply; optional `Open Question` (the ask type of another engine question on screen when the message came: by default no decision on a question beneath counts it, unless the conductor names the message with `--message`); optional `Picked` (a picker reply's picks, as a JSON list of the labels the person chose); optional `Open Questions` (the ids of the questions open where they replied: shown in this chat, in the stage's questions file, or by a command whose chat was unknown) and `Questions Digest` (JSON: `file`, the questions file of the stage the engine handed out last, and `entries`, one 16-hex digest per entry with its `[Answer]:` lines blanked and line endings normalized), each written only when it holds something; nothing decides on them yet | `hooks/aidlc-record-human-turn.ts` (UserPromptSubmit + PostToolUse AskUserQuestion) + the per-harness prompt-submit adapters |
-| `HOST_TURN` | Never a human turn: a prompt the host made for the agent reached the prompt-submit seam and was not counted as the person's turn (a Kiro Workflows brief or finish notice, a Kiro sub-agent synthesis prompt, a Claude Code background-task notification, subagent hand-back, scheduled wake-up (a `/loop` tick, a CronCreate task, the loop Claude Code arms itself), another Claude session's message, the Claude desktop app's own events, quit note or session brief). Told from a person's message by the host's own record (Kiro's chat record `syntheticUserMessageReason`, Claude Code's transcript `turnOrigin`) or by the whole host sentence, anchored; anything unknown is a person's turn. Nothing of the person's rides on it: no message record, no kept words, no reply, no typed switch, no conversational marker. Claude Code writes a turn's own row only after the prompt hook returns, so a wake-up is first recorded as a `HUMAN_TURN`; the next engine command or hook reads the row and appends a `HOST_TURN` naming that turn's `Message Id`, and from then on that `HUMAN_TURN` is no turn for any reader, its message record is gone and the replies kept for it are withdrawn | Timestamp, optional Session, `Origin: host`, Reason (the host's own word for it, or the sentence's name), Source (`record` or `template`), optional Message Id (the turn it takes back); never the prompt text | `hooks/aidlc-record-human-turn.ts` (UserPromptSubmit, with the Kiro CLI and Kiro IDE adapters deciding for their hosts); `tools/aidlc-claude-turn-origin.ts` (`settleClaudeTurns`, for the turn it takes back) |
+| `SESSION_STARTED` | 新しいセッションが始まる（source=startup または clear。Kiro IDE ではチャットの最初のプロンプト） | Timestamp, Source | `hooks/aidlc-session-start.ts` |
+| `SESSION_RESUMED` | 既存のセッションが再開される（source=resume。Kiro IDE では以前のチャットに戻るプロンプト） | Timestamp, Source | `hooks/aidlc-session-start.ts` |
+| `SESSION_COMPACTED` | コンテキストの圧縮が発生した | Timestamp, Current Stage, State Validity | `hooks/aidlc-validate-state.ts`（PreCompact） |
+| `SESSION_ENDED` | Claude Code のセッションが終了する | Timestamp, Reason, Session（ホストがチャットに名前を付けた場合） | `hooks/aidlc-session-end.ts` |
+| `HUMAN_TURN` | サポートされているプロンプト送信またはウィジェット回答の接点が観測された（承認・インタビューのゲートは、前回のゲート解決以降に 1 件を必要とし、ステージゲートは、ステージ開始以降かつゲート表示後に送られた 1 件、またはエージェントが `--message` で指定したメッセージを必要とする）。ドライバーが `AIDLC_UNATTENDED=1` を宣言している場合や、プロンプトがスウォームワーカーのワークツリーに届いた場合は省略される（ワーカーのブリーフはコンダクターのものであり、利用者のターンではない）。ホストが作成したプロンプトについては決して書き込まれない（`HOST_TURN` を参照） | Timestamp, Session, `Origin: person`, `Source: typed` または `Source: picker`（ターンの到着経路。旧形式のペイロードにはない）, 任意で `Message Id`（`aidlc/.aidlc-sessions/messages/<id>.json` にあるフックによるメッセージの記録。記録を書き込めなかった場合はない）, 任意で `Reply: command`（そのターンが AIDLC へのコマンドのみだった。AIDLC 自身のコマンド構文、エンジンが読むフラグ・スコープ・動詞・名詞を伴う `/aidlc ...`、`/aidlc-<runner> ...`、`$aidlc ...`、または入力されたスイッチ。`/aidlc` や `$aidlc` の後に言葉だけが続くもの、たとえば `/aidlc approve the code plan` は、このエントリなしで保持される返信であり、スラッシュで始まるその他のテキストも同様である）（古い記録の `Reply: question` は "skip plan approval?" のようなスイッチについての質問を示していた。現在はこれを書き込むものはなく、エージェントが質問に答え、読み取り側はそれをコマンドのターンとして扱う）。開いている質問への判断では、コマンドのターンを返信として数えない。任意で `Open Question`（メッセージが届いたときに画面上にあった別のエンジン質問の質問種別。既定では、その下にある質問への判断はこれを数えない。ただしコンダクターが `--message` でメッセージを指定した場合を除く）。任意で `Picked`（ピッカーによる返信の選択内容。利用者が選んだラベルの JSON リスト）。任意で `Open Questions`（返信した場所で開いていた質問の ID。このチャットで表示されたもの、ステージの質問ファイル内のもの、またはチャット不明のコマンドによるもの）と `Questions Digest`（JSON: `file` はエンジンが最後に提示したステージの質問ファイル、`entries` はエントリごとの 16 桁 16 進ダイジェストで、`[Answer]:` 行を空にし改行を正規化したもの）。いずれも内容がある場合にのみ書き込まれる。現時点では、これらに基づいて何かを判断するものはない | `hooks/aidlc-record-human-turn.ts`（UserPromptSubmit + PostToolUse AskUserQuestion）+ ハーネスごとのプロンプト送信アダプター |
+| `HOST_TURN` | 人のターンではない: ホストがエージェント向けに作成したプロンプトがプロンプト送信の接点に届き、利用者のターンとして数えられなかった（Kiro Workflows のブリーフや完了通知、Kiro サブエージェントの統合プロンプト、Claude Code のバックグラウンドタスク通知、サブエージェントの引き渡し、スケジュールされた起動（`/loop` のティック、CronCreate タスク、Claude Code 自身が設定するループ）、別の Claude セッションのメッセージ、Claude デスクトップアプリ自身のイベント、終了メモ、セッションブリーフ）。利用者のメッセージとの区別は、ホスト自身の記録（Kiro のチャット記録の `syntheticUserMessageReason`、Claude Code のトランスクリプトの `turnOrigin`）か、アンカー付きのホストの定型文全体によって行う。不明なものはすべて利用者のターンとする。利用者に関するものは何も載らない。メッセージ記録も、保持された言葉も、返信も、入力されたスイッチも、会話上のマーカーもない。Claude Code はプロンプトフックが戻った後にのみターン自身の行を書き込むため、起動は最初 `HUMAN_TURN` として記録される。次のエンジンコマンドまたはフックがその行を読み、そのターンの `Message Id` を指す `HOST_TURN` を追記する。それ以降、その `HUMAN_TURN` はどの読み取り側にとってもターンではなくなり、そのメッセージ記録は削除され、そのために保持されていた返信は取り下げられる | Timestamp, 任意で Session, `Origin: host`, Reason（ホスト自身による呼び名、または定型文の名前）, Source（`record` または `template`）, 任意で Message Id（取り消す対象のターン）。プロンプトのテキストは決して含まない | `hooks/aidlc-record-human-turn.ts`（UserPromptSubmit。Kiro CLI と Kiro IDE のアダプターがそれぞれのホストについて判断する）; `tools/aidlc-claude-turn-origin.ts`（`settleClaudeTurns`。取り消すターンについて） |
 
-`HUMAN_TURN` is chronological presence evidence, not authenticated decision
-content. The `--user-input`, `--feedback`, and `--details` fields recorded by
-authority-bearing tools are caller-supplied prose, indistinguishable from
-human-authored text. Audit shards are operational evidence, not a tamper-proof
-human-authorship boundary.
+`HUMAN_TURN` は時系列上の在席の証拠であり、認証された判断内容ではない。
+権限を伴うツールが記録する `--user-input`、`--feedback`、`--details` の各フィールドは
+呼び出し側が与える散文であり、人が書いたテキストと区別できない。
+監査シャードは運用上の証拠であり、改ざん防止された人間による作成の境界ではない。
 
 ### Initialization Events (3 events — fire IN ADDITION TO `STAGE_COMPLETED`)
 
 | Event | When | Required Fields | Emitter |
 |-------|------|-----------------|---------|
-| `WORKSPACE_SCAFFOLDED` | Directory tree created | Timestamp, Details | `tools/aidlc-utility.ts` handleInit |
-| `WORKSPACE_SCANNED` | Workspace detection done | Timestamp, Project type, Details | `tools/aidlc-utility.ts` handleInit |
-| `WORKSPACE_INITIALISED` | State file created | Timestamp, Details | `tools/aidlc-utility.ts` handleInit |
+| `WORKSPACE_SCAFFOLDED` | ディレクトリツリーが作成された | Timestamp, Details | `tools/aidlc-utility.ts` handleInit |
+| `WORKSPACE_SCANNED` | ワークスペースの検出が完了した | Timestamp, Project type, Details | `tools/aidlc-utility.ts` handleInit |
+| `WORKSPACE_INITIALISED` | 状態ファイルが作成された | Timestamp, Details | `tools/aidlc-utility.ts` handleInit |
 
 ### Navigation Events (9 events)
 
 | Event | When | Required Fields | Emitter |
 |-------|------|-----------------|---------|
-| `SCOPE_CHANGED` | `--scope` changed existing scope | Timestamp, Old scope, New scope | `tools/aidlc-utility.ts` |
-| `PLUGIN_SELECTION_CHANGED` | `select-plugins` changed enabled plugins | Timestamp, Previous Selection, New Selection | `tools/aidlc-utility.ts select-plugins` |
-| `DEPTH_CHANGED` | `--depth` changed depth level | Timestamp, Old depth, New depth | `tools/aidlc-utility.ts` |
-| `TEST_STRATEGY_CHANGED` | `--test-strategy` changed test strategy | Timestamp, Old strategy, New strategy | `tools/aidlc-utility.ts` |
-| `REVIEW_CLASS_CHANGED` | `--review` changed the per-run review override | Timestamp, Old Override, New Override | `tools/aidlc-utility.ts` |
-| `SCOPE_DETECTED` | A scope recorded for freeform text | Timestamp, Detected scope, Input text, Source, Matched keywords (optional; present when `Source=keyword`) | `tools/aidlc-utility.ts detect-scope` |
-| `RECOMPOSED` | The adaptive composer re-shaped a running workflow's pending stages (suffix flips via `recompose`) | Timestamp, Scope, Stages skipped, Stages added, Stages in Scope | `tools/aidlc-utility.ts recompose` |
-| `WORKSPACE_RECLASSIFIED` | The person said the work is a new project or existing code (`workspace reclassify --project-type`); the folder was scanned again | Timestamp, Old Project Type, New Project Type, Scanned As, Languages, Frameworks, Build System, Nested Root (optional), Repos Recorded (optional), Reverse Engineering; optional Message Id and Person Reply (the message the agent named with `--message` as the one they said it in), or Conductor Summary (words passed in the form before `--message`, the agent's own) | `tools/aidlc-utility.ts reclassify` |
-| `SCOPE_SAVED` | The person kept a piece of work's current plan as a reusable scope (`scope save`) | Timestamp, Scope, Saved as, Stages in Scope | `tools/aidlc-utility.ts scope-save` |
+| `SCOPE_CHANGED` | `--scope` が既存のスコープを変更した | Timestamp, Old scope, New scope | `tools/aidlc-utility.ts` |
+| `PLUGIN_SELECTION_CHANGED` | `select-plugins` が有効なプラグインを変更した | Timestamp, Previous Selection, New Selection | `tools/aidlc-utility.ts select-plugins` |
+| `DEPTH_CHANGED` | `--depth` が深度レベルを変更した | Timestamp, Old depth, New depth | `tools/aidlc-utility.ts` |
+| `TEST_STRATEGY_CHANGED` | `--test-strategy` がテスト戦略を変更した | Timestamp, Old strategy, New strategy | `tools/aidlc-utility.ts` |
+| `REVIEW_CLASS_CHANGED` | `--review` が実行ごとのレビューオーバーライドを変更した | Timestamp, Old Override, New Override | `tools/aidlc-utility.ts` |
+| `SCOPE_DETECTED` | 自由記述テキストに対してスコープが記録された | Timestamp, Detected scope, Input text, Source, Matched keywords（任意。`Source=keyword` の場合に存在） | `tools/aidlc-utility.ts detect-scope` |
+| `RECOMPOSED` | 適応型コンポーザーが実行中のワークフローの保留中ステージを組み直した（`recompose` による後続部分の切り替え） | Timestamp, Scope, Stages skipped, Stages added, Stages in Scope | `tools/aidlc-utility.ts recompose` |
+| `WORKSPACE_RECLASSIFIED` | 利用者が、作業は新規プロジェクトである、または既存コードであると述べた（`workspace reclassify --project-type`）。フォルダーが再スキャンされた | Timestamp, Old Project Type, New Project Type, Scanned As, Languages, Frameworks, Build System, Nested Root（任意）, Repos Recorded（任意）, Reverse Engineering。任意で Message Id と Person Reply（利用者がそう述べたメッセージとしてエージェントが `--message` で指定したもの）、または Conductor Summary（`--message` 以前の形式で渡された言葉。エージェント自身のもの） | `tools/aidlc-utility.ts reclassify` |
+| `SCOPE_SAVED` | 利用者が作業の現在のプランを再利用可能なスコープとして保存した（`scope save`） | Timestamp, Scope, Saved as, Stages in Scope | `tools/aidlc-utility.ts scope-save` |
 
 ### Guard Policy Events (5 events)
 
-Guard Policy (formerly Change Control) is one per-intent setting, `strict`, `relaxed`, or `off`, that decides how far the guards stand aside for a piece of work: what a governed checkpoint does when an input changed after the human approved or confirmed something, and which authority fences hold. Configuration transactions and governed checkpoints emit provenance through the audit library; the public audit CLI refuses these rows.
+Guard Policy（旧称 Change Control）はインテントごとの 1 つの設定で、`strict`、`relaxed`、`off` のいずれかをとり、ある作業に対してガードがどこまで道を譲るかを決める。具体的には、人が何かを承認または確認した後に入力が変わったときに管理対象のチェックポイントが何をするか、そしてどの権限フェンスを維持するかを決める。設定トランザクションと管理対象のチェックポイントは監査ライブラリを通じて来歴を発行する。公開の audit CLI はこれらの行を拒否する。
 
 | Event | When | Required Fields | Emitter |
 |-------|------|-----------------|---------|
-| `GUARD_POLICY_SET` | `config-change --guard-policy <strict\|relaxed\|off>` (the setter the agent runs for a typed or asked-for switch) rewrites the state line, `scope-change` carries a scope-supplied value or explicit setting, or a governed checkpoint observes a memory edit changing the effective value | Timestamp, Old Value, New Value, Source (`you` when the record shows the person asked, `command` for a setter run without that, `scope <name>`, or `<layer>.md`), and on a lowering that is theirs, Person Reply and Message Id (the message the agent named with `--message`). Configuration and scope changes record the previously persisted intent value in Old Value (raw text if invalid; `strict` when no line existed), not the memory-effective value. Checkpoint observations retain effective old/new values. | `tools/aidlc-utility.ts` batches configuration changes, including `applyTypedGuardSwitchPrompt` from `hooks/aidlc-record-human-turn.ts`; `tools/aidlc-lib.ts` (`governedGuardPolicy` through `appendGuardPolicySetRow`) records checkpoint observations |
-| `CHANGE_CONTROL_SET` | The retired name of `GUARD_POLICY_SET`, written by releases before the rename. Read as the same setting history; never written by this release | Timestamp, Old Value, New Value, Source | none (read-only legacy row) |
-| `GUARD_RESTORED` | `config-change --guard.<fence> on` switched a fence back on for this piece of work after a per-work `off` or forced it on above a policy word that lowers it | Timestamp, Guard (`plan-approval`, `review-freeze`, `state-transition`, `reviewer-scope`), Scope, Source (`you` when theirs, `command` otherwise) | `tools/aidlc-utility.ts` batches configuration changes |
-| `GUARD_STOOD_ASIDE` | A fence let an action through instead of refusing it, because that fence was lowered for this piece of work: by the Guard Policy word, by a `guard.<fence>` switch, or by its environment kill switch. A fence is lowered only by the setter the agent runs for the person's typed or asked-for switch, by the scope default, or by trusted environment configuration (the kill switches and the fixture/harness-launch presence bypass); a human turn alone or a picked remedy never lowers one. That configuration is separate from this row's conversational Authority. The row is emitted when an action passes the lowered fence, not when the switch is applied. A ledger that cannot take the row never stops the action: the plan-approval fence's line then says it was not recorded, and the miss goes to the hook health log. The row is the evidence that stands in for the refusal, and the human hears one line beside it | Timestamp, Guard (the fence), Authority (`grant`, `instruction`, or `none`: who was working when it passed, not what opened the fence), Grant (how a grant was proven, when there was one: `turn-marker`, `marker-sequence`, `dispatch-stamp`, or `none`), Actor (`main`, `subagent`, or `unattended`), optional Stage, Tool, Details | `tools/aidlc-lib.ts` (`recordGuardStoodAside`, called by the fence hooks) |
-| `CHANGE_ACCEPTED` | A governed checkpoint found that an input changed after a human approval or confirmation and, under `relaxed` or `off` (or, for workspace source that moved after a plan was approved, under every policy), recorded the change and continued instead of refusing. Under `relaxed` or `off` it also records application source that changed during a stage outside every reviewed unit's claims; under every policy it records a stage-entry source record that is missing on this machine (a fresh clone). Checkpoint `units-generation`: the work's repos changed after Units Generation was approved; under `relaxed` or `off` it is written at the change, under `strict` by the next step once the person has replied to its question (whatever the reply) or when the run is unattended, and the work carries on with the approved Units. Written once per distinct change: the same Recorded and Current values for the same Checkpoint, Stage, and Unit never produce a second row | Timestamp, Stage, optional Unit, Checkpoint (`plan-approval`, `review-receipt`, `summary-confirmation`, `swarm-batch`, `construction-unit`, `units-generation`), Changed (a bounded path list or `(paths unavailable)`; for `units-generation`, the repos added or left out), Recorded (for `units-generation`, the repo set Units Generation was approved with and when it was approved), Current, Details (the one line the human hears), Message Id (for a `swarm-batch` change the person asked for with `swarm allow-change`: the message they asked in) | `tools/aidlc-lib.ts` (`recordAcceptedChanges`, called by the checkpoint owners: `aidlc-log.ts decision` / `answer` / `review`, `aidlc-testing-posture.ts begin`, `aidlc-state.ts` gate and completion checks, the plan-approval guard hook, `aidlc-swarm-checkpoints.ts` batch `ask` / `approve`, `aidlc-worktree.ts merge` for a swarm Unit merged over the person's own edits, and for `units-generation` the intent repo commands and `aidlc-orchestrate.ts next`) |
+| `GUARD_POLICY_SET` | `config-change --guard-policy <strict\|relaxed\|off>`（入力された、または依頼されたスイッチに対してエージェントが実行するセッター）が状態行を書き換えた、`scope-change` がスコープ由来の値や明示的な設定を引き継いだ、または管理対象のチェックポイントが実効値を変えるメモリの編集を観測した | Timestamp, Old Value, New Value, Source（記録上利用者が依頼したことが示されている場合は `you`、そうでないセッター実行は `command`、`scope <name>`、または `<layer>.md`）。利用者による引き下げの場合は Person Reply と Message Id（エージェントが `--message` で指定したメッセージ）。設定とスコープの変更では、Old Value にはメモリ上の実効値ではなく、以前に永続化されたインテントの値を記録する（無効な場合は生のテキスト、行がなかった場合は `strict`）。チェックポイントでの観測は実効値の新旧を保持する。 | `tools/aidlc-utility.ts` が設定変更をまとめて処理する（`hooks/aidlc-record-human-turn.ts` からの `applyTypedGuardSwitchPrompt` を含む）; `tools/aidlc-lib.ts`（`appendGuardPolicySetRow` を介した `governedGuardPolicy`）がチェックポイントでの観測を記録する |
+| `CHANGE_CONTROL_SET` | `GUARD_POLICY_SET` の旧名で、名前変更前のリリースが書き込んでいた。同じ設定履歴として読まれる。このリリースでは決して書き込まれない | Timestamp, Old Value, New Value, Source | なし（読み取り専用のレガシー行） |
+| `GUARD_RESTORED` | 作業単位の `off` の後、`config-change --guard.<fence> on` がこの作業のフェンスを再び有効にした、またはそれを引き下げるポリシーの値より優先して強制的に有効にした | Timestamp, Guard（`plan-approval`, `review-freeze`, `state-transition`, `reviewer-scope`）, Scope, Source（利用者によるものなら `you`、それ以外は `command`） | `tools/aidlc-utility.ts` が設定変更をまとめて処理する |
+| `GUARD_STOOD_ASIDE` | フェンスが、この作業について引き下げられていたため、アクションを拒否せずに通した。引き下げの手段は、Guard Policy の値、`guard.<fence>` スイッチ、またはその環境キルスイッチである。フェンスを引き下げられるのは、利用者が入力した、または依頼したスイッチに対してエージェントが実行するセッター、スコープの既定値、または信頼された環境設定（キルスイッチと、fixture/harness-launch の在席バイパス）のみである。人のターンだけ、あるいは選ばれた対処策だけでフェンスが引き下げられることは決してない。その設定は、この行の会話上の Authority とは別である。この行は、スイッチが適用されたときではなく、アクションが引き下げられたフェンスを通過したときに発行される。行を受け取れない台帳がアクションを止めることは決してない。その場合、plan-approval フェンスの一文は記録されなかったことを伝え、その欠落はフックのヘルスログに送られる。この行は拒否の代わりとなる証拠であり、人はそれと並んで一文を聞く | Timestamp, Guard（フェンス）, Authority（`grant`、`instruction`、または `none`: 何がフェンスを開けたかではなく、通過時に誰が作業していたか）, Grant（付与があった場合、その証明方法: `turn-marker`、`marker-sequence`、`dispatch-stamp`、または `none`）, Actor（`main`、`subagent`、または `unattended`）, 任意で Stage, Tool, Details | `tools/aidlc-lib.ts`（`recordGuardStoodAside`。フェンスのフックから呼ばれる） |
+| `CHANGE_ACCEPTED` | 管理対象のチェックポイントが、人の承認または確認の後に入力が変わったことを検出し、`relaxed` または `off` の下で（あるいは、プラン承認後に動いたワークスペースのソースについてはすべてのポリシーの下で）、拒否する代わりに変更を記録して続行した。`relaxed` または `off` の下では、レビュー済みのどのユニットのクレームにも含まれない、ステージ中に変更されたアプリケーションのソースも記録する。すべてのポリシーの下で、このマシンに存在しないステージ開始時のソース記録（新しいクローン）も記録する。チェックポイント `units-generation`: Units Generation の承認後に作業のリポジトリが変わった。`relaxed` または `off` の下では変更時に書き込まれ、`strict` の下では、利用者がその質問に返信した（返信の内容を問わない）時点、または無人実行の場合に、次のステップによって書き込まれ、作業は承認済みの Units で続行する。異なる変更ごとに 1 回書き込まれる。同じ Checkpoint、Stage、Unit について同じ Recorded と Current の値で 2 行目が生じることは決してない | Timestamp, Stage, 任意で Unit, Checkpoint（`plan-approval`, `review-receipt`, `summary-confirmation`, `swarm-batch`, `construction-unit`, `units-generation`）, Changed（上限付きのパスのリスト、または `(paths unavailable)`。`units-generation` では追加または除外されたリポジトリ）, Recorded（`units-generation` では、Units Generation が承認されたときのリポジトリのセットと承認日時）, Current, Details（人が聞く一文）, Message Id（利用者が `swarm allow-change` で依頼した `swarm-batch` の変更について: 依頼したメッセージ） | `tools/aidlc-lib.ts`（`recordAcceptedChanges`。チェックポイントの所有者から呼ばれる: `aidlc-log.ts decision` / `answer` / `review`、`aidlc-testing-posture.ts begin`、`aidlc-state.ts` のゲートと完了の検査、plan-approval ガードフック、`aidlc-swarm-checkpoints.ts` のバッチ `ask` / `approve`、利用者自身の編集の上にマージされたスウォーム Unit についての `aidlc-worktree.ts merge`、および `units-generation` についてはインテントのリポジトリコマンドと `aidlc-orchestrate.ts next`） |
 
 ### Ceremony Events (1 event)
 
-Sensors, Learnings, and Summary Confirmation are independent per-intent `on`/`off` settings. The shared configuration applier batches their provenance with other requested settings through `tools/aidlc-audit.ts appendAuditEntries`; the public audit CLI refuses this event. Environment kill switches affect resolution without rewriting the intent's saved value.
+Sensors、Learnings、Summary Confirmation は、それぞれ独立したインテントごとの `on`/`off` 設定である。共有の設定適用処理は、他の要求された設定とともにそれらの来歴を `tools/aidlc-audit.ts appendAuditEntries` でまとめて記録する。公開の audit CLI はこのイベントを拒否する。環境キルスイッチは、インテントに保存された値を書き換えずに解決結果に影響する。
 
 | Event | When | Required Fields | Emitter |
 |-------|------|-----------------|---------|
-| `CEREMONY_SET` | `config-change --sensors\|--learnings\|--summary-confirmation\|--plan-approval <on\|off>` sets an intent override, or `scope-change` carries a scope-supplied setting to the new scope's default | Timestamp, Key (`sensors`, `learnings`, `summary_confirmation`, or `plan_approval`), Old, New, Source (`you` for the person's typed switch or a reply of theirs that asked for it, `command` for a setter run without one, or `scope <name>`), and on an off that is theirs, Person Reply and Message Id (the message the agent named with `--message`, and its words as the record kept them); on an off asked in the form before `--message`, Conductor Summary (the agent's own text). Old is the previously persisted intent value (raw text if invalid; scope default when no line existed), not the environment-effective value. | `tools/aidlc-utility.ts` shared settings applier via `tools/aidlc-audit.ts appendAuditEntries` |
+| `CEREMONY_SET` | `config-change --sensors\|--learnings\|--summary-confirmation\|--plan-approval <on\|off>` がインテントのオーバーライドを設定した、または `scope-change` がスコープ由来の設定を新しいスコープの既定値へ引き継いだ | Timestamp, Key（`sensors`, `learnings`, `summary_confirmation`, または `plan_approval`）, Old, New, Source（利用者が入力したスイッチ、またはそれを依頼した利用者の返信なら `you`、それがないセッター実行は `command`、または `scope <name>`）。利用者による off の場合は Person Reply と Message Id（エージェントが `--message` で指定したメッセージと、記録が保持したその言葉）。`--message` 以前の形式で依頼された off では Conductor Summary（エージェント自身のテキスト）。Old は環境上の実効値ではなく、以前に永続化されたインテントの値である（無効な場合は生のテキスト、行がなかった場合はスコープの既定値）。 | `tools/aidlc-audit.ts appendAuditEntries` を介した `tools/aidlc-utility.ts` の共有設定適用処理 |
 
 ### Interaction Events (19 events)
 
 | Event | When | Required Fields | Emitter |
 |-------|------|-----------------|---------|
-| `DECISION_RECORDED` | Before presenting a non-gate structured question, to record the options shown. Consolidated-summary, verification-command, and construction-policy prompts also carry checkpoint identity; verification-command prompts bind the canonical command digest, while construction-policy prompts bind the requested field and value; both record the asking session | Timestamp, Stage, Decision, Options, the question record (`Question Id`, `Question Type`: the checkpoint's name or the Question Kind, else `stage-question`, `Question Shows`, optional `Question Chat`); optional Recommended (when the labels passed carry the trailing "(Recommended)" mark: the choices it marks, the mark cut, written in the list grammar Options uses; a row without it records no recommendation), Checkpoint, Command SHA-256, Field, Value, Session, Questions File, Unit, Attempt Generation, Workflow | `tools/aidlc-log.ts decision` (a Unit checkpoint's and a swarm batch's from `aidlc-bolt.ts checkpoint` and `swarm-checkpoint`, with `Question Type` `unit-checkpoint` and `swarm-batch`) |
-| `GATE_APPROVED` | Human approved at gate | Timestamp, Stage, User Input; `Brief Digest` (`sha256:<hex>` of the review brief kept for this gate when the person decided, the brief the agent renders after the gate row is written, or `none`), optional `Decisions Accepted Open` (the ids the gate-open row listed: Approve continues with every open decision accepted as it stands), optional Person Reply (the person's messages since the question was shown, as the human-turn hook kept them, within the limits under Person Reply above; the conductor reported the choice), optional Message Id (on a stage approval whose chat the engine could not name: the message kept for the person's latest reply after the showing, in this machine's own shard, and only when one chat replied since; written instead of Person Reply, never beside it; on a Unit or swarm batch checkpoint's approval, the message record of the latest reply kept for its question, beside Person Reply), optional Message Ids (see Message Ids above), Review Finding Dispositions (version 1 JSON mapping every current open finding to Accepted risk when the person approved, to Approved autonomously when Construction approved on its own, or to Changed after review when the work its review covered changed after that review and no finished review has seen the change, and one the approval named with `--fix-finding` (the person asked for it to be fixed) to Fix requested whatever else holds (all but Accepted risk are no decision: the finding stays open for the next review); a Unit's checkpoint and a swarm batch's approval record their Units' findings, and a stage's approval nobody gave records none that a Unit's own approval recorded; keyed by review artifact, finding ID, and finding-content fingerprint; optional decided-at severity and reviewed record path/digest bind the decision to its paired review), Review (`not finished` when the person's approval went over a review requested in the attempt that had no verdict, or over the NOT-READY fallback no reviewer gave), Approves Together (the stages this one approval covers, copied from its gate), Approved Together With (on a later listed stage: the first stage, whose approval it stands on), Unit, Gate Scope, Gate Stages, Attempt Generation (team Unit gates); Unit merge gates also carry Pinned OID, Strategy, Target branch | `tools/aidlc-state.ts approve`, `tools/aidlc-unit.ts gate` |
-| `GATE_REJECTED` | Human requested changes | Timestamp, Stage, Feedback; optional Message Id and Message Ids (at a stage gate, the messages Feedback holds; see Message Ids above), optional Person Reply (the person's messages since the question was shown, as the human-turn hook kept them, within the limits under Person Reply above; the conductor reported the choice) and Message Id (the message record of the latest of them) (Unit and swarm checkpoints), Conductor Summary (the conductor's `--feedback`/`--reason` when Feedback holds the person's recorded words and the two differ), Review Finding Dispositions (version 1 JSON for explicit `Rejected: <reason>` decisions and `Reopened: <reason>` decisions on reviewer-resolved findings, from a rejected report or a checkpoint's reject (a swarm batch's rejection carries them on each of its Units' rows); optional decided-at severity and reviewed record path/digest; rows without dispositions change no finding), `Recovered=true` (backfilled by the approve-time revision backstop), Prior Accepted Source Fingerprint (the prior attempt's validated final swarm aggregate; never a replacement completion baseline), Prior Accepted Source Listing (the `Source Listing` that aggregate's landing kept; absent when it has none and on rows an earlier release wrote), Unit, Gate Scope, Gate Stages, Attempt Generation (team Unit gates); Unit merge gates also carry Pinned OID, Strategy, Target branch | `tools/aidlc-state.ts reject`, `tools/aidlc-state.ts approve` (backstop backfill), `tools/aidlc-unit.ts gate`, `tools/aidlc-jump.ts reopen` (a jump back to a per-unit stage under unit-major Construction, a Redo the person asked for on re-entry at a Unit's summary or checkpoint stop, or a change they asked for at the one late question for a listed stage: one Unit-scoped row per reopened Unit, Feedback names the jump or the Redo, or holds the person's words for a change, and Reopen is `jump`, `redo` or `change`; a change also carries User Input Request Changes; a reopen that moved Current Stage back from a later stage also carries Moved From, that stage) |
-| `QUESTION_ANSWERED` | Non-gate question answered by user | Timestamp, Stage, Details (for a question with choices, the choice the conductor read from the reply; the reply itself where no hook kept the person's words, or where one reply answers several questions); optional Unit, Attempt Generation; optional Person Reply (for a checkpoint question, the person's messages since the question was shown; for any other question, the message the agent named, or every reply of theirs in this chat that no decision has used yet, whenever the question was logged; as the human-turn hook kept them, within the limits under Person Reply above; the conductor reported the choice); optional Message Id (that message, or the latest of those replies) and Message Ids (see Message Ids above); optional Answer Source `chosen by the agent, reading their message` (`answer --on-instruction`, on the message of theirs the agent read as leaving it the choice, which Message Id names); optional Conductor Summary (words the agent passed with `--on-instruction` in the form before `--message`: its own text, claiming nothing) | `tools/aidlc-log.ts answer` |
-| `QUESTION_REPLIED` | A harness question box came back with the person's answer: one row per question it asked, the question as shown and the reply as given (a picked label, several joined with commas, or the words they typed into it). It decides nothing and spends no turn, so the answer stands on record even when no `QUESTION_ANSWERED` is logged for it; only this hook writes it (the public `append` refuses it, and a worktree's audit merge never copies it) | Timestamp, Question, Reply; optional Session, Options (the choices the box offered for that question, as a JSON list of labels), Recommended (the choices whose label the box showed with the trailing "(Recommended)" mark, the mark cut, as a JSON list), Question Id (the open question in that chat whose exact text the box showed) | `hooks/aidlc-record-human-turn.ts` (Claude Code `AskUserQuestion`, Codex `request_user_input`) |
-| `QUESTION_UNANSWERED` | A harness question box came back with no answer (Codex's runs out after about two minutes, or the person dismissed or closed it); spends any earlier human turn so nothing is recorded until the person replies; the hook also hands back the same question re-rendered as numbered prose (labels and order unchanged) for the agent to re-present, so the prose fallback is the engine's, not the conductor's to reconstruct; only this hook writes it (the public `append` refuses it, and a worktree's audit merge never copies it) | Timestamp; optional Session | `hooks/aidlc-record-human-turn.ts` (via the Codex adapter) |
-| `QUESTION_ASKED` | The engine handed out one of its own questions that has no row of its own when asked: the code plan question, a question `next` asks (where the work belongs, which plan, who builds the Units, the project type, which repos), or the go-ahead for a system install the guard held (beside its `SYSTEM_INSTALL_BLOCKED`; `SYSTEM_INSTALL_ALLOWED` answers it). Written once per question; the same question handed out again keeps its id (see Question records) | Timestamp, Question Id, Question Type (the ask type), Question Shows, Stage; optional Question Chat, Unit or Units, Options (JSON list), State Digest (engine asks), Ask Id (the code plan question's own record), Questions File, Question Text SHA-256 | `tools/aidlc-orchestrate.ts`, `tools/aidlc-plan-approval-ask.ts`, `hooks/system-install.ts` |
-| `QUESTION_SHOWN` | A question still open was shown in a chat it was not asked or shown in before (a new chat, a resume, a clone), or the code plan question was shown with its plans changed | Timestamp, Question Id, Question Type, Question Chat; optional Question Shows (what it shows now), Stage, Unit, Ask Id, Questions File (the file it was asked from) | `tools/aidlc-state.ts gate-start`, `tools/aidlc-orchestrate.ts`, `tools/aidlc-plan-approval-ask.ts` |
-| `REQUEST_ROUTED` | The person sent the words a routing question asked about to separate new work or to reshaping the plan; the words answer no question the work in progress has open, and a decision on it needs a later reply | Timestamp, Request; optional Session, Message Id (the reply the route stands on: the chat's latest since the last decision) | `aidlc-orchestrate.ts` |
-| `SUMMARY_CONFIRMATION_RECORDED` | Consolidated-summary choice recorded after the matching prompt and a fresh human turn; reserved from the public audit CLI | Timestamp, Stage, Details, Checkpoint, Questions File, Questions SHA-256, Hash Scope (required on new receipts; legacy rows may omit it), Summary Authorization Id (on a `Looks correct` receipt: sha256 over the attempt, stage, Unit, workflow, questions path, confirmed-content hash, and choice; identical confirmations mint the same id, changed answers a new one; legacy rows omit it); optional Unit, Workflow, Feedback (on a `Request changes` receipt whose reply said what to change: the person's words), Person Reply, Message Id and Message Ids (see Message Ids above) | `tools/aidlc-log.ts answer --checkpoint summary-confirmation` |
-| `VERIFICATION_COMMAND_RECORDED` | Human approved an intent's Construction verification command through the matching pending decision's one-shot challenge and exact offered choice: the person's own reply to it, in the chat that asked or in a new one while it is the newest question asked; unrelated human turns do not authorize it. The latest current-workflow receipt authorizes only the matching state command and is reserved from the public audit CLI | Timestamp, Stage, Checkpoint (`Construction Verification Command`), Command SHA-256 (hex SHA-256 of the canonical trimmed single-line command), Command Label (the full canonical command: at most 1024 characters, no control or display-spoofing characters), User Input (`Approve`), Session; optional Workflow; optional Person Reply (the person's messages since the question was shown, as the human-turn hook kept them, within the limits under Person Reply above; the conductor reported the choice) | `tools/aidlc-log.ts answer --checkpoint verification-command` |
-| `CONSTRUCTION_POLICY_RECORDED` | Human approved a Construction policy change through the matching pending decision's one-shot field/value challenge and exact offered choice, replied to in the chat that asked or a new one (workflows that asked this question; the conductor now runs the typed setter when the person asks). The latest current-workflow receipt for the field authorizes only its requested value and is spent when the setter applies it. Reserved from public audit append and worktree audit merge | Timestamp, Stage, Checkpoint (`Construction Policy`), Field (`Construction Checkpoints`, `Construction Execution`, or `Construction Iteration`), Value, Session, User Input (`Approve`); optional Person Reply (the person's messages since the question was shown, as the human-turn hook kept them, within the limits under Person Reply above; the conductor reported the choice) | `tools/aidlc-log.ts answer --checkpoint construction-policy` |
-| `CHECKPOINT_VERIFICATION_RECORDED` | Construction checkpoint verifier finished the authorized command and wrote its proof under the audit lock. Verification requires the latest current-attempt receipt to match the proof id, evidence fingerprint, current command digest, and run floor with `Verified: true`; a proof JSON alone cannot authorize approval. On a checkout with no proof file at all, the receipt stands in for the proof of a Unit already approved whose evidence is unchanged. Reserved from public audit append and worktree audit merge | Timestamp, Unit, Kind (`unit` or `skeleton`), Stage (last checkpoint stage), Stages, Verification Id, Fingerprint, Command SHA-256, Exit Code, Verified (`true` or `false`), Run floor; optional Attempt Generation; optional Blocking Checks (`<stage>:<sensor>@<binding digest>=passed|overridden`), Checked Outputs (JSON: checked file to its line-ending-normalized SHA-256), Blocking Sensor Override, Blocking Sensor IDs, Blocking Sensor Detail Paths, Blocking Sensor Reasons (when the Unit's blocking gate checks ran at the checkpoint) | `tools/aidlc-construction-checkpoints.ts verifyConstructionCheckpoint` |
-| `PLAN_APPROVAL_RECORDED` | Provenance that Code Generation consumed a protected Plan Approval challenge/response receipt; this Markdown row is not authorization evidence. `Directive Epoch` is recorded for diagnosis and never compared: the approval binds to `Plan Target`, `Run floor` (the stage attempt), and `Approval Fingerprint` (the plan content) | Timestamp, Stage, Details, Checkpoint, Plan Target, Intent, Directive Epoch, Run floor, Approval Fingerprint, Questions File, Questions SHA-256, Prompt SHA-256, Session; optional Person Reply (the person's messages since the question was shown, as the human-turn hook kept them, within the limits under Person Reply above; the conductor reported the choice) | `tools/aidlc-log.ts answer --checkpoint plan-approval` |
-| `PLAN_APPROVAL_SKIPPED` | Code Generation started from a plan nobody was asked to approve, because plan approval is off for this piece of work (the scope default, the person's own switch, or the machine switch `AIDLC_DISABLE_PLAN_APPROVAL_GUARD=1`). It records the fingerprint of the plan that was built, so the trail shows what ran, and never claims a person approved it. The questions file reads `[Answer]: Plan approval off` and the protected receipt is marked skipped; reserved from the public audit CLI | Timestamp, Stage, Details (`Plan approval off`), Checkpoint, Plan Target, Intent, Directive Epoch, Run floor, Approval Fingerprint, Questions File, Questions SHA-256, Prompt SHA-256, Source (where the off setting came from), Unit (when Unit-scoped) | `tools/aidlc-plan-approval-ask.ts` (the engine, when it hands over the build: on `next`, or on the `continue` that delivers the build's last rules part) |
-| `PLAN_APPROVAL_OVERRIDDEN` | The human broke the glass: after the refusal that offers it was shown, they asked for the plan to be built anyway in a reply (their own words or a pick, recorded by the human-turn hook) and the conductor ran `answer --override-file` with their reason after the normal receipt path refused. The receipt this row accompanies binds to plan content and stage attempt only; source certification is skipped for it. Always paired with a `PLAN_APPROVAL_RECORDED` row carrying `Override: yes`; reserved from the public audit CLI | Timestamp, Stage, Reason (verbatim), Failed Checks (the normal path's refusals, separated by a vertical bar), Session, Unit (or `stage-level`), Fingerprint; optional Person Reply (their latest reply since the offer; absent when the host passed no words) | `tools/aidlc-log.ts answer --checkpoint plan-approval --override` |
-| `REVIEW_REQUESTED` | Conductor dispatches the §12a reviewer sub-agent; reserved from the public audit CLI. Structurally malformed rows are non-authoritative and do not consume an ordinal | Timestamp, Stage, Reviewer, Iteration, Artifact Fingerprint (`sha256:<hex>` from one stable snapshot of every declared artifact exactly as dispatched for review, with CRLF text read as LF), Request Id (`review:<32 lowercase hex>`, minted per request; the completion row and the review record echo it), Review File (the record-relative file this request's review is read from; a request recorded without it predates per-request review files, and its review is read from the pass's shared `<iteration>.review.md`), optional Unit + Attempt Generation (authoritative-DAG per-unit claims), Source Fingerprint on `workspace_requires` stages, Unit Source Fingerprint (manifest bytes + claimed source listing) on per-unit `workspace_requires` stages, optional Retry (`pending-request`, accepted once after a modern binding exists), optional Upgrade (`legacy-request`, one bounded modernization of a valid request recorded before request ids or source binding), optional Recovery (`stale-receipt`) plus Recovery Cause (`artifact`, `source`, or `artifact+source`), optional Person Asked (`true` on a pass past the stage's passes or its spent recovery that the conductor recorded as the person's request with `--person-asked`, a turn of theirs being on record since that review was last requested) plus Person Reply (their replies in this chat that no decision has used yet, when the hook kept any), Message Id (the latest of them) and Message Ids (see Message Ids above), optional Checkouts Recorded (each checkout a Unit's claim lay in where the source walk did not reach, recorded by this request before its binding, as `<label> (<path>)`), optional Replaces Request Id (the Request Id of the pending request at the same scope and pass whose outputs or source changed before its verdict, or `none` for one recorded before request ids; the new request takes that pass, does not count against the review budget, carries the replaced request's Recovery and Recovery Cause when it was the recovery request, and is replaced the same way if it is interrupted in turn; a row whose Replaces Request Id names no such request counts as an ordinary request). Rows written under the retired appendix protocol also carry Review Appendix Artifact, Review Appendix Offset, Review Appendix Prior Digest, Review Appendix Prior Length, and Review Challenge; they stay readable, and a completion of such a request echoes them unchanged so the pair still binds | `tools/aidlc-log.ts review` |
-| `REVIEW_COMPLETED` | Reviewer verdict recorded; gates approval and is reserved from the public audit CLI. Malformed rows are ignored without consuming their pending request | Timestamp, Stage, Reviewer, Iteration, Verdict, Request Fingerprint (must match the request), Artifact Fingerprint (the same stable snapshot: the reviewer writes no artifact, so the reviewed bytes are the requested bytes), Request Id (must match the request), Review Record (record-relative path `.aidlc-engine/reviews/<stage>/stage/<attempt>/<iteration>.json` or `.aidlc-engine/reviews/<stage>/units/<unit>/<attempt>/<iteration>.json`) + Review Record Digest (`sha256:<hex>` over the record bytes; a record that no longer hashes to it is not the review), optional Unit + Attempt Generation (per-unit claims), Request Source Fingerprint + Source Fingerprint (identical request-time source identity on `workspace_requires` stages), Source Listing on `workspace_requires` stages (the content-addressed listing the reviewer saw, so the completion can tell an AI-DLC update after the review from a change to source; absent when the source moved during the review, when it could not be kept, and on rows an earlier release wrote), Unit Source Fingerprint or Unit Source Binding Bypass on per-unit `workspace_requires` stages, Review Challenge only for the deprecated appendix migration path, Recovery only for the one stale-receipt recovery pass, optional Workflow for isolated runs, optional Review Headings Made Level 3 (each review-file heading line the logger recorded as `###`, as `line N: <a trimmed preview of that line, up to 120 characters>`; nothing else in the review changes, and the record keeps the full text), optional Review Finished (`no` on the NOT-READY fallback recorded when a retried review still wrote no whole review: no reviewer gave the verdict; feeds no fingerprint), optional Review Verdict Dictated (`yes` or `no`, the reviewer's own `**Verdict Dictated:**` line as written: whether the brief it was given named the verdict to write or to prefer; `yes` is said to the person once with the verdict and, under strict, once at the gate; a missing or unreadable line writes no field; feeds no fingerprint), optional Reviewer Finished Before Verdict (`no` when the verdict was recorded with no `SUBAGENT_COMPLETED` row of the request's reviewer since the request carrying the `Review File Digest` for its review file (another agent finishing is not the reviewer finishing), on a host whose harness declares `agentFinishRecorded` (Claude Code), or elsewhere when the `SUBAGENT_DISPATCHED` rows since the request show a helper sent, every one closed by its completion and none of them the reviewer, outside a delegated worktree, with no background agent sent since, no completion row since that names no agent, and no completion hook run since that left no row or recorded a failure: no reviewer had finished; said to the person once with the verdict and, under strict, once at the gate; feeds no fingerprint), optional Testing Contract (Code Generation only, and not in a swarm worker's checkout: the Testing Contract hash in force when the verdict was recorded; a Code Generation completion reads a contract that moved after the terminal review as the next build's; feeds no fingerprint) | `tools/aidlc-log.ts review --verdict` |
-| `PIPELINE_LINK_COMPLETED` | A declared pipeline link returned in order; current-attempt receipts gate pipeline approval and are reserved from the public audit CLI | Timestamp, Stage, Link, Position (`k/N`), optional Repo (required by the protocol for multi-repo chains), optional Workflow (`single-stage:<slug>` for isolated runs) | `tools/aidlc-log.ts link` |
+| `DECISION_RECORDED` | ゲート以外の構造化された質問を提示する前に、表示する選択肢を記録する。統合サマリー、verification-command、construction-policy のプロンプトはチェックポイントの識別情報も持つ。verification-command のプロンプトは正規化されたコマンドのダイジェストに、construction-policy のプロンプトは要求されたフィールドと値に結び付く。いずれも質問したセッションを記録する | Timestamp, Stage, Decision, Options, 質問記録（`Question Id`, `Question Type`: チェックポイント名または Question Kind、それ以外は `stage-question`, `Question Shows`, 任意で `Question Chat`）。任意で Recommended（渡されたラベルに末尾の "(Recommended)" マークが付いている場合: マークが付いた選択肢を、マークを除き Options と同じリスト文法で記録する。これがない行は推奨を記録しない）, Checkpoint, Command SHA-256, Field, Value, Session, Questions File, Unit, Attempt Generation, Workflow | `tools/aidlc-log.ts decision`（Unit チェックポイントとスウォームバッチのものは `aidlc-bolt.ts checkpoint` と `swarm-checkpoint` から、`Question Type` はそれぞれ `unit-checkpoint` と `swarm-batch`） |
+| `GATE_APPROVED` | 人がゲートで承認した | Timestamp, Stage, User Input。`Brief Digest`（利用者が判断した時点でこのゲートについて保持されていたレビューブリーフの `sha256:<hex>`。ゲート行の書き込み後にエージェントが描画するブリーフ、または `none`）, 任意で `Decisions Accepted Open`（ゲートオープン行に列挙された ID: Approve は、すべての未決の判断を現状のまま受け入れて続行する）, 任意で Person Reply（質問が表示されてからの利用者のメッセージ。human-turn フックが保持したもので、上記 Person Reply の上限内。コンダクターが選択を報告した）, 任意で Message Id（エンジンがチャットを特定できなかったステージ承認の場合: 表示後の利用者の最新の返信について、このマシン自身のシャードに保持されたメッセージ。表示以降に返信したチャットが 1 つだけの場合に限る。Person Reply の代わりに書き込まれ、決して併記されない。Unit またはスウォームバッチのチェックポイントの承認では、その質問について保持された最新の返信のメッセージ記録で、Person Reply と併記される）, 任意で Message Ids（上記 Message Ids を参照）, Review Finding Dispositions（バージョン 1 の JSON。現在未解決のすべての指摘を、利用者が承認した場合は Accepted risk に、Construction が自律的に承認した場合は Approved autonomously に、レビュー対象の作業がそのレビュー後に変更され、完了したレビューがまだその変更を見ていない場合は Changed after review に対応付ける。承認が `--fix-finding` で指定したもの（利用者が修正を求めたもの）は、他の条件にかかわらず Fix requested に対応付ける（Accepted risk 以外はいずれも判断ではなく、指摘は次のレビューまで未解決のまま残る）。Unit のチェックポイントとスウォームバッチの承認はその Unit の指摘を記録し、誰も与えていないステージの承認は、Unit 自身の承認が記録したものを何も記録しない。キーはレビュー成果物、指摘 ID、指摘内容のフィンガープリント。任意の判断時の重大度と、レビューされた記録のパス/ダイジェストが、判断を対になるレビューに結び付ける）, Review（試行内で要求されたレビューに判定がないまま、または誰のレビュアーも出していない NOT-READY のフォールバックのまま利用者が承認した場合は `not finished`）, Approves Together（この 1 つの承認が対象とするステージ。ゲートからコピー）, Approved Together With（列挙された後のステージについて: その承認の拠り所となる最初のステージ）, Unit, Gate Scope, Gate Stages, Attempt Generation（チームの Unit ゲート）。Unit のマージゲートは Pinned OID, Strategy, Target branch も持つ | `tools/aidlc-state.ts approve`, `tools/aidlc-unit.ts gate` |
+| `GATE_REJECTED` | 人が変更を要求した | Timestamp, Stage, Feedback。任意で Message Id と Message Ids（ステージゲートでは Feedback に含まれるメッセージ。上記 Message Ids を参照）, 任意で Person Reply（質問が表示されてからの利用者のメッセージ。human-turn フックが保持したもので、上記 Person Reply の上限内。コンダクターが選択を報告した）と Message Id（その最新のもののメッセージ記録）（Unit とスウォームのチェックポイント）, Conductor Summary（Feedback が記録された利用者の言葉を含み、両者が異なる場合のコンダクターの `--feedback`/`--reason`）, Review Finding Dispositions（バージョン 1 の JSON。却下された報告またはチェックポイントの reject による、明示的な `Rejected: <reason>` の判断と、レビュアーが解決済みとした指摘に対する `Reopened: <reason>` の判断（スウォームバッチの却下では、その各 Unit の行に付く）。任意で判断時の重大度と、レビューされた記録のパス/ダイジェスト。判断を持たない行はどの指摘も変更しない）, `Recovered=true`（承認時の修正バックストップによる補完）, Prior Accepted Source Fingerprint（前回の試行で検証済みの最終スウォーム集約。完了時のベースラインの代わりには決してならない）, Prior Accepted Source Listing（その集約の着地が保持した `Source Listing`。ない場合や以前のリリースが書いた行にはない）, Unit, Gate Scope, Gate Stages, Attempt Generation（チームの Unit ゲート）。Unit のマージゲートは Pinned OID, Strategy, Target branch も持つ | `tools/aidlc-state.ts reject`, `tools/aidlc-state.ts approve`（バックストップによる補完）, `tools/aidlc-unit.ts gate`, `tools/aidlc-jump.ts reopen`（unit-major の Construction で Unit ごとのステージへ戻るジャンプ、Unit のサマリーまたはチェックポイントでの停止に再入したときに利用者が求めた Redo、または列挙されたステージについての 1 つの遅い質問で利用者が求めた変更: 再オープンした Unit ごとに Unit スコープの行が 1 行。Feedback はジャンプまたは Redo を示すか、変更の場合は利用者の言葉を含み、Reopen は `jump`、`redo`、`change` のいずれか。変更の場合は User Input Request Changes も持つ。後のステージから Current Stage を戻した再オープンは、そのステージを示す Moved From も持つ） |
+| `QUESTION_ANSWERED` | ゲート以外の質問にユーザーが回答した | Timestamp, Stage, Details（選択肢のある質問では、コンダクターが返信から読み取った選択。フックが利用者の言葉を保持しなかった場合や、1 つの返信で複数の質問に答えた場合は返信そのもの）。任意で Unit, Attempt Generation。任意で Person Reply（チェックポイントの質問では、質問が表示されてからの利用者のメッセージ。その他の質問では、エージェントが指定したメッセージ、または質問がいつ記録されたかにかかわらず、まだどの判断にも使われていないこのチャットでの利用者の返信すべて。human-turn フックが保持したもので、上記 Person Reply の上限内。コンダクターが選択を報告した）。任意で Message Id（そのメッセージ、またはそれらの返信の最新のもの）と Message Ids（上記 Message Ids を参照）。任意で Answer Source `chosen by the agent, reading their message`（`answer --on-instruction`。エージェントが選択を任されたと読んだ利用者のメッセージに基づくもので、Message Id がそれを示す）。任意で Conductor Summary（`--message` 以前の形式でエージェントが `--on-instruction` とともに渡した言葉。エージェント自身のテキストであり、何も主張しない） | `tools/aidlc-log.ts answer` |
+| `QUESTION_REPLIED` | ハーネスの質問ボックスが利用者の回答とともに戻ってきた。質問ごとに 1 行で、表示された質問と、返されたままの返信（選ばれたラベル、カンマで連結された複数のラベル、または入力された言葉）を記録する。何も判断せず、ターンも消費しないため、`QUESTION_ANSWERED` が記録されなくても回答は記録に残る。これを書き込むのはこのフックだけである（公開の `append` は拒否し、ワークツリーの監査マージも決してコピーしない） | Timestamp, Question, Reply。任意で Session, Options（ボックスがその質問に提示した選択肢。ラベルの JSON リスト）, Recommended（ボックスが末尾に "(Recommended)" マークを付けて表示した選択肢。マークを除いた JSON リスト）, Question Id（ボックスが表示した正確なテキストを持つ、そのチャットで開いている質問） | `hooks/aidlc-record-human-turn.ts`（Claude Code の `AskUserQuestion`、Codex の `request_user_input`） |
+| `QUESTION_UNANSWERED` | ハーネスの質問ボックスが回答なしで戻ってきた（Codex のものは約 2 分で期限切れになる、または利用者が閉じた）。以前の人のターンを消費するため、利用者が返信するまで何も記録されない。フックは同じ質問を番号付きの散文（ラベルと順序は変えない）として描画し直してエージェントに返し、エージェントがそれを再提示する。したがって散文のフォールバックはエンジンのものであり、コンダクターが再構成するものではない。これを書き込むのはこのフックだけである（公開の `append` は拒否し、ワークツリーの監査マージも決してコピーしない） | Timestamp。任意で Session | `hooks/aidlc-record-human-turn.ts`（Codex アダプター経由） |
+| `QUESTION_ASKED` | エンジンが、質問時に独自の行を持たない自身の質問の 1 つを提示した: コードプランの質問、`next` が尋ねる質問（作業の所属先、どのプラン、誰が Units を構築するか、プロジェクトの種類、どのリポジトリ）、またはガードが保留したシステムインストールの許可（`SYSTEM_INSTALL_BLOCKED` に並び、`SYSTEM_INSTALL_ALLOWED` がそれに答える）。質問ごとに 1 回書き込まれ、同じ質問が再度提示されても ID は変わらない（Question records を参照） | Timestamp, Question Id, Question Type（質問種別）, Question Shows, Stage。任意で Question Chat, Unit または Units, Options（JSON リスト）, State Digest（エンジンの質問）, Ask Id（コードプランの質問自身の記録）, Questions File, Question Text SHA-256 | `tools/aidlc-orchestrate.ts`, `tools/aidlc-plan-approval-ask.ts`, `hooks/system-install.ts` |
+| `QUESTION_SHOWN` | まだ開いている質問が、以前に質問・表示されたことのないチャット（新しいチャット、再開、クローン）で表示された、またはコードプランの質問がプランを変更した状態で表示された | Timestamp, Question Id, Question Type, Question Chat。任意で Question Shows（現在表示している内容）, Stage, Unit, Ask Id, Questions File（質問の元になったファイル） | `tools/aidlc-state.ts gate-start`, `tools/aidlc-orchestrate.ts`, `tools/aidlc-plan-approval-ask.ts` |
+| `REQUEST_ROUTED` | 利用者が、ルーティングの質問が尋ねた言葉を、別の新しい作業へ、またはプランの組み直しへ振り向けた。その言葉は進行中の作業で開いているどの質問にも答えるものではなく、それについての判断には後の返信が必要である | Timestamp, Request。任意で Session, Message Id（ルーティングの根拠となる返信: 前回の判断以降のそのチャットの最新のもの） | `aidlc-orchestrate.ts` |
+| `SUMMARY_CONFIRMATION_RECORDED` | 対応するプロンプトと新しい人のターンの後に、統合サマリーの選択が記録された。公開の audit CLI からは予約されている | Timestamp, Stage, Details, Checkpoint, Questions File, Questions SHA-256, Hash Scope（新しいレシートでは必須。レガシーの行では省略されることがある）, Summary Authorization Id（`Looks correct` のレシートの場合: 試行、ステージ、Unit、ワークフロー、質問ファイルのパス、確認済み内容のハッシュ、選択に対する sha256。同一の確認は同じ ID を生成し、回答が変われば新しい ID になる。レガシーの行では省略される）。任意で Unit, Workflow, Feedback（返信で何を変えるかを述べた `Request changes` のレシートの場合: 利用者の言葉）, Person Reply, Message Id, Message Ids（上記 Message Ids を参照） | `tools/aidlc-log.ts answer --checkpoint summary-confirmation` |
+| `VERIFICATION_COMMAND_RECORDED` | 人が、対応する保留中の判断の一回限りのチャレンジと、提示されたとおりの選択肢を通じて、インテントの Construction 検証コマンドを承認した。それに対する利用者自身の返信であり、質問したチャット、またはそれが最新の質問である間は新しいチャットでのものに限る。無関係な人のターンはこれを承認しない。現在のワークフローの最新のレシートは、一致する state コマンドのみを承認し、公開の audit CLI からは予約されている | Timestamp, Stage, Checkpoint（`Construction Verification Command`）, Command SHA-256（正規化しトリミングした 1 行のコマンドの 16 進 SHA-256）, Command Label（正規化されたコマンド全体: 最大 1024 文字、制御文字や表示偽装文字を含まない）, User Input（`Approve`）, Session。任意で Workflow。任意で Person Reply（質問が表示されてからの利用者のメッセージ。human-turn フックが保持したもので、上記 Person Reply の上限内。コンダクターが選択を報告した） | `tools/aidlc-log.ts answer --checkpoint verification-command` |
+| `CONSTRUCTION_POLICY_RECORDED` | 人が、対応する保留中の判断のフィールド/値に対する一回限りのチャレンジと、提示されたとおりの選択肢を通じて、Construction ポリシーの変更を承認した。返信は質問したチャットまたは新しいチャットで行われた（この質問をしたワークフローの場合。現在は、利用者が求めるとコンダクターが入力型のセッターを実行する）。そのフィールドについての現在のワークフローの最新のレシートは、要求された値のみを承認し、セッターがそれを適用した時点で消費される。公開の audit append とワークツリーの監査マージからは予約されている | Timestamp, Stage, Checkpoint（`Construction Policy`）, Field（`Construction Checkpoints`、`Construction Execution`、または `Construction Iteration`）, Value, Session, User Input（`Approve`）。任意で Person Reply（質問が表示されてからの利用者のメッセージ。human-turn フックが保持したもので、上記 Person Reply の上限内。コンダクターが選択を報告した） | `tools/aidlc-log.ts answer --checkpoint construction-policy` |
+| `CHECKPOINT_VERIFICATION_RECORDED` | Construction チェックポイントの検証器が承認済みのコマンドを完了し、監査ロックの下で証明を書き込んだ。検証には、現在の試行の最新のレシートが、証明 ID、証拠のフィンガープリント、現在のコマンドのダイジェスト、run floor と一致し、`Verified: true` であることが必要である。証明の JSON だけでは承認を与えられない。証明ファイルがまったくないチェックアウトでは、証拠が変わっていないすでに承認済みの Unit について、レシートが証明の代わりとなる。公開の audit append とワークツリーの監査マージからは予約されている | Timestamp, Unit, Kind（`unit` または `skeleton`）, Stage（最後のチェックポイントステージ）, Stages, Verification Id, Fingerprint, Command SHA-256, Exit Code, Verified（`true` または `false`）, Run floor。任意で Attempt Generation。任意で Blocking Checks（`<stage>:<sensor>@<binding digest>=passed|overridden`）, Checked Outputs（JSON: 検査したファイルから、改行を正規化した SHA-256 への対応）, Blocking Sensor Override, Blocking Sensor IDs, Blocking Sensor Detail Paths, Blocking Sensor Reasons（Unit のブロッキングゲート検査がチェックポイントで実行された場合） | `tools/aidlc-construction-checkpoints.ts verifyConstructionCheckpoint` |
+| `PLAN_APPROVAL_RECORDED` | Code Generation が保護された Plan Approval のチャレンジ/レスポンスのレシートを消費したことの来歴。この Markdown の行は承認の証拠ではない。`Directive Epoch` は診断のために記録され、比較されることはない。承認は `Plan Target`、`Run floor`（ステージの試行）、`Approval Fingerprint`（プランの内容）に結び付く | Timestamp, Stage, Details, Checkpoint, Plan Target, Intent, Directive Epoch, Run floor, Approval Fingerprint, Questions File, Questions SHA-256, Prompt SHA-256, Session。任意で Person Reply（質問が表示されてからの利用者のメッセージ。human-turn フックが保持したもので、上記 Person Reply の上限内。コンダクターが選択を報告した） | `tools/aidlc-log.ts answer --checkpoint plan-approval` |
+| `PLAN_APPROVAL_SKIPPED` | この作業ではプラン承認がオフ（スコープの既定値、利用者自身のスイッチ、またはマシンスイッチ `AIDLC_DISABLE_PLAN_APPROVAL_GUARD=1`）のため、誰にも承認を求めていないプランから Code Generation が開始された。構築されたプランのフィンガープリントを記録し、何が実行されたかを証跡に残すが、人が承認したとは決して主張しない。質問ファイルには `[Answer]: Plan approval off` と記載され、保護されたレシートはスキップとしてマークされる。公開の audit CLI からは予約されている | Timestamp, Stage, Details（`Plan approval off`）, Checkpoint, Plan Target, Intent, Directive Epoch, Run floor, Approval Fingerprint, Questions File, Questions SHA-256, Prompt SHA-256, Source（オフ設定の出どころ）, Unit（Unit スコープの場合） | `tools/aidlc-plan-approval-ask.ts`（エンジンがビルドを引き渡すとき: `next` で、またはビルドの最後のルール部分を届ける `continue` で） |
+| `PLAN_APPROVAL_OVERRIDDEN` | 人が非常手段を使った: それを提示する拒否が表示された後、返信（利用者自身の言葉または選択。human-turn フックが記録）でとにかくプランを構築するよう求め、通常のレシート経路が拒否した後に、コンダクターが利用者の理由を付けて `answer --override-file` を実行した。この行に付随するレシートは、プランの内容とステージの試行のみに結び付く。ソースの認証はスキップされる。常に `Override: yes` を持つ `PLAN_APPROVAL_RECORDED` 行と対になる。公開の audit CLI からは予約されている | Timestamp, Stage, Reason（原文のまま）, Failed Checks（通常経路の拒否理由。縦棒で区切る）, Session, Unit（または `stage-level`）, Fingerprint。任意で Person Reply（提示以降の利用者の最新の返信。ホストが言葉を渡さなかった場合はない） | `tools/aidlc-log.ts answer --checkpoint plan-approval --override` |
+| `REVIEW_REQUESTED` | コンダクターが §12a のレビュアーサブエージェントを派遣した。公開の audit CLI からは予約されている。構造的に不正な行は権威を持たず、序数を消費しない | Timestamp, Stage, Reviewer, Iteration, Artifact Fingerprint（レビューのために派遣されたとおりの、宣言されたすべての成果物の 1 つの安定したスナップショットから得た `sha256:<hex>`。CRLF のテキストは LF として読む）, Request Id（`review:<32 lowercase hex>`。要求ごとに生成され、完了行とレビュー記録がそれを反映する）, Review File（この要求のレビューを読み取る、記録相対のファイル。これなしで記録された要求は要求ごとのレビューファイル導入以前のもので、そのレビューはそのパスの共有ファイル `<iteration>.review.md` から読み取られる）, 任意で Unit + Attempt Generation（権威ある DAG による Unit ごとのクレーム）, `workspace_requires` ステージでは Source Fingerprint, Unit ごとの `workspace_requires` ステージでは Unit Source Fingerprint（マニフェストのバイト列 + クレームされたソースの一覧）, 任意で Retry（`pending-request`。現代的なバインディングが存在した後に 1 回だけ受け付ける）, 任意で Upgrade（`legacy-request`。要求 ID やソースのバインディング導入以前に記録された有効な要求に対する、上限付きの 1 回の近代化）, 任意で Recovery（`stale-receipt`）と Recovery Cause（`artifact`、`source`、または `artifact+source`）, 任意で Person Asked（ステージのパス数またはその使用済みのリカバリーを超えるパスについて、コンダクターが `--person-asked` で利用者の依頼として記録した場合に `true`。そのレビューが最後に要求されて以降の利用者のターンが記録にあること）と Person Reply（まだどの判断にも使われていないこのチャットでの利用者の返信。フックが保持した場合）, Message Id（その最新のもの）, Message Ids（上記 Message Ids を参照）, 任意で Checkouts Recorded（ソースの走査が届かなかった場所にある、Unit のクレームを含む各チェックアウト。この要求がバインディングの前に記録したもので、`<label> (<path>)` の形式）, 任意で Replaces Request Id（同じスコープとパスで保留中だった要求のうち、判定の前に出力またはソースが変わったものの Request Id。要求 ID 導入以前に記録されたものは `none`。新しい要求はそのパスを引き継ぎ、レビューの予算には数えられず、置き換えた要求がリカバリー要求だった場合はその Recovery と Recovery Cause を引き継ぎ、それ自体が中断された場合も同様に置き換えられる。Replaces Request Id がそのような要求を指していない行は通常の要求として数える）。廃止された付録プロトコルの下で書き込まれた行は、Review Appendix Artifact, Review Appendix Offset, Review Appendix Prior Digest, Review Appendix Prior Length, Review Challenge も持つ。これらは引き続き読み取り可能であり、そのような要求の完了はそれらを変更せずに反映するため、組は引き続き結び付く | `tools/aidlc-log.ts review` |
+| `REVIEW_COMPLETED` | レビュアーの判定が記録された。承認のゲートとなり、公開の audit CLI からは予約されている。不正な行は、対応する保留中の要求を消費せずに無視される | Timestamp, Stage, Reviewer, Iteration, Verdict, Request Fingerprint（要求と一致しなければならない）, Artifact Fingerprint（同じ安定したスナップショット: レビュアーは成果物を書き込まないため、レビューされたバイト列は要求されたバイト列である）, Request Id（要求と一致しなければならない）, Review Record（記録相対パス `.aidlc-engine/reviews/<stage>/stage/<attempt>/<iteration>.json` または `.aidlc-engine/reviews/<stage>/units/<unit>/<attempt>/<iteration>.json`）+ Review Record Digest（記録のバイト列に対する `sha256:<hex>`。もはやこのハッシュにならない記録はそのレビューではない）, 任意で Unit + Attempt Generation（Unit ごとのクレーム）, Request Source Fingerprint + Source Fingerprint（`workspace_requires` ステージでの、要求時と同一のソース識別）, `workspace_requires` ステージでは Source Listing（レビュアーが見た、内容アドレス型の一覧。これにより完了時に、レビュー後の AI-DLC の更新とソースの変更を区別できる。レビュー中にソースが動いた場合、保持できなかった場合、以前のリリースが書いた行にはない）, Unit ごとの `workspace_requires` ステージでは Unit Source Fingerprint または Unit Source Binding Bypass, 非推奨の付録移行経路の場合のみ Review Challenge, 1 回の stale-receipt リカバリーパスの場合のみ Recovery, 分離された実行では任意で Workflow, 任意で Review Headings Made Level 3（ロガーが `###` として記録したレビューファイルの各見出し行。`line N: <a trimmed preview of that line, up to 120 characters>` の形式。レビューのそれ以外は何も変わらず、記録は全文を保持する）, 任意で Review Finished（再試行したレビューがなおレビュー全体を書かなかったときに記録される NOT-READY のフォールバックでは `no`: どのレビュアーも判定を出していない。どのフィンガープリントにも影響しない）, 任意で Review Verdict Dictated（`yes` または `no`。レビュアー自身が書いた `**Verdict Dictated:**` 行のとおり: 与えられたブリーフが、書くべき判定や優先すべき判定を指定していたかどうか。`yes` は判定とともに利用者に 1 回伝えられ、strict の下ではゲートでもう 1 回伝えられる。行がない、または読めない場合はフィールドを書き込まない。どのフィンガープリントにも影響しない）, 任意で Reviewer Finished Before Verdict（次の場合に `no`: ハーネスが `agentFinishRecorded` を宣言しているホスト（Claude Code）で、レビューファイルの `Review File Digest` を持つ要求以降、その要求のレビュアーの `SUBAGENT_COMPLETED` 行がないまま判定が記録された場合（別のエージェントの完了はレビュアーの完了ではない）。または他のホストで、要求以降の `SUBAGENT_DISPATCHED` 行が、補助エージェントが送られ、そのすべてが完了によって閉じられ、そのどれもレビュアーではないことを示し、委任されたワークツリーの外であり、それ以降バックグラウンドエージェントが送られておらず、エージェント名のない完了行もなく、行を残さないか失敗を記録した完了フックの実行もない場合: どのレビュアーも完了していなかった。判定とともに利用者に 1 回伝えられ、strict の下ではゲートでもう 1 回伝えられる。どのフィンガープリントにも影響しない）, 任意で Testing Contract（Code Generation のみで、スウォームワーカーのチェックアウトでは付かない: 判定が記録された時点で有効だった Testing Contract のハッシュ。Code Generation の完了は、最終レビュー後に動いたコントラクトを次のビルドのものとして読む。どのフィンガープリントにも影響しない） | `tools/aidlc-log.ts review --verdict` |
+| `PIPELINE_LINK_COMPLETED` | 宣言されたパイプラインのリンクが順番どおりに戻った。現在の試行のレシートがパイプラインの承認のゲートとなり、公開の audit CLI からは予約されている | Timestamp, Stage, Link, Position（`k/N`）, 任意で Repo（複数リポジトリのチェーンではプロトコル上必須）, 任意で Workflow（分離された実行では `single-stage:<slug>`） | `tools/aidlc-log.ts link` |
 
-`Hash Scope: confirmed-content-v2` identifies the questions-file digest used by
-newly emitted receipts. The digest algorithm is unchanged: normalize CRLF and
-lone CR to LF, preserve the original order and raw bytes of retained sections,
-trim trailing whitespace once from the resulting content, then hash UTF-8 with
-SHA-256. The visibility view does not replace the raw digest input: comments,
-code, HTML, and a leading BOM in retained content remain bound.
+`Hash Scope: confirmed-content-v2` は、新しく発行されるレシートが使う質問ファイルの
+ダイジェストを識別する。ダイジェストのアルゴリズムは変わらない。CRLF と単独の CR を
+LF に正規化し、保持されたセクションの元の順序と生のバイト列を維持し、
+得られた内容から末尾の空白を 1 回トリミングしてから、UTF-8 を SHA-256 で
+ハッシュする。可視性のビューは生のダイジェスト入力を置き換えない。保持された内容に含まれる
+コメント、コード、HTML、先頭の BOM は引き続き結び付けられる。
 
-Heading and answer recognition now follows the built-in `Bun.markdown`
-CommonMark/GFM parser through `markdownBlocks` and its `visibleMarkdownLines` projection. Text inside
-raw HTML blocks (CommonMark kinds 1–7) is never a heading, answer, or control
-tag. The digest includes every visible Q<n> section and each
-`Requested Changes Feedback` section, including follow-up questions added after
-an assumption decision. Exactly one visible top-level `Assumption Confirmation`
-section is valid only after the summary and is excluded, along with its
-contents and an immediately preceding blank-separated thematic separator. The
-exclusion ends at any line spelled as a top-level `## Q<n>` or
-`## Requested Changes Feedback` heading, even inside raw HTML or code, so a
-heading the parser does not see can only widen the confirmed content. A
-`Q<n>` or `Assumption Confirmation` heading counts with or without a leading
-emoji decoration, by the rule the claim-sources sensor uses. A
-same-named pre-summary section remains part of the confirmed digest. The
-excluded assumptions and answer remain subject to the stage's existing
-decision/answer and sensor checks. Any other recognized heading after the
-summary is invalid. Heading-like text in comments, code spans, fenced or
-indented code, and HTML attribute values is not a section.
+見出しと回答の認識は現在、組み込みの `Bun.markdown` による
+CommonMark/GFM パーサーに、`markdownBlocks` とその `visibleMarkdownLines` 投影を通じて従う。
+生の HTML ブロック（CommonMark の種類 1〜7）内のテキストは、見出し、回答、制御
+タグには決してならない。ダイジェストには、可視のすべての Q<n> セクションと、各
+`Requested Changes Feedback` セクションが含まれ、前提に関する判断の後に追加された
+フォローアップの質問も含まれる。可視のトップレベルの `Assumption Confirmation`
+セクションは、サマリーの後にちょうど 1 つある場合にのみ有効であり、その内容と、
+直前の空行で区切られた区切り線とともに除外される。
+除外は、トップレベルの `## Q<n>` 見出しまたは
+`## Requested Changes Feedback` 見出しとして綴られた行で終わる。これは生の HTML やコードの内部でも同様であり、
+パーサーが認識しない見出しは確認済みの内容を広げる方向にしか働かない。
+`Q<n>` または `Assumption Confirmation` の見出しは、claim-sources センサーと同じ規則により、
+先頭の絵文字装飾の有無にかかわらず数えられる。
+サマリー以前にある同名のセクションは、確認済みのダイジェストの一部のままである。
+除外された前提と回答は、ステージの既存の判断/回答の検査とセンサーの検査の対象のままである。
+サマリーの後にあるその他の認識された見出しは無効である。
+コメント、コードスパン、フェンス付きまたはインデントされたコード、HTML の属性値に含まれる
+見出しのようなテキストはセクションではない。
 
-`confirmed-content-v1` is the supported legacy scope: it used the same
-raw-content digest algorithm with the former hand-written Markdown visibility
-rules. For documents unaffected by the parser upgrade, v2 digests are
-byte-identical to v1. Existing receipts migrate as follows:
+`confirmed-content-v1` はサポートされているレガシーのスコープである。同じ
+生の内容のダイジェストアルゴリズムを、以前の手書きの Markdown 可視性
+ルールとともに使っていた。パーサーのアップグレードの影響を受けないドキュメントでは、v2 のダイジェストは
+v1 とバイト単位で同一である。既存のレシートは次のように移行する:
 
-- A `confirmed-content-v1` receipt whose recorded digest equals the current v2
-  digest is accepted. v1 is compared under current semantics, so in-flight
-  workflows on unaffected documents are not forced to reconfirm.
-- If that v1 digest differs, completion refuses because the content semantics
-  may have changed: the receipt predates the Markdown-parser upgrade, so either the confirmed content
-  changed after confirmation or raw HTML content that v1 treated as confirmed
-  text is no longer part of it. Raw HTML headings and control tags are now
-  excluded from Markdown recognition. Re-present the summary and reconfirm,
-  which records a v2 receipt. The refusal names the raw-HTML exclusion and
-  never asserts that an edit happened.
-- A `confirmed-content-v2` digest mismatch retains the existing
-  “changed after confirmation” refusal and recovery.
-- A receipt with no `Hash Scope` retains the legacy whole-file SHA-256 and
-  existing recovery text. An in-flight unscoped receipt needs fresh human
-  confirmation to create a scoped receipt before an allowed post-confirmation
-  append can recover.
-- An unknown scope still refuses as an invalid hash scope.
+- 記録されたダイジェストが現在の v2 ダイジェストと等しい `confirmed-content-v1` のレシートは
+  受け付けられる。v1 は現在の意味論で比較されるため、影響を受けないドキュメント上の
+  進行中のワークフローに再確認は強制されない。
+- その v1 ダイジェストが異なる場合、内容の意味論が変わった可能性があるため、完了は拒否される。
+  レシートは Markdown パーサーのアップグレード以前のものであり、確認後に確認済みの内容が
+  変わったか、v1 が確認済みのテキストとして扱っていた生の HTML の内容が
+  もはやその一部ではないかのどちらかである。生の HTML の見出しと制御タグは現在、
+  Markdown の認識から除外される。サマリーを再提示して再確認すると、
+  v2 のレシートが記録される。拒否は生の HTML の除外を示し、
+  編集が行われたとは決して断定しない。
+- `confirmed-content-v2` のダイジェストの不一致では、既存の
+  「確認後に変更された」（“changed after confirmation”）拒否とリカバリーが維持される。
+- `Hash Scope` を持たないレシートでは、レガシーのファイル全体の SHA-256 と
+  既存のリカバリーテキストが維持される。進行中のスコープなしのレシートは、許可された確認後の
+  追記がリカバリーできるようになる前に、スコープ付きのレシートを作成するための新しい人の
+  確認を必要とする。
+- 不明なスコープは、引き続き無効なハッシュスコープとして拒否される。
 
-The duplicate-confirmation / earlier-identical-confirmation path resolves v1
-receipts through the same v2 hash function. Stored receipts are not rewritten.
+重複確認 / 以前の同一確認の経路は、v1 のレシートを同じ v2 ハッシュ関数で解決する。
+保存済みのレシートは書き換えられない。
 
-Summary-confirmation authority comparisons preserve append order within one
-audit shard. Across shards, different timestamps establish order; equal
-timestamps are causally unordered. Completion fails closed when such a tie
-could change the current attempt, selected receipt, or whether an artifact was
-written after confirmation, and requires fresh evidence with a later timestamp.
+サマリー確認の権限比較は、1 つの監査シャード内では追記順を維持する。
+シャードをまたぐ場合は、異なるタイムスタンプによって順序が決まり、等しい
+タイムスタンプは因果的に順序付けられない。そのような同着が、現在の試行、選択されるレシート、
+または成果物が確認後に書き込まれたかどうかを変えうる場合、完了はフェイルクローズし、
+より後のタイムスタンプを持つ新しい証拠を必要とする。
 
 #### Question records
 
-Every question AI-DLC asks carries one `Question Id` (eight hex digits, the id
-space a stored request's question already uses) on the row that asks it: the
-gate's `STAGE_AWAITING_APPROVAL`, every `DECISION_RECORDED`, and a
-`QUESTION_ASKED` for the engine's own questions that have no row of their own.
-Beside it: `Question Type` (`gate`; a logged question's checkpoint name or
-Question Kind, else `stage-question`; `unit-checkpoint`, `swarm-batch`; an
-engine question's ask type, `plan-approval` for the code plan question),
-`Question Chat` (the chat it was asked in, when the command names it), and
-`Question Shows` (`sha256:` over what it asks the person to judge). The same
-question shown again in another chat keeps its id and writes `QUESTION_SHOWN`;
-a clone finds an open question by its slot (type, stage, Unit) on the committed
-record. A question in a questions file is digested entry by entry with its
-`[Answer]:` lines blanked and line endings normalized, so an answer written in
-and Windows line endings change nothing. The ids are recorded only: nothing
-reads them to decide anything yet.
+AI-DLC が尋ねるすべての質問は、それを尋ねる行に 1 つの `Question Id`（8 桁の 16 進数。
+保存された要求の質問がすでに使っている ID 空間）を持つ。具体的には、
+ゲートの `STAGE_AWAITING_APPROVAL`、すべての `DECISION_RECORDED`、そして独自の行を持たない
+エンジン自身の質問についての `QUESTION_ASKED` である。
+それと並んで: `Question Type`（`gate`。記録された質問ではチェックポイント名または
+Question Kind、それ以外は `stage-question`。`unit-checkpoint`、`swarm-batch`。
+エンジンの質問では質問種別で、コードプランの質問は `plan-approval`）、
+`Question Chat`（コマンドがチャットを指定する場合、質問したチャット）、
+`Question Shows`（利用者に判断を求める内容に対する `sha256:`）。同じ
+質問が別のチャットで再度表示された場合、ID は変わらず `QUESTION_SHOWN` を書き込む。
+クローンは、コミットされた記録上のスロット（種類、ステージ、Unit）によって開いている質問を見つける。
+質問ファイル内の質問はエントリごとに、`[Answer]:` 行を空にし改行を正規化してダイジェストされるため、
+書き込まれた回答や Windows の改行は何も変えない。ID は記録されるだけで、
+現時点ではそれらを読んで何かを判断するものはない。
 
 ### Unit Configuration and Lifecycle Events (9 events, unit-major Construction)
 
-The interactive twin of the swarm's `SWARM_UNIT_*` ledger. `UNIT_COMPLETED` is
-the completion receipt the engine's coverage walk prefers over bare artifact
-existence once any receipt exists for the stage; the emitting verb verifies
-the unit's required artifacts as regular files on disk before committing it.
-`Run floor` is an exact boundary token (`<event>:<timestamp>#<ordinal>`), so
-same-second attempts within one shard cannot reuse receipts. Equal-time
-boundaries in different shards are causally unordered and use a deterministic
-`AMBIGUOUS:<timestamp>#<digest>` floor; prior receipts cannot match it.
-Unit-major stages key the floor to workflow/jump/rejection boundaries because
-their work can precede their own `STAGE_STARTED`. A changed Construction policy
-is not a boundary: a `STAGE_STARTED` recorded while stage-major flooring was in
-force (the policy the next `CONSTRUCTION_POLICY_SET` found) stays one after a
-switch to unit-major iteration or checkpoints, and one recorded while unit-major
-flooring was in force stays ignored by a Unit receipt's floor after a switch back to
-stage-major with checkpoints off, so Units finished before either switch keep their
-receipts. A Unit with its own reopen (a Unit-tagged `GATE_REJECTED`) has its receipts
-floored on that Unit in every mode, so the reopen stays its boundary across either switch. A stage's first `STAGE_STARTED` recorded after its Units finished in a unit-major walk (the late gate cascade, possibly after a switch back) is not a restart of it. `UNIT_SKIPPED` settles one
-unit's beat when the stage's condition does not apply to that unit: the unit
-owes the stage nothing in that attempt (like a unit whose kind prunes every
-output), while every other unit still does. The stage is marked skipped only
-once no unit owes it.
+スウォームの `SWARM_UNIT_*` 台帳に対応する対話型の版である。`UNIT_COMPLETED` は、
+ステージについて何らかのレシートが存在するようになると、エンジンのカバレッジ走査が
+成果物の単なる存在よりも優先する完了レシートである。発行する動詞は、コミットする前に
+ユニットの必須成果物がディスク上の通常ファイルであることを検証する。
+`Run floor` は正確な境界トークン（`<event>:<timestamp>#<ordinal>`）であるため、
+1 つのシャード内の同じ秒の試行がレシートを再利用することはできない。異なるシャードにある
+同時刻の境界は因果的に順序付けられず、決定的な
+`AMBIGUOUS:<timestamp>#<digest>` フロアを使う。以前のレシートがそれに一致することはない。
+unit-major のステージは、作業がそのステージ自身の `STAGE_STARTED` より前に行われうるため、
+フロアをワークフロー/ジャンプ/却下の境界に結び付ける。Construction ポリシーの変更は
+境界ではない。stage-major のフロア設定が有効だった間（次の `CONSTRUCTION_POLICY_SET` が見つけたポリシー）に
+記録された `STAGE_STARTED` は、unit-major のイテレーションやチェックポイントへの切り替え後も境界のままであり、
+unit-major のフロア設定が有効だった間に記録されたものは、チェックポイントがオフの stage-major へ戻した後も
+Unit レシートのフロアからは無視されたままである。したがって、どちらの切り替えの前に完了した Unit も
+レシートを保持する。自身の再オープン（Unit タグ付きの `GATE_REJECTED`）を持つ Unit は、
+どのモードでもその Unit についてレシートのフロアが設定されるため、再オープンはどちらの切り替えをまたいでも境界のままである。unit-major の走査で Unit が完了した後に記録された、ステージの最初の `STAGE_STARTED`（遅れたゲートの連鎖。戻す切り替えの後の場合もある）は、そのステージの再開ではない。`UNIT_SKIPPED` は、
+ステージの条件がそのユニットに当てはまらない場合に、1 つのユニットの拍を決着させる。
+そのユニットはその試行においてステージに何も負わない（種類によってすべての出力が刈り込まれる
+ユニットと同様）が、他のすべてのユニットは引き続き負う。ステージがスキップとしてマークされるのは、
+どのユニットもそれを負わなくなった場合のみである。
 
 | Event | When | Required Fields | Emitter |
 |-------|------|-----------------|---------|
-| `UNIT_OWNERSHIP_SET` | Unit-major ownership mode is set before unit activity starts | Timestamp, Mode | `tools/aidlc-state.ts set-unit-ownership` |
-| `UNIT_GATE_RHYTHM_SET` | Team-owned gate rhythm is set before the first team Unit gate | Timestamp, Rhythm | `tools/aidlc-state.ts set-unit-gate-rhythm` |
-| `CONSTRUCTION_POLICY_SET` | A typed setter applied a changed Construction Iteration, Checkpoints, or Execution value; the attempt floor reads it so a switch in either direction (to unit-major iteration or checkpoints on, or back to stage-major with checkpoints off) keeps finished Units' receipts. During Construction a change applies only on the message the person asked in, named with `--message` (or a current `CONSTRUCTION_POLICY_RECORDED`), never unattended | Timestamp, Field, Value, Previous Value, Construction Iteration, Construction Checkpoints; optional Person Reply and Message Id (that message and its words, as the human-turn hook kept them) | `tools/aidlc-state.ts set-construction-iteration`, `set-construction-checkpoints`, `set-construction-execution` |
-| `UNIT_STARTED` | A unit's work begins on an inline per-unit stage; refused while another unit of the stage is open | Timestamp, Stage, Unit, Run floor; optional Attempt Generation | `tools/aidlc-state.ts unit start` |
-| `UNIT_PAUSED` | A unit stops before completion; the checkpoint carries why and what comes next | Timestamp, Stage, Unit, Run floor, Reason, Next Action; optional Attempt Generation, Set Aside For (the Unit the person asked for meanwhile; the walk takes it first) | `tools/aidlc-state.ts unit pause` |
-| `UNIT_RESUMED` | The paused unit is explicitly resumed (the engine hard-stops until this) | Timestamp, Stage, Unit, Run floor; optional Attempt Generation | `tools/aidlc-state.ts unit resume` |
-| `UNIT_COMPLETED` | The unit's work is done AND its required artifacts are regular files on disk (verified at emit) | Timestamp, Stage, Unit, Run floor; optional Attempt Generation | `tools/aidlc-state.ts unit complete` |
-| `UNIT_SKIPPED` | Under unit-major, the stage's condition does not apply to this unit (or the person asked to skip it for this unit), reported for the walk's live (stage, unit) beat, or a forward jump moves this unit past the stage | Timestamp, Stage, Unit, Reason, Run floor | `tools/aidlc-state.ts skip --unit` (internally, by `aidlc-orchestrate.ts report --result skipped --unit`, or by `aidlc-jump.ts execute --units` for each step the jump skips) |
-| `UNIT_MERGED` | Main landed the pinned candidate content and folded this Unit's row; transported receipts now satisfy main's floors | Timestamp, Unit, Owner, Pinned OID, Merge commit OID, Attempt Generation | `tools/aidlc-state.ts fold-unit-merge` |
+| `UNIT_OWNERSHIP_SET` | ユニットの活動が始まる前に、unit-major の所有モードが設定された | Timestamp, Mode | `tools/aidlc-state.ts set-unit-ownership` |
+| `UNIT_GATE_RHYTHM_SET` | 最初のチーム Unit ゲートの前に、チーム所有のゲートのリズムが設定された | Timestamp, Rhythm | `tools/aidlc-state.ts set-unit-gate-rhythm` |
+| `CONSTRUCTION_POLICY_SET` | 入力型のセッターが、変更された Construction Iteration、Checkpoints、または Execution の値を適用した。試行のフロアはこれを読むため、どちらの方向への切り替え（unit-major のイテレーションまたはチェックポイントのオンへ、あるいはチェックポイントがオフの stage-major へ戻す）でも、完了済みの Unit のレシートは保持される。Construction 中の変更は、利用者が依頼したメッセージが `--message` で指定された場合（または現在の `CONSTRUCTION_POLICY_RECORDED` がある場合）にのみ適用され、無人実行では決して適用されない | Timestamp, Field, Value, Previous Value, Construction Iteration, Construction Checkpoints。任意で Person Reply と Message Id（そのメッセージとその言葉。human-turn フックが保持したもの） | `tools/aidlc-state.ts set-construction-iteration`, `set-construction-checkpoints`, `set-construction-execution` |
+| `UNIT_STARTED` | インラインの Unit ごとのステージで、あるユニットの作業が始まる。そのステージの別のユニットが開いている間は拒否される | Timestamp, Stage, Unit, Run floor。任意で Attempt Generation | `tools/aidlc-state.ts unit start` |
+| `UNIT_PAUSED` | ユニットが完了前に停止する。チェックポイントはその理由と次に行うことを持つ | Timestamp, Stage, Unit, Run floor, Reason, Next Action。任意で Attempt Generation, Set Aside For（その間に利用者が求めた Unit。走査はそれを先に扱う） | `tools/aidlc-state.ts unit pause` |
+| `UNIT_RESUMED` | 一時停止中のユニットが明示的に再開された（これが行われるまでエンジンは強制停止する） | Timestamp, Stage, Unit, Run floor。任意で Attempt Generation | `tools/aidlc-state.ts unit resume` |
+| `UNIT_COMPLETED` | ユニットの作業が完了し、かつその必須成果物がディスク上の通常ファイルである（発行時に検証） | Timestamp, Stage, Unit, Run floor。任意で Attempt Generation | `tools/aidlc-state.ts unit complete` |
+| `UNIT_SKIPPED` | unit-major の下で、ステージの条件がこのユニットに当てはまらない（または利用者がこのユニットについてスキップを求めた）ことが走査中の (stage, unit) の拍について報告された、または前方ジャンプがこのユニットをステージの先へ進めた | Timestamp, Stage, Unit, Reason, Run floor | `tools/aidlc-state.ts skip --unit`（内部的には `aidlc-orchestrate.ts report --result skipped --unit` から、またはジャンプがスキップする各ステップについて `aidlc-jump.ts execute --units` から） |
+| `UNIT_MERGED` | main が固定された候補の内容を取り込み、この Unit の行を畳み込んだ。運ばれたレシートが main のフロアを満たすようになる | Timestamp, Unit, Owner, Pinned OID, Merge commit OID, Attempt Generation | `tools/aidlc-state.ts fold-unit-merge` |
 
 ### Artifact Events (3 events — hook-emitted)
 
-The artifact hook emits for writes in either the active intent's record tree or
-the active space's shared `codekb/<repo>/` tree.
+成果物フックは、アクティブなインテントの記録ツリー、または
+アクティブなスペースの共有 `codekb/<repo>/` ツリーへの書き込みについて発行する。
 
 | Event | When | Required Fields | Emitter |
 |-------|------|-----------------|---------|
-| `ARTIFACT_CREATED` | New artifact written in the active intent record or space-level codekb tree | Timestamp, Tool, File, Context, optional Summary Authorization Id (the active summary confirmation for the written stage and Unit at write time, read from `<record>/.aidlc-engine/summary-authorization/<stage>/stage.json` or `<record>/.aidlc-engine/summary-authorization/<stage>/units/<unit>.json`; absent when no confirmation is active) | `hooks/aidlc-write-audit-log.ts` (PostToolUse; Write to net-new path) |
-| `ARTIFACT_UPDATED` | Existing artifact modified in either tree | Timestamp, Tool, File, Context, optional Summary Authorization Id (as for `ARTIFACT_CREATED`) | `hooks/aidlc-write-audit-log.ts` (PostToolUse; Edit, or Write overwriting existing) |
-| `ARTIFACT_REUSED` | Re-use decision on backward jump or per-repo pipeline reuse evidence; only `Decision=keep` grants the pipeline exemption; reserved from the public audit CLI | Timestamp, Stage, Decision, Artifacts, optional Repo, optional Workflow (`single-stage:<slug>` for isolated freshness-bound reuse), optional Unit (the Unit a per-Unit Keep names, or with Source `Redo on re-entry`: the person's Redo answered the question for that Unit's step), and on a `keep` under an active summary confirmation `Summary Authorization Id` and `Kept Outputs` (`<sha256> <record-relative path>; ...`) | `tools/aidlc-state.ts reuse-artifact`, `tools/aidlc-jump.ts reopen --via redo` |
+| `ARTIFACT_CREATED` | アクティブなインテントの記録、またはスペースレベルの codekb ツリーに新しい成果物が書き込まれた | Timestamp, Tool, File, Context, 任意で Summary Authorization Id（書き込み時点での、書き込まれたステージと Unit についての有効なサマリー確認。`<record>/.aidlc-engine/summary-authorization/<stage>/stage.json` または `<record>/.aidlc-engine/summary-authorization/<stage>/units/<unit>.json` から読む。有効な確認がない場合はない） | `hooks/aidlc-write-audit-log.ts`（PostToolUse。新規パスへの Write） |
+| `ARTIFACT_UPDATED` | いずれかのツリーの既存の成果物が変更された | Timestamp, Tool, File, Context, 任意で Summary Authorization Id（`ARTIFACT_CREATED` と同様） | `hooks/aidlc-write-audit-log.ts`（PostToolUse。Edit、または既存ファイルを上書きする Write） |
+| `ARTIFACT_REUSED` | 後方ジャンプでの再利用の判断、またはリポジトリごとのパイプライン再利用の証拠。パイプラインの免除を与えるのは `Decision=keep` のみ。公開の audit CLI からは予約されている | Timestamp, Stage, Decision, Artifacts, 任意で Repo, 任意で Workflow（分離された鮮度依存の再利用では `single-stage:<slug>`）, 任意で Unit（Unit ごとの Keep が指す Unit、または Source が `Redo on re-entry` の場合: 利用者の Redo がその Unit のステップについての質問に答えた）。有効なサマリー確認の下での `keep` では、`Summary Authorization Id` と `Kept Outputs`（`<sha256> <record-relative path>; ...`） | `tools/aidlc-state.ts reuse-artifact`, `tools/aidlc-jump.ts reopen --via redo` |
 
 ### Subagent Events (4 events - hook-emitted)
 
 | Event | When | Required Fields | Emitter |
 |-------|------|-----------------|---------|
-| `SUBAGENT_DISPATCHED` | A helper is sent; reserved from the public audit CLI | Timestamp, Agent Type (a crew's roles as one value, `unknown` when the dispatch names none), optional Dispatch Agent (a Kiro reviewer copy, recorded under its request's reviewer) | `hooks/aidlc-deliver-stage-rules.ts` (PreToolUse, on the paths that let the dispatch go); `hooks/aidlc-log-subagent.ts` for a SubagentStart forwarded by Cursor's and Kiro IDE's adapters |
-| `SUBAGENT_COMPLETED` | Subagent task finishes; reserved from the public audit CLI | Timestamp, Agent Type, optional Agent ID, optional Message | `hooks/aidlc-log-subagent.ts` (SubagentStop) |
-| `SUBAGENT_PROMPT_UNMATCHED` | Advisory, never a human turn: a Copilot prompt arrived within seconds of a subagent start in the same chat and matched no recorded subagent brief, so it was not counted | Timestamp, optional Session, Agent, Counted (always `no`), Reason (no brief matched, or the brief record could not be read) | `tools/aidlc-audit.ts appendSubagentPromptUnmatched` (Copilot adapter `record-human-turn`) |
-| `REVIEW_VERDICT_DICTATED` | No longer written. Earlier releases had the plan-approval guard record a reviewer dispatch whose brief carried a rendered `**Verdict:**` line; the reviewer now says so itself in its review file (`**Verdict Dictated:** yes\|no`, recorded on `REVIEW_COMPLETED` as `Review Verdict Dictated`). Kept registered so audits and worktree deltas written before still read and merge | Timestamp, Agent Type (the reviewer), Verdict, Tool, Request Id | reserved (no longer written; historical rows only) |
+| `SUBAGENT_DISPATCHED` | 補助エージェントが送られた。公開の audit CLI からは予約されている | Timestamp, Agent Type（クルーの役割を 1 つの値として。派遣が何も指定しない場合は `unknown`）, 任意で Dispatch Agent（Kiro のレビュアーのコピー。その要求のレビュアーの下に記録される） | `hooks/aidlc-deliver-stage-rules.ts`（PreToolUse。派遣を通す経路で）; Cursor と Kiro IDE のアダプターが転送する SubagentStart については `hooks/aidlc-log-subagent.ts` |
+| `SUBAGENT_COMPLETED` | サブエージェントのタスクが完了した。公開の audit CLI からは予約されている | Timestamp, Agent Type, 任意で Agent ID, 任意で Message | `hooks/aidlc-log-subagent.ts`（SubagentStop） |
+| `SUBAGENT_PROMPT_UNMATCHED` | 助言のみで、人のターンではない: 同じチャットでサブエージェントの開始から数秒以内に Copilot のプロンプトが届き、記録されたどのサブエージェントのブリーフにも一致しなかったため、数えられなかった | Timestamp, 任意で Session, Agent, Counted（常に `no`）, Reason（どのブリーフにも一致しなかった、またはブリーフの記録を読めなかった） | `tools/aidlc-audit.ts appendSubagentPromptUnmatched`（Copilot アダプターの `record-human-turn`） |
+| `REVIEW_VERDICT_DICTATED` | もはや書き込まれない。以前のリリースでは、描画された `**Verdict:**` 行をブリーフに含むレビュアーの派遣を plan-approval ガードが記録していた。現在はレビュアー自身がレビューファイルでその旨を述べ（`**Verdict Dictated:** yes\|no`）、`REVIEW_COMPLETED` に `Review Verdict Dictated` として記録される。以前に書かれた監査とワークツリーの差分が引き続き読み取り・マージできるよう、登録は残している | Timestamp, Agent Type（レビュアー）, Verdict, Tool, Request Id | 予約済み（もはや書き込まれない。過去の行のみ） |
 
 ### Reviewer Enforcement Events (2 events - hook-emitted)
 
 | Event | When | Required Fields | Emitter |
 |-------|------|-----------------|---------|
-| `REVIEWER_SCOPE_BLOCKED` | A per-unit reviewer's tool call was refused for reaching into sibling units' `construction/` paths (the §12a read-scope bound) | Timestamp, Guard, Reason (`reviewer-read-scope`), Tool, Target, Stage, Unit, Session when the host names the chat | `hooks/aidlc-reviewer-scope.ts` (PreToolUse) |
-| `REVIEW_FREEZE_BLOCKED` | A file-tool or shell `produces[]` write was refused because it would invalidate a fresh READY review receipt before the gate (the §12a terminal-receipt ordering) | Timestamp, Guard, Reason (`review-receipt`), Tool, Target, Stage, optional Unit, Session when the host names the chat | `hooks/aidlc-review-freeze.ts` (PreToolUse) |
+| `REVIEWER_SCOPE_BLOCKED` | Unit ごとのレビュアーのツール呼び出しが、兄弟ユニットの `construction/` パスに及んだため拒否された（§12a の読み取りスコープの境界） | Timestamp, Guard, Reason（`reviewer-read-scope`）, Tool, Target, Stage, Unit, ホストがチャットに名前を付けている場合は Session | `hooks/aidlc-reviewer-scope.ts`（PreToolUse） |
+| `REVIEW_FREEZE_BLOCKED` | ファイルツールまたはシェルによる `produces[]` への書き込みが、ゲート前の新しい READY のレビューレシートを無効にするため拒否された（§12a の最終レシートの順序） | Timestamp, Guard, Reason（`review-receipt`）, Tool, Target, Stage, 任意で Unit, ホストがチャットに名前を付けている場合は Session | `hooks/aidlc-review-freeze.ts`（PreToolUse） |
 
 ### Guard Refusal Events (2 events - hook-emitted)
 
 | Event | When | Required Fields | Emitter |
 |-------|------|-----------------|---------|
-| `STATE_TRANSITION_BLOCKED` | A delegated agent's lifecycle or routing command was refused because only the main workflow session may change stage status or routing | Timestamp, Guard, Reason (`delegated-lifecycle`), Tool, Target; Session when the host names the chat | `hooks/aidlc-state-transition-guard.ts` (PreToolUse) |
-| `STAGE_RULES_BLOCKED` | Stage rules were not delivered to a subagent: the assembled brief exceeded the hook output limit (`Reason: oversize`) or a required rule file could not be read (`Reason: rules-unreadable`) | Timestamp, Guard, Reason; Session when the host names the chat | `hooks/aidlc-deliver-stage-rules.ts` (PreToolUse) |
+| `STATE_TRANSITION_BLOCKED` | 委任されたエージェントのライフサイクルまたはルーティングのコマンドが拒否された。ステージの状態やルーティングを変更できるのはメインのワークフローセッションだけであるため | Timestamp, Guard, Reason（`delegated-lifecycle`）, Tool, Target。ホストがチャットに名前を付けている場合は Session | `hooks/aidlc-state-transition-guard.ts`（PreToolUse） |
+| `STAGE_RULES_BLOCKED` | ステージのルールがサブエージェントに届けられなかった: 組み立てたブリーフがフックの出力上限を超えた（`Reason: oversize`）、または必須のルールファイルを読めなかった（`Reason: rules-unreadable`） | Timestamp, Guard, Reason。ホストがチャットに名前を付けている場合は Session | `hooks/aidlc-deliver-stage-rules.ts`（PreToolUse） |
 
 ### Plan Approval Enforcement Events (2 events - hook-emitted)
 
 | Event | When | Required Fields | Emitter |
 |-------|------|-----------------|---------|
-| `PLAN_APPROVAL_BLOCKED` | A code-generation developer-agent dispatch or workspace mutation was refused: the target lacked a current, explicitly approved plan contract (stage Steps 2-3 must precede Step 4), the stage rules were still arriving, the build's start could not be recorded, or the runtime lock folder is held | Timestamp, Guard, Reason (`plan-approval`, `rules-arriving`, `start-record`), Tool, Stage; Target, Unit and Session when the refusal has them | `hooks/aidlc-plan-approval-guard.ts` (PreToolUse) |
-| `GUARD_DISABLED` | Either a tool call passed the Plan Approval guard because its deterministic off-switch (the disable environment variable documented in the hooks reference) was set while a workflow existed (one row per streak: the hook appends only when the newest row in the active shard is not already this event for the same guard), or a CLI setter lowered it for the person's typed or asked-for switch or through the fixture/harness-launch presence bypass | Timestamp, Guard (`plan-approval-guard` from the hook; `plan-approval`, `review-freeze`, `state-transition`, or `reviewer-scope` from the switch), Tool (hook rows) or Scope and Source (`you` when theirs, `command` otherwise; switch rows), and on a switch row that is theirs, Person Reply and Message Id (the message the agent named with `--message`, and its words as the record kept them) | `hooks/aidlc-plan-approval-guard.ts` (PreToolUse); `tools/aidlc-utility.ts` batches the switch rows, including `applyTypedGuardSwitchPrompt` from `hooks/aidlc-record-human-turn.ts` |
+| `PLAN_APPROVAL_BLOCKED` | code-generation の開発者エージェントの派遣またはワークスペースの変更が拒否された: 対象に、明示的に承認された現在のプランの契約がなかった（ステージの Step 2-3 は Step 4 より前でなければならない）、ステージのルールがまだ届いている途中だった、ビルドの開始を記録できなかった、またはランタイムのロックフォルダーが保持されている | Timestamp, Guard, Reason（`plan-approval`, `rules-arriving`, `start-record`）, Tool, Stage。拒否にそれらがある場合は Target, Unit, Session | `hooks/aidlc-plan-approval-guard.ts`（PreToolUse） |
+| `GUARD_DISABLED` | ワークフローが存在する間に、決定的なオフスイッチ（hooks リファレンスに記載された無効化用の環境変数）が設定されていたためツール呼び出しが Plan Approval ガードを通過した（連続ごとに 1 行: アクティブなシャードの最新の行が同じガードについてのこのイベントでない場合にのみフックが追記する）、または CLI のセッターが、利用者が入力した、または依頼したスイッチに対して、あるいは fixture/harness-launch の在席バイパスを通じて、ガードを引き下げた | Timestamp, Guard（フックからは `plan-approval-guard`、スイッチからは `plan-approval`、`review-freeze`、`state-transition`、または `reviewer-scope`）, Tool（フックの行）または Scope と Source（利用者によるものなら `you`、それ以外は `command`。スイッチの行）。利用者によるスイッチの行では Person Reply と Message Id（エージェントが `--message` で指定したメッセージと、記録が保持したその言葉） | `hooks/aidlc-plan-approval-guard.ts`（PreToolUse）; `tools/aidlc-utility.ts` がスイッチの行をまとめて処理する（`hooks/aidlc-record-human-turn.ts` からの `applyTypedGuardSwitchPrompt` を含む） |
 
 ### System Install Events (2 events - hook-emitted)
 
 | Event | When | Required Fields | Emitter |
 |-------|------|-----------------|---------|
-| `SYSTEM_INSTALL_BLOCKED` | The agent ran an OS package manager install (`apt-get install`, `dnf install`, `brew install`, `winget install` and the like, with or without `sudo`) at any stage or in an isolated run, with no turn of the person's standing since the last decision, no message of theirs named for its packages (`SYSTEM_INSTALL_REQUESTED`) and no one plan they approved naming it (a plan built with plan approval off names nothing): the command waits until they say so | Timestamp, Guard (`plan-approval-guard`), Reason (`system-install`), Tool, Target (the command, on one line, cut at 160 characters), Stage; Session when the host names the chat | `hooks/aidlc-plan-approval-guard.ts` (PreToolUse), through `hooks/system-install.ts` |
-| `SYSTEM_INSTALL_ALLOWED` | The same kind of install was let through because the person's turn stood behind it (their own request, or their go-ahead after the hold), or the message the agent named as asking for its packages (`SYSTEM_INSTALL_REQUESTED`) still stands; the row says that message stood, never that they approved, and the host's own prompt or `sudo` can still stop the command | Timestamp, Stage, Command, Message Id (the turn's or the named message), Person Reply (their words, when the record kept them); Session when the host names the chat | `hooks/aidlc-plan-approval-guard.ts` (PreToolUse), through `hooks/system-install.ts` |
-| `SYSTEM_INSTALL_REQUESTED` | The agent named the person's message that asked for a system package install, one an approval or another decision had already used ("Approve. Then install shellcheck"); the engine proved the message as a request's (on this work, their words, not spent) and read none of its words. An install of these packages runs on it while that message still stands | Timestamp, Packages (a JSON list, as named), Message Id, Person Reply (their words, when the record kept them) | `tools/aidlc-log.ts install` |
+| `SYSTEM_INSTALL_BLOCKED` | エージェントが、任意のステージまたは分離された実行で、OS のパッケージマネージャーによるインストール（`apt-get install`、`dnf install`、`brew install`、`winget install` など。`sudo` の有無を問わない）を実行したが、前回の判断以降に有効な利用者のターンがなく、そのパッケージについて指定された利用者のメッセージ（`SYSTEM_INSTALL_REQUESTED`）もなく、利用者が承認した、それを指定する 1 つのプランもない（プラン承認オフで構築されたプランは何も指定しない）: コマンドは利用者が許可するまで待機する | Timestamp, Guard（`plan-approval-guard`）, Reason（`system-install`）, Tool, Target（コマンド。1 行で、160 文字で切る）, Stage。ホストがチャットに名前を付けている場合は Session | `hooks/aidlc-plan-approval-guard.ts`（PreToolUse）、`hooks/system-install.ts` を通じて |
+| `SYSTEM_INSTALL_ALLOWED` | 同種のインストールが通された。利用者のターンがそれを裏付けていた（利用者自身の依頼、または保留後の利用者の許可）、またはエージェントがそのパッケージを求めるものとして指定したメッセージ（`SYSTEM_INSTALL_REQUESTED`）がまだ有効であるため。この行はそのメッセージが有効だったことを示すものであり、利用者が承認したとは決して示さない。また、ホスト自身のプロンプトや `sudo` が引き続きコマンドを止めることがある | Timestamp, Stage, Command, Message Id（ターンのもの、または指定されたメッセージ）, Person Reply（記録が保持した場合、利用者の言葉）。ホストがチャットに名前を付けている場合は Session | `hooks/aidlc-plan-approval-guard.ts`（PreToolUse）、`hooks/system-install.ts` を通じて |
+| `SYSTEM_INSTALL_REQUESTED` | エージェントが、システムパッケージのインストールを求めた利用者のメッセージを指定した。それは承認や別の判断がすでに使ったメッセージである（"Approve. Then install shellcheck"）。エンジンはそのメッセージが依頼のものであること（この作業について、利用者の言葉で、未消費であること）を証明し、その言葉は一切読まなかった。そのメッセージが有効である間、これらのパッケージのインストールはそれに基づいて実行される | Timestamp, Packages（指定されたとおりの JSON リスト）, Message Id, Person Reply（記録が保持した場合、利用者の言葉） | `tools/aidlc-log.ts install` |
 
 ### Documents (3 events)
 

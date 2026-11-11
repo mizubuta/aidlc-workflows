@@ -1,22 +1,22 @@
 # Adding a Repo to the Work
 
-> **Audience**: the architect, developer and product agents, and any agent
-> that finds mid-work that the change needs another repo.
-> **Owner of this file**: framework. A team's own how goes in
-> `aidlc/knowledge/aidlc-shared/` (see section 5).
+> **対象読者**: アーキテクト、開発者、プロダクトの各エージェント、および作業の途中で
+> 変更に別のリポジトリが必要だと気付いたすべてのエージェント。
+> **このファイルのオーナー**: フレームワーク。チーム独自のやり方は
+> `aidlc/knowledge/aidlc-shared/` に書く（セクション 5 を参照）。
 
-A piece of work that records repos (several repos beside one `aidlc/`) covers
-the repos it was created with. When the change needs another, it joins the
-work through one command, at any stage.
+リポジトリを記録する作業（1 つの `aidlc/` の横に複数のリポジトリがある場合）は、
+作成時のリポジトリを対象とする。変更に別のリポジトリが必要になった場合、どのステージでも
+1 つのコマンドでそのリポジトリを作業に参加させられる。
 
 ---
 
 ## 1. When a repo joins
 
-- **The change will modify it**: it joins. Code Generation will write there, a
-  contract changes there, a migration runs there.
-- **You only read it** (to learn an API, a schema, a convention): it does not
-  join. Read it where it is.
+- **変更がそのリポジトリを修正する場合**: 参加させる。Code Generation がそこに書き込む、
+  そこで契約が変わる、そこでマイグレーションが実行される、といった場合である。
+- **読むだけの場合**（API、スキーマ、規約を知るため）: 参加させない。
+  その場所のまま読む。
 
 ## 2. The command
 
@@ -24,52 +24,52 @@ work through one command, at any stage.
 {{INVOKE}} engine intent add-repo <name> --reason '<why this work changes it>'
 ```
 
-- `<name>` is the repo's folder name beside the other repos.
-- A repo that is not cloned here yet is cloned first: from its `repos.json`
-  entry, else from the team's `repos.json` `org`. The tool uses the person's
-  own git setup, writes the `repos.json` entry, and refreshes the managed
-  `.gitignore` block and `aidlc.code-workspace`.
-- Never pass `--url` yourself: a name taken from a search result must resolve
-  inside the team's org. An address comes from the person. When they give one,
-  pass it with `--url <address>`, and pass their words with
-  `--person-words '<their words>'` instead of `--reason`.
-- Say the line the tool prints, once. It says what happened and the way back
-  (`intent remove-repo <name>`, which leaves the folder and its `repos.json`
-  line in place).
+- `<name>` は、他のリポジトリと並ぶそのリポジトリのフォルダ名である。
+- まだここにクローンされていないリポジトリは、先にクローンされる: その `repos.json`
+  エントリから、なければチームの `repos.json` の `org` から。ツールは利用者
+  自身の git 設定を使い、`repos.json` のエントリを書き込み、管理対象の
+  `.gitignore` ブロックと `aidlc.code-workspace` を更新する。
+- `--url` を自分で渡してはならない: 検索結果から得た名前は、チームの org 内で
+  解決されなければならない。アドレスは利用者から得る。利用者がアドレスを示した場合は、
+  `--url <address>` で渡し、`--reason` の代わりに
+  `--person-words '<their words>'` で利用者の言葉を渡す。
+- ツールが出力する行を 1 回だけ伝える。その行は何が起きたかと、元に戻す方法
+  （`intent remove-repo <name>`。フォルダとその `repos.json`
+  の行はそのまま残る）を示している。
 
 ## 3. After Units Generation is approved
 
-The add lands at any stage. What it means for the approved Units follows the
-work's Guard Policy:
+追加はどのステージでも反映される。それが承認済みの Units にとって何を意味するかは、
+作業の Guard Policy に従う:
 
-- **strict**: the next `next` asks the person once whether the Units still
-  stand, or whether to go back to Units Generation. Show the question as given
-  and act on their reply.
-- **relaxed** or **off**: the work carries on with the approved Units; the
-  tool's line says so, with the way back to Units Generation.
+- **strict**: 次の `next` で、Units がそのまま有効か、それとも
+  Units Generation に戻るかを利用者に 1 回尋ねる。質問は示されたとおりに提示し、
+  利用者の回答に従って行動する。
+- **relaxed** または **off**: 作業は承認済みの Units のまま続行する。
+  ツールの出力行がそのことを、Units Generation に戻る方法とともに伝える。
 
-A Unit that will change the new repo names it in its Code Generation plan's
-source manifest, which the person approves where plan approval is on. Reverse
-Engineering shows as behind for the new repo until it is revisited.
+新しいリポジトリを変更する Unit は、Code Generation プランの
+ソースマニフェストにそのリポジトリを記載する。プランの承認がオンの場合、利用者はそれを承認する。Reverse
+Engineering は、再実施されるまで、新しいリポジトリについて遅れている状態として表示される。
 
 ## 4. When the clone does not land
 
-- **The clone failed**: the line carries git's own reason and the `git clone`
-  command to run by hand, and nothing was recorded. Give the person both; once
-  the repo is cloned, run the same add again.
-- **The host cut the command off** (a command timeout in the host tool): run the
-  same add again with a longer timeout where the host allows one; otherwise
-  give the person the `git clone -- <address> "<workspace>/<name>"` command, then
-  add the repo once it is there. A leftover `.aidlc-workspace-sync-txn-*`
-  folder in the workspace is ignored by the managed `.gitignore` block and can
-  be deleted.
-- **No address** (no `repos.json` org and no `--url`): ask the person for the
-  repo's clone address.
+- **クローンに失敗した場合**: 出力行には git 自身の理由と、手動で実行する `git clone`
+  コマンドが含まれ、何も記録されていない。その両方を利用者に伝える。
+  リポジトリがクローンされたら、同じ追加を再度実行する。
+- **ホストがコマンドを打ち切った場合**（ホストツールでのコマンドのタイムアウト）: ホストが許す場合は
+  より長いタイムアウトで同じ追加を再度実行する。そうでなければ、
+  利用者に `git clone -- <address> "<workspace>/<name>"` コマンドを伝え、
+  リポジトリが配置されたら追加する。ワークスペースに残った `.aidlc-workspace-sync-txn-*`
+  フォルダは、管理対象の `.gitignore` ブロックによって無視され、
+  削除してよい。
+- **アドレスがない場合**（`repos.json` の org も `--url` もない）: 利用者に
+  リポジトリのクローン用アドレスを尋ねる。
 
 ## 5. A team's own how
 
-- What counts as needed, and where to look it up (the team's code index or code
-  search), goes in `aidlc/knowledge/aidlc-shared/`.
-- A team that wants to be asked before any repo joins writes one line under
-  `## Mandated` in `aidlc/spaces/<active-space>/memory/team.md` or
-  `project.md`, which the agents read with the rest of the space's memory.
+- 何を必要とみなすか、そしてそれをどこで調べるか（チームのコードインデックスやコード
+  検索）は、`aidlc/knowledge/aidlc-shared/` に書く。
+- どのリポジトリを参加させる前にも確認を求めてほしいチームは、
+  `aidlc/spaces/<active-space>/memory/team.md` または
+  `project.md` の `## Mandated` の下に 1 行書く。エージェントはそれを、スペースの他のメモリとともに読む。

@@ -1,65 +1,65 @@
 # Market Research Methods
 
 ## Purpose
-Structured approaches for understanding the competitive landscape, sizing the opportunity, and making informed build-vs-buy decisions before committing engineering effort.
+エンジニアリングの労力を投じる前に、競争環境を理解し、機会の規模を見積もり、情報に基づいた build-vs-buy（自社開発か購入か）の判断を下すための構造化されたアプローチ。
 
 ## Competitive Analysis Framework
 
 ### Step 1: Identify Competitors
-- **Direct competitors**: Same product, same market (e.g., Slack vs Teams)
-- **Indirect competitors**: Different product, same problem (e.g., Slack vs email)
-- **Potential competitors**: Adjacent players who could enter your space
+- **直接競合**: 同じ製品、同じ市場（例: Slack と Teams）
+- **間接競合**: 異なる製品、同じ課題（例: Slack とメール）
+- **潜在的な競合**: 自社の領域に参入してくる可能性のある隣接分野のプレイヤー
 
 ### Step 2: Feature Comparison Matrix
 
-| Capability | Our Product | Competitor A | Competitor B | Competitor C |
+| 機能 | 自社製品 | 競合 A | 競合 B | 競合 C |
 |------------|-------------|-------------|-------------|-------------|
-| Core Feature 1 | | | | |
-| Core Feature 2 | | | | |
-| Pricing Model | | | | |
-| Target Segment | | | | |
-| Integration Ecosystem | | | | |
-| Key Differentiator | | | | |
+| コア機能 1 | | | | |
+| コア機能 2 | | | | |
+| 価格モデル | | | | |
+| 対象セグメント | | | | |
+| 連携エコシステム | | | | |
+| 主要な差別化要因 | | | | |
 
-Rate each: Strong / Adequate / Weak / Absent
+それぞれを評価する: Strong / Adequate / Weak / Absent
 
 ### Step 3: Positioning Map
-Plot competitors on two axes representing the dimensions that matter most to your target users (e.g., Ease of Use vs Power, Price vs Completeness). Identify underserved quadrants.
+対象ユーザーにとって最も重要な次元を表す 2 つの軸（例: 使いやすさ対機能の強力さ、価格対網羅性）の上に競合をプロットする。十分にカバーされていない象限を特定する。
 
 ## SWOT Analysis Template
 
-| | Helpful | Harmful |
+| | 好影響 | 悪影響 |
 |---|---------|---------|
-| **Internal** | **Strengths**: What do we do well? What unique resources do we have? | **Weaknesses**: Where do we lack capability? What do competitors do better? |
-| **External** | **Opportunities**: What market trends favor us? What unmet needs exist? | **Threats**: What could disrupt us? What are competitors planning? |
+| **内部** | **Strengths（強み）**: 自社が得意なことは何か？ 自社だけが持つリソースは何か？ | **Weaknesses（弱み）**: 能力が不足しているのはどこか？ 競合の方が優れている点は何か？ |
+| **外部** | **Opportunities（機会）**: 自社に有利な市場トレンドは何か？ 満たされていないニーズは何か？ | **Threats（脅威）**: 自社を揺るがしうるものは何か？ 競合は何を計画しているか？ |
 
 ### Making SWOT Actionable
-- **Strengths + Opportunities** = Strategies to pursue aggressively
-- **Weaknesses + Threats** = Risks to mitigate or defend against
-- **Strengths + Threats** = Defensive strategies leveraging advantages
-- **Weaknesses + Opportunities** = Investments needed to capitalize
+- **Strengths + Opportunities** = 積極的に追求すべき戦略
+- **Weaknesses + Threats** = 軽減または防御すべきリスク
+- **Strengths + Threats** = 優位性を活かした防御的な戦略
+- **Weaknesses + Opportunities** = 機会を活かすために必要な投資
 
 ## Porter's Five Forces
 
-Assess industry attractiveness by analyzing:
+次の観点を分析して、業界の魅力度を評価する:
 
-1. **Threat of New Entrants**: How easy is it to enter this market? (Low barriers = high threat)
-2. **Bargaining Power of Suppliers**: How dependent are you on key suppliers/platforms? (Single cloud provider = high power)
-3. **Bargaining Power of Buyers**: Can customers easily switch? (Low switching costs = high power)
-4. **Threat of Substitutes**: Can the problem be solved differently? (Manual process, different tech)
-5. **Competitive Rivalry**: How intense is existing competition? (Many similar products = high rivalry)
+1. **新規参入の脅威**: この市場への参入はどれくらい容易か？（参入障壁が低い = 脅威が高い）
+2. **供給者の交渉力**: 主要な供給者やプラットフォームにどれくらい依存しているか？（単一のクラウドプロバイダー = 交渉力が高い）
+3. **買い手の交渉力**: 顧客は容易に乗り換えられるか？（スイッチングコストが低い = 交渉力が高い）
+4. **代替品の脅威**: その課題は別の方法で解決できるか？（手作業のプロセス、異なる技術）
+5. **既存競合との敵対関係**: 既存の競争はどれくらい激しいか？（類似製品が多い = 敵対関係が激しい）
 
-Rate each force High/Medium/Low. High forces compress margins and reduce attractiveness.
+各要因を High/Medium/Low で評価する。高い要因は利益率を圧迫し、魅力度を下げる。
 
 ## Market Sizing: TAM / SAM / SOM
 
 ### Definitions
-- **TAM (Total Addressable Market)**: Total revenue if you captured 100% of the market globally
-- **SAM (Serviceable Addressable Market)**: Portion of TAM your product/model can realistically serve (geography, segment, channel)
-- **SOM (Serviceable Obtainable Market)**: Realistic market share you can capture in 2-3 years given competition and resources
+- **TAM（Total Addressable Market）**: 世界中の市場の 100% を獲得した場合の総収益
+- **SAM（Serviceable Addressable Market）**: TAM のうち、自社の製品／モデルが現実的に対応できる部分（地域、セグメント、チャネル）
+- **SOM（Serviceable Obtainable Market）**: 競合とリソースを踏まえて、2〜3 年で現実的に獲得できる市場シェア
 
 ### Top-Down Calculation
-Start with industry reports, narrow by filters:
+業界レポートから始め、フィルターで絞り込む:
 ```
 TAM = Total industry revenue for category
 SAM = TAM x % in your geography x % in your segment
@@ -71,35 +71,35 @@ SOM = SAM x realistic capture rate (typically 1-5% for new entrants)
 SOM = Target customers x Average deal size x Purchase frequency
 ```
 
-Use both methods and compare. If they diverge wildly, investigate assumptions.
+両方の方法を使って比較する。大きく食い違う場合は、前提を調べる。
 
 ## Build vs Buy Assessment
 
 ### Evaluation Criteria
 
-| Factor | Build | Buy | Score (Build -2 to +2) |
+| 要因 | Build | Buy | スコア（Build -2〜+2） |
 |--------|-------|-----|----------------------|
-| Core differentiator? | Build if it is your competitive advantage | Buy commodity capabilities | |
-| Time to market | Months to years | Days to weeks | |
-| Total cost (3-year) | Dev + maintenance + opportunity cost | License + integration + vendor risk | |
-| Customization needed | High customization favors build | Standard needs favor buy | |
-| Data sensitivity | Full control | Vendor data handling policies | |
-| Team expertise | Requires in-house skills | Transfers complexity to vendor | |
-| Maintenance burden | Ongoing responsibility | Vendor handles updates | |
+| コアの差別化要因か？ | 競争優位であれば Build | コモディティ化した機能は Buy | |
+| 市場投入までの時間 | 数か月〜数年 | 数日〜数週間 | |
+| 総コスト（3 年間） | 開発 + 保守 + 機会費用 | ライセンス + 統合 + ベンダーリスク | |
+| 必要なカスタマイズ | 高度なカスタマイズは Build に有利 | 標準的なニーズは Buy に有利 | |
+| データの機密性 | 完全に管理できる | ベンダーのデータ取り扱いポリシーに依存 | |
+| チームの専門性 | 社内のスキルが必要 | 複雑さをベンダーに移せる | |
+| 保守の負担 | 継続的な責任を負う | ベンダーが更新を担う | |
 
 ### Decision Rule
-If the capability is not your core differentiator and a mature vendor solution exists, default to Buy. Build only when the capability is central to your competitive advantage or when vendor solutions fundamentally cannot meet your requirements.
+その機能がコアの差別化要因ではなく、成熟したベンダーのソリューションが存在する場合は、デフォルトで Buy とする。Build を選ぶのは、その機能が競争優位の中心である場合、またはベンダーのソリューションでは根本的に要件を満たせない場合に限る。
 
 ## Trend Analysis Methods
 
 ### Approaches
-- **Technology radar**: Categorize emerging technologies as Adopt / Trial / Assess / Hold
-- **Hype cycle mapping**: Identify where relevant technologies sit on the Gartner Hype Cycle
-- **Customer signal analysis**: Mine support tickets, feature requests, and churn reasons for emerging patterns
-- **Adjacent market monitoring**: Track what is happening in related industries that may spill over
+- **テクノロジーレーダー**: 新興技術を Adopt / Trial / Assess / Hold に分類する
+- **ハイプサイクルのマッピング**: 関連する技術が Gartner のハイプサイクルのどこに位置するかを特定する
+- **顧客シグナルの分析**: サポートチケット、機能要望、解約理由を掘り下げ、新たなパターンを見つける
+- **隣接市場の監視**: 波及してくる可能性のある関連業界の動向を追跡する
 
 ### Validation
-Trends are hypotheses. Validate with:
-- Customer interviews confirming the trend affects their buying decisions
-- Revenue data showing market movement (not just media coverage)
-- Competitor investment signals (hiring patterns, acquisitions, product launches)
+トレンドは仮説である。次の方法で検証する:
+- トレンドが購買判断に影響していることを確認する顧客インタビュー
+- 市場の動きを示す収益データ（メディアでの報道だけではないもの）
+- 競合の投資シグナル（採用の傾向、買収、製品の発売）

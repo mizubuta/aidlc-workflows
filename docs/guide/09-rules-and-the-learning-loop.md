@@ -1,14 +1,14 @@
 # Rules and the Learning Loop
 
-Rules are persistent, prose instructions that shape how agents work on your project. The learning loop is how those rules get written: you correct an agent during a workflow, confirm the correction at the stage's approval gate, and the framework saves it so the same correction is never needed twice.
+ルールは、エージェントがあなたのプロジェクトでどのように作業するかを形づくる、永続的な文章による指示です。学習ループは、そのルールが書かれる仕組みです。ワークフローの途中であなたがエージェントを修正し、その修正をステージの承認ゲートで確認すると、フレームワークがそれを保存するため、同じ修正を二度行う必要はなくなります。
 
-This chapter is the user-facing tour. It covers where rules live, how the five layers stack, how the learning loop captures a correction, and how Sensors give you a deterministic second opinion alongside the rules. For the schema-level mechanics, the chapter cross-links to the Developer Reference at each step.
+この章は利用者向けの解説です。ルールの置き場所、5 つのレイヤーの積み重なり方、学習ループが修正を取り込む方法、そしてセンサーがルールと並んで決定的なセカンドオピニオンを提供する仕組みを扱います。スキーマレベルの仕組みについては、各ステップで開発者リファレンスへのリンクを示しています。
 
 ---
 
 ## Rules at a glance
 
-Rules live as Markdown files in the active space memory layer at `aidlc/spaces/<active-space>/memory/`, a single hand-editable set at the workspace root, read by every harness via its native include (Claude `@`-import stub, Kiro CLI resources or IDE steering, the engine's per-step rules delivery on Codex, Cursor's always-applied `.cursor/rules/aidlc.mdc` rule, opencode `instructions` glob, Copilot `AGENTS.md` `@`-imports). Each file is named for its scope:
+ルールは、アクティブなスペースのメモリレイヤー `aidlc/spaces/<active-space>/memory/` に Markdown ファイルとして置かれます。これはワークスペースルートにある、手で編集できる 1 組のファイルで、各ハーネスがネイティブなインクルード機構（Claude の `@` インポートスタブ、Kiro CLI のリソースまたは IDE のステアリング、Codex でのエンジンによるステップごとのルール配信、Cursor で常に適用される `.cursor/rules/aidlc.mdc` ルール、opencode の `instructions` glob、Copilot の `AGENTS.md` の `@` インポート）を通じて読み込みます。各ファイルはそのスコープに応じた名前が付いています:
 
 ```
 aidlc/spaces/<active-space>/memory/
@@ -22,61 +22,61 @@ aidlc/spaces/<active-space>/memory/
     └── operation.md
 ```
 
-There is no `scope:` field inside the files — scope comes from the filename. `org.md` carries framework defaults (trunk-based development, testing posture, walking-skeleton policy). `team.md` holds what your team has affirmed. `project.md` holds anything specific to this one project. The four `phases/<phase>.md` files carry rules that apply to every stage in a given phase — for example, the inception phase rule requires every architecture decision to document at least two alternatives.
+ファイル内に `scope:` フィールドはなく、スコープはファイル名で決まります。`org.md` はフレームワークのデフォルト（トランクベース開発、テストの姿勢、ウォーキングスケルトンの方針）を保持します。`team.md` にはチームが合意した内容を、`project.md` にはこのプロジェクト固有の内容を記載します。4 つの `phases/<phase>.md` ファイルには、特定のフェーズのすべてのステージに適用されるルールを記載します。たとえば inception フェーズのルールでは、すべてのアーキテクチャ上の決定について、少なくとも 2 つの代替案を文書化することを求めています。
 
-Each file is plain prose under topical headings (`## Way of Working`, `## Testing Posture`, `## Deployment`, `## Code Style`, and so on). You read them, you can edit them by hand, and the framework writes to them through the learning loop.
+各ファイルは、トピックごとの見出し（`## Way of Working`、`## Testing Posture`、`## Deployment`、`## Code Style` など）の下に書かれた平易な文章です。あなたはそれを読み、手で編集することもでき、フレームワークは学習ループを通じてそこに書き込みます。
 
-The schema, the filename-to-scope table, and the resolver mechanics are documented in [Rule System](../reference/08-rule-system.md) in the Developer Reference.
+スキーマ、ファイル名とスコープの対応表、リゾルバーの仕組みは、開発者リファレンスの [ルールシステム](../reference/08-rule-system.md) に記載されています。
 
 ---
 
 ## The five-layer chain
 
-Rules resolve through a five-layer chain at the start of every workflow:
+ルールは、すべてのワークフローの開始時に 5 層のチェーンを通じて解決されます:
 
 ```
 org → team → project → phase → stage
 ```
 
-The model is **strict-additive**. Every applicable rule appears in the agent's context — nothing is silently dropped or overridden at runtime. Org defaults, team practices, and project specialization concatenate. The matching phase rule attaches because the stage already declares its phase. (The fifth layer, per-stage rules, is reserved for a future release.)
+このモデルは**厳密に加算的**です。該当するすべてのルールがエージェントのコンテキストに現れ、実行時に黙って除外されたり上書きされたりするものはありません。org のデフォルト、チームのプラクティス、プロジェクト固有の内容は連結されます。ステージはすでに自分のフェーズを宣言しているため、対応するフェーズのルールが付加されます。（5 番目のレイヤーであるステージごとのルールは、将来のリリースのために予約されています。）
 
-This is a deliberate change from earlier versions. There is no `overrides:` block and no `enforcement:` keyword anymore. All the applicable layers are present at once, and the orchestrator is asked to check a kept learning for conflict at admission time rather than leaving the runtime resolver to reconcile it (see [Admission-time conflict checks](#admission-time-conflict-checks) below).
+これは以前のバージョンからの意図的な変更です。`overrides:` ブロックや `enforcement:` キーワードはもうありません。該当するすべてのレイヤーが同時に存在し、保持された学びの競合は、実行時のリゾルバーに調整を任せるのではなく、取り込み時にオーケストレーターが確認するよう求められます（後述の [取り込み時の競合チェック](#admission-time-conflict-checks) を参照）。
 
-The chain **selection** is resolved **once**, when the framework compiles your stage definitions, rules, and sensors into a single graph; a workflow reads that compiled graph. The graph records which rule files apply to each stage; the engine never re-walks the directory chain mid-run. The files' **contents** are not frozen, though: before each stage runs, the engine reads the selected files' current text and delivers it. That compile boundary is the same one the planes model describes — see [Planes: how it fits together](#planes-how-it-fits-together) at the end of this chapter.
+チェーンの**選択**は、フレームワークがステージ定義、ルール、センサーを 1 つのグラフにコンパイルするときに **1 回だけ**解決され、ワークフローはそのコンパイル済みのグラフを読み込みます。グラフには各ステージにどのルールファイルが適用されるかが記録されており、エンジンが実行の途中でディレクトリのチェーンをたどり直すことはありません。ただし、ファイルの**内容**は固定されません。各ステージの実行前に、エンジンは選択されたファイルの現在のテキストを読み込んで配信します。このコンパイルの境界は、プレーンモデルが説明しているものと同じです。この章の最後にある [プレーン: 全体のつながり](#planes-how-it-fits-together) を参照してください。
 
 ---
 
 ## The learning loop
 
-The learning loop is the mechanism that turns a one-time correction into a durable rule. Most stage runs add nothing, and that is healthy. The loop comes in only when you corrected the agent in a stage, or asked it to keep something for next time.
+学習ループは、一度きりの修正を永続的なルールに変える仕組みです。ほとんどのステージの実行では何も追加されませんが、それは健全なことです。ループが動くのは、あなたがステージ内でエージェントを修正したとき、または次回のために何かを残すよう依頼したときだけです。
 
-When learnings are on, the loop has three moments you see: you correct the agent (or ask it to keep something), it asks once whether to keep that correction for next time, and the framework writes what you keep. With nothing corrected you are asked nothing: the stage goes from its summary straight to its approval question. When learnings are off, none of this runs and no diary is kept.
+学びがオンの場合、ループにはあなたの目に見える 3 つの場面があります。あなたがエージェントを修正する（または何かを残すよう依頼する）、エージェントがその修正を次回のために残すかを 1 回だけ質問する、そしてフレームワークがあなたが残すと決めたものを書き込む、の 3 つです。何も修正しなければ何も質問されず、ステージはサマリーからそのまま承認の質問に進みます。学びがオフの場合、これらは一切実行されず、日誌も記録されません。
 
 ### The memory.md diary
 
-When the learnings ritual is on, the framework keeps a running observation log at `<record>/<phase>/<stage>/memory.md` while a stage runs — under the intent's record dir, `aidlc/spaces/<space>/intents/<YYMMDD>-<label>/`. A stage that runs once per Unit keeps one per Unit, at `<record>/construction/<unit>/<stage>/memory.md` beside that Unit's documents, so `construction/` holds the Unit folders and the folders of the stages that run once (Build and Test, CI Pipeline). Work started before an update that moved them keeps its notes where they are, and they are still read. The engine creates it from the shipped template when it emits the run-stage directive, and the orchestrator maintains it for you — never hand-edited. Entries land under four standard headings:
+学びの儀式がオンの場合、フレームワークはステージの実行中に、インテントの記録ディレクトリ `aidlc/spaces/<space>/intents/<YYMMDD>-<label>/` 配下の `<record>/<phase>/<stage>/memory.md` に、継続的な観察ログを記録します。ユニットごとに 1 回実行されるステージは、ユニットごとに 1 つの日誌を、そのユニットのドキュメントと並べて `<record>/construction/<unit>/<stage>/memory.md` に保持します。そのため `construction/` には、ユニットのフォルダーと、1 回だけ実行されるステージ（Build and Test、CI Pipeline）のフォルダーが並びます。配置を移したアップデートより前に開始された作業では、メモは元の場所に残り、引き続き読み込まれます。エンジンは run-stage ディレクティブを出力するときに同梱のテンプレートから日誌を作成し、オーケストレーターがあなたの代わりに管理します（手で編集することは決してありません）。エントリーは次の 4 つの標準見出しの下に記録されます:
 
-- **Interpretations** — choices the agent made where the stage prose was ambiguous
-- **Deviations** — places the agent intentionally departed from the stage prose, and why
-- **Tradeoffs** — alternatives considered and the reason for the pick
-- **Open questions** — anything to confirm before the next run, or context that's still uncertain
+- **Interpretations** — ステージの記述があいまいだった箇所でエージェントが行った選択
+- **Deviations** — エージェントが意図的にステージの記述から外れた箇所とその理由
+- **Tradeoffs** — 検討した代替案と、その選択をした理由
+- **Open questions** — 次の実行の前に確認すべきこと、またはまだ不確かなコンテキスト
 
-Each entry carries a timestamp. The diary is the stage's record of the agent's own reasoning: it is never offered to you as something to keep.
+各エントリーにはタイムスタンプが付きます。日誌はエージェント自身の推論に関するステージの記録であり、保持の対象としてあなたに提示されることは決してありません。
 
 ### The question after a correction
 
-Before the approval question of a stage where you corrected the agent, it asks about each correction that would hold next time, in your words:
+あなたがエージェントを修正したステージでは、承認の質問の前に、次回も通用する修正のそれぞれについて、あなたの言葉を使って質問します:
 
-- you asked for changes at the stage's approval (Request Changes) and the agent made them: the question comes before the approval is asked again;
-- or you corrected, in your own words, what the agent did or assumed while it worked.
+- ステージの承認で変更を依頼し（Request Changes）、エージェントがそれを反映した場合: 承認を再度求める前に質問します。
+- または、エージェントが作業中に行ったことや想定したことを、あなたが自分の言葉で修正した場合。
 
-A one-off fix (a typo, a wrong name, one value) is not asked about. Whether you corrected the agent, and whether that would hold next time, is the agent's reading of your words, as it reads any reply; no list of words decides it. Each correction is asked about once.
+一度きりの修正（誤字、間違った名前、1 つの値）については質問しません。あなたがエージェントを修正したかどうか、そしてそれが次回も通用するかどうかは、他の返答と同様に、エージェントがあなたの言葉を読み取って判断します。特定の語句のリストで決まるわけではありません。各修正について質問するのは 1 回だけです。
 
-When you ask the agent outright to keep something ("approve, and next time use the shared fixtures"), it keeps it with no question and tells you in one line where it went: this project's rules unless you named the team, so you can move it or take it out.
+エージェントに何かを残すよう明示的に依頼した場合（"approve, and next time use the shared fixtures"（承認します。次回は共有のフィクスチャを使ってください）など）、エージェントは質問せずにそれを残し、どこに保存したかを 1 行で伝えます。チームを指定しない限りこのプロジェクトのルールに保存されるので、移動したり削除したりできます。
 
 ### What it looks like
 
-At the Intent Capture approval, after you told the agent to call a stock item a SKU (shortened, drawing characters shown as plain text):
+Intent Capture の承認で、在庫品目を product ではなく SKU と呼ぶようエージェントに伝えた後の例です（省略しており、罫線文字はプレーンテキストで表示しています）:
 
 ```text
  Keep for next time
@@ -86,7 +86,7 @@ At the Intent Capture approval, after you told the agent to call a stock item a 
    3. No
 ```
 
-With **Yes, for this project**, `aidlc/spaces/default/memory/project.md` ends with the practice line the agent words from your correction:
+**Yes, for this project** を選ぶと、`aidlc/spaces/default/memory/project.md` の末尾に、エージェントがあなたの修正をもとに言葉にしたプラクティスの行が追加されます:
 
 ```text
 ## Corrections
@@ -94,7 +94,7 @@ With **Yes, for this project**, `aidlc/spaces/default/memory/project.md` ends wi
 - Call a stock item a SKU in every document, never a product. (learned 2026-10-13) <!-- cid:... -->
 ```
 
-and the audit shard gets a row for it:
+そして、監査シャードにはそれに対応する行が記録されます:
 
 ```text
 ## Rule Learned
@@ -108,71 +108,71 @@ and the audit shard gets a row for it:
 **Source**: user_addition
 ```
 
-A kept line that sets a value AI-DLC reads (`Methodology: tdd` or `Ordering: ...` under `## Testing Posture`, `Mode: strict` under `## Guard Policy` or the retired `## Change Control`) carries its date as `<!-- learned 2026-10-13 -->` instead, so the value is exactly what you kept.
+AI-DLC が読み取る値を設定する保持された行（`## Testing Posture` 配下の `Methodology: tdd` や `Ordering: ...`、`## Guard Policy` または廃止された `## Change Control` 配下の `Mode: strict`）では、日付が代わりに `<!-- learned 2026-10-13 -->` として記録されるため、値はあなたが保持したものと正確に一致します。
 
-The kept line is in force from the next stage on, as [Applies from the next applicable stage](#applies-from-the-next-applicable-stage) describes.
+保持された行は、[次に該当するステージから適用](#applies-from-the-next-applicable-stage) で説明しているとおり、次のステージ以降で有効になります。
 
 ### Where a kept learning goes
 
-You never pick a file path or a heading. A correction you keep lands as a practice in `aidlc/spaces/<active-space>/memory/project.md` (**Yes, for this project**) or `memory/team.md` (**Yes, for the team**), under the topical heading the agent picks for it (`## Corrections`, `## Testing Posture`, `## Forbidden`).
+ファイルパスや見出しを自分で選ぶことはありません。保持した修正は、エージェントが選んだトピックの見出し（`## Corrections`、`## Testing Posture`、`## Forbidden`）の下に、プラクティスとして `aidlc/spaces/<active-space>/memory/project.md`（**Yes, for this project**）または `memory/team.md`（**Yes, for the team**）に保存されます。
 
-The default scope is **project**: **Yes, for the team** widens a kept learning to `memory/team.md` when the lesson applies beyond this one project. There is no widen-to-org path: org rules are framework-shipped or organization-authored through a separate process, so the learning loop never writes at org scope. Defaulting to the narrowest scope keeps one project's surprise from becoming an organization-wide rule by accident.
+デフォルトのスコープは **project** です。教訓がこのプロジェクトを超えて当てはまる場合は、**Yes, for the team** によって保持した学びを `memory/team.md` に広げます。org まで広げる手段はありません。org のルールはフレームワークに同梱されるか、別のプロセスを通じて組織が作成するものであり、学習ループが org スコープに書き込むことは決してありません。最も狭いスコープをデフォルトにすることで、1 つのプロジェクトでの想定外の出来事が誤って組織全体のルールになることを防ぎます。
 
-A confirmed learning *is* a practice: it lands in the same active-space memory files (`aidlc/spaces/<active-space>/memory/project.md`, `team.md`) that practices-discovery affirms — there is no separate rolling `*-learnings.md` surface. The two paths into those files differ by lifecycle: practices-discovery affirms a whole section deterministically, while the learning loop appends one dated, topically-headed entry at a time through the gate.
+確認された学びは、そのまま*プラクティス*です。practices-discovery が合意するのと同じアクティブスペースのメモリファイル（`aidlc/spaces/<active-space>/memory/project.md`、`team.md`）に保存され、別の継続的な `*-learnings.md` の置き場所はありません。これらのファイルへの 2 つの経路は、ライフサイクルが異なります。practices-discovery はセクション全体を決定的に合意するのに対し、学習ループはゲートを通じて、日付とトピックの見出しが付いたエントリーを 1 つずつ追記します。
 
-When a kept learning is a **sensor binding** rather than a rule (you want a new deterministic check to fire on a stage's output), the framework does a two-write install atomically: it scaffolds the sensor manifest and appends the new sensor's id to the originating stage's import list. The question, your answer, and the resulting file write each leave an audit row (the write's is `RULE_LEARNED` or `SENSOR_PROPOSED`), so no rule is ever installed silently.
+保持した学びがルールではなく**センサーのバインディング**である場合（ステージの出力に対して新しい決定的なチェックを実行したい場合）、フレームワークは 2 つの書き込みからなるインストールをアトミックに行います。センサーのマニフェストの雛形を作成し、元のステージのインポートリストに新しいセンサーの ID を追記します。質問、あなたの回答、そして結果として行われるファイルの書き込みは、それぞれ監査行を残します（書き込みの監査行は `RULE_LEARNED` または `SENSOR_PROPOSED`）。そのため、ルールが黙ってインストールされることは決してありません。
 
 ### Admission-time conflict checks
 
-Before a kept learning lands on disk, the gate protocol asks the orchestrator to compare it with the matching section of `memory/org.md`. This is a section-level LLM check. If the proposed entry contradicts an org rule, the orchestrator quotes the conflicting sentence inline and asks you to revise the entry, skip it, or escalate to the org-rule owner. Only conflict-clear or user-escalated selections are then handed to the deterministic writer. `aidlc-learnings.ts persist` has no independent view of `org.md`, does not judge conflicts, and accepts the selections it is handed. The org-contradiction escalation is therefore an audit aid for keeping resolver inputs coherent, not an enforcement boundary.
+保持した学びがディスクに書き込まれる前に、ゲートのプロトコルはオーケストレーターに、それを `memory/org.md` の対応するセクションと比較するよう求めます。これはセクション単位の LLM によるチェックです。提案されたエントリーが org のルールと矛盾する場合、オーケストレーターは矛盾する文をその場で引用し、エントリーの修正、スキップ、または org ルールの所有者へのエスカレーションを求めます。その後、競合がないもの、または利用者がエスカレーションしたものだけが決定的なライターに渡されます。`aidlc-learnings.ts persist` は `org.md` を独自に参照せず、競合を判断せず、渡された選択をそのまま受け入れます。したがって、org との矛盾のエスカレーションは、リゾルバーへの入力の一貫性を保つための監査の補助であり、強制の境界ではありません。
 
-The practices-discovery affirmation gate does not run this org-conflict check. Its promotion is a deterministic section-replace legitimised by your affirmation. And when org policy changes *after* a team or project rule is already on disk, `/aidlc --doctor` surfaces possible drift on demand: for each team or project file with a filled-in section whose heading `org.md` also fills in, it names the file and the heading and quotes the first sentence of org's section there, so you (or the agent) can judge whether the two disagree. It compares headings, not meaning. The doctor check is advisory and never blocks. The two doctor advisory rows are described in [CLI Commands](12-cli-commands.md) and [Troubleshooting](15-troubleshooting.md).
+practices-discovery の合意ゲートでは、この org との競合チェックは実行されません。その昇格は、あなたの合意によって正当化された決定的なセクションの置き換えです。また、チームやプロジェクトのルールがすでにディスク上にある*後で* org のポリシーが変わった場合、`/aidlc --doctor` は要求に応じて、ずれの可能性を表示します。チームまたはプロジェクトのファイルで記入済みのセクションのうち、`org.md` でも同じ見出しが記入されているものについて、ファイルと見出しを示し、そこにある org 側のセクションの最初の文を引用します。これにより、あなた（またはエージェント）が両者が食い違っているかを判断できます。比較するのは見出しであり、意味ではありません。doctor のチェックは助言的なもので、決して進行を止めません。2 つの doctor の助言行については、[CLI コマンド](12-cli-commands.md) と [トラブルシューティング](15-troubleshooting.md) で説明しています。
 
 ### Applies from the next applicable stage
 
-A kept learning is appended to an already-selected rule file (`project.md` or `team.md`), and the engine reads the selected files' current text before each stage delivery. So the learning reaches the agent at the next applicable stage of the **current** workflow — the stage where it was captured already got your correction in conversation, and every later delivery carries the written rule. Later workflows receive it too.
+保持した学びは、すでに選択されているルールファイル（`project.md` または `team.md`）に追記され、エンジンは各ステージの配信前に選択されたファイルの現在のテキストを読み込みます。そのため、学びは**現在の**ワークフローの次に該当するステージでエージェントに届きます。学びが取り込まれたステージは、すでに会話の中であなたの修正を受け取っており、それ以降のすべての配信には書き込まれたルールが含まれます。後のワークフローにも反映されます。
 
-What waits for the next compile is the **selection**: a brand-new rule file enters the chain, and a new Sensor binds and fires, only when the stage graph is next compiled. This is the stability property a router gets from BGP: the compiled selection doesn't recompute mid-packet-flight. The rule *text* inside the selected files is read fresh each stage, so a correction you kept does not sit idle for the rest of the run.
+次のコンパイルを待つのは**選択**です。まったく新しいルールファイルがチェーンに加わったり、新しいセンサーがバインドされて実行されたりするのは、次にステージグラフがコンパイルされたときだけです。これは、ルーターが BGP から得る安定性の性質と同じで、コンパイル済みの選択がパケットの転送途中に再計算されることはありません。選択されたファイル内のルールの*テキスト*はステージごとに新しく読み込まれるため、保持した修正が実行の残りの間ずっと使われずに放置されることはありません。
 
 ---
 
 ## Worked example: a banking project
 
-A concrete walk-through shows the loop end to end.
+具体的な例で、ループを最初から最後まで見ていきます。
 
-Sam runs `/aidlc feature` on a banking project. The workflow lands on `requirements-analysis`. Sam writes a stakeholder note saying "the transaction shouldn't duplicate on retry" — meaning a banking transaction, the payment being processed. The product agent reads "transaction" as a database transaction and interprets the note as an ACID-semantics requirement. Sam corrects it. The agent updates the artifact and continues.
+Sam は銀行のプロジェクトで `/aidlc feature` を実行します。ワークフローは `requirements-analysis` に到達します。Sam は「transaction はリトライ時に重複してはならない」というステークホルダーのメモを書きます。これは銀行の取引、つまり処理中の支払いを意味しています。プロダクトエージェントは "transaction" をデータベースのトランザクションと解釈し、このメモを ACID の意味論に関する要件だと受け取ります。Sam がそれを修正し、エージェントは成果物を更新して作業を続けます。
 
-Nothing in the framework predicted this. There's no rule about the bank's own terminology and no sensor catching generic-versus-domain term clashes. The agent simply hit an ambiguity.
+フレームワークにはこれを予測するものは何もありませんでした。銀行独自の用語に関するルールも、一般用語とドメイン用語の衝突を検出するセンサーもありません。エージェントは単にあいまいさに直面したのです。
 
-**1. Sam's correction is what counts.** Sam's words ("transaction" means the payment being processed) correct what the agent assumed, in a way that holds for the whole project. The agent's own diary line about it stays in the stage's record; nothing is offered from it.
+**1. 重要なのは Sam の修正です。** Sam の言葉（"transaction" は処理中の支払いを意味する）は、エージェントの想定を、プロジェクト全体で通用する形で修正しています。それについてのエージェント自身の日誌の行はステージの記録に残り、そこから何かが提示されることはありません。
 
-**2. The step asks once.** The stage finishes. Before the approval question the agent asks: "You asked me to read 'transaction' as the payment being processed, not a database write. Keep that for next time?" Sam picks **Yes, for this project**. At the approval question Sam also says "approve, and next time always say 'bank customer' for the banking customer entity": the agent keeps that as well, with no second question, and says in one line that it went to this project's rules in `memory/project.md`.
+**2. このステップで質問は 1 回です。** ステージが終了します。承認の質問の前に、エージェントは "You asked me to read 'transaction' as the payment being processed, not a database write. Keep that for next time?"（'transaction' をデータベースへの書き込みではなく処理中の支払いとして読むよう依頼されました。次回のために残しますか?）と質問します。Sam は **Yes, for this project** を選びます。承認の質問では、Sam はさらに "approve, and next time always say 'bank customer' for the banking customer entity"（承認します。次回からは銀行の顧客エンティティを常に 'bank customer' と呼んでください）と伝えます。エージェントはこれも 2 回目の質問なしで保持し、`memory/project.md` のこのプロジェクトのルールに保存したことを 1 行で伝えます。
 
-**3. The conflict check runs.** The orchestrator compares both entries against the org practices (`memory/org.md`) as a section-level LLM check. Neither the "transaction" nor the "bank customer" terminology is covered by an org rule, so both pass. The deterministic tool then writes both lines into `memory/project.md` with provenance, and the audit log records a `RULE_LEARNED` event for each.
+**3. 競合チェックが実行されます。** オーケストレーターは、セクション単位の LLM チェックとして、両方のエントリーを org のプラクティス（`memory/org.md`）と比較します。"transaction" と "bank customer" のどちらの用語も org のルールでは扱われていないため、両方とも通過します。続いて決定的なツールが両方の行を来歴付きで `memory/project.md` に書き込み、監査ログにはそれぞれについて `RULE_LEARNED` イベントが記録されます。
 
-**4. The current workflow carries them forward.** The stage approves and the workflow advances to `user-stories`. `memory/project.md` was already in this workflow's compiled selection, and the engine re-reads its text before each stage delivery — so from `user-stories` onward, the new lines are in the agent's context for the rest of this run.
+**4. 現在のワークフローがそれを引き継ぎます。** ステージが承認され、ワークフローは `user-stories` に進みます。`memory/project.md` はすでにこのワークフローのコンパイル済みの選択に含まれており、エンジンは各ステージの配信前にそのテキストを読み直します。そのため `user-stories` 以降、この実行の残りの間は新しい行がエージェントのコンテキストに含まれます。
 
-**5. Later workflows receive them too.** Later that day Sam runs `/aidlc bugfix`. `memory/project.md` is in every stage's selection (the org, team, and project files attach to every stage), so from stage one of the bugfix workflow, the agent knows "transaction" means a payment and the customer entity is the "bank customer."
+**5. 後のワークフローにも反映されます。** その日の後半、Sam は `/aidlc bugfix` を実行します。`memory/project.md` はすべてのステージの選択に含まれている（org、team、project のファイルはすべてのステージに付加されます）ため、bugfix ワークフローの最初のステージから、エージェントは "transaction" が支払いを意味し、顧客エンティティが "bank customer" であることを理解しています。
 
-The cost was paid once (one question, one file write), and it pays back on every future workflow for the price of one more file in the directory walk.
+コストは 1 回（1 つの質問と 1 回のファイル書き込み）で済み、ディレクトリの走査でファイルが 1 つ増えるだけの代償で、以降のすべてのワークフローで効果を発揮します。
 
 ---
 
 ## Sensors: the deterministic second opinion
 
-Rules are prose the agent reads. Sensors are deterministic checks that run automatically when an agent writes a stage's output. Where a rule says "user stories follow Given/When/Then format," a sensor can verify, byte-for-byte, that the required headings are actually present in the file. Rules feed the agent forward into a stage; sensors feed back what the agent actually produced.
+ルールはエージェントが読む文章です。センサーは、エージェントがステージの出力を書き込んだときに自動的に実行される決定的なチェックです。ルールが「ユーザーストーリーは Given/When/Then 形式に従う」と述べている場合、センサーは必要な見出しが実際にファイル内に存在することを、バイト単位で検証できます。ルールはエージェントがステージに入る前に前方へ情報を与え（フィードフォワード）、センサーはエージェントが実際に生成したものを後方へ返します（フィードバック）。
 
 ### How sensors fire
 
-When an agent writes or edits an output file during a stage, a PostToolUse hook checks which sensors apply to that stage and runs each matching one. Matching is by file shape: a code-quality sensor declares it analyses `**/*.{ts,js}`, so it only fires on TypeScript and JavaScript writes; a document-shape sensor that fires on any stage output omits the filter. Gate-fired sensors, the first three in the table below, run instead when the stage reaches its approval gate, once for each of the stage's declared output files their filter accepts. Their advisory checks also run once before that, when the stage's documents are written and handed on to their review (or to the gate, when the stage has no review): the agent gets what they found first and fixes its own slips, so the review and the gate see the tidied documents. When the gate is one the tool approves on its own under Construction autonomy, only blocking sensors run there: advisory findings would have no one to read them. You don't invoke sensors by hand during a workflow; they ride along on the stage's writes and its gate.
+ステージの途中でエージェントが出力ファイルを書き込んだり編集したりすると、PostToolUse フックがそのステージに適用されるセンサーを確認し、一致するものをそれぞれ実行します。一致はファイルの形で判断されます。コード品質のセンサーは `**/*.{ts,js}` を解析すると宣言しているため、TypeScript と JavaScript の書き込みでのみ実行されます。任意のステージ出力で実行されるドキュメント形状のセンサーは、フィルターを省略します。下の表の最初の 3 つであるゲートで実行されるセンサーは、代わりにステージが承認ゲートに到達したときに、ステージが宣言した出力ファイルのうちフィルターが受け入れるものごとに 1 回実行されます。それらの助言的なチェックは、その前にも 1 回、ステージのドキュメントが書き込まれてレビューに（ステージにレビューがない場合はゲートに）渡されるときに実行されます。エージェントは指摘された内容を先に受け取って自分のミスを修正するため、レビューとゲートでは整えられたドキュメントが確認されます。Construction の自律モードのもとでツールが自ら承認するゲートでは、ブロッキングのセンサーのみが実行されます。助言的な指摘事項を読む人がいないためです。ワークフロー中にセンサーを手動で呼び出すことはありません。センサーはステージの書き込みとゲートに付随して動作します。
 
-The six sensors that ship are **advisory**. A failing one produces an audit row and a detail file pointing at exactly what's missing, but it does not block the stage's approval gate or stop your workflow. When the gate opens, the agent tells you which checks still report findings on the stage's outputs, and in one line which checks could not run (their script crashed or could not start, so they checked nothing), so you decide with that in view. With Sensors switched off, nothing is said about checks.
+同梱されている 6 つのセンサーは**助言的**です。失敗したセンサーは、監査行と、何が欠けているかを正確に示す詳細ファイルを生成しますが、ステージの承認ゲートをブロックしたり、ワークフローを止めたりはしません。ゲートが開くと、エージェントはステージの出力についてまだ指摘事項を報告しているチェックと、実行できなかったチェック（スクリプトがクラッシュしたか起動できず、何もチェックしなかったもの）を 1 行で伝えます。そのため、あなたはそれを踏まえて判断できます。センサーがオフの場合、チェックについては何も伝えられません。
 
-A sensor you add can be **blocking** instead (`default_severity: blocking` in its manifest). When a blocking sensor at a gate does not pass, the gate does not open: the agent offers **Fix findings** or **Override blocking sensors**, and an override is recorded as your choice. In autonomous Construction the run stops there instead, and choosing the override first sets Construction back to stopping for your approval at each Bolt. See [Sensor System](../reference/07-sensor-system.md).
+あなたが追加するセンサーは、代わりに**ブロッキング**にすることもできます（マニフェストで `default_severity: blocking` を指定）。ゲートでブロッキングのセンサーが合格しない場合、ゲートは開きません。エージェントは **Fix findings** または **Override blocking sensors** を提示し、上書きはあなたの選択として記録されます。自律的な Construction では代わりにその時点で実行が停止し、上書きを選ぶと、まず Construction が各 Bolt であなたの承認を待つ設定に戻ります。[センサーシステム](../reference/07-sensor-system.md) を参照してください。
 
 ### What you see in the audit log
 
-Sensor activity shows up in the intent's `audit/` shards as `Sensor Fired`, `Sensor Passed`, and `Sensor Failed` rows, and `Sensor Could Not Run` for a check whose script crashed or could not start. A failed row links to a detail file (for example `<record>/.aidlc-engine/sensors/intent-capture/claim-sources-0719478d.md`, named for the sensor and the fire id on its rows) that lists the specific gap - the missing headings, the unreferenced upstream artifact, the lint error. A passing check leaves a row like this one, from the run above:
+センサーの動作は、インテントの `audit/` シャードに `Sensor Fired`、`Sensor Passed`、`Sensor Failed` の行として、またスクリプトがクラッシュしたか起動できなかったチェックについては `Sensor Could Not Run` の行として表示されます。失敗の行は詳細ファイル（たとえば `<record>/.aidlc-engine/sensors/intent-capture/claim-sources-0719478d.md`。センサーとその行の fire id にちなんだ名前です）にリンクしており、そこには欠けている見出し、参照されていない上流の成果物、lint エラーなど、具体的な不足が一覧されます。合格したチェックは、上の実行の例では次のような行を残します:
 
 ```text
 ## Sensor Passed
@@ -185,47 +185,47 @@ Sensor activity shows up in the intent's `audit/` shards as `Sensor Fired`, `Sen
 **Duration ms**: 190
 ```
 
-The audit log is covered in [State and Audit](10-state-and-audit.md).
+監査ログについては [状態と監査](10-state-and-audit.md) で説明しています。
 
 ### The six framework sensors
 
-Six sensors ship with the framework:
+フレームワークには 6 つのセンサーが同梱されています:
 
-| Sensor | Fires on | Checks |
+| センサー | 実行対象 | チェック内容 |
 |--------|----------|--------|
-| `claim-sources` | Intent Capture record-dir outputs | Every claim has a visible source tag; registered description, workflow scope, and memory text match authoritative inputs; retained assumptions exactly match explicit confirmation |
-| `required-sections` | Any record-dir markdown output, plus reverse-engineering's `codekb/` files | The output contains the `##` headings of its template, when your team has written one in `memory/templates/`; with no template nothing is required |
-| `upstream-coverage` | Any record-dir markdown output, plus reverse-engineering's `codekb/` files | The stage's deliverables (evaluated as a set) reference each upstream artifact the stage declares it requires (`required: true`) or marks `cited: true`, by slug, wikilink, or the producing stage's directory path |
-| `traceability` | `traceability.json` stage artifacts | Stable upstream IDs are declared and covered, statuses and targets are valid, and deterministic downstream targets exist |
-| `linter` | `.ts` / `.js` code outputs | Wraps your configured linter (ESLint by default) |
-| `type-check` | `.ts` / `.tsx` code outputs | Wraps your configured type-checker (`tsc` by default) |
+| `claim-sources` | Intent Capture の記録ディレクトリの出力 | すべての主張に目に見えるソースタグがあること。登録された説明、ワークフローのスコープ、メモリのテキストが信頼できる入力と一致すること。保持された前提が明示的な確認と正確に一致すること |
+| `required-sections` | 記録ディレクトリの任意の Markdown 出力と、reverse-engineering の `codekb/` ファイル | チームが `memory/templates/` にテンプレートを作成している場合、出力にそのテンプレートの `##` 見出しが含まれていること。テンプレートがなければ何も要求されない |
+| `upstream-coverage` | 記録ディレクトリの任意の Markdown 出力と、reverse-engineering の `codekb/` ファイル | ステージの成果物（集合として評価）が、ステージが必須（`required: true`）と宣言した、または `cited: true` とマークした各上流の成果物を、slug、wikilink、または生成元ステージのディレクトリパスで参照していること |
+| `traceability` | `traceability.json` のステージ成果物 | 安定した上流の ID が宣言されカバーされていること、ステータスとターゲットが有効であること、決定的な下流のターゲットが存在すること |
+| `linter` | `.ts` / `.js` のコード出力 | 設定済みのリンター（デフォルトは ESLint）をラップする |
+| `type-check` | `.ts` / `.tsx` のコード出力 | 設定済みの型チェッカー（デフォルトは `tsc`）をラップする |
 
-Each stage declares which sensors fire on its outputs. You can add your own sensors — author a manifest under `.claude/sensors/`, then add its id to the stages that should run it. The learning loop can also install a sensor for you when you confirm one at a gate. The manifest format, the per-stage matrix, and the authoring walkthrough live in [Sensor System](../reference/07-sensor-system.md). For adding one to your own project, see [Customization](13-customization.md).
+各ステージは、その出力に対してどのセンサーを実行するかを宣言します。独自のセンサーを追加することもできます。`.claude/sensors/` 配下にマニフェストを作成し、それを実行すべきステージにその ID を追加します。ゲートであなたがセンサーを確認した場合は、学習ループがセンサーをインストールすることもできます。マニフェストの形式、ステージごとの対応表、作成手順は [センサーシステム](../reference/07-sensor-system.md) にあります。自分のプロジェクトに追加する方法については、[カスタマイズ](13-customization.md) を参照してください。
 
 ---
 
 ## Planes: how it fits together
 
-You can use everything above without thinking about planes. But the underlying design borrows a discipline from networking, and naming it makes the compile boundary — what is fixed at workflow start and what is read live — click into place.
+ここまでの内容は、プレーンについて考えなくてもすべて利用できます。ただし、根底にある設計はネットワーキングの考え方を借用しており、それに名前を付けることで、コンパイルの境界、つまりワークフロー開始時に固定されるものと実行中に読み込まれるものの区別がすっきりと理解できます。
 
-A modern router splits its work into three planes, and AI-DLC mirrors the split:
+現代のルーターは作業を 3 つのプレーンに分けており、AI-DLC もその分割にならっています:
 
-- **Control plane** — the *schema* of what should run. Stage definitions, rules, sensors. In networking terms, this is route computation: given the configuration, decide what applies where. The control plane is allowed to be slow and clever because it runs once.
-- **Data plane** — the *actual runs*. Stage executions, agent invocations, the files in the intent's record dir. In networking terms, this is packet forwarding: fast, repeated, by lookup. The data plane reads the resolved answers; it doesn't re-derive them.
-- **Management plane** — the *observe-and-configure* surface. `/aidlc --doctor`, the audit log, `CLAUDE.md`. You configure here and you query here, at human cadence.
+- **Control plane** — 何を実行すべきかの*スキーマ*です。ステージ定義、ルール、センサーが該当します。ネットワーキングで言えば経路計算にあたり、設定をもとにどこに何を適用するかを決めます。コントロールプレーンは 1 回しか実行されないため、遅くて賢くてもかまいません。
+- **Data plane** — *実際の実行*です。ステージの実行、エージェントの呼び出し、インテントの記録ディレクトリ内のファイルが該当します。ネットワーキングで言えばパケット転送にあたり、高速で、繰り返し行われ、参照（ルックアップ）によって処理されます。データプレーンは解決済みの答えを読み取り、それを再導出することはありません。
+- **Management plane** — *観察と設定*のための窓口です。`/aidlc --doctor`、監査ログ、`CLAUDE.md` が該当します。ここで設定や問い合わせを、人間のペースで行います。
 
-The control plane compiles your rules and sensors into a graph **once**; the data plane reads pre-resolved answers off that graph for the rest of the run. The compiled answer is the *selection* — which rule files and sensors attach to which stage. The selected rule files' text is read at delivery time, so a kept learning in an already-selected file reaches the next stage without a recompile; a new file or a new Sensor binding is a topology change and waits for the next graph compile. The result is reproducible runs and clean recovery after a restart.
+コントロールプレーンはルールとセンサーを**1 回だけ**グラフにコンパイルし、データプレーンは実行の残りの間、そのグラフから事前に解決された答えを読み取ります。コンパイルされた答えは*選択*、つまりどのルールファイルとセンサーがどのステージに付加されるかです。選択されたルールファイルのテキストは配信時に読み込まれるため、すでに選択されているファイルに保持された学びは、再コンパイルなしで次のステージに届きます。新しいファイルや新しいセンサーのバインディングはトポロジーの変更であり、次のグラフのコンパイルを待ちます。その結果、実行は再現可能になり、再起動後もきれいに復旧できます。
 
-As a user you mostly touch one horizontal slice at a time — running a workflow, capturing a learning, customizing team practices, auditing what happened. Each slice touches the planes underneath without making you reason about them. The full model, the compile boundary, and the recovery property are in [Plane Architecture](../reference/02-plane-architecture.md), with the telemetry artifact it produces documented in [Runtime Graph](../reference/13-runtime-graph.md).
+利用者としては、ほとんどの場合、一度に 1 つの水平なスライス（ワークフローの実行、学びの取り込み、チームのプラクティスのカスタマイズ、起きたことの監査）に触れるだけです。各スライスは下にあるプレーンに触れますが、あなたがそれについて考える必要はありません。完全なモデル、コンパイルの境界、復旧の性質については [プレーンアーキテクチャ](../reference/02-plane-architecture.md) に、それが生成するテレメトリーの成果物については [ランタイムグラフ](../reference/13-runtime-graph.md) に記載されています。
 
 ---
 
 ## Next Steps
 
-- [Knowledge](08-knowledge.md) — the two-tier knowledge system that informs (rather than constrains) agent behavior
-- [Customization](13-customization.md) — add a rule, add a sensor, extend the loop, add a stage or agent
-- [Interaction Modes](07-interaction-modes.md) — how corrections happen during a stage
-- [State and Audit](10-state-and-audit.md) — how the learning loop's events are logged
-- [CLI Commands](12-cli-commands.md) — the doctor rule-drift and paired-coverage advisory rows
-- [Rule System](../reference/08-rule-system.md) · [Sensor System](../reference/07-sensor-system.md) · [Plane Architecture](../reference/02-plane-architecture.md) — the schema- and design-level reference
-- [Glossary](glossary.md) — terminology reference
+- [ナレッジ](08-knowledge.md) — エージェントの振る舞いを（制約するのではなく）情報で支える 2 層のナレッジシステム
+- [カスタマイズ](13-customization.md) — ルールの追加、センサーの追加、ループの拡張、ステージやエージェントの追加
+- [インタラクションモード](07-interaction-modes.md) — ステージ中に修正がどのように行われるか
+- [状態と監査](10-state-and-audit.md) — 学習ループのイベントがどのように記録されるか
+- [CLI コマンド](12-cli-commands.md) — doctor のルールのずれとペアカバレッジに関する助言行
+- [ルールシステム](../reference/08-rule-system.md) · [センサーシステム](../reference/07-sensor-system.md) · [プレーンアーキテクチャ](../reference/02-plane-architecture.md) — スキーマと設計レベルのリファレンス
+- [用語集](glossary.md) — 用語のリファレンス

@@ -18,38 +18,38 @@ collaborators: off
 
 # express scope
 
-`express` answers the community request for a lightweight run. It follows a
-straight line from requirements to code, test, and deploy without a design
-pass or reviewer dispatch.
+`express` は、軽量な実行を求めるコミュニティの要望に応えるスコープである。
+要件からコード、テスト、デプロイまで一直線に進み、設計パスもレビュアーの
+ディスパッチも行わない。
 
-Guard Policy defaults to off: changed inputs are recorded and announced rather than reopening approval; plan approval, review freeze, state transition, and reviewer read scope are lowered for undirected work. Human presence stays up.
+Guard Policy の既定値は off である。変更された入力は承認をやり直すのではなく、記録して通知する。プラン承認、レビューフリーズ、状態遷移、レビュアーの読み取り範囲は、指示のない作業向けに引き下げられる。人間の関与（Human presence）は高いまま維持する。
 
-Sensors, learnings, and summary confirmation are off too; override them per intent
-with `/aidlc --sensors on|off`, `/aidlc --learnings on|off`, or
-`/aidlc --summary-confirmation on|off`.
+センサー、学び、サマリー確認もオフである。インテントごとに
+`/aidlc --sensors on|off`、`/aidlc --learnings on|off`、
+`/aidlc --summary-confirmation on|off` で上書きできる。
 
-Plan approval is off as well: once the code plan is written you see one line
-naming it, code generation starts, and the line says you can ask to go over the
-plan at any time. You can also ask to see a plan before it is built, or to be
-asked about every plan.
+プラン承認もオフである。コードプランが書かれると、それを示す1行が表示され、
+コード生成が始まる。その行には、いつでもプランを見直すよう依頼できることが
+記されている。プランを構築前に確認したい、あるいはすべてのプランについて
+確認してほしいと依頼することもできる。
 
 ## Why these stages, why skip those
 
-Requirements Analysis establishes the contract, Code Generation implements
-it, Build and Test verifies it, and the Operation tail can deploy and observe
-the result. Reviewers are disabled by `review_cap: none`. Minimal testing still
-requires requirement-driven unit tests with a happy-path floor per component.
+Requirements Analysis が契約を確立し、Code Generation がそれを実装し、
+Build and Test がそれを検証し、Operation の末尾ステージ群が結果をデプロイして
+監視できる。レビュアーは `review_cap: none` によって無効化される。Minimal の
+テストでも、要件に基づくユニットテストと、コンポーネントごとのハッピーパスの
+最低ラインは必須である。
 
-The swarm path is structurally unreachable because `express` skips Units
-Generation, so no Unit DAG can exist. Reverse Engineering remains CONDITIONAL
-to provide brownfield understanding when existing code is present. The deploy
-tail is also CONDITIONAL and self-skips when there is nothing to deploy. Its
-stages use the approved requirements, workspace deployment configuration, build
-results, and prior tail artifacts when full design producers are intentionally
-absent.
+`express` は Units Generation をスキップするため Unit DAG が存在し得ず、
+スウォームの経路には構造上到達できない。Reverse Engineering は CONDITIONAL の
+ままであり、既存コードがある場合にブラウンフィールドの理解を提供する。デプロイの
+末尾ステージ群も CONDITIONAL で、デプロイ対象がなければ自らスキップする。これらの
+ステージは、完全な設計の生成ステージが意図的に存在しない場合、承認済みの要件、
+ワークスペースのデプロイ設定、ビルド結果、および先行する末尾ステージの成果物を使用する。
 
 ## Membership
 
-The grid contains the three Initialization stages, Reverse Engineering,
-Requirements Analysis, Code Generation, Build and Test, Deployment Pipeline,
-Deployment Execution, and Observability Setup. Every other stage is SKIP.
+グリッドには、Initialization の3ステージ、Reverse Engineering、
+Requirements Analysis、Code Generation、Build and Test、Deployment Pipeline、
+Deployment Execution、Observability Setup が含まれる。それ以外のステージはすべて SKIP である。

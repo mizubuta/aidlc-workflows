@@ -3,46 +3,46 @@
 ## Requirement Types
 
 ### Functional Requirements (FR)
-Define what the system must do. Format: "The system shall [verb] [object] [condition]."
-- User-facing behavior (inputs, outputs, interactions)
-- Business rules and logic (calculations, validations, state transitions)
-- Data requirements (entities, relationships, lifecycle)
-- Integration requirements (external systems, APIs, data feeds)
+システムが何をしなければならないかを定義する。形式: "The system shall [verb] [object] [condition]."（システムは [条件] において [対象] を [動詞] しなければならない）
+- ユーザーに見える振る舞い（入力、出力、インタラクション）
+- ビジネスルールとロジック（計算、検証、状態遷移）
+- データ要件（エンティティ、リレーションシップ、ライフサイクル）
+- 連携要件（外部システム、API、データフィード）
 
 ### Non-Functional Requirements (NFR)
-Define how the system must perform. Must be quantifiable.
-- **Performance**: Response time < Xms for Y% of requests under Z concurrent users
-- **Availability**: X% uptime measured over a rolling 30-day window
-- **Scalability**: Support X to Y concurrent users with linear resource scaling
-- **Security**: Authentication method, authorization model, data encryption at rest/in transit
-- **Usability**: WCAG level, maximum clicks to complete core workflow
-- **Maintainability**: Code coverage target, deployment frequency target
+システムがどのように動作しなければならないかを定義する。定量化できなければならない。
+- **性能（Performance）**: 同時ユーザー数 Z の下で、リクエストの Y% について応答時間 < Xms
+- **可用性（Availability）**: 直近 30 日間のローリングウィンドウで測定した稼働率 X%
+- **スケーラビリティ（Scalability）**: リソースの線形スケーリングで同時ユーザー X〜Y 人をサポート
+- **セキュリティ（Security）**: 認証方式、認可モデル、保存時／転送時のデータ暗号化
+- **ユーザビリティ（Usability）**: WCAG レベル、中核ワークフローの完了に必要な最大クリック数
+- **保守性（Maintainability）**: コードカバレッジの目標値、デプロイ頻度の目標値
 
 ### Constraints
-Non-negotiable boundaries imposed externally:
-- Technology mandates (must use AWS, must use React, must support IE11)
-- Regulatory compliance (GDPR, HIPAA, SOC2, PCI-DSS)
-- Budget and timeline limitations
-- Integration compatibility with existing systems
+外部から課される、交渉の余地のない境界:
+- 技術上の必須条件（AWS の使用必須、React の使用必須、IE11 のサポート必須）
+- 規制コンプライアンス（GDPR、HIPAA、SOC2、PCI-DSS）
+- 予算とスケジュールの制約
+- 既存システムとの連携互換性
 
 ### Assumptions
-Believed-true conditions that have not been validated:
-- Always document assumptions explicitly
-- Assign an owner responsible for validating each assumption
-- Track assumption status (unvalidated, confirmed, invalidated)
+真であると考えられているが、検証されていない条件:
+- 前提は必ず明示的に文書化する
+- 各前提の検証に責任を持つオーナーを割り当てる
+- 前提のステータス（unvalidated、confirmed、invalidated）を追跡する
 
 ## Elicitation Techniques
 
-Use these in order of preference for AI-DLC:
-1. **Document analysis** -- Read existing docs, READMEs, wikis, API specs, database schemas
-2. **Structured questioning** -- Ask targeted questions using the completeness checklist below
-3. **Scenario walkthrough** -- Walk through key user journeys step by step
-4. **Constraint identification** -- Ask "What must NOT happen?" and "What are the limits?"
-5. **Edge case probing** -- For each requirement, ask "What happens when [unusual condition]?" At Standard and Comprehensive depth, use `corner-checklist.md` for the list of unusual conditions to sweep, component by component
+AI-DLC では、次の優先順で使う:
+1. **ドキュメント分析** -- 既存のドキュメント、README、wiki、API 仕様、データベーススキーマを読む
+2. **構造化された質問** -- 下記の完全性チェックリストを使って、的を絞った質問をする
+3. **シナリオのウォークスルー** -- 主要なユーザージャーニーを 1 ステップずつたどる
+4. **制約の特定** -- 「起きてはならないことは何か？」「限界はどこか？」を尋ねる
+5. **エッジケースの探索** -- 各要件について「[通常と異なる条件] のときに何が起きるか？」を尋ねる。Standard および Comprehensive の深度では、`corner-checklist.md` を使って、確認すべき通常と異なる条件の一覧をコンポーネントごとに洗い出す
 
 ## Acceptance Criteria Pattern
 
-Use Given/When/Then (Gherkin) format:
+Given/When/Then（Gherkin）形式を使う:
 ```
 Given [precondition or initial state]
 When [action or trigger]
@@ -50,29 +50,29 @@ Then [expected outcome]
 And [additional outcomes if needed]
 ```
 
-Each requirement should have:
-- At least 1 happy-path scenario
-- At least 1 error/edge-case scenario
-- Boundary values for any numeric constraints
+各要件には次を含めるべきである:
+- 少なくとも 1 つの正常系（happy-path）シナリオ
+- 少なくとも 1 つのエラー／エッジケースのシナリオ
+- 数値の制約がある場合はその境界値
 
 ## Completeness Analysis Checklist
 
-For every system, verify coverage of:
-- [ ] User authentication and authorization
-- [ ] Data input validation and sanitization
-- [ ] Error handling and user-facing error messages
-- [ ] Data persistence and retrieval (CRUD for each entity)
-- [ ] Search and filtering capabilities
-- [ ] Pagination for list views
-- [ ] Audit logging for sensitive operations
-- [ ] Notification/alerting requirements
-- [ ] Data export/import capabilities
-- [ ] Concurrent access and conflict resolution
-- [ ] Session management and timeout behavior
-- [ ] Offline/degraded mode behavior (if applicable)
-- [ ] Localization and internationalization (if applicable)
-- [ ] Accessibility requirements
-- [ ] Data retention and deletion policies
+すべてのシステムについて、次の項目がカバーされているか検証する:
+- [ ] ユーザーの認証と認可
+- [ ] データ入力の検証とサニタイズ
+- [ ] エラーハンドリングとユーザー向けエラーメッセージ
+- [ ] データの永続化と取得（各エンティティの CRUD）
+- [ ] 検索とフィルタリングの機能
+- [ ] 一覧表示のページネーション
+- [ ] 機密性の高い操作の監査ログ
+- [ ] 通知／アラートの要件
+- [ ] データのエクスポート／インポート機能
+- [ ] 同時アクセスと競合の解決
+- [ ] セッション管理とタイムアウト時の振る舞い
+- [ ] オフライン／縮退モードでの振る舞い（該当する場合）
+- [ ] ローカライゼーションと国際化（該当する場合）
+- [ ] アクセシビリティ要件
+- [ ] データの保持と削除のポリシー
 
 ## Traceability Matrix Format
 
@@ -82,7 +82,7 @@ For every system, verify coverage of:
 | FR1    | [summary]   | Must     | Approved | AD-003   | U7       | TC-012   |
 ```
 
-Every cell should be filled. Empty cells indicate gaps:
-- Empty Design Ref: requirement not yet designed
-- Empty Unit Ref: requirement not yet assigned for implementation
-- Empty Test Ref: requirement not yet covered by test plan
+すべてのセルを埋めるべきである。空のセルはギャップを示す:
+- Design Ref が空: 要件がまだ設計されていない
+- Unit Ref が空: 要件がまだ実装に割り当てられていない
+- Test Ref が空: 要件がまだテスト計画でカバーされていない

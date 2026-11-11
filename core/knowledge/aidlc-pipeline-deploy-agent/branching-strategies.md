@@ -1,17 +1,17 @@
 # Branching Strategies
 
-A menu of common branching strategies, what they look like, when to use them, and how AIDLC's Construction worktrees map onto each. When the orchestrator dispatches aidlc-pipeline-deploy-agent at Bolt boundaries, this file is the menu the agent surveys to map a team's affirmed branching strategy onto the `aidlc-worktree` tool's flags.
+よく使われるブランチ戦略のメニューであり、それぞれの形、使いどころ、そして AIDLC の Construction ワークツリーが各戦略にどう対応するかを示す。オーケストレーターが Bolt の境界で aidlc-pipeline-deploy-agent をディスパッチするとき、このファイルは、チームが確認したブランチ戦略を `aidlc-worktree` ツールのフラグに対応付けるためにエージェントが参照するメニューである。
 
-> **Reading practices:** see `knowledge/aidlc-shared/rules-reading.md` for empty-template detection, semantic-topic matching, and the active-space `project.md → team.md → org.md → hardcoded defaults` fallback chain. In the runbooks below, those files live under `aidlc/spaces/<active-space>/memory/`.
+> **プラクティスの読み方:** 空テンプレートの検出、意味的なトピックの照合、アクティブなスペースの `project.md → team.md → org.md → hardcoded defaults` フォールバックチェーンについては `knowledge/aidlc-shared/rules-reading.md` を参照。以下のランブックでは、それらのファイルは `aidlc/spaces/<active-space>/memory/` 配下にある。
 >
-> See also `cicd-patterns.md` § "Branch Strategies" for the higher-level CI-flow context.
+> より上位の CI フローのコンテキストについては、`cicd-patterns.md` の § "Branch Strategies" も参照。
 
-New worktree directories and branches use `bolt-<id8>_<slug>`, where `<id8>` is
-the selected intent's registry UUID suffix, shared with Unit claims. Retained
-source and parked refs are scoped to that same intent. See
-[Bolt identity](../aidlc-shared/worktree-info-schema.md#bolt-identity) for naming
-and provenance-gated completion of pre-upgrade legacy Bolts. Always return the
-tool's path and branch, never reconstruct them from `--slug`.
+新しいワークツリーのディレクトリとブランチには `bolt-<id8>_<slug>` を使う。`<id8>` は
+選択されたインテントのレジストリ UUID の接尾辞で、ユニットの claim と共有される。保持される
+ソースと退避された ref は、同じインテントにスコープされる。命名と、
+アップグレード前のレガシー Bolt の出自に基づく完了については、
+[Bolt の識別](../aidlc-shared/worktree-info-schema.md#bolt-identity) を参照。常に
+ツールが返したパスとブランチを返し、`--slug` から再構成してはならない。
 
 ---
 
@@ -26,35 +26,35 @@ main ─────────────────────────
       unit-b  unit-d
 ```
 
-**Shape.** All work merges to `main` via short-lived feature branches. Long-lived branches don't exist. Feature flags gate incomplete work in production.
+**形。** すべての作業は、短命のフィーチャーブランチを経由して `main` にマージされる。長命のブランチは存在しない。未完成の作業は、本番環境でフィーチャーフラグによって制御される。
 
-**When to use.** Default for most teams. Especially when CI pipeline duration is short (under 30 minutes) and observability is good enough to detect production issues quickly.
+**使いどころ。** ほとんどのチームの既定。特に、CI パイプラインの所要時間が短く（30 分未満）、本番環境の問題をすばやく検出できるだけのオブザーバビリティがある場合に適する。
 
-**Common problems.**
-- Teams with infrequent releases find it hard to "hold" features for a release window. Feature flags are the answer, not branches.
-- Teams without good test coverage shouldn't trunk-base — every commit hits production-shaped pipelines, so flaky tests block everyone.
+**よくある問題。**
+- リリース頻度の低いチームは、リリースウィンドウまで機能を「保留」しておくのが難しいと感じる。答えはブランチではなくフィーチャーフラグである。
+- テストカバレッジが十分でないチームはトランクベースにすべきではない。すべてのコミットが本番相当のパイプラインに流れるため、不安定なテストが全員を止めてしまう。
 
-**Worktree mapping.** Create: `{{INVOKE}} engine worktree create --slug <bolt-slug> --base main`. Merge: `--target main --strategy squash`. Each Bolt = one squash commit on `main`.
+**ワークツリーの対応付け。** 作成: `{{INVOKE}} engine worktree create --slug <bolt-slug> --base main`。マージ: `--target main --strategy squash`。各 Bolt = `main` 上の 1 つの squash コミット。
 
-**Parallel Bolts.** Cleanest fit. Multiple Bolts can be in flight simultaneously; each branches from current `main`, each merges back without rebase contention because squash flattens history at merge time.
+**並列 Bolt。** 最もきれいに適合する。複数の Bolt を同時に進行できる。それぞれが現在の `main` から分岐し、squash がマージ時に履歴を平坦化するため、rebase の競合なしにそれぞれマージし戻せる。
 
 ### Execution runbook
 
-When dispatched for trunk-based:
+トランクベースでディスパッチされた場合:
 
-1. Read `## Way of Working` from the active space's `project.md`, `team.md`, then `org.md` per `shared/rules-reading.md`; use hardcoded defaults only if all three are empty.
-2. Resolve flags: `--base main --target main --strategy squash` for the default; deviate only if `team.md` explicitly says otherwise.
-3. **Create**: invoke `{{INVOKE}} engine worktree create --slug <bolt-slug> --base main`.
-4. **Merge** (after Bolt gate approval): caller must be on `main` at the main checkout. Invoke `{{INVOKE}} engine worktree merge --slug <bolt-slug> --target main --strategy squash --message '<commit message>'`.
-5. Return the JSON envelope per § Response contract back to the orchestrator.
+1. `shared/rules-reading.md` に従い、アクティブなスペースの `project.md`、`team.md`、`org.md` の順に `## Way of Working` を読む。3 つすべてが空の場合にのみ、ハードコードされた既定値を使う。
+2. フラグを決定する: 既定は `--base main --target main --strategy squash`。`team.md` が明示的に別のことを言っている場合にのみ外れる。
+3. **作成**: `{{INVOKE}} engine worktree create --slug <bolt-slug> --base main` を呼び出す。
+4. **マージ**（Bolt のゲート承認後）: 呼び出し元はメインのチェックアウトで `main` 上にいなければならない。`{{INVOKE}} engine worktree merge --slug <bolt-slug> --target main --strategy squash --message '<commit message>'` を呼び出す。
+5. § Response contract に従い、JSON エンベロープをオーケストレーターに返す。
 
 ### Failure modes
 
-- **Dirty tree on merge.** Local uncommitted changes on `main` in files the landing changes: git does not start it, and the tool names those files and the step (commit them, then run the same merge again); any other git failure carries git's message verbatim. Orchestrator's halt-and-ask offers retry/abort. Worktree preserved on retry; an explicit discard on abort sets the work aside before removing the live checkout and branch.
-- **Conflict on squash.** Squash conflicts with concurrent `main` motion (e.g. another Bolt landed first). Tool exits non-zero with `{status: "conflict", conflict_files, detail, next}` and leaves the landing staged in the main checkout: combine those files there, `git add` them (`git rm` one that stays deleted) and run the same merge again, which finishes it; `git reset --merge` drops it.
-- **Branch already exists.** Pre-audit error; the tool refuses to clobber. Orchestrator should set the old attempt aside with `worktree discard` first only when authorized, or pick a different slug. Recover its files with the abort result's or doctor's `restore_operation`, invoking its engine route with the listed args exactly as argv, in the separate restored namespace. Rendered hints and commands are human display text only.
-- **Intent has no registry UUID.** Create refuses: `Intent record <relative record dir> has no registry identity (uuid); adopt or re-create the intent before Construction. Bolt worktrees are named by intent so parallel intents cannot collide.` Do not retry with a slug-only branch.
-- **Branch checked out elsewhere.** Before deleting a Bolt branch or its retained/parked refs, cleanup requires the branch to be checked out at its own Bolt directory or nowhere. A foreign-owner refusal names the owner path on stderr and records `(checked out in another worktree of this repository)` in the audit. Preserve that checkout and surface the refusal.
+- **マージ時のダーティなツリー。** 取り込みが変更するファイルについて、`main` にコミットされていないローカルの変更がある場合: git は取り込みを開始せず、ツールはそれらのファイルと手順（それらをコミットしてから、同じマージを再実行する）を示す。それ以外の git の失敗は、git のメッセージをそのまま含む。オーケストレーターの halt-and-ask が再試行/中止を提示する。再試行ではワークツリーは保持される。中止時の明示的な discard は、ライブのチェックアウトとブランチを削除する前に作業を退避させる。
+- **squash 時の競合。** squash が並行する `main` の動き（例: 別の Bolt が先に取り込まれた）と競合する。ツールは `{status: "conflict", conflict_files, detail, next}` とともに非ゼロで終了し、取り込みをメインのチェックアウトにステージしたままにする。そこでそれらのファイルを統合し、`git add` して（削除されたままのものは `git rm`）同じマージを再実行すると完了する。`git reset --merge` で取り込みを破棄できる。
+- **ブランチがすでに存在する。** 監査前のエラーであり、ツールは上書きを拒否する。オーケストレーターは、許可された場合にのみ先に `worktree discard` で古い試行を退避させるか、別の slug を選ぶべきである。そのファイルは、中止結果または doctor の `restore_operation` を使い、そのエンジンのルートを、列挙された引数をそのまま argv として、別の復元用名前空間で呼び出して回復する。レンダリングされたヒントやコマンドは、人間向けの表示テキストにすぎない。
+- **インテントにレジストリ UUID がない。** 作成は拒否される: `Intent record <relative record dir> has no registry identity (uuid); adopt or re-create the intent before Construction. Bolt worktrees are named by intent so parallel intents cannot collide.` slug のみのブランチで再試行してはならない。
+- **ブランチが別の場所でチェックアウトされている。** Bolt のブランチや、その保持/退避された ref を削除する前に、クリーンアップでは、そのブランチが自分の Bolt ディレクトリでチェックアウトされているか、どこでもチェックアウトされていないことが必要である。他の所有者による拒否では、stderr に所有者のパスが示され、監査に `(checked out in another worktree of this repository)` が記録される。そのチェックアウトは保持し、拒否を表に出す。
 
 ---
 
@@ -68,30 +68,30 @@ main ─────────────────────────
   feat-A  feat-B  feat-C  feat-D
 ```
 
-**Shape.** `main` + indefinite feature branches. PRs merge to `main`. Branches can live longer than trunk-based — days to weeks for larger features. No `develop` or `release` branches.
+**形。** `main` + 期限のないフィーチャーブランチ。PR が `main` にマージされる。ブランチはトランクベースより長く存続できる。大きな機能では数日から数週間になる。`develop` や `release` ブランチはない。
 
-**When to use.** Teams that want trunk-based discipline but need longer-lived feature branches. Open-source projects often use this.
+**使いどころ。** トランクベースの規律は欲しいが、より長命のフィーチャーブランチが必要なチーム。オープンソースプロジェクトでよく使われる。
 
-**Common problems.**
-- Branches that live too long accumulate merge debt. Discipline required to either land or close.
-- Without feature flags, in-flight features block release of unrelated work.
+**よくある問題。**
+- 長く存続しすぎるブランチは、マージの負債を蓄積する。取り込むかクローズするかの規律が必要である。
+- フィーチャーフラグがないと、進行中の機能が無関係な作業のリリースを妨げる。
 
-**Worktree mapping.** Same base/target as trunk-based: `--base main --target main`. Strategy is usually `squash`, but teams that prefer to preserve the branch in history use `merge`. Team picks at affirmation; agent reads `team.md`.
+**ワークツリーの対応付け。** base/target はトランクベースと同じ: `--base main --target main`。戦略は通常 `squash` だが、ブランチを履歴に残したいチームは `merge` を使う。チームが確認時に選び、エージェントは `team.md` を読む。
 
 ### Execution runbook
 
-When dispatched for GitHub Flow:
+GitHub Flow でディスパッチされた場合:
 
-1. Read `## Way of Working` from the active space's `project.md`, `team.md`, then `org.md` (including any merge-style statement). The merge-strategy choice (squash vs merge) is what differs from trunk-based.
-2. Resolve flags: `--base main --target main --strategy <squash|merge>` per affirmation; default to `squash`.
-3. **Create**: `{{INVOKE}} engine worktree create --slug <bolt-slug> --base main`.
-4. **Merge**: `{{INVOKE}} engine worktree merge --slug <bolt-slug> --target main --strategy <squash|merge> [--message '<msg>']`. With `--strategy merge`, a no-fast-forward merge commit preserves the bolt branch's individual commits.
-5. Return per § Response contract.
+1. アクティブなスペースの `project.md`、`team.md`、`org.md` の順に `## Way of Working` を読む（マージ方式についての記述を含む）。トランクベースとの違いは、マージ戦略の選択（squash か merge か）である。
+2. フラグを決定する: 確認内容に従い `--base main --target main --strategy <squash|merge>`。既定は `squash`。
+3. **作成**: `{{INVOKE}} engine worktree create --slug <bolt-slug> --base main`。
+4. **マージ**: `{{INVOKE}} engine worktree merge --slug <bolt-slug> --target main --strategy <squash|merge> [--message '<msg>']`。`--strategy merge` では、no-fast-forward のマージコミットによって bolt ブランチの個々のコミットが保持される。
+5. § Response contract に従って返す。
 
 ### Failure modes
 
-- **Same as trunk-based**, plus:
-- **Stale base for `--strategy merge`.** Long-lived bolt branches against a moving `main` produce conflicts. The tool reports the conflict envelope; the user resolves in the worktree (preserved on conflict) and re-invokes merge.
+- **トランクベースと同じ**。加えて:
+- **`--strategy merge` での古いベース。** 動き続ける `main` に対する長命の bolt ブランチは競合を生む。ツールは競合のエンベロープを報告し、ユーザーがワークツリー（競合時は保持される）で解決して、マージを再度呼び出す。
 
 ---
 
@@ -110,32 +110,32 @@ develop ─────┴───────────┴──────
                     │ hotfix/v1.0.1 (off main, merged to both)
 ```
 
-**Shape.** Two long-lived branches (`main` = production, `develop` = integration), plus `feature/*`, `release/*`, `hotfix/*` short-lived branches. Releases cut from `develop` → `release/*` → `main` with version tags.
+**形。** 2 つの長命ブランチ（`main` = 本番、`develop` = 統合）に加え、`feature/*`、`release/*`、`hotfix/*` の短命ブランチ。リリースは `develop` → `release/*` → `main` の順に、バージョンタグ付きで切り出される。
 
-**When to use.** Teams with strict release management — quarterly releases, regulated deployments, stable production while integration continues. Common in enterprise + financial services.
+**使いどころ。** 厳格なリリース管理を行うチーム。四半期ごとのリリース、規制下のデプロイ、統合を続けながらの安定した本番環境など。エンタープライズや金融サービスでよく見られる。
 
-**Common problems.**
-- Long-lived `develop` accumulates merge debt against `main` over a release cycle. Painful merges at release-cut time.
-- Hotfixes require dual-merging (to both `main` and `develop`) — easy to miss the second merge.
+**よくある問題。**
+- 長命の `develop` は、リリースサイクルの間に `main` に対するマージの負債を蓄積する。リリースの切り出し時のマージが苦痛になる。
+- ホットフィックスには二重マージ（`main` と `develop` の両方へ）が必要であり、2 つ目のマージを忘れやすい。
 
-**Worktree mapping.** Feature Bolts: `--base develop --target develop`. Hotfix Bolts: `--base main --target main` (and the operator merges to `develop` separately — out of scope for `aidlc-worktree`). Strategy is usually `merge` to preserve branch history; `squash` is also valid.
+**ワークツリーの対応付け。** フィーチャーの Bolt: `--base develop --target develop`。ホットフィックスの Bolt: `--base main --target main`（そしてオペレーターが別途 `develop` にマージする。これは `aidlc-worktree` の範囲外）。戦略はブランチの履歴を保持するために通常 `merge` だが、`squash` も有効である。
 
 ### Execution runbook
 
-When dispatched for GitFlow:
+GitFlow でディスパッチされた場合:
 
-1. Read the active space's `## Way of Working`. Look for the integration-branch name (`develop` is the convention; teams sometimes use `integration` or `next`).
-2. For feature Bolts: `--base <integration> --target <integration> --strategy <merge|squash>`. Default to `merge`.
-3. For hotfix Bolts (rare in Construction; usually triggered by an out-of-band stage): `--base main --target main --strategy merge`. The operator separately merges the hotfix back to `<integration>` after `aidlc-worktree merge` succeeds. Out of scope for the tool.
-4. **Create**: `{{INVOKE}} engine worktree create --slug <bolt-slug> --base <integration>`.
-5. **Merge**: caller must be on `<integration>` at the main checkout. `{{INVOKE}} engine worktree merge --slug <bolt-slug> --target <integration> --strategy <merge|squash>`.
-6. Return per § Response contract; if hotfix, include `notes: "manual merge to <integration> required"` so the orchestrator surfaces the follow-up.
+1. アクティブなスペースの `## Way of Working` を読む。統合ブランチの名前を探す（慣例は `develop` だが、`integration` や `next` を使うチームもある）。
+2. フィーチャーの Bolt の場合: `--base <integration> --target <integration> --strategy <merge|squash>`。既定は `merge`。
+3. ホットフィックスの Bolt の場合（Construction ではまれで、通常は帯域外のステージから起動される）: `--base main --target main --strategy merge`。`aidlc-worktree merge` が成功した後、オペレーターが別途ホットフィックスを `<integration>` にマージし戻す。ツールの範囲外である。
+4. **作成**: `{{INVOKE}} engine worktree create --slug <bolt-slug> --base <integration>`。
+5. **マージ**: 呼び出し元はメインのチェックアウトで `<integration>` 上にいなければならない。`{{INVOKE}} engine worktree merge --slug <bolt-slug> --target <integration> --strategy <merge|squash>`。
+6. § Response contract に従って返す。ホットフィックスの場合は、オーケストレーターがフォローアップを表に出せるように `notes: "manual merge to <integration> required"` を含める。
 
 ### Failure modes
 
-- **`<integration>` branch missing locally.** Pre-audit error; tool refuses to invent the branch.
-- **Wrong cwd on merge.** Defensive HEAD check fails: `expected branch <integration>, found <actual>`. Caller must `cd` to the main checkout and `git checkout <integration>` first.
-- **Hotfix merge to second target forgotten.** Out-of-scope for `aidlc-worktree`; orchestrator's aidlc-pipeline-deploy-agent dispatch should always include the second-target reminder in `notes`.
+- **`<integration>` ブランチがローカルにない。** 監査前のエラーであり、ツールはブランチの捏造を拒否する。
+- **マージ時の cwd が誤っている。** 防御的な HEAD チェックが失敗する: `expected branch <integration>, found <actual>`。呼び出し元は先にメインのチェックアウトに `cd` し、`git checkout <integration>` しなければならない。
+- **2 つ目のターゲットへのホットフィックスのマージを忘れる。** `aidlc-worktree` の範囲外である。オーケストレーターによる aidlc-pipeline-deploy-agent のディスパッチでは、常に `notes` に 2 つ目のターゲットのリマインダーを含めるべきである。
 
 ---
 
@@ -154,32 +154,32 @@ release/v1.0 ┴──── (frozen for stabilisation) ──────►
               └──► merge release/v1.0 → main + tag v1.0.0
 ```
 
-**Shape.** Trunk-based or GitHub Flow on `main`, with a release branch cut at code-freeze. Stabilisation work (bug fixes only) happens on the release branch; new features continue on `main`.
+**形。** `main` 上ではトランクベースまたは GitHub Flow で、コードフリーズ時にリリースブランチを切り出す。安定化の作業（バグ修正のみ）はリリースブランチで行い、新機能は `main` で継続する。
 
-**When to use.** Teams shipping versioned software where release stability matters more than continuous deployment — desktop apps, embedded software, enterprise products with hard release dates.
+**使いどころ。** 継続的デプロイよりもリリースの安定性が重要な、バージョン付きのソフトウェアを出荷するチーム。デスクトップアプリ、組み込みソフトウェア、リリース日が固定されたエンタープライズ製品など。
 
-**Common problems.**
-- Bug fixes on release branch must be cherry-picked or merged back to `main` so they don't regress in the next release.
-- Long stabilisation periods can block feature work waiting for the release branch to merge back.
+**よくある問題。**
+- リリースブランチでのバグ修正は、次のリリースで退行しないように、cherry-pick するか `main` にマージし戻さなければならない。
+- 安定化の期間が長いと、リリースブランチのマージバックを待つ機能開発が止まることがある。
 
-**Worktree mapping.** Bolts on `main` use `--base main --target main`. Release-branch fix Bolts use `--base release/vX.Y --target release/vX.Y`. Strategy is `merge` typically (preserves the fix branch in history for traceability).
+**ワークツリーの対応付け。** `main` 上の Bolt は `--base main --target main` を使う。リリースブランチの修正の Bolt は `--base release/vX.Y --target release/vX.Y` を使う。戦略は通常 `merge`（トレーサビリティのために修正ブランチを履歴に残す）。
 
 ### Execution runbook
 
-When dispatched for Release Branches:
+Release Branches でディスパッチされた場合:
 
-1. Read the active space's `## Way of Working`. Look for the release-branch pattern (`release/vX.Y` is the convention).
-2. Determine which line the Bolt belongs to from the Bolt's metadata (the orchestrator passes a `target_line: main | release/vX.Y` hint). Default to `main` when ambiguous.
-3. **Create**: `{{INVOKE}} engine worktree create --slug <bolt-slug> --base <line>`.
-4. **Merge**: caller on `<line>` at the main checkout. `{{INVOKE}} engine worktree merge --slug <bolt-slug> --target <line> --strategy merge`.
-5. If the Bolt was a release-branch fix, include `notes: "consider cherry-pick to main"` in the response — the operator handles the cross-merge.
-6. Return per § Response contract.
+1. アクティブなスペースの `## Way of Working` を読む。リリースブランチのパターンを探す（慣例は `release/vX.Y`）。
+2. Bolt のメタデータから、その Bolt がどのラインに属するかを判断する（オーケストレーターが `target_line: main | release/vX.Y` のヒントを渡す）。あいまいな場合の既定は `main`。
+3. **作成**: `{{INVOKE}} engine worktree create --slug <bolt-slug> --base <line>`。
+4. **マージ**: 呼び出し元はメインのチェックアウトで `<line>` 上にいる。`{{INVOKE}} engine worktree merge --slug <bolt-slug> --target <line> --strategy merge`。
+5. Bolt がリリースブランチの修正だった場合は、応答に `notes: "consider cherry-pick to main"` を含める。相互のマージはオペレーターが扱う。
+6. § Response contract に従って返す。
 
 ### Failure modes
 
-- **Release branch missing locally.** Pre-audit error.
-- **Bolt targeted release branch but main has diverged.** Bolt completes; orchestrator surfaces the cherry-pick reminder via the `notes` field.
-- **Same as GitFlow** for wrong-cwd / dirty-tree / conflict cases.
+- **リリースブランチがローカルにない。** 監査前のエラー。
+- **Bolt がリリースブランチをターゲットにしたが、main が分岐している。** Bolt は完了する。オーケストレーターが `notes` フィールドを通じて cherry-pick のリマインダーを表に出す。
+- 誤った cwd / ダーティなツリー / 競合のケースは **GitFlow と同じ**。
 
 ---
 
@@ -193,35 +193,35 @@ main ─────────────────────────
   pkg-a/feat-1  pkg-b/feat-2  pkg-c/refactor  shared/lib-update
 ```
 
-**Shape.** Single repo holding multiple packages/services. Branches scoped by path (changes within `packages/auth/` are one Bolt; changes spanning packages need explicit cross-package coordination). Can run trunk-based, GitHub Flow, or any of the above on top.
+**形。** 複数のパッケージ/サービスを保持する単一のリポジトリ。ブランチはパスでスコープされる（`packages/auth/` 内の変更は 1 つの Bolt であり、パッケージをまたぐ変更には明示的なパッケージ間の調整が必要）。その上で、トランクベース、GitHub Flow、または上記のいずれでも運用できる。
 
-**When to use.** Teams with multiple closely-coupled services that benefit from atomic cross-service changes. Tooling support required: Nx, Turborepo, Pants.
+**使いどころ。** サービスをまたぐアトミックな変更の恩恵を受ける、密結合した複数のサービスを持つチーム。ツールのサポートが必要: Nx、Turborepo、Pants。
 
-**Common problems.**
-- CI must be path-aware (only test packages with changes). Monolithic CI defeats the purpose.
-- Cross-package changes can't be parallelised cleanly — they require coordinated merges.
+**よくある問題。**
+- CI はパスを認識しなければならない（変更のあるパッケージだけをテストする）。モノリシックな CI では意味がなくなる。
+- パッケージをまたぐ変更はきれいに並列化できない。協調したマージが必要である。
 
-**Worktree mapping.** Same as the underlying strategy (trunk-based default). The path-awareness lives at the CI/test layer, not the worktree layer. Strategy is usually `squash` per package change.
+**ワークツリーの対応付け。** 基盤となる戦略と同じ（既定はトランクベース）。パスの認識はワークツリー層ではなく CI/テスト層にある。戦略は通常、パッケージの変更ごとに `squash`。
 
 ### Execution runbook
 
-When dispatched for Monorepo:
+Monorepo でディスパッチされた場合:
 
-1. Resolve the underlying strategy (trunk-based default) per its runbook above.
-2. The Bolt slug should encode the package scope (e.g. `auth-token-rotation` rather than `feature-1`) so `git worktree list` output stays diagnosable.
-3. Create + merge identical to the underlying strategy.
-4. Return per § Response contract.
+1. 基盤となる戦略（既定はトランクベース）を、上記のそのランブックに従って決定する。
+2. `git worktree list` の出力が診断しやすいままになるように、Bolt の slug にはパッケージのスコープを含めるべきである（例: `feature-1` ではなく `auth-token-rotation`）。
+3. 作成 + マージは基盤となる戦略と同一。
+4. § Response contract に従って返す。
 
 ### Failure modes
 
-- **Cross-package Bolts.** When a Bolt's units span two packages, the merge succeeds but the cherry-pick / coordinate-with-other-package reminder is the operator's job. Surface in `notes` if known.
-- **Same as the underlying strategy.**
+- **パッケージをまたぐ Bolt。** Bolt のユニットが 2 つのパッケージにまたがる場合、マージは成功するが、cherry-pick や他パッケージとの調整のリマインドはオペレーターの仕事である。わかっていれば `notes` で表に出す。
+- **基盤となる戦略と同じ。**
 
 ---
 
 ## Response contract
 
-When the orchestrator dispatches aidlc-pipeline-deploy-agent for a worktree create or merge, the agent invokes `aidlc-worktree` directly and reports the JSON envelope below back to the orchestrator. SKILL.md Step 0.5 / Step 6.75 then call `aidlc-worktree verify` as a deterministic backstop confirming the audit event landed.
+オーケストレーターがワークツリーの作成またはマージのために aidlc-pipeline-deploy-agent をディスパッチすると、エージェントは `aidlc-worktree` を直接呼び出し、下記の JSON エンベロープをオーケストレーターに報告する。その後、SKILL.md の Step 0.5 / Step 6.75 が、監査イベントが記録されたことを確認する決定的な安全策として `aidlc-worktree verify` を呼び出す。
 
 ### Create response (success)
 
@@ -252,19 +252,19 @@ When the orchestrator dispatches aidlc-pipeline-deploy-agent for a worktree crea
 }
 ```
 
-The landing runs with the person's own git: their hooks, filters and merge
-drivers run as for any commit they make. When what landed differs from the
-reviewed source (a formatter in a pre-commit hook, a smudge filter, a configured
-merge driver), the landing keeps that result, `notices` carries one line for the
-person ("Your pre-commit hook changed 3 files while landing Unit auth-mfa: ..."),
-and the `SWARM_SOURCE_MERGED` row records the files under `Landed changes` and
-`Driver merges` beside both commits. Say the line once; never refuse or undo it.
+取り込みは利用者自身の git で実行される。利用者のフック、フィルター、マージ
+ドライバーは、利用者が行う任意のコミットと同様に実行される。取り込まれた内容が
+レビュー済みのソースと異なる場合（pre-commit フック内のフォーマッター、smudge フィルター、設定された
+マージドライバー）、取り込みはその結果を維持し、`notices` は利用者向けに 1 行を含み
+（"Your pre-commit hook changed 3 files while landing Unit auth-mfa: ..."）、
+`SWARM_SOURCE_MERGED` の行は、両方のコミットと並べて `Landed changes` と
+`Driver merges` の下にファイルを記録する。その行は一度だけ伝える。拒否したり元に戻したりしてはならない。
 
-If a merge error carries `[merge-succeeded:<sha>]` and says the
-`SWARM_SOURCE_MERGED` post-result audit row failed, the Git merge already
-landed but no aggregate source authority exists. Preserve the worktree and do
-not retry the same merge command. Restart the stage attempt, or use
-`AIDLC_SKIP_SOURCE_FRESHNESS=1` only after explicit human approval.
+マージのエラーが `[merge-succeeded:<sha>]` を含み、
+`SWARM_SOURCE_MERGED` の結果後の監査行が失敗したと述べている場合、Git のマージはすでに
+取り込まれているが、集約されたソースの権限は存在しない。ワークツリーを保持し、
+同じマージコマンドを再試行してはならない。ステージの試行をやり直すか、
+人間の明示的な承認を得た後にのみ `AIDLC_SKIP_SOURCE_FRESHNESS=1` を使う。
 
 ### Merge response (the person's hook refused the commit)
 
@@ -282,12 +282,12 @@ not retry the same merge command. Restart the stage attempt, or use
 }
 ```
 
-The main checkout is left exactly as git left it, with the landing staged, and
-the worktree is preserved. Tell the person in one line that their hook refused
-the landing and why (the `output` field's words), fix what it named in the
-staged landing, and run the same merge again; it finishes the landing and
-records the fix under `Landed changes`. If it cannot be fixed, stop and say
-what `staged` lists.
+メインのチェックアウトは、取り込みがステージされた状態で git が残したとおりに保たれ、
+ワークツリーは保持される。利用者のフックが取り込みを拒否したことと、その理由（`output` フィールドの言葉）を
+1 行で利用者に伝え、ステージされた取り込みの中で指摘されたものを修正し、
+同じマージを再実行する。それによって取り込みが完了し、
+修正が `Landed changes` の下に記録される。修正できない場合は、停止して
+`staged` に列挙されているものを伝える。
 
 ### Merge response (conflict)
 
@@ -302,12 +302,12 @@ what `staged` lists.
 }
 ```
 
-The landing stays staged in the main checkout as git left it, and the worktree
-is preserved. Combine both sides in each listed file so each Unit keeps what its
-plan asked for, `git add` them and run the same merge again: it finishes the
-landing, records the combined files under `Landed changes` and returns one
-notice naming them. Run before they are combined, it returns this response
-again. A rebase landing's conflict is in the worktree, and its `detail` says so. See `aidlc-common/protocols/stage-protocol-construction.md` § "Halt-and-ask on failure" and `skills/aidlc/SKILL.md` § "Halt-and-ask failure handling" for the full prompt shape and preservation invariant.
+取り込みは、git が残したとおりメインのチェックアウトにステージされたままで、ワークツリー
+は保持される。各ユニットがそのプランで求めたものを保持できるように、列挙された各ファイルで両側を統合し、
+`git add` して同じマージを再実行する。それによって
+取り込みが完了し、統合したファイルが `Landed changes` の下に記録され、それらを示す
+通知が 1 つ返される。統合する前に実行すると、この応答が
+再び返される。rebase による取り込みの競合はワークツリー内にあり、その `detail` がそう述べる。完全なプロンプトの形と保持の不変条件については、`aidlc-common/protocols/stage-protocol-construction.md` の § "Halt-and-ask on failure" と `skills/aidlc/SKILL.md` の § "Halt-and-ask failure handling" を参照。
 
 ### Discard response
 
@@ -326,118 +326,117 @@ again. A rebase landing's conflict is in the worktree, and its `detail` says so.
 }
 ```
 
-If the checkout, branch, and reviewed source refs are already gone (idempotent path), `emitted` is `null` and `reason` is `already-discarded` — no audit event is re-emitted.
-That already-discarded response has no `parked_*` fields. A new discard keeps
-`parked_ref` and `parked_commit` and adds the exact `parked_stamp`, `parked_mode`
-(`snapshot`, `branch-tip`, or `evidence-only`), and `parked_repo` (`null` for the
-project root, otherwise the sibling repository name).
+チェックアウト、ブランチ、レビュー済みのソースの ref がすでに存在しない場合（冪等な経路）、`emitted` は `null`、`reason` は `already-discarded` となり、監査イベントは再発行されない。
+その already-discarded の応答には `parked_*` フィールドがない。新しい discard では
+`parked_ref` と `parked_commit` を保持し、正確な `parked_stamp`、`parked_mode`
+（`snapshot`、`branch-tip`、`evidence-only` のいずれか）、`parked_repo`（プロジェクトルートでは
+`null`、それ以外では兄弟リポジトリの名前）を追加する。
 
-Discard snapshots tracked files and non-ignored untracked files with a temporary
-index and `commit-tree`; ignored untracked files are not backed up. Before audit
-emission, it parks `/head`, a `/snapshot` marker pointing to the same commit,
-and `/reviewed-source/<commit>` refs below the `parked_ref` namespace. If the
-checkout is already gone but its branch remains, `/head` holds that branch tip
-instead, with a matching `/branch-tip` marker rather than `/snapshot`.
-Only then does it remove the live checkout and
-branch and compare-delete the original reviewed source refs. If only reviewed
-refs remain, `parked_mode` is `evidence-only` and `parked_commit` is the string `"-"`;
-`parked_ref`, `parked_stamp`, and `parked_repo` still identify the saved evidence,
-but there is no `/head` to restore.
+discard は、一時的なインデックスと `commit-tree` を使って、追跡ファイルと無視されていない未追跡ファイルのスナップショットを取る。
+無視されている未追跡ファイルはバックアップされない。監査の
+発行の前に、`parked_ref` の名前空間の下に、`/head`、同じコミットを指す `/snapshot` マーカー、
+`/reviewed-source/<commit>` の ref を退避させる。
+チェックアウトがすでに存在しないがブランチは残っている場合は、`/head` は代わりにそのブランチの先端を保持し、
+`/snapshot` ではなく対応する `/branch-tip` マーカーを付ける。
+その後にのみ、ライブのチェックアウトと
+ブランチを削除し、元のレビュー済みソースの ref を比較削除する。レビュー済みの
+ref だけが残っている場合、`parked_mode` は `evidence-only` で、`parked_commit` は文字列 `"-"` である。
+`parked_ref`、`parked_stamp`、`parked_repo` は引き続き保存された証跡を識別するが、
+復元する `/head` はない。
 
 ### Abort response (success)
 
-`bolt abort` success JSON includes `emitted: "BOLT_FAILED"`, `reason: "aborted"`,
-the supplied `--reason` text in the additive `abort_reason` field, `failed_bolt`,
-`slug`, `discarded`, and `parked_ref`. When nothing was parked, including without
-`--discard`, `parked_ref` is `null`. Only a non-null `parked_ref` adds the returned
-`parked_stamp`, `parked_mode`, and `parked_repo`.
-For restorable attempts, `restore_operation` has route `worktree` and args
-`["restore", "--slug", slug, "--parked", stamp, "--repo", repo ?? ".", "--intent", recordDirName, "--space", space]`.
-The repository selector is always present: the sibling name or `.` when
-`parked_repo` is `null`. `recordDirName` and `space` identify the owning intent,
-so a saved operation cannot drift when the active intent changes.
-`restore_hint` is optional human display text rendered
-from that operation by `renderEngineInvocation`, using the installed native or
-source prefix, harness validation, and shell-safe argument quoting. If rendering
-throws, the hint is omitted and `restore_hint_error` carries the reason; the
-typed operation remains available. A missing hint is not evidence-only status.
-Snapshot mode reports
-`parked_excludes: ["ignored files", "eol/text=auto normalization"]`; branch-tip
-mode reports `["uncommitted files (no working tree existed)"]` instead.
-Evidence-only mode keeps the four descriptor fields but omits
-`restore_operation`, `restore_hint`, `restore_hint_error`, and `parked_excludes`
-because no restorable files were saved.
+`bolt abort` の成功時の JSON には、`emitted: "BOLT_FAILED"`、`reason: "aborted"`、
+追加の `abort_reason` フィールドに入る指定された `--reason` のテキスト、`failed_bolt`、
+`slug`、`discarded`、`parked_ref` が含まれる。何も退避されなかった場合（
+`--discard` なしの場合を含む）、`parked_ref` は `null` である。null でない `parked_ref` の場合にのみ、返される
+`parked_stamp`、`parked_mode`、`parked_repo` が追加される。
+復元可能な試行では、`restore_operation` はルート `worktree` と次の引数を持つ:
+`["restore", "--slug", slug, "--parked", stamp, "--repo", repo ?? ".", "--intent", recordDirName, "--space", space]`。
+リポジトリのセレクターは常に存在する。兄弟リポジトリの名前、または
+`parked_repo` が `null` の場合は `.` である。`recordDirName` と `space` は所有するインテントを識別するため、
+アクティブなインテントが変わっても保存された操作がずれることはない。
+`restore_hint` は任意の人間向け表示テキストで、
+その操作から `renderEngineInvocation` によってレンダリングされる。インストール済みのネイティブまたは
+ソースのプレフィックス、ハーネスの検証、シェルセーフな引数のクォートを使う。レンダリングが
+例外を投げた場合、ヒントは省略され、`restore_hint_error` がその理由を持つ。
+型付きの操作は引き続き利用できる。ヒントがないことは evidence-only の状態を意味しない。
+スナップショットモードは
+`parked_excludes: ["ignored files", "eol/text=auto normalization"]` を報告する。branch-tip
+モードは代わりに `["uncommitted files (no working tree existed)"]` を報告する。
+evidence-only モードは 4 つの記述子フィールドを保持するが、
+復元可能なファイルが保存されていないため、`restore_operation`、`restore_hint`、`restore_hint_error`、`parked_excludes` を省略する。
 
-If a saved namespace is known but its discard descriptor is missing, the
-fallback retains `parked_ref` and derives `parked_stamp` from its namespace
-only when the stamp parses strictly; otherwise `parked_stamp` is `null`.
-It reports `parked_mode: null` and `parked_repo: null`, since neither can be
-inferred from legacy output, and omits `restore_operation`, `restore_hint`,
-`restore_hint_error`, and `parked_excludes`. Instead, `recovery_hint` asks the
-human to run doctor to list set-aside attempts and their exact restore commands.
-The hint is plain guidance, not an executable operation. Unknown mode does not
-justify a saved-files claim or restoration offer. If no namespace was saved,
-`parked_ref` is `null`, with no `parked_stamp`, `parked_mode`, `parked_repo`,
-`restore_operation`, `restore_hint`, `restore_hint_error`, `parked_excludes`, or
-`recovery_hint`. The audit row
-still uses `Reason: aborted`; the success JSON preserves the caller's text in
-`abort_reason`.
-Do not change the abort command or its human-consent requirement. Tell the human
-the attempt was **set aside**. For branch-tip mode, say: "I kept its committed
-work; there were no uncommitted files to save." For evidence-only mode, say:
+保存された名前空間はわかっているが、その discard の記述子が欠けている場合、
+フォールバックは `parked_ref` を保持し、スタンプが厳密に解析できる場合にのみ、
+その名前空間から `parked_stamp` を導出する。そうでない場合、`parked_stamp` は `null` である。
+`parked_mode: null` と `parked_repo: null` を報告する。どちらもレガシーな出力からは
+推測できないためである。また `restore_operation`、`restore_hint`、
+`restore_hint_error`、`parked_excludes` を省略する。代わりに、`recovery_hint` が
+人間に doctor を実行して退避された試行とその正確な復元コマンドを一覧するよう求める。
+このヒントは単なるガイダンスであり、実行可能な操作ではない。モードが不明であることは、
+ファイルが保存されたという主張や復元の提案の根拠にならない。名前空間が保存されなかった場合、
+`parked_ref` は `null` で、`parked_stamp`、`parked_mode`、`parked_repo`、
+`restore_operation`、`restore_hint`、`restore_hint_error`、`parked_excludes`、
+`recovery_hint` はいずれもない。監査の行は
+引き続き `Reason: aborted` を使い、成功時の JSON は呼び出し元のテキストを
+`abort_reason` に保持する。
+中止コマンドや、それに必要な人間の同意の要件を変更してはならない。人間には、
+試行が **set aside**（退避）されたと伝える。branch-tip モードでは次のように言う: "I kept its committed
+work; there were no uncommitted files to save."（コミット済みの作業は保持しました。保存すべき未コミットのファイルはありませんでした。）evidence-only モードでは次のように言う:
 "Nothing of its working files remained to save; only its review evidence was
-kept." Omit the final restoration offer only when `restore_operation` is absent.
-On a later human restore request, invoke its `worktree` route through
-`{{INVOKE}} engine worktree <args...>`, passing each saved arg exactly as a
-separate argv argument. Never join args into a shell command, execute the
-display-only hint, or rebuild a slug-only selection. A rendering error does not
-withdraw the restoration offer. Announce the returned `worktree_path` plainly.
+kept."（保存すべき作業ファイルは何も残っていませんでした。レビューの証跡だけを保持しました。）最後の復元の提案を省略するのは、`restore_operation` がない場合だけである。
+後で人間が復元を求めたら、その `worktree` ルートを
+`{{INVOKE}} engine worktree <args...>` を通じて呼び出し、保存された各引数をそのまま
+別々の argv 引数として渡す。引数を結合してシェルコマンドにしたり、
+表示専用のヒントを実行したり、slug のみの選択を作り直したりしてはならない。レンダリングのエラーは
+復元の提案を取り下げる理由にならない。返された `worktree_path` をそのまま伝える。
 
 ### Restore or purge set-aside work
 
 `{{INVOKE}} engine worktree restore --slug <bolt-slug> [--parked <stamp>]
-[--raw] [--repo <name|.>] [--intent <intent>] [--space <space>]` restores the selected
-attempt, or the latest parked `/head` when `--parked` is omitted. Stamps use UTC
-`YYYYMMDDTHHMMSSZ` with optional numeric `-N` collision suffixes; latest selection
-orders those suffixes numerically. Restore creates
-`.aidlc/restored/bolt-<id8>_<slug>-<stamp>` on
-`restore/bolt-<id8>_<slug>-<stamp>`, never touching the live
-`.aidlc/worktrees/bolt-<id8>_<slug>` path or `bolt-<id8>_<slug>` branch. Legacy
-restores retain the legacy name and require the selected intent's recorded
-discard provenance. Restore does not resume the aborted lifecycle or restore
-active review authority.
-Its JSON is `{restored: true, slug, parked_ref, worktree_path, branch,
-reviewed_source_refs, raw_bytes, restore_mode}` with `materialized` added only in raw mode.
-`reviewed_source_refs` counts retained parked reviewed refs, which are not copied into the active namespace.
-An exact stamp present in only one repository selects that repository before
-generic slug ambiguity. Selecting evidence-only storage, even with `--raw`,
-refuses with `no restorable files were parked for <slug> <stamp>; only review evidence was kept`.
-Classification checks the bare `--raw` flag first (`restore_mode: "raw-requested"`),
-then `/snapshot` (`"snapshot"`), then `/branch-tip` (`"branch-tip"`). Legacy parks
-have neither marker for either shape. An unmarked head is a snapshot only if the
-commit author is exactly `AI-DLC`, its email is `aidlc@localhost`, and its subject
-starts with `aidlc: parked bolt-<slug> at ` (`"legacy-snapshot"`); otherwise it is
-a branch tip (`"legacy-branch-tip"`). The identity check ignores Git replacement objects.
-Snapshots and explicit `--raw` report `raw_bytes: true`, bypass smudge/process
-filters and working-tree-encoding conversions, and stream regular-file blobs
-directly to disk; only symlink targets are buffered.
-`materialized` counts regular files plus symbolic links written, excluding submodule gitlinks.
-Both branch-tip modes use Git's ordinary checkout, applying filters and encoding
-conversions, and report `raw_bytes: false`. A required failing filter fails the
-restore with Git's message; `--raw` bypasses conversions after any remaining
-restore checkout and branch have been removed.
+[--raw] [--repo <name|.>] [--intent <intent>] [--space <space>]` は、選択された
+試行、または `--parked` を省略した場合は最新の退避された `/head` を復元する。スタンプは UTC の
+`YYYYMMDDTHHMMSSZ` を使い、任意で数値の `-N` 衝突接尾辞を持つ。最新の選択では、
+それらの接尾辞を数値順に並べる。復元は
+`.aidlc/restored/bolt-<id8>_<slug>-<stamp>` を
+`restore/bolt-<id8>_<slug>-<stamp>` 上に作成し、ライブの
+`.aidlc/worktrees/bolt-<id8>_<slug>` パスや `bolt-<id8>_<slug>` ブランチには決して触れない。レガシーな
+復元はレガシーな名前を保持し、選択されたインテントに記録された
+discard の出自を必要とする。復元は、中止されたライフサイクルを再開したり、
+アクティブなレビューの権限を復元したりしない。
+その JSON は `{restored: true, slug, parked_ref, worktree_path, branch,
+reviewed_source_refs, raw_bytes, restore_mode}` で、raw モードでのみ `materialized` が追加される。
+`reviewed_source_refs` は、保持された退避済みのレビュー済み ref の数であり、それらはアクティブな名前空間にはコピーされない。
+1 つのリポジトリにのみ存在する正確なスタンプは、
+一般的な slug のあいまいさより先にそのリポジトリを選択する。evidence-only のストレージを選択すると、`--raw` を付けても、
+`no restorable files were parked for <slug> <stamp>; only review evidence was kept` で拒否される。
+分類では、まず単独の `--raw` フラグ（`restore_mode: "raw-requested"`）、
+次に `/snapshot`（`"snapshot"`）、次に `/branch-tip`（`"branch-tip"`）を確認する。レガシーな退避は、
+どちらの形でもいずれのマーカーも持たない。マーカーのない head がスナップショットとみなされるのは、
+コミットの作成者が正確に `AI-DLC`、メールアドレスが `aidlc@localhost`、件名が
+`aidlc: parked bolt-<slug> at ` で始まる場合だけである（`"legacy-snapshot"`）。そうでなければ
+ブランチの先端である（`"legacy-branch-tip"`）。この識別チェックは Git の置換オブジェクトを無視する。
+スナップショットと明示的な `--raw` は `raw_bytes: true` を報告し、smudge/process
+フィルターと working-tree-encoding の変換をバイパスし、通常ファイルの blob を
+直接ディスクにストリームする。バッファされるのはシンボリックリンクのターゲットだけである。
+`materialized` は、書き込まれた通常ファイルとシンボリックリンクの数で、サブモジュールの gitlink は含まない。
+どちらの branch-tip モードも Git の通常のチェックアウトを使い、フィルターとエンコーディングの
+変換を適用して、`raw_bytes: false` を報告する。必須のフィルターが失敗すると、
+復元は Git のメッセージとともに失敗する。`--raw` は、残っている
+復元用のチェックアウトとブランチが削除された後に変換をバイパスする。
 
-Symbolic links are materialized as symlinks when `core.symlinks` is unset or true;
-with `core.symlinks=false`, a mode-120000 entry is written as a regular file whose
-bytes are the link target, exactly as Git checks it out.
-Raw-restored filtered paths may appear modified under their own filter. Submodule
-gitlinks become empty directories, not restored submodule checkouts. Git's
-eol/`text=auto` normalization during parking remains a limit: normalized CRLF
-bytes cannot be recovered. Together with ignored untracked files, this is the
-explicit snapshot-mode `parked_excludes` boundary; tracked files matching ignore patterns
-remain included. A regular file with a non-UTF-8 name and a `filter`, `text`,
-`eol`, `ident`, or `working-tree-encoding` attribute (neither unspecified nor
-unset) cannot currently be parked; discard refuses before teardown with:
+シンボリックリンクは、`core.symlinks` が未設定または true の場合はシンボリックリンクとして実体化される。
+`core.symlinks=false` の場合、mode-120000 のエントリは、Git がチェックアウトするのとまったく同じく、
+リンクターゲットをバイト列とする通常ファイルとして書き込まれる。
+raw で復元されたフィルター対象のパスは、自身のフィルターの下で変更済みに見えることがある。サブモジュールの
+gitlink は空のディレクトリになり、復元されたサブモジュールのチェックアウトにはならない。退避時の Git の
+eol/`text=auto` の正規化は制約として残る。正規化された CRLF の
+バイト列は回復できない。無視された未追跡ファイルと合わせて、これがスナップショットモードの
+明示的な `parked_excludes` の境界である。ignore パターンに一致する追跡ファイルは
+含まれたままになる。UTF-8 でない名前を持ち、`filter`、`text`、
+`eol`、`ident`、`working-tree-encoding` のいずれかの属性（未指定でも
+unset でもないもの）を持つ通常ファイルは、現在退避できない。discard は削除処理の前に次のメッセージで拒否する:
 
 ```text
 cannot park file with a non-UTF-8 name and a content-transforming attribute (<attr>=<value>): <name>; rename the file or unset its <attr> attribute
@@ -445,91 +444,89 @@ cannot park file with a non-UTF-8 name and a content-transforming attribute (<at
 
 `{{INVOKE}} engine worktree purge --slug <bolt-slug> [--parked <stamp> |
 --older-than <days>] [--repo <name|.>] [--intent <intent>] [--space <space>]`
-compare-deletes all matching parked refs. With no selector it removes every stamp
-for the selected intent's Bolt; `--parked` selects one exact stamp.
-`--older-than` accepts nonnegative finite days, including fractions,
-and selects only attempts strictly older than the threshold. Age comes from the
-UTC `YYYYMMDDTHHMMSSZ` portion of the stamp, not its numeric `-N` collision suffix
-or a commit date. The shared strict calendar parser rejects impossible dates
-and times rather than normalizing them; age-filtered purge retains unparseable
-stamps and reports them in `skipped_unparseable: [stamps]`. The two selectors
-are mutually exclusive. Purge refuses while any corresponding restored checkout
-exists or remains registered with Git, including moved checkouts. Its JSON is
-`{purged: <number-of-refs>, slug, stamps: [...], skipped_unparseable: [...]}`.
-`skipped_unparseable` is always present and is empty unless `--older-than`
-retains unparseable stamps; exact-stamp and all-stamp purges can remove them.
-For restore and purge, `--repo <name>` selects an existing sibling Git repository
-and `--repo .` selects the project root, independently of the current intent's
-repo list. Both `WORKTREE_CREATED` and `WORKTREE_DISCARDED` emit `Repo`: the
-recorded sibling name, or `-` for the project root. A discard row preserves this
-provenance even when its creation row is unavailable. Recovery admits valid Git
-repositories named in the same slug's creation or discard audit `Repo` fields even when those
-sibling names are symlinks: the framework may recover exactly where it recorded
-the attempt's worktree or parking. That admission is slug-scoped; records for
-other slugs never widen this slug's repository set. Intent membership alone,
-current or historical, cannot admit a symlink. Intent-list candidates and
-unrecorded discovered siblings must be real immediate child directories whose
-canonical paths remain directly under the canonical workspace root
-(`isWorkspaceRepoDir`). Arbitrary paths and symlink aliases without the
-same-slug audit provenance are refused. These selectors do not change
-live create/discard behavior. Restore and purge reject unknown and duplicate
-flags before selection or mutation; `--raw` is a bare restore-only flag.
+は、一致するすべての退避済み ref を比較削除する。セレクターがない場合は、
+選択されたインテントの Bolt のすべてのスタンプを削除する。`--parked` は 1 つの正確なスタンプを選択する。
+`--older-than` は、小数を含む非負の有限の日数を受け付け、
+しきい値より厳密に古い試行だけを選択する。経過日数は、スタンプの
+UTC の `YYYYMMDDTHHMMSSZ` 部分から求め、数値の `-N` 衝突接尾辞や
+コミット日付は使わない。共有の厳格なカレンダーパーサーは、ありえない日付や
+時刻を正規化せずに却下する。経過日数で絞り込む purge は、解析できない
+スタンプを保持し、`skipped_unparseable: [stamps]` で報告する。2 つのセレクターは
+相互に排他的である。purge は、対応する復元済みのチェックアウトが
+存在する間、または Git に登録されたままである間（移動されたチェックアウトを含む）は拒否する。その JSON は
+`{purged: <number-of-refs>, slug, stamps: [...], skipped_unparseable: [...]}` である。
+`skipped_unparseable` は常に存在し、`--older-than` が
+解析できないスタンプを保持した場合を除いて空である。正確なスタンプの purge とすべてのスタンプの purge は、それらを削除できる。
+restore と purge では、`--repo <name>` は既存の兄弟 Git リポジトリを選択し、
+`--repo .` はプロジェクトルートを選択する。これは現在のインテントの
+リポジトリリストとは独立している。`WORKTREE_CREATED` と `WORKTREE_DISCARDED` はどちらも `Repo` を発行する。
+記録された兄弟リポジトリの名前、またはプロジェクトルートの場合は `-` である。discard の行は、
+作成の行が利用できない場合でも、この出自を保持する。復旧では、同じ slug の作成または discard の監査の `Repo` フィールドに
+記載された有効な Git リポジトリを、その兄弟の名前がシンボリックリンクであっても受け入れる。
+フレームワークは、試行のワークツリーや退避を記録した場所でのみ、正確に
+復旧できる。この受け入れは slug にスコープされる。他の
+slug の記録が、この slug のリポジトリの集合を広げることは決してない。インテントへの所属だけでは、
+現在のものであれ過去のものであれ、シンボリックリンクを受け入れられない。インテントのリストの候補と、
+記録されていない検出された兄弟は、正規のパスが正規のワークスペースルートの直下に
+とどまる、実在する直接の子ディレクトリでなければならない
+（`isWorkspaceRepoDir`）。同じ slug の監査の出自を持たない任意のパスや
+シンボリックリンクのエイリアスは拒否される。これらのセレクターは、ライブの
+create/discard の振る舞いを変えない。restore と purge は、選択や変更の前に、不明なフラグと重複した
+フラグを却下する。`--raw` は restore 専用の単独のフラグである。
 
-Doctor lists saved `/head` entries and evidence-only namespaces containing actual
-reviewed source refs informationally, not as warnings or failures: slug, stamp,
-age in days, mode (`snapshot`, `branch-tip`, `legacy`, or `evidence-only`),
-existence of the canonical restored checkout, and typed recovery operations
-for the exact slug and stamp with an explicit repository selector, followed by
-`--intent <record-dir-name> --space <space>`. Every entry has `purge_operation`;
-only restorable entries have `restore_operation`. Each has route `worktree` and
-exact argv args, never a shell program. Optional
-`restore_command` and `purge_command` are safe renderings for human display;
-if rendering throws, the corresponding command is omitted and
-`restore_command_error` or `purge_command_error` carries the reason while the
-operation remains. Evidence-only entries have only the purge operation and its
-command-or-error fields. Doctor applies the same slug-scoped audit provenance
-and real-immediate-child boundary described above; an intent's repo list alone
-does not admit a symlink, nor does a record for another slug. A moved checkout
-may not show as restored there, but purge still checks its Git registration. Doctor and
-purge share the strict stamp parser: impossible dates or times have
-`age_days: null` in doctor's JSON and `unknown` in human-readable output. Restore and
-purge add no audit events. See `aidlc-shared/worktree-info-schema.md` for the JSON
-examples and recovery contract.
+doctor は、保存された `/head` のエントリと、実際の
+レビュー済みソースの ref を含む evidence-only の名前空間を、警告や失敗としてではなく情報として一覧する。slug、スタンプ、
+経過日数、モード（`snapshot`、`branch-tip`、`legacy`、`evidence-only` のいずれか）、
+正規の復元済みチェックアウトの有無、そして正確な slug とスタンプについて、明示的なリポジトリセレクターを含み、
+その後に `--intent <record-dir-name> --space <space>` が続く型付きの復旧操作である。すべてのエントリは `purge_operation` を持ち、
+復元可能なエントリだけが `restore_operation` を持つ。それぞれがルート `worktree` と
+正確な argv の引数を持ち、シェルのプログラムであることは決してない。任意の
+`restore_command` と `purge_command` は、人間向け表示のための安全なレンダリングである。
+レンダリングが例外を投げた場合、対応するコマンドは省略され、
+`restore_command_error` または `purge_command_error` がその理由を持つが、
+操作は残る。evidence-only のエントリは、purge の操作と、その
+コマンドまたはエラーのフィールドだけを持つ。doctor は、上記と同じ slug にスコープされた監査の出自と、
+実在する直接の子という境界を適用する。インテントのリポジトリリストだけでは
+シンボリックリンクは受け入れられず、別の slug の記録でも受け入れられない。移動されたチェックアウトは
+そこで復元済みとして表示されないことがあるが、purge は引き続きその Git の登録を確認する。doctor と
+purge は厳格なスタンプパーサーを共有する。ありえない日付や時刻は、
+doctor の JSON では `age_days: null`、人間が読める出力では `unknown` になる。restore と
+purge は監査イベントを追加しない。JSON の例と復旧の契約については
+`aidlc-shared/worktree-info-schema.md` を参照。
 
-Doctor inventories both namespaced and legacy attempts. Namespaced attempts
-resolve their owning intent through the registry UUID suffix; legacy attempts
-require the owner's exact `WORKTREE_DISCARDED` `Parked ref` provenance. Unknown
-or ambiguous owners and unattributed legacy parks are omitted, never authorized
-through whichever intent happens to be active. Saved operations carry that
-owner's record-directory name and space.
-
+doctor は、名前空間付きの試行とレガシーな試行の両方を棚卸しする。名前空間付きの試行は、
+レジストリ UUID の接尾辞を通じて所有するインテントを解決する。レガシーな試行は、
+所有者の正確な `WORKTREE_DISCARDED` の `Parked ref` の出自を必要とする。不明または
+あいまいな所有者や、帰属のないレガシーな退避は省略され、たまたまアクティブなインテントを通じて
+許可されることは決してない。保存された操作は、その
+所有者の記録ディレクトリの名前とスペースを持つ。
 ---
 
 ## How AIDLC reads strategy from team practices
 
-The dispatch protocol described in this section is implemented by **SKILL.md Step 0** (worktree create) and **Step 6.5** (worktree merge). `aidlc-bolt complete --merge` orchestrates around the dispatch (forkState merge-back, forkAudit merge-back) but does not call `aidlc-worktree merge` directly — the dispatch lives in SKILL.md prose.
+このセクションで説明するディスパッチのプロトコルは、**SKILL.md Step 0**（ワークツリーの作成）と **Step 6.5**（ワークツリーのマージ）で実装されている。`aidlc-bolt complete --merge` はディスパッチの前後を調整する（forkState のマージバック、forkAudit のマージバック）が、`aidlc-worktree merge` を直接呼び出しはしない。ディスパッチは SKILL.md の散文の中にある。
 
-When a Bolt starts (Step 0) or completes (Step 6.5), the orchestrator dispatches a Task call to **aidlc-pipeline-deploy-agent** with two inputs:
+Bolt が開始する（Step 0）または完了する（Step 6.5）とき、オーケストレーターは 2 つの入力とともに **aidlc-pipeline-deploy-agent** への Task 呼び出しをディスパッチする:
 
-1. The resolved `## Way of Working` statement from `aidlc/spaces/<active-space>/memory/{project,team,org}.md` (fallback chain in `shared/rules-reading.md`).
-2. The Bolt's metadata (slug, source branch, optional target-line hint for release-branch teams).
+1. `aidlc/spaces/<active-space>/memory/{project,team,org}.md` から解決された `## Way of Working` の記述（フォールバックチェーンは `shared/rules-reading.md` にある）。
+2. Bolt のメタデータ（slug、ソースブランチ、リリースブランチを使うチーム向けの任意のターゲットラインのヒント）。
 
-The agent reads this file (`branching-strategies.md`) as the menu, matches the team's stated strategy to one of the five above, picks the right `aidlc-worktree` flags, invokes the tool, and returns the response envelope per § Response contract.
+エージェントはこのファイル（`branching-strategies.md`）をメニューとして読み、チームが述べた戦略を上記の 5 つのいずれかに対応付け、適切な `aidlc-worktree` のフラグを選び、ツールを呼び出し、§ Response contract に従って応答のエンベロープを返す。
 
-If the team's stated strategy doesn't map cleanly to the menu (e.g. "we use a hybrid"), the agent picks the closest fit and notes the deviation in the response's `notes` field; the orchestrator surfaces it in the audit log.
+チームが述べた戦略がメニューにきれいに対応しない場合（例: 「ハイブリッドを使っている」）、エージェントは最も近いものを選び、応答の `notes` フィールドに逸脱を記載する。オーケストレーターはそれを監査ログに表に出す。
 
-If none of `project.md`, `team.md`, or `org.md` provides a branching practice, the agent applies hardcoded defaults — trunk-based with squash, base `main`, target `main` — and emits `PRACTICES_SECTION_EMPTY` (advisory-only).
+`project.md`、`team.md`、`org.md` のいずれもブランチのプラクティスを提供していない場合、エージェントはハードコードされた既定値（squash を使うトランクベース、ベース `main`、ターゲット `main`）を適用し、`PRACTICES_SECTION_EMPTY`（参考情報のみ）を発行する。
 
 ---
 
 ## Quick decision matrix
 
-| You want... | Use |
+| 求めるもの | 使うもの |
 |---|---|
-| Default for a new project | Trunk-Based |
-| OSS-style PRs with longer-lived branches | GitHub Flow |
-| Enterprise release management | GitFlow |
-| Versioned releases with stabilisation periods | Release Branches |
-| Multiple services in one repo | Monorepo (on top of one of the above) |
+| 新規プロジェクトの既定 | Trunk-Based |
+| 長命のブランチを伴う OSS スタイルの PR | GitHub Flow |
+| エンタープライズのリリース管理 | GitFlow |
+| 安定化期間を伴うバージョン付きのリリース | Release Branches |
+| 1 つのリポジトリに複数のサービス | Monorepo（上記のいずれかの上で） |
 
-If unsure, choose Trunk-Based. It's the lowest-overhead strategy with the strongest CI/CD ecosystem support, and AIDLC's Construction worktrees are designed for it as the default.
+迷ったら Trunk-Based を選ぶ。最もオーバーヘッドが小さく、CI/CD エコシステムのサポートが最も充実した戦略であり、AIDLC の Construction ワークツリーはこれを既定として設計されている。

@@ -26,52 +26,51 @@ timeout_seconds: 300
 
 # required-sections sensor
 
-With no template for the output, no heading is required: the stage's prose
-shapes the file, so the check passes and still reports the output's `##`
-headings. When a template applies (below), its `##` headings are required.
-A failed result carries `message`, one plain sentence saying what is
-missing, which the detail file keeps for the agent to correct from.
+出力に対するテンプレートがない場合、必須の見出しはない。ファイルの構成はステージの散文が決めるため、
+チェックは合格とし、出力に含まれる `##` 見出しを報告するだけにとどめる。
+テンプレートが適用される場合（後述）は、その `##` 見出しが必須となる。
+不合格の結果には `message` が含まれる。これは何が欠けているかを述べる平易な 1 文であり、
+詳細ファイルに保存され、エージェントはそれをもとに修正する。
 
-For `unit-of-work-dependency.md` (units-generation 2.7), additionally
-requires the fenced `yaml` `units:` edge block to be present, well-formed,
-and cycle-free — the machine-readable DAG the runtime compiler parses into
-the batch fan-out. The check reports `edge_block` as `ok`, `absent`,
-`malformed`, or `cyclic`; anything but `ok` fails the sensor at the gate so
-the malformed block never reaches the compiler. Every other artefact gets
-only the template check below.
+`unit-of-work-dependency.md`（units-generation 2.7）については、さらに
+フェンス付きの `yaml` `units:` エッジブロックが存在し、整形式で、
+循環がないことを要求する。これはランタイムコンパイラがバッチのファンアウトへと解析する、
+機械可読の DAG である。チェックは `edge_block` を `ok`、`absent`、
+`malformed`、`cyclic` のいずれかとして報告する。`ok` 以外はゲートでセンサーを不合格にするため、
+不正なブロックがコンパイラに届くことはない。その他の成果物には
+後述のテンプレートチェックだけが適用される。
 
 ## Heading-set overrides — two paths, with precedence
 
-A heading set can be required two ways. **Precedence: a resolving
-`templates/<artifact>.md` wins over a `## Sensors`-documented heading set.**
+見出しセットを必須にする方法は 2 つある。**優先順位: 解決できた
+`templates/<artifact>.md` は、`## Sensors` に記述された見出しセットより優先される。**
 
-1. **Template-override layer (file-driven, preferred).** A team drops
-   `aidlc/spaces/<space>/memory/templates/<artifact>.md` (keyed by the output filename stem —
-   artifact `X` writes to `X.md`). When one resolves for the output path, its
-   `##` headings become the expected set and the sensor passes iff
-   `expected ⊆ output`; the missing headings are precise findings. A heading
-   matches with or without a leading emoji (`## 📌 Overview` is `## Overview`),
-   the same rule the claim-sources sensor reads headings by. Whole-doc,
-   advisory — the human decides at the gate. The same file is the skeleton the
-   agent fills (see the stage protocol § Template overrides), so the produced
-   shape and the checked shape cannot drift. A template applies only to a
-   template-eligible artifact (the stage's prose `produces` entries, threaded by
-   the dispatcher); a template resolving for a questions/timestamp marker is
-   ignored with a config warning.
+1. **テンプレート上書きレイヤー（ファイル駆動、推奨）。** チームが
+   `aidlc/spaces/<space>/memory/templates/<artifact>.md` を配置する（出力ファイル名の語幹をキーとする。
+   成果物 `X` は `X.md` に書き込まれる）。出力パスに対してこれが解決されると、その
+   `##` 見出しが期待セットとなり、センサーは
+   `expected ⊆ output` の場合に限り合格する。欠けている見出しはそのまま正確な指摘事項となる。見出しは
+   先頭の絵文字の有無にかかわらず一致する（`## 📌 Overview` は `## Overview` とみなす）。
+   これは claim-sources センサーが見出しを読むときと同じルールである。文書全体が対象で、
+   助言レベル（advisory）であり、判断はゲートで人が行う。同じファイルがエージェントの埋める
+   スケルトンでもある（ステージプロトコルの § Template overrides を参照）ため、生成される
+   構成とチェックされる構成がずれることはない。テンプレートが適用されるのは
+   テンプレート対象の成果物（ステージの散文にある `produces` エントリで、
+   ディスパッチャーが受け渡すもの）だけである。questions/timestamp マーカーに対して解決された
+   テンプレートは、設定警告を出したうえで無視する。
 
-2. **`## Sensors`-prose override (in-stage, legacy anticipation).** A stage's
-   `## Sensors` body may document a heading-set override (post-milestone-12
-   mechanism). This applies only when no template file resolves for the output.
+2. **`## Sensors` 散文による上書き（ステージ内、レガシーの先行策）。** ステージの
+   `## Sensors` 本文には、見出しセットの上書きを記述できる（マイルストーン 12 以降の
+   仕組み）。これは出力に対してテンプレートファイルが解決されない場合にのみ適用される。
 
-The framework ships no per-stage `## Sensors` overrides by default — teams
-introduce specific heading shapes either by authoring a template (path 1) or via
-the §13 learning loop when there's a real reason. When neither override is
-present, no heading is required.
+フレームワークは既定でステージごとの `## Sensors` 上書きを同梱していない。チームは
+テンプレートを作成する（経路 1）か、正当な理由があるときに §13 の学びのループを通じて、
+特定の見出し構成を導入する。どちらの上書きもない場合、必須の見出しはない。
 
 ## Failure mode
 
-When required headings are missing, emits `SENSOR_FAILED` and writes detail
-to `aidlc/spaces/<active-space>/intents/<active-intent>/.aidlc-engine/sensors/<stage-slug>/required-sections-<fire-id>.md`,
-where the space and intent come from the active cursors. The fire id is the
-8-hex correlator from the `SENSOR_FIRED` row in the active record's
-`audit/<host>-<clone-id>.md` shard. The detail lists the missing headings.
+必須の見出しが欠けている場合、`SENSOR_FAILED` を発行し、詳細を
+`aidlc/spaces/<active-space>/intents/<active-intent>/.aidlc-engine/sensors/<stage-slug>/required-sections-<fire-id>.md` に書き込む。
+スペースとインテントはアクティブなカーソルから取得する。fire id は、アクティブな記録の
+`audit/<host>-<clone-id>.md` シャードにある `SENSOR_FIRED` 行の
+8 桁 16 進の相関 ID である。詳細には欠けている見出しを列挙する。

@@ -20,21 +20,21 @@ timeout_seconds: 1200
 
 # linter sensor
 
-Wraps the project's configured linter. v0.5.0 defaults to eslint; multi-language
-auto-detection (ruff, golangci-lint, clippy) is deferred to v0.6.0+.
+プロジェクトで設定されたリンターをラップする。v0.5.0 の既定は eslint で、多言語の
+自動検出（ruff、golangci-lint、clippy）は v0.6.0 以降に先送りされている。
 
-Echoes Fowler's "Eslint, Semgrep" examples from the harness-engineering article.
+harness-engineering の記事にある Fowler の "Eslint, Semgrep" の例に倣ったものである。
 
 ## Failure mode
 
-Emits `SENSOR_FAILED` and writes detail to
-`aidlc/spaces/<active-space>/intents/<active-intent>/.aidlc-engine/sensors/<stage-slug>/linter-<fire-id>.md`,
-where the space and intent come from the active cursors. The fire id is the
-8-hex correlator from the `SENSOR_FIRED` row in the active record's
-`audit/<host>-<clone-id>.md` shard. The detail contains the linter's structured
-output (file, line, rule, message per violation).
+`SENSOR_FAILED` を出力し、詳細を
+`aidlc/spaces/<active-space>/intents/<active-intent>/.aidlc-engine/sensors/<stage-slug>/linter-<fire-id>.md` に書き込む。
+スペースとインテントはアクティブなカーソルから決まる。fire id は、
+アクティブなレコードの `audit/<host>-<clone-id>.md` シャードにある `SENSOR_FIRED` 行の
+8桁16進の相関 ID である。詳細にはリンターの構造化された
+出力（違反ごとの file、line、rule、message）が含まれる。
 
 ## v0.6.0 carry-forward
 
-Multi-language detection at framework boundary (read project type from
-practices `## Tech Stack` section, dispatch appropriate linter).
+フレームワーク境界での多言語検出（practices の `## Tech Stack` セクションからプロジェクトの種類を読み取り、
+適切なリンターをディスパッチする）。

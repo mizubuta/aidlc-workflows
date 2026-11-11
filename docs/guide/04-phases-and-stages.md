@@ -1,13 +1,13 @@
 # Phases and Stages
 
-The AI-DLC lifecycle is organized into 5 phases containing 33 stages. This chapter explains each phase, lists its stages, and shows how they connect.
+AI-DLC のライフサイクルは、33 のステージを含む 5 つのフェーズで構成されています。この章では、各フェーズの説明、そのステージの一覧、そしてステージ同士のつながりを示します。
 
-> **Harness note.** The methodology — the phases, stages, agents, and gates this
-> guide describes — is identical on every harness. Where a mechanic differs by
-> harness (how a gate renders, how a subagent is dispatched, where config lives),
-> the difference is called out and tabled in your harness's chapter:
-> [Running on other harnesses](harnesses/README.md). Examples here use Claude Code
-> unless noted.
+> **ハーネスに関する注記。** 方法論 — このガイドで説明するフェーズ、ステージ、
+> エージェント、ゲート — はどのハーネスでも同じです。仕組みがハーネスによって異なる箇所
+> （ゲートの表示方法、サブエージェントのディスパッチ方法、設定の保存場所）では、
+> その違いを明記し、各ハーネスの章に表でまとめています:
+> [他のハーネスでの実行](harnesses/README.md)。特に断りのない限り、ここでの例は
+> Claude Code を使用しています。
 
 ---
 
@@ -60,60 +60,60 @@ graph LR
 
 <!-- Text fallback: Linear flow: INITIALIZATION (0.1-0.3) auto-proceeds to IDEATION (1.1-1.7), which passes through Verification Gate 1 to INCEPTION (2.1-2.9), through Verification Gate 2 to CONSTRUCTION (3.1-3.7), through Verification Gate 3 to OPERATION (4.1-4.7). A feedback loop returns from 4.7 back to 1.1. -->
 
-Phases execute sequentially. At each phase boundary (except Initialization → Ideation), a **verification gate** runs automated traceability checks to catch missing links, orphaned artifacts, or inconsistencies before downstream stages build on them.
+フェーズは順番に実行されます。各フェーズの境界（Initialization → Ideation を除く）では、**検証ゲート**が自動のトレーサビリティチェックを実行し、下流のステージがその上に構築を進める前に、リンクの欠落、孤立した成果物、不整合を検出します。
 
 ### What runs in order, and what runs in parallel
 
-**Stages run one at a time, in order.** When a stage completes, the engine moves to the next stage in lifecycle order that your scope runs and that is not already done or skipped (Construction repeats its stages per Unit, as described below). Within one workflow, a later phase does not start while a stage in an earlier phase is still open.
+**ステージは 1 つずつ、順番に実行されます。** ステージが完了すると、エンジンはライフサイクルの順序で次のステージ、つまりスコープで実行対象となっていて、まだ完了もスキップもされていないステージへ進みます（Construction では、後述のとおりユニットごとにステージを繰り返します）。1 つのワークフロー内では、前のフェーズのステージが開いている間、後のフェーズは開始されません。
 
-- To move ahead anyway, jump: `/aidlc --stage <name>` or `/aidlc --phase <name>`. The stages you pass over are marked skipped (`[S]`); they are not run later on their own. Jumping back to an earlier stage reopens it and every later stage in your plan. The files stay; a reopened stage that finds its earlier files asks whether to keep them, modify them, or redo the stage from scratch. See [Skipping and Navigating Stages](07-interaction-modes.md#skipping-and-navigating-stages).
-- To run one stage without moving your workflow, use `/aidlc --stage <name> --single`. It writes that stage's artifact and stops with no workflow gate; your workflow stays where it was. When your work already holds files for that stage, it keeps a copy of them in the record's `archive/` folder first, and one line says where.
+- それでも先に進みたい場合は、ジャンプします: `/aidlc --stage <name>` または `/aidlc --phase <name>`。飛ばしたステージはスキップ済み（`[S]`）としてマークされ、後から単独で実行されることはありません。前のステージに戻ると、そのステージと計画内のそれ以降のすべてのステージが再開されます。ファイルは残ります。再開したステージが以前のファイルを見つけると、それらを残すか、修正するか、ステージを最初からやり直すかを尋ねます。[Skipping and Navigating Stages](07-interaction-modes.md#skipping-and-navigating-stages) を参照してください。
+- ワークフローを動かさずに 1 つのステージだけを実行するには、`/aidlc --stage <name> --single` を使います。そのステージの成果物を書き出し、ワークフローのゲートなしで停止します。ワークフローは元の位置のままです。作業内にそのステージのファイルがすでにある場合は、先にそれらのコピーを記録の `archive/` フォルダーに保存し、その場所を 1 行で知らせます。
 
-**Construction repeats its stages for each Unit**, in one of two walks:
+**Construction はユニットごとにステージを繰り返します。** 進め方は次の 2 通りです:
 
-- **Unit-major** (the default for new solo work that has Units and produces source): one Unit goes through its design stages and Code Generation, then the next Unit starts again at the first design stage. You approve each Unit at a verified Unit checkpoint; your team's blocking checks run on that Unit's own files at its checkpoint, so a check that fails is put to you there (fix it, or override it for that Unit), before the next Unit is built on it, and is not checked again at the end while that file and the check's settings stay as they were. The stage gates that follow the last Unit are recorded as bookkeeping. Workflows without Unit checkpoints, such as older ones, get one question for those stage approvals instead: one Approve approves them all, and a change request approves none of them. A change for one Unit's stage ("in beta's NFR design, retry failed calls through a queue") redoes that stage and the ones after it for that Unit only, from your words; the other Units are asked nothing, and the one question comes back once. See [Why Construction works the way it does](#why-construction-works-the-way-it-does).
-- **Stage-major**: every Unit goes through one stage before the next stage starts, and that stage's gate comes once, after the last Unit. With a walking skeleton on, the first Unit still goes through every stage, including Code Generation, before the other Units start.
+- **Unit-major**（ユニットがあり、ソースを生成する新しい単独作業のデフォルト）: 1 つのユニットが設計ステージと Code Generation を通過し、その後、次のユニットが最初の設計ステージから再び始まります。各ユニットは検証済みのユニットチェックポイントで承認します。チームのブロッキングチェックはそのチェックポイントでそのユニット自身のファイルに対して実行されるため、失敗したチェックは次のユニットがその上に構築される前に、その場であなたに提示されます（修正するか、そのユニットについてオーバーライドします）。そのファイルとチェックの設定が変わらない限り、最後に再度チェックされることはありません。最後のユニットに続くステージゲートは、記録処理として記録されます。古いワークフローなど、ユニットチェックポイントのないワークフローでは、それらのステージ承認について代わりに 1 つの質問が出されます。1 回の Approve ですべてが承認され、変更依頼を出すとどれも承認されません。あるユニットのステージに対する変更（"in beta's NFR design, retry failed calls through a queue"（beta の NFR 設計で、失敗した呼び出しをキュー経由でリトライして））は、あなたの言葉に基づいて、そのユニットについてだけ、そのステージとそれ以降のステージをやり直します。他のユニットには何も尋ねられず、1 つの質問が一度だけ再提示されます。[Why Construction works the way it does](#why-construction-works-the-way-it-does) を参照してください。
+- **Stage-major**: すべてのユニットが 1 つのステージを通過してから次のステージが始まり、そのステージのゲートは最後のユニットの後に一度だけ来ます。ウォーキングスケルトンが有効な場合でも、最初のユニットは他のユニットが始まる前に、Code Generation を含むすべてのステージを通過します。
 
-**What can run in parallel**, within a stage or across Units in Construction:
+**並列に実行できるもの**（ステージ内、または Construction のユニット間）:
 
-- **Units in Construction.** On a stage-major walk with `Construction Execution: swarm`, Units whose dependencies are done build together in one batch, then share one batch checkpoint. Unit-major stays serial. See [Parallel Unit batches](#parallel-unit-batches).
-- **Per-Unit design passes.** On a stage-major walk, the design stages can hand you a wave of Units that do not depend on each other. Each Unit's questions are asked in your chat first, one Unit after another; then the Units are designed side by side from your answers.
-- **People, in team mode.** With `Unit Ownership: team`, each person claims a Unit and builds it in their own checkout at the same time as the others. Each checkout keeps its own place, so two people can be at different Construction stages at once. A claim is refused until that Unit's dependencies, and any required walking skeleton, are complete.
-- **Agents within a stage.** User Stories (2.4) is a mob: the design, developer, and quality agents contribute at the same time. Practices Discovery (2.2) has its inspectors look at the draft independently. Agents and design waves run at the same time where the harness can dispatch in parallel; on a harness that cannot, they run one after another with the same briefs. See [Stage Execution Modes Reference](#stage-execution-modes-reference).
+- **Construction のユニット。** `Construction Execution: swarm` を指定した Stage-major の進め方では、依存関係が完了したユニットは 1 つのバッチとしてまとめてビルドされ、1 つのバッチチェックポイントを共有します。Unit-major は直列のままです。[Parallel Unit batches](#parallel-unit-batches) を参照してください。
+- **ユニットごとの設計パス。** Stage-major の進め方では、設計ステージが互いに依存しないユニットのウェーブを提示することがあります。各ユニットの質問はまずチャットで、ユニットを 1 つずつ順に尋ねられます。その後、あなたの回答をもとにユニットが並行して設計されます。
+- **チームモードでの人。** `Unit Ownership: team` では、各メンバーがユニットを 1 つ担当（claim）し、他のメンバーと同時に自分のチェックアウトでビルドします。各チェックアウトは独自の位置を保持するため、2 人が同時に異なる Construction ステージにいることもあります。そのユニットの依存関係と、必要なウォーキングスケルトンが完了するまで、担当の申請は拒否されます。
+- **ステージ内のエージェント。** User Stories（2.4）はモブです。design、developer、quality の各エージェントが同時に貢献します。Practices Discovery（2.2）では、インスペクターがそれぞれ独立してドラフトを確認します。ハーネスが並列ディスパッチに対応している場合、エージェントと設計ウェーブは同時に実行されます。対応していないハーネスでは、同じ指示内容で 1 つずつ順に実行されます。[Stage Execution Modes Reference](#stage-execution-modes-reference) を参照してください。
 
-**Which stops you always get, and what settings change.**
+**常に発生する停止点と、設定で変わるもの。**
 
-- Every stage your scope runs, outside Initialization, ends with an approval gate. Your scope decides which stages run; a stage it skips has no gate. In Construction, the walk above decides whether you approve per Unit or per stage. In team mode, the gate rhythm you choose when claiming (`per-stage` or `unit-end`) sets the review points instead. See [Multi-Team Construction](workshop-mode.md).
-- In Construction, choosing **Continue automatically** waives the ordinary completion checkpoints. You still get Plan Approval (unless plan approval is off for the work), an enabled summary confirmation, the verification command choice, skeleton approval, and every failure.
-- The ceremony switches remove only what they name: sensors, learnings, the summary confirmation, plan approval, and collaborators (the support agents a stage brings in). See [Ceremony Switches](13-customization.md#ceremony-switches). Guard Policy changes how hard the guards hold, not which gates you see.
-- A gate that is put to you needs a real message from you to approve it. Nothing in a scope, a per-work setting, or Guard Policy lowers that; only `AIDLC_SKIP_HUMAN_PRESENCE_GUARD=1` does, set machine-wide or recorded with `aidlc config flags --bypass`, and AI-DLC tells you while it is off. Checkpoints you chose to let run automatically are recorded without asking you.
+- Initialization 以外で、スコープが実行するすべてのステージは承認ゲートで終わります。どのステージを実行するかはスコープが決め、スコープがスキップするステージにはゲートがありません。Construction では、上記の進め方によって、ユニットごとに承認するかステージごとに承認するかが決まります。チームモードでは、担当の申請時に選ぶゲートのリズム（`per-stage` または `unit-end`）が、代わりにレビューのポイントを決めます。[Multi-Team Construction](workshop-mode.md) を参照してください。
+- Construction で **Continue automatically** を選ぶと、通常の完了チェックポイントが免除されます。それでも Plan Approval（その作業で計画の承認がオフになっていない限り）、有効になっている要約確認、検証コマンドの選択、スケルトンの承認、そしてすべての失敗は提示されます。
+- セレモニースイッチが取り除くのは、その名前が示すものだけです: センサー、学び、要約確認、計画の承認、コラボレーター（ステージが呼び入れるサポートエージェント）。[Ceremony Switches](13-customization.md#ceremony-switches) を参照してください。Guard Policy が変えるのはガードの強さであり、表示されるゲートではありません。
+- あなたに提示されたゲートを承認するには、あなたからの実際のメッセージが必要です。スコープ、作業ごとの設定、Guard Policy のいずれもこれを緩めません。緩められるのは、マシン全体で設定するか `aidlc config flags --bypass` で記録する `AIDLC_SKIP_HUMAN_PRESENCE_GUARD=1` だけで、それがオフの間は AI-DLC がその旨を知らせます。自動実行を選んだチェックポイントは、あなたに尋ねずに記録されます。
 
-**How later stages depend on earlier ones.** Each stage declares the artifacts it reads (`consumes`) and writes (`produces`). The engine hands a stage the paths it needs. When a required input is missing, the stage is told whether that is expected (the stage that makes it is not in your scope) or a real gap (for example a stage you skipped with a jump). An expected gap means the stage works from what exists instead of inventing the file. A real gap is raised with you, so you can run the stage that makes the file or put the file in place yourself. The verification gate at each phase boundary checks that the links between phases hold.
+**後のステージが前のステージにどう依存するか。** 各ステージは、読み込む成果物（`consumes`）と書き出す成果物（`produces`）を宣言します。エンジンは、ステージに必要なパスを渡します。必須の入力が欠けている場合、ステージには、それが想定内（それを作るステージがスコープに含まれていない）なのか、本当の欠落（たとえばジャンプでスキップしたステージ）なのかが伝えられます。想定内の欠落であれば、ステージはファイルを捏造せず、存在するものをもとに作業します。本当の欠落はあなたに提示されるため、そのファイルを作るステージを実行するか、自分でファイルを配置できます。各フェーズ境界の検証ゲートは、フェーズ間のリンクが保たれていることをチェックします。
 
 ---
 
 ## Phase 0: Initialization
 
-**Purpose:** Bootstrap the workspace: create the intent's record dir, detect the workspace, and initialize state. The welcome message is shown at session start via the `companyAnnouncements` entry in `settings.json` (not a stage).
+**目的:** ワークスペースを立ち上げます。インテントの記録ディレクトリを作成し、ワークスペースを検出し、状態を初期化します。ウェルカムメッセージは、`settings.json` の `companyAnnouncements` エントリによってセッション開始時に表示されます（ステージではありません）。
 
-Initialization stages run **automatically** without approval gates. All three execute inside a single deterministic tool call (`aidlc-utility intent-create`) that completes in well under a second.
+Initialization のステージは、承認ゲートなしで**自動的に**実行されます。3 つすべてが、1 回の決定的なツール呼び出し（`aidlc-utility intent-create`）の中で実行され、1 秒もかからずに完了します。
 
-| # | Stage | Lead | Key Artifacts | Condition |
+| # | ステージ | リード | 主な成果物 | 条件 |
 |---|-------|------|---------------|-----------|
-| 0.1 | Workspace Scaffold | orchestrator | first intent's record dir (`aidlc/spaces/<space>/intents/<YYMMDD>-<label>/`) | ALWAYS |
-| 0.2 | Workspace Detection | orchestrator | `aidlc-state.md` (workspace state) | ALWAYS |
-| 0.3 | State Initialization | orchestrator | `aidlc-state.md`, `audit/` shards | ALWAYS |
+| 0.1 | Workspace Scaffold | orchestrator | 最初のインテントの記録ディレクトリ（`aidlc/spaces/<space>/intents/<YYMMDD>-<label>/`） | ALWAYS |
+| 0.2 | Workspace Detection | orchestrator | `aidlc-state.md`（ワークスペースの状態） | ALWAYS |
+| 0.3 | State Initialization | orchestrator | `aidlc-state.md`、`audit/` シャード | ALWAYS |
 
-**Execution notes:**
-- All three stages run inline inside `aidlc-utility intent-create` - no LLM subagent delegation, no per-stage prompt.
-- Workspace detection is a rule-based scanner (file extensions, known config filenames, package manifests).
-- No user interaction is needed during this phase.
+**実行に関する注記:**
+- 3 つのステージはすべて `aidlc-utility intent-create` の中でインライン実行されます - LLM サブエージェントへの委譲も、ステージごとのプロンプトもありません。
+- ワークスペースの検出は、ルールベースのスキャナー（ファイル拡張子、既知の設定ファイル名、パッケージマニフェスト）です。
+- このフェーズの間、ユーザーとの対話は必要ありません。
 
 ---
 
 ## Phase 1: Ideation
 
-**Purpose:** Validate the initiative — capture intent, assess feasibility, define scope, form the team, and secure approval to proceed.
+**目的:** イニシアチブを検証します — インテントを捉え、実現可能性を評価し、スコープを定義し、チームを編成し、先に進むための承認を得ます。
 
 ```mermaid
 flowchart TD
@@ -150,31 +150,31 @@ flowchart TD
 
 <!-- Text fallback: 1.1 Intent Capture (ALWAYS) flows to 1.2 Market Research (CONDITIONAL); mvp goes from 1.1 to 1.3. 1.2 flows to 1.3 Feasibility (CONDITIONAL) or to 1.4. 1.3 flows to 1.4 Scope Definition (ALWAYS). 1.4 flows to 1.5 Team Formation (CONDITIONAL); mvp goes from 1.4 to 1.6. 1.5 flows to 1.6 Rough Mockups (CONDITIONAL, skip if no UI) or to 1.7. 1.6 flows to 1.7 Approval & Handoff (ALWAYS), then Verification Gate 1. poc leaves Ideation after 1.1, mvp after 1.6, and the other plans except enterprise and feature skip Ideation. -->
 
-| # | Stage | Lead | Supporting | Key Artifacts | Condition |
+| # | ステージ | リード | サポート | 主な成果物 | 条件 |
 |---|-------|------|-----------|---------------|-----------|
-| 1.1 | Intent Capture & Framing | aidlc-product-agent | aidlc-architect-agent | Intent statement, stakeholder map | ALWAYS |
-| 1.2 | Market Research | aidlc-product-agent | — | Competitive analysis, build-vs-buy | CONDITIONAL |
-| 1.3 | Feasibility & Constraints | aidlc-architect-agent | aidlc-aws-platform-agent, aidlc-compliance-agent | Feasibility assessment, constraint register, RAID log | CONDITIONAL |
-| 1.4 | Scope Definition | aidlc-product-agent | aidlc-delivery-agent | Scope definition, intent backlog | ALWAYS |
-| 1.5 | Team Formation | aidlc-delivery-agent | — | Team assessment, mob composition plan | CONDITIONAL |
-| 1.6 | Rough Mockups | aidlc-design-agent | aidlc-product-agent | Wireframes, user flows | CONDITIONAL |
-| 1.7 | Approval & Handoff | aidlc-delivery-agent | aidlc-product-agent | Initiative brief, decision log | ALWAYS |
+| 1.1 | Intent Capture & Framing | aidlc-product-agent | aidlc-architect-agent | インテントステートメント、ステークホルダーマップ | ALWAYS |
+| 1.2 | Market Research | aidlc-product-agent | — | 競合分析、build-vs-buy | CONDITIONAL |
+| 1.3 | Feasibility & Constraints | aidlc-architect-agent | aidlc-aws-platform-agent, aidlc-compliance-agent | フィージビリティ評価、制約レジスター、RAID ログ | CONDITIONAL |
+| 1.4 | Scope Definition | aidlc-product-agent | aidlc-delivery-agent | スコープ定義、インテントバックログ | ALWAYS |
+| 1.5 | Team Formation | aidlc-delivery-agent | — | チーム評価、モブ編成計画 | CONDITIONAL |
+| 1.6 | Rough Mockups | aidlc-design-agent | aidlc-product-agent | ワイヤーフレーム、ユーザーフロー | CONDITIONAL |
+| 1.7 | Approval & Handoff | aidlc-delivery-agent | aidlc-product-agent | イニシアチブブリーフ、意思決定ログ | ALWAYS |
 
-Which plans enter Ideation at all: `enterprise` and `feature` run all seven stages, `mvp` runs Intent Capture, Feasibility & Constraints, Scope Definition and Rough Mockups, `poc` runs Intent Capture only, and every other plan skips Ideation.
+どのプランが Ideation に入るか: `enterprise` と `feature` は 7 つのステージすべてを実行し、`mvp` は Intent Capture、Feasibility & Constraints、Scope Definition、Rough Mockups を実行し、`poc` は Intent Capture だけを実行します。それ以外のプランはすべて Ideation をスキップします。
 
-**Stage colors:** Green = ALWAYS (runs whenever the selected scope includes it). Yellow = CONDITIONAL (may skip based on scope, project type, or plan). For the exact per-scope stage membership, see the [Stage-by-Scope Matrix](05-scopes-and-depth.md#stage-by-scope-matrix).
+**ステージの色:** 緑 = ALWAYS（選択したスコープに含まれていれば常に実行）。黄 = CONDITIONAL（スコープ、プロジェクトの種類、プランによってスキップされることがある）。スコープごとの正確なステージ構成については、[Stage-by-Scope Matrix](05-scopes-and-depth.md#stage-by-scope-matrix) を参照してください。
 
-Intent Capture records the initial description, workflow-selected scope, and
-used memory rules in its questions file. Claims in the intent statement and
-stakeholder map carry inline source tags; both artifacts surface assumptions
-and open questions. Retained assumptions require explicit confirmation before
-the Product Lead reviewer and approval gate run.
+Intent Capture は、最初の説明、ワークフローで選択されたスコープ、使用された
+メモリールールを質問ファイルに記録します。インテントステートメントと
+ステークホルダーマップの主張にはインラインのソースタグが付き、どちらの成果物も
+前提と未解決の質問を明示します。残された前提は、Product Lead のレビュアーと
+承認ゲートが実行される前に、明示的な確認が必要です。
 
 ---
 
 ## Phase 2: Inception
 
-**Purpose:** Elaborate the requirements — analyze the codebase, elicit requirements, design architecture, decompose into units of work, and plan delivery.
+**目的:** 要件を具体化します — コードベースを分析し、要件を引き出し、アーキテクチャを設計し、作業ユニットに分解し、デリバリーを計画します。
 
 ```mermaid
 flowchart TD
@@ -231,82 +231,80 @@ flowchart TD
 
 <!-- Text fallback: Brownfield check (from stage 0.3). If yes, 2.1 Reverse Engineering runs as a two-link pipeline (developer code scan then architect synthesis-and-write). Then 2.2 Practices Discovery runs as a hub-and-spoke on every included scope (lead draft, mutually blind quality/developer/devsecops spokes, human interview, lead integration) and promotes affirmed work to active-space memory. Next are 2.3 Requirements Analysis (ALWAYS), optional 2.4 User Stories mob, optional 2.5 Refined Mockups, optional 2.6 Domain Design, 2.7 Units Generation (ALWAYS), optional 2.8 Contract Design, and 2.9 Delivery Planning (ALWAYS), followed by Verification Gate 2. -->
 
-Supporting agents take part when collaborators are on (the `collaborators` setting, shipped on only for `enterprise`; `/aidlc --collaborators on` turns it on for one piece of work); otherwise each stage runs with its lead agent only.
+サポートエージェントは、コラボレーターがオンのとき（`collaborators` 設定。出荷時にオンになっているのは `enterprise` だけで、`/aidlc --collaborators on` で 1 つの作業についてオンにできます）に参加します。それ以外の場合、各ステージはリードエージェントだけで実行されます。
 
-| # | Stage | Lead | Supporting | Key Artifacts | Condition |
+| # | ステージ | リード | サポート | 主な成果物 | 条件 |
 |---|-------|------|-----------|---------------|-----------|
-| 2.1 | Reverse Engineering | aidlc-developer-agent | aidlc-architect-agent | 9 RE artifacts | Brownfield projects |
-| 2.2 | Practices Discovery | aidlc-pipeline-deploy-agent | aidlc-quality-agent, aidlc-developer-agent, aidlc-devsecops-agent | `team-practices.md`, `discovered-rules.md`, `evidence.md` (promoted to `aidlc/spaces/<active-space>/memory/team.md` / `project.md` on affirmation) | CONDITIONAL |
+| 2.1 | Reverse Engineering | aidlc-developer-agent | aidlc-architect-agent | 9 つの RE 成果物 | ブラウンフィールドのプロジェクト |
+| 2.2 | Practices Discovery | aidlc-pipeline-deploy-agent | aidlc-quality-agent, aidlc-developer-agent, aidlc-devsecops-agent | `team-practices.md`、`discovered-rules.md`、`evidence.md`（承認時に `aidlc/spaces/<active-space>/memory/team.md` / `project.md` に昇格） | CONDITIONAL |
 | 2.3 | Requirements Analysis | aidlc-product-agent | — | `requirements.md` | ALWAYS |
-| 2.4 | User Stories | aidlc-product-agent | aidlc-design-agent, aidlc-developer-agent, aidlc-quality-agent | `stories.md`, `personas.md` | User-facing features |
-| 2.5 | Refined Mockups | aidlc-design-agent | aidlc-product-agent | Hi-fi mockups, interaction spec | UI projects |
-| 2.6 | Domain Design | aidlc-architect-agent | aidlc-aws-platform-agent, aidlc-design-agent | `components.md`, `decisions.md` (ADRs) | Per execution plan |
-| 2.7 | Units Generation | aidlc-architect-agent | aidlc-delivery-agent | `unit-of-work.md`, `unit-of-work-dependency.md` (DAG), `unit-of-work-story-map.md` | ALWAYS |
+| 2.4 | User Stories | aidlc-product-agent | aidlc-design-agent, aidlc-developer-agent, aidlc-quality-agent | `stories.md`、`personas.md` | ユーザー向け機能 |
+| 2.5 | Refined Mockups | aidlc-design-agent | aidlc-product-agent | 高忠実度モックアップ、インタラクション仕様 | UI プロジェクト |
+| 2.6 | Domain Design | aidlc-architect-agent | aidlc-aws-platform-agent, aidlc-design-agent | `components.md`、`decisions.md`（ADR） | 実行計画による |
+| 2.7 | Units Generation | aidlc-architect-agent | aidlc-delivery-agent | `unit-of-work.md`、`unit-of-work-dependency.md`（DAG）、`unit-of-work-story-map.md` | ALWAYS |
 | 2.8 | Contract Design | aidlc-architect-agent | aidlc-aws-platform-agent | `contract-summary.md` | CONDITIONAL |
-| 2.9 | Delivery Planning | aidlc-delivery-agent | aidlc-architect-agent | `bolt-plan.md`, `team-allocation.md`, `risk-and-sequencing-rationale.md`, `external-dependency-map.md` | ALWAYS |
+| 2.9 | Delivery Planning | aidlc-delivery-agent | aidlc-architect-agent | `bolt-plan.md`、`team-allocation.md`、`risk-and-sequencing-rationale.md`、`external-dependency-map.md` | ALWAYS |
 
-**Key behavior:** Stage 2.1 runs as a **pipeline**: with collaborators on, a 2-link chain (first an aidlc-developer-agent code scan, then an aidlc-architect-agent synthesis that writes the artifacts); with collaborators off, the developer alone scans and writes them. Each return creates an ordered durable receipt, and multi-repo work requires one complete chain per repo before approval. It only executes for brownfield projects. Stage 2.2 runs as a **subagent hub-and-spoke** for greenfield and brownfield work: the lead drafts, quality/developer/devsecops inspect it independently, the human interview resolves gaps, and the lead integrates. Stage 2.4 runs as a **mob**: the lead drafts, and the design, developer, and quality agents contribute in parallel via contribution files.
+**主な動作:** Stage 2.1 は**パイプライン**として実行されます。コラボレーターがオンの場合は 2 段のチェーン（まず aidlc-developer-agent がコードをスキャンし、次に aidlc-architect-agent が統合して成果物を書き出す）になり、オフの場合は developer が単独でスキャンと書き出しを行います。各戻り値は順序付きの永続的なレシートを作成し、複数リポジトリの作業では、承認前にリポジトリごとに完全なチェーンが 1 つ必要です。このステージはブラウンフィールドのプロジェクトでのみ実行されます。Stage 2.2 は、グリーンフィールドとブラウンフィールドのどちらでも**サブエージェントのハブ&スポーク**として実行されます。リードがドラフトを作り、quality/developer/devsecops がそれぞれ独立して確認し、人間へのインタビューでギャップを解消し、リードが統合します。Stage 2.4 は**モブ**として実行されます。リードがドラフトを作り、design、developer、quality の各エージェントが貢献ファイルを通じて並行して貢献します。
 
 ---
 
 ## Phase 3: Construction
 
-**Purpose:** Build the solution — design, implement, and test — in reviewable slices.
+**目的:** ソリューションを構築します — レビュー可能な単位で、設計、実装、テストを行います。
 
 ### Why Construction works the way it does
 
-New solo workflows that include Unit decomposition and a source-producing
-Construction stage default to **unit-major, serial execution with verified Unit
-checkpoints**. Each Unit completes its applicable design stages and Code
-Generation before the next. Runtime order follows `unit-of-work-dependency.md`;
-`bolt-plan.md` records delivery grouping and rationale without replacing that DAG.
+ユニット分解と、ソースを生成する Construction ステージを含む新しい単独ワークフローは、
+デフォルトで**検証済みユニットチェックポイント付きの Unit-major・直列実行**になります。
+各ユニットは、該当する設計ステージと Code Generation を完了してから次のユニットに
+移ります。実行時の順序は `unit-of-work-dependency.md` に従います。
+`bolt-plan.md` はデリバリーのグループ分けと根拠を記録しますが、その DAG を置き換えはしません。
 
-With skeleton-on, the first DAG Unit is the smallest working integrated slice.
-Its code must run through a real end-to-end check, and you approve the verified
-skeleton before later Units begin. This happens even if you explicitly choose
-stage-major order. A first design-stage review alone is not a working skeleton.
+skeleton-on では、DAG の最初のユニットが、最小限の動作する統合スライスになります。
+そのコードは実際のエンドツーエンドのチェックを通過しなければならず、後のユニットが
+始まる前に、検証済みのスケルトンをあなたが承認します。これは、明示的に Stage-major の
+順序を選んだ場合でも行われます。最初の設計ステージのレビューだけでは、動作するスケルトンにはなりません。
 
-The check is the intent's recorded, human-authorized `Construction Verification
-Command`, reused for every Unit/batch checkpoint. Delivery Planning proposes it
-from the project scan and asks you to approve it. Your approval of that question,
-in your own words or by picking **Approve**, is what sets it, in the chat that
-asked or in a new one while it is the newest question asked; **Request
-Changes** or an answer to some other question does not. You may
-defer if no runnable check exists yet; the first checkpoint then asks before
-verification (on Kiro IDE and Kiro CLI v3, a side-by-side build asks once its plans
-are approved, before its workers start). A missing authorization or later command change always requires
-the [recorded-command flow](12-cli-commands.md#construction-verification-command-record-human-authorization),
-never a command chosen at verify time. The approval question shows **Verified
-with `<verification_command>` (exit 0)**.
-The verifier records a tool-owned `CHECKPOINT_VERIFICATION_RECORDED` receipt
-alongside the proof file, and approval requires that receipt; a hand-written
-proof file cannot verify a Unit. On a checkout with no proof file at all (a
-fresh clone, another machine), that receipt stands in for the proof of a Unit
-already approved whose evidence is unchanged, so nothing runs again.
+このチェックは、インテントに記録され人間が認可した `Construction Verification
+Command` であり、すべてのユニット／バッチのチェックポイントで再利用されます。Delivery Planning が
+プロジェクトのスキャンからこれを提案し、承認を求めます。その質問に対するあなたの承認
+（自分の言葉で答えるか **Approve** を選ぶ）によってこれが設定されます。質問したチャットでも、
+それが最新の質問である間は新しいチャットでもかまいません。**Request
+Changes** や別の質問への回答では設定されません。まだ実行可能なチェックがない場合は
+先送りできます。その場合、最初のチェックポイントが検証の前に尋ねます（Kiro IDE と Kiro CLI v3 では、
+並行ビルドは計画が承認された後、ワーカーが始まる前に一度尋ねます）。認可がない場合や、後でコマンドを変更する場合は、
+必ず[記録済みコマンドのフロー](12-cli-commands.md#construction-verification-command-record-human-authorization)を
+通す必要があり、検証時に選んだコマンドが使われることは決してありません。承認の質問には **Verified
+with `<verification_command>` (exit 0)** と表示されます。
+検証ツールは、証明ファイルとともにツール所有の `CHECKPOINT_VERIFICATION_RECORDED` レシートを
+記録し、承認にはそのレシートが必要です。手書きの証明ファイルではユニットを検証できません。
+証明ファイルがまったくないチェックアウト（新しいクローンや別のマシン）では、
+証拠に変更のない承認済みユニットについてはそのレシートが証明の代わりとなるため、何も再実行されません。
 
-At a Unit or skeleton checkpoint you are asked to **Approve** or **Request
-Changes**. Answer in your own words or pick an option: your reply to that
-checkpoint's question decides it, in the chat that asked or in a new one while
-it is the newest question asked, and an option you pick is the one recorded.
-A reply to a different question does not count. A checkpoint whose work changed after it was asked is asked again. Checkpoints
-you chose to let run automatically are recorded without a question.
+ユニットまたはスケルトンのチェックポイントでは、**Approve** または **Request
+Changes** を求められます。自分の言葉で答えても、選択肢を選んでもかまいません。そのチェックポイントの
+質問への返答がそれを決定します。質問したチャットでも、それが最新の質問である間は
+新しいチャットでもかまいません。選んだ選択肢がそのまま記録されます。
+別の質問への返答はカウントされません。質問された後に作業が変わったチェックポイントは、再度質問されます。自動実行を
+選んだチェックポイントは、質問なしで記録されます。
 
-The autonomy offer is **Continue automatically** / **Review each checkpoint**:
-for eligible checkpoint workflows, skeleton-off offers it at Construction entry,
-and skeleton-on offers it after the real skeleton checkpoint. An existing choice
-is not repeated; on-demand grant/revoke requests remain available. Plan Approval,
-enabled summary confirmation, verification command selection, and failures still
-need human attention under either choice. Summary confirmation applies only when
-`directive.ceremony.summary_confirmation === "on"`.
+自律実行の提案は **Continue automatically** / **Review each checkpoint** です。
+対象となるチェックポイントワークフローでは、skeleton-off の場合は Construction の開始時に、
+skeleton-on の場合は実際のスケルトンのチェックポイントの後に提示されます。既存の選択が
+あれば繰り返し尋ねられません。必要に応じて付与・取り消しを依頼することはいつでもできます。Plan Approval、
+有効になっている要約確認、検証コマンドの選択、失敗は、どちらを選んでも
+人間の対応が必要です。要約確認が適用されるのは
+`directive.ceremony.summary_confirmation === "on"` の場合だけです。
 
-The new default does not convert existing workflows, design-only work, or flows
-without Units. Their existing stage approvals remain. Team-owned Units keep their
-own per-stage or unit-end gate rhythm. Preserve explicit iteration choices.
+新しいデフォルトは、既存のワークフロー、設計のみの作業、ユニットのないフローを
+変換しません。それらの既存のステージ承認はそのまま残ります。チームが所有するユニットは、
+独自のステージごと、またはユニット終了時のゲートのリズムを維持します。明示的な反復の選択は保持されます。
 
 ### Construction flow
 
-This diagram shows the default path for an eligible solo workflow that produces
-source. Other workflows keep their recorded execution and approval policy.
+この図は、ソースを生成する対象の単独ワークフローにおけるデフォルトの経路を示しています。
+他のワークフローは、記録済みの実行ポリシーと承認ポリシーに従います。
 
 ```mermaid
 flowchart TD
@@ -338,22 +336,22 @@ flowchart TD
 
 ### Parallel Unit batches
 
-Unit-major remains serial. To use swarm execution in an eligible checkpoint
-workflow, explicitly choose stage-major and `Construction Execution: swarm`:
-say so in your own words, for example "run the Units in parallel", and AI-DLC
-makes the changes this needs and says each in one line.
-Execution and approval are separate choices: batch completion may be guided or
-automatic. Dependency-ready Units may run together; an inline Unit already
-approved at its checkpoint is not rebuilt in a later batch.
-Before initial protected prepare, the approved parent application source must
-be committed and reproducible. In particular, commit the approved inline
-skeleton source before preparing parallel Units. This is an explicit action;
-the tool never commits automatically and checks all Units before creating any
-child. See [Swarm prepare](12-cli-commands.md#aidlc-engine-swarm-prepare-prepare-a-reproducible-batch).
+Unit-major は直列のままです。対象となるチェックポイントワークフローでスウォーム実行を使うには、
+Stage-major と `Construction Execution: swarm` を明示的に選びます。
+たとえば「ユニットを並列で実行して」のように自分の言葉で伝えると、AI-DLC が
+必要な変更を行い、それぞれを 1 行で知らせます。
+実行と承認は別々の選択です。バッチの完了はガイド付きにも自動にもできます。依存関係が
+揃ったユニットはまとめて実行できます。チェックポイントですでに承認されたインラインのユニットは、
+後のバッチで再ビルドされません。
+最初の保護された prepare の前に、承認済みの親アプリケーションのソースが
+コミットされ、再現可能でなければなりません。特に、並列ユニットを準備する前に、承認済みのインライン
+スケルトンのソースをコミットしてください。これは明示的な操作であり、
+ツールが自動的にコミットすることはなく、子を作成する前にすべてのユニットをチェックします。
+[Swarm prepare](12-cli-commands.md#aidlc-engine-swarm-prepare-prepare-a-reproducible-batch) を参照してください。
 
-A guided batch ends with one **Approve** / **Request Changes** question for the
-batch, read the same way: your reply to that batch's question decides it.
-Automatic batch approval asks nothing.
+ガイド付きのバッチは、バッチに対する 1 つの **Approve** / **Request Changes** の質問で
+終わり、同じように扱われます。そのバッチの質問へのあなたの返答がそれを決定します。
+自動のバッチ承認では何も尋ねられません。
 
 ```mermaid
 flowchart LR
@@ -373,44 +371,44 @@ flowchart LR
 
 <!-- Text fallback: After explicit stage-major/swarm selection and any required skeleton approval, ensure the approved application source is committed with explicit authorization, then obtain Plan Approval for the exact emitted Units. Build dependency-independent Units in parallel, collect current verification and review evidence, then resolve that batch's guided or automatic checkpoint before the next work. -->
 
-Design stages can use an emitted per-Unit wave on a stage-major path. The
-conductor follows the emitted Unit set rather than deriving parallelism from a
-Bolt-plan grouping. `BOLT_STARTED` / `BOLT_COMPLETED` apply to the swarm/worktree
-path; serial inline Unit work uses its lifecycle and checkpoint receipts.
+設計ステージは、Stage-major の経路で、提示されたユニットごとのウェーブを使えます。
+コンダクターは、Bolt プランのグループ分けから並列性を導くのではなく、提示されたユニットの集合に
+従います。`BOLT_STARTED` / `BOLT_COMPLETED` はスウォーム／ワークツリーの経路に
+適用されます。直列のインラインのユニット作業では、そのライフサイクルとチェックポイントのレシートが使われます。
 
 ### Halt-and-ask on failure
 
-Failures always stop Construction, even in autonomous mode. The Build-and-Test loop-back's rung 4 also stops for the human; required Plan Approvals, summary confirmations, and verification command selection remain separate human decisions.
+失敗は、自律モードであっても常に Construction を停止させます。Build-and-Test のループバックの第 4 段階でも人間のために停止します。必須の Plan Approval、要約確認、検証コマンドの選択は、引き続き個別の人間の判断です。
 
-- If a solo Unit's Code Generation fails, Construction halts immediately and offers **retry** (re-run just that Unit), **skip** (mark it `[S]` and continue — dependents will likely also fail), or **abort**.
-- If one Unit in a parallel batch fails while others succeed, the conductor waits for the whole batch to finish, preserves the successful Units' artifacts on disk, and presents the same retry / skip / abort choice for the failed Unit only.
+- 単独のユニットの Code Generation が失敗した場合、Construction は直ちに停止し、**retry**（そのユニットだけを再実行）、**skip**（`[S]` とマークして続行 — 依存するユニットもおそらく失敗します）、**abort** を提示します。
+- 並列バッチ内の 1 つのユニットが失敗し、他が成功した場合、コンダクターはバッチ全体の完了を待ち、成功したユニットの成果物をディスク上に保持したうえで、失敗したユニットについてだけ同じ retry / skip / abort の選択肢を提示します。
 
 ### Stage reference
 
-| # | Stage | Lead | Supporting | Key Artifacts | Runs |
+| # | ステージ | リード | サポート | 主な成果物 | 実行 |
 |---|-------|------|-----------|---------------|------|
-| 3.1 | Functional Design | aidlc-architect-agent | aidlc-developer-agent | `entities.md`, `rules.md`, `functional-spec.md` | Per Unit (CONDITIONAL by execution plan) |
-| 3.2 | NFR Requirements | aidlc-architect-agent | aidlc-devsecops-agent, aidlc-compliance-agent, aidlc-quality-agent | Performance, security, scalability, reliability, observability NFRs | Per Unit (CONDITIONAL) |
-| 3.3 | NFR Design | aidlc-architect-agent | aidlc-aws-platform-agent | NFR design specifications | Per Unit (CONDITIONAL) |
-| 3.4 | Infrastructure Design | aidlc-aws-platform-agent | aidlc-devsecops-agent, aidlc-compliance-agent | Infrastructure specifications, IaC designs | Per Unit (CONDITIONAL) |
-| 3.5 | Code Generation | aidlc-developer-agent | — | Application code + code docs | Per Unit (ALWAYS) |
-| 3.6 | Build and Test | aidlc-quality-agent | aidlc-devsecops-agent | Test results, quality report | ALWAYS, once at end |
-| 3.7 | CI Pipeline | aidlc-pipeline-deploy-agent | — | CI config, quality gates | CONDITIONAL, once at end |
+| 3.1 | Functional Design | aidlc-architect-agent | aidlc-developer-agent | `entities.md`、`rules.md`、`functional-spec.md` | ユニットごと（実行計画により CONDITIONAL） |
+| 3.2 | NFR Requirements | aidlc-architect-agent | aidlc-devsecops-agent, aidlc-compliance-agent, aidlc-quality-agent | パフォーマンス、セキュリティ、スケーラビリティ、信頼性、オブザーバビリティの NFR | ユニットごと（CONDITIONAL） |
+| 3.3 | NFR Design | aidlc-architect-agent | aidlc-aws-platform-agent | NFR 設計仕様 | ユニットごと（CONDITIONAL） |
+| 3.4 | Infrastructure Design | aidlc-aws-platform-agent | aidlc-devsecops-agent, aidlc-compliance-agent | インフラ仕様、IaC 設計 | ユニットごと（CONDITIONAL） |
+| 3.5 | Code Generation | aidlc-developer-agent | — | アプリケーションコード + コードのドキュメント | ユニットごと（ALWAYS） |
+| 3.6 | Build and Test | aidlc-quality-agent | aidlc-devsecops-agent | テスト結果、品質レポート | ALWAYS、最後に一度 |
+| 3.7 | CI Pipeline | aidlc-pipeline-deploy-agent | — | CI 設定、品質ゲート | CONDITIONAL、最後に一度 |
 
-**Key behaviors:**
+**主な動作:**
 
-- Eligible new source-producing solo Unit workflows default to unit-major and serial execution. Legacy, design-only, no-Unit, and team-owned workflows retain their existing paths.
-- The real skeleton is the first complete integrated Unit, verified and human-approved before later Units; a legacy first-stage gate is only a stage review.
-- Ordinary completion follows the recorded autonomy policy. `completion_only` stage directives settle existing approvals without repeating bodies, reviewers, or human completion questions.
-- An autonomy answer does not choose swarm or change iteration order. Explicit stage-major/swarm selection supports guided or automatic batch checkpoints.
-- While Plan Approval is on for the work, each Unit's plan is approved; grouping its presentation never removes individual approval receipts. Enabled summary confirmation, verification command selection, and failures still require the human.
-- Build and Test reads every Unit's code. When Code Generation has not finished for some Units (a jump ahead skipped it, say), it says which in one line, with its gate or with your approval when you approve before the gate is shown (also when you ask to stop for now): "Code Generation has not finished for units beta and gamma, so their code may be missing from Build and Test." It never stops the approval.
+- 対象となる、ソースを生成する新しい単独のユニットワークフローは、デフォルトで Unit-major・直列実行になります。レガシー、設計のみ、ユニットなし、チーム所有のワークフローは、既存の経路を維持します。
+- 実際のスケルトンは最初の完全な統合ユニットであり、後のユニットの前に検証され、人間に承認されます。レガシーの最初のステージのゲートは、単なるステージレビューです。
+- 通常の完了は、記録された自律ポリシーに従います。`completion_only` のステージディレクティブは、本文、レビュアー、人間への完了の質問を繰り返さずに、既存の承認を確定させます。
+- 自律実行への回答は、スウォームを選択したり反復順序を変えたりはしません。明示的な Stage-major/スウォームの選択は、ガイド付きまたは自動のバッチチェックポイントをサポートします。
+- その作業で Plan Approval がオンの間は、各ユニットの計画が承認されます。提示をグループ化しても、個々の承認レシートがなくなることはありません。有効になっている要約確認、検証コマンドの選択、失敗には、引き続き人間が必要です。
+- Build and Test はすべてのユニットのコードを読みます。一部のユニットで Code Generation が完了していない場合（たとえば先へのジャンプでスキップされた場合）、どのユニットかを 1 行で知らせます。これはゲートとともに、またはゲートが表示される前に承認した場合（いったん中断を依頼した場合も含む）はその承認とともに表示されます: "Code Generation has not finished for units beta and gamma, so their code may be missing from Build and Test."（ユニット beta と gamma の Code Generation が完了していないため、それらのコードが Build and Test に含まれていない可能性があります。）承認が止められることはありません。
 
 ---
 
 ## Phase 4: Operation
 
-**Purpose:** Deploy and operate — set up deployment pipelines, provision environments, configure observability, and establish feedback loops.
+**目的:** デプロイと運用 — デプロイパイプラインを構築し、環境をプロビジョニングし、オブザーバビリティを設定し、フィードバックループを確立します。
 
 ```mermaid
 flowchart TD
@@ -443,52 +441,52 @@ flowchart TD
 
 <!-- Text fallback: All Operation stages are CONDITIONAL. 4.1 through 4.7 flow sequentially. On approval of Stage 4.7 the workflow is complete. -->
 
-| # | Stage | Lead | Supporting | Key Artifacts | Condition |
+| # | ステージ | リード | サポート | 主な成果物 | 条件 |
 |---|-------|------|-----------|---------------|-----------|
-| 4.1 | Deployment Pipeline | aidlc-pipeline-deploy-agent | — | CD config, deployment strategy, rollback runbook | CONDITIONAL |
-| 4.2 | Environment Provisioning | aidlc-aws-platform-agent | aidlc-devsecops-agent, aidlc-compliance-agent | Environment inventory, validation report | CONDITIONAL |
-| 4.3 | Deployment Execution | aidlc-pipeline-deploy-agent | aidlc-developer-agent | Deployment log, smoke tests, health checks | CONDITIONAL |
-| 4.4 | Observability Setup | aidlc-operations-agent | — | Dashboards, alarms, SLO config | CONDITIONAL |
-| 4.5 | Incident Response | aidlc-operations-agent | — | SSM runbooks, incident plan, escalation matrix | CONDITIONAL |
-| 4.6 | Performance Validation | aidlc-quality-agent | — | Load test results, NFR validation matrix | CONDITIONAL |
-| 4.7 | Feedback & Optimization | aidlc-operations-agent | aidlc-aws-platform-agent | SLO report, cost analysis, feedback loop doc | CONDITIONAL |
+| 4.1 | Deployment Pipeline | aidlc-pipeline-deploy-agent | — | CD 設定、デプロイ戦略、ロールバック用ランブック | CONDITIONAL |
+| 4.2 | Environment Provisioning | aidlc-aws-platform-agent | aidlc-devsecops-agent, aidlc-compliance-agent | 環境一覧、検証レポート | CONDITIONAL |
+| 4.3 | Deployment Execution | aidlc-pipeline-deploy-agent | aidlc-developer-agent | デプロイログ、スモークテスト、ヘルスチェック | CONDITIONAL |
+| 4.4 | Observability Setup | aidlc-operations-agent | — | ダッシュボード、アラーム、SLO 設定 | CONDITIONAL |
+| 4.5 | Incident Response | aidlc-operations-agent | — | SSM ランブック、インシデント対応計画、エスカレーションマトリクス | CONDITIONAL |
+| 4.6 | Performance Validation | aidlc-quality-agent | — | 負荷テスト結果、NFR 検証マトリクス | CONDITIONAL |
+| 4.7 | Feedback & Optimization | aidlc-operations-agent | aidlc-aws-platform-agent | SLO レポート、コスト分析、フィードバックループのドキュメント | CONDITIONAL |
 
-**Key behaviors:**
-- All 7 stages are **conditional** — the entire phase may be skipped for `mvp` and `poc` scopes
-- Stage 4.7 is the **terminal stage** — on approval, the workflow is complete
+**主な動作:**
+- 7 つのステージはすべて**条件付き**です — `mvp` と `poc` のスコープでは、フェーズ全体がスキップされることがあります
+- Stage 4.7 は**最終ステージ**です — 承認されるとワークフローが完了します
 
 ---
 
 ## Phase Transitions and Verification Gates
 
-At each phase boundary (Ideation → Inception, Inception → Construction, Construction → Operation), the framework runs **phase boundary verification**. This automated check validates:
+各フェーズ境界（Ideation → Inception、Inception → Construction、Construction → Operation）で、フレームワークは**フェーズ境界の検証**を実行します。この自動チェックは次を検証します:
 
-- All required artifacts from the completing phase exist
-- Traceability links between artifacts are intact (e.g., every requirement maps to a story)
-- No orphaned artifacts or missing references
-- Consistency between related artifacts
+- 完了するフェーズで必要なすべての成果物が存在する
+- 成果物間のトレーサビリティリンクが保たれている（例: すべての要件がストーリーに対応付けられている）
+- 孤立した成果物や欠落した参照がない
+- 関連する成果物間で整合性がとれている
 
-If verification fails, the conductor reports the issues and asks whether to proceed or go back to fix them.
+検証に失敗した場合、コンダクターは問題を報告し、先に進むか、戻って修正するかを尋ねます。
 
 ---
 
 ## Stage Execution Modes Reference
 
-| Mode | Stages | User Interaction | Description |
+| モード | ステージ | ユーザーとの対話 | 説明 |
 |------|--------|-----------------|-------------|
-| Inline (auto-proceed) | 0.1, 0.2, 0.3 | None | Run deterministically inside `aidlc-utility intent-create`, no approval gate |
-| Inline | 26 stages | Full | Agent works in conversation, approval gate at end |
-| Subagent | 2.2, 3.5 | Practices interview + final gate for 2.2; approval gate for 3.5 | Hub-and-spoke Practices Discovery; focused Code Generation |
-| Pipeline | 2.1 | Approval gate only | Developer scan, then architect synthesis-and-write (the developer alone with collaborators off) |
-| Mob | 2.4 | Mid-stage judgment questions + approval gate | Lead drafts; design/developer/quality collaborate in parallel via contribution files |
+| Inline (auto-proceed) | 0.1, 0.2, 0.3 | なし | `aidlc-utility intent-create` の中で決定的に実行され、承認ゲートはない |
+| Inline | 26 ステージ | フル | エージェントが会話の中で作業し、最後に承認ゲートがある |
+| Subagent | 2.2, 3.5 | 2.2 はプラクティスのインタビュー + 最終ゲート、3.5 は承認ゲート | ハブ&スポーク型の Practices Discovery、焦点を絞った Code Generation |
+| Pipeline | 2.1 | 承認ゲートのみ | developer のスキャンの後、architect が統合と書き出しを行う（コラボレーターがオフの場合は developer が単独で行う） |
+| Mob | 2.4 | ステージ途中の判断の質問 + 承認ゲート | リードがドラフトを作り、design/developer/quality が貢献ファイルを通じて並行して協働する |
 
-Across all 33 stages, the topology count is **29 inline / 2 subagent / 1 pipeline / 1 mob**.
+33 のステージ全体で、トポロジーの内訳は **inline 29 / subagent 2 / pipeline 1 / mob 1** です。
 
 ---
 
 ## Next Steps
 
-- [Scopes, Depth, and Test Strategy](05-scopes-and-depth.md) — how scopes control which stages execute, including the full [Stage-by-Scope Matrix](05-scopes-and-depth.md#stage-by-scope-matrix)
-- [Agents](06-agents.md) — the 14-agent roster and its domain, review, and composition roles
-- [Your First Workflow](02-your-first-workflow.md) — annotated walkthrough
-- [Glossary](glossary.md) — terminology reference
+- [Scopes, Depth, and Test Strategy](05-scopes-and-depth.md) — スコープがどのステージを実行するかをどのように制御するか。完全な [Stage-by-Scope Matrix](05-scopes-and-depth.md#stage-by-scope-matrix) を含みます
+- [Agents](06-agents.md) — 14 のエージェントの一覧と、そのドメイン、レビュー、構成上の役割
+- [Your First Workflow](02-your-first-workflow.md) — 注釈付きのウォークスルー
+- [Glossary](glossary.md) — 用語のリファレンス

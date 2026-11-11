@@ -1,84 +1,84 @@
 # Non-Functional Requirement (NFR) Validation Methods
 
-Practical approaches to validating performance, scalability, and reliability requirements.
+パフォーマンス、スケーラビリティ、信頼性の要件を検証するための実践的なアプローチ。
 
 ## Load Testing Tools and Methodology
 
-**Tools**:
-- **k6** (Grafana): Script-based, developer-friendly, runs locally or in cloud. Preferred for API load testing.
-- **Locust** (Python): Distributed, programmable load generation. Good for complex user behaviour simulation.
-- **Artillery**: YAML-driven, supports HTTP/WebSocket/Socket.io. Quick to set up.
-- **AWS Distributed Load Testing**: CloudFormation-based, uses Fargate to generate load from within AWS.
+**ツール**:
+- **k6**（Grafana）: スクリプトベースで開発者に扱いやすく、ローカルでもクラウドでも実行できる。API の負荷テストに推奨。
+- **Locust**（Python）: 分散型でプログラム可能な負荷生成。複雑なユーザー行動のシミュレーションに向く。
+- **Artillery**: YAML 駆動で、HTTP/WebSocket/Socket.io をサポートする。セットアップが早い。
+- **AWS Distributed Load Testing**: CloudFormation ベースで、Fargate を使って AWS 内部から負荷を生成する。
 
-**Methodology**:
-1. Identify critical user journeys and their expected traffic volumes.
-2. Create realistic test scripts with think times, parameterized data, and varied payloads.
-3. Establish a performance baseline on current production or staging.
-4. Run tests against an environment that mirrors production (same instance sizes, data volume, network topology).
-5. Collect results, compare against NFR targets, identify bottlenecks.
+**方法論**:
+1. 重要なユーザージャーニーと、その想定トラフィック量を特定する。
+2. 思考時間（think time）、パラメータ化されたデータ、多様なペイロードを含む現実的なテストスクリプトを作成する。
+3. 現在の本番環境またはステージング環境でパフォーマンスのベースラインを確立する。
+4. 本番を反映した環境（同じインスタンスサイズ、データ量、ネットワークトポロジー）に対してテストを実行する。
+5. 結果を収集し、NFR の目標値と比較して、ボトルネックを特定する。
 
 ## Performance Test Design Patterns
 
 ### Ramp-Up Test
-Gradually increase virtual users from 0 to target over 5-15 minutes. Validates system behaviour under increasing load and identifies the breaking point.
+5〜15分かけて仮想ユーザーを 0 から目標値まで徐々に増やす。負荷の増加に対するシステムの振る舞いを検証し、限界点を特定する。
 
 ### Steady-State Test
-Hold constant load at expected peak for 30-60 minutes. Validates sustained performance, memory leaks, connection pool exhaustion, and resource saturation.
+想定ピークの負荷を 30〜60分間一定に保つ。持続的なパフォーマンス、メモリリーク、コネクションプールの枯渇、リソースの飽和を検証する。
 
 ### Spike Test
-Suddenly inject 3-5x normal load for a short burst (2-5 minutes). Validates auto-scaling triggers, queue depth handling, circuit breaker behaviour, and graceful degradation.
+通常の 3〜5倍の負荷を短時間（2〜5分）突発的に投入する。オートスケーリングのトリガー、キュー深度の処理、サーキットブレーカーの振る舞い、グレースフルデグラデーションを検証する。
 
 ### Soak Test
-Run at moderate load (60-80% of peak) for 4-24 hours. Detects slow memory leaks, file handle exhaustion, log rotation issues, and gradual performance degradation.
+中程度の負荷（ピークの 60〜80%）で 4〜24時間実行する。緩やかなメモリリーク、ファイルハンドルの枯渇、ログローテーションの問題、パフォーマンスの段階的な劣化を検出する。
 
 ## Latency Percentiles
 
-- **p50 (median)**: The typical user experience. Target depends on use case (web API: < 100ms).
-- **p95**: Captures most users' worst-case experience. The primary SLO metric for most services.
-- **p99**: Tail latency. High p99 with low p50 indicates inconsistent performance (GC pauses, cold starts, noisy neighbours).
-- **p99.9**: Relevant for high-volume services where even 0.1% affects thousands of requests.
+- **p50（中央値）**: 典型的なユーザー体験。目標値はユースケースによる（Web API: < 100ms）。
+- **p95**: ほとんどのユーザーにとっての最悪ケースの体験を捉える。多くのサービスで主要な SLO 指標となる。
+- **p99**: テールレイテンシ。p50 が低く p99 が高い場合、パフォーマンスが不安定であることを示す（GC の停止、コールドスタート、ノイジーネイバー）。
+- **p99.9**: 0.1% でも数千件のリクエストに影響する大量処理のサービスで重要になる。
 
-Always measure percentiles, not averages. An average of 50ms can hide a p99 of 5 seconds.
+平均ではなく、必ずパーセンタイルを測定する。平均 50ms の裏に、p99 で 5秒が隠れていることがある。
 
 ## Throughput Measurement
 
-- Measure in requests per second (RPS) for APIs, messages per second for queues, transactions per second (TPS) for databases.
-- Record throughput alongside latency; throughput without latency context is meaningless.
-- Identify the throughput ceiling: the RPS at which latency begins to degrade beyond acceptable thresholds.
-- For batch processing, measure records processed per second and total job duration.
+- API は秒間リクエスト数（RPS）、キューは秒間メッセージ数、データベースは秒間トランザクション数（TPS）で測定する。
+- スループットはレイテンシと併せて記録する。レイテンシの文脈がないスループットには意味がない。
+- スループットの上限を特定する: レイテンシが許容しきい値を超えて劣化し始める RPS である。
+- バッチ処理では、秒間処理レコード数とジョブ全体の所要時間を測定する。
 
 ## Capacity Planning
 
-1. Determine current peak traffic from production metrics (CloudWatch, X-Ray).
-2. Apply a growth multiplier (typically 2-3x current peak for 12-month horizon).
-3. Load test at the projected peak to validate infrastructure can handle it.
-4. Identify the scaling bottleneck (database connections, Lambda concurrency, NAT gateway bandwidth).
-5. Document the cost at projected peak for budget approval.
+1. 本番のメトリクス（CloudWatch、X-Ray）から現在のピークトラフィックを把握する。
+2. 成長係数を適用する（12か月の見通しなら、一般に現在のピークの 2〜3倍）。
+3. 予測ピークで負荷テストを行い、インフラが対応できることを検証する。
+4. スケーリングのボトルネック（データベース接続数、Lambda の同時実行数、NAT ゲートウェイの帯域幅）を特定する。
+5. 予算承認のため、予測ピーク時のコストを文書化する。
 
 ## Auto-Scaling Validation
 
-- Test that scale-out triggers fire within acceptable time (target: under 2 minutes for EC2, under 30 seconds for Lambda).
-- Test that scale-in does not cause request failures (connection draining, graceful shutdown).
-- Validate scaling policies use the right metric (CPU alone is often insufficient; include request count, queue depth).
-- Test minimum and maximum capacity limits to prevent runaway scaling costs.
-- Simulate a scaling event during a spike test and measure the latency impact during scale-out.
+- スケールアウトのトリガーが許容時間内に発火することをテストする（目標: EC2 は 2分未満、Lambda は 30秒未満）。
+- スケールインがリクエストの失敗を引き起こさないことをテストする（コネクションドレイニング、グレースフルシャットダウン）。
+- スケーリングポリシーが適切なメトリクスを使っていることを検証する（CPU だけでは不十分なことが多い。リクエスト数やキュー深度も含める）。
+- スケーリングコストの暴走を防ぐため、最小・最大キャパシティの制限をテストする。
+- スパイクテスト中にスケーリングイベントをシミュレートし、スケールアウト中のレイテンシへの影響を測定する。
 
 ## NFR Target-vs-Actual Matrix
 
-Track every NFR with a structured comparison:
+すべての NFR を構造化された比較で追跡する:
 
-| NFR | Target | Actual | Status | Test Date | Notes |
+| NFR | 目標値 | 実績値 | ステータス | テスト日 | 備考 |
 |-----|--------|--------|--------|-----------|-------|
-| API latency p95 | < 200ms | 145ms | PASS | 2024-01-15 | Under 500 RPS |
-| API latency p99 | < 500ms | 620ms | FAIL | 2024-01-15 | DB connection pool saturation |
-| Throughput | > 1000 RPS | 1250 RPS | PASS | 2024-01-15 | |
-| Availability | 99.95% | — | PENDING | — | Requires 30-day measurement |
+| API レイテンシ p95 | < 200ms | 145ms | PASS | 2024-01-15 | 500 RPS 未満 |
+| API レイテンシ p99 | < 500ms | 620ms | FAIL | 2024-01-15 | DB コネクションプールの飽和 |
+| スループット | > 1000 RPS | 1250 RPS | PASS | 2024-01-15 | |
+| 可用性 | 99.95% | — | PENDING | — | 30日間の測定が必要 |
 
-Review the matrix at each milestone. Failing NFRs are risks that must be addressed before release.
+マイルストーンごとにマトリクスをレビューする。満たしていない NFR はリスクであり、リリース前に必ず対処しなければならない。
 
 ## SLA Testing
 
-- Simulate failure scenarios (AZ failure, dependency timeout, database failover) and measure recovery time.
-- Validate that SLA commitments (uptime percentage, response time) hold under degraded conditions.
-- Test circuit breakers, retries, and fallback responses under dependency failure.
-- Document the gap between internal SLOs (tighter) and external SLAs (looser) to provide a safety margin.
+- 障害シナリオ（AZ 障害、依存先のタイムアウト、データベースのフェイルオーバー）をシミュレートし、復旧時間を測定する。
+- 劣化した状態でも SLA のコミットメント（稼働率、応答時間）が守られることを検証する。
+- 依存先の障害時に、サーキットブレーカー、リトライ、フォールバック応答をテストする。
+- 安全マージンを確保するため、内部 SLO（より厳しい）と外部 SLA（より緩い）の差を文書化する。

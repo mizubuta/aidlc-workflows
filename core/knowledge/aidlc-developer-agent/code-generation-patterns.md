@@ -1,56 +1,56 @@
 # Code Generation Patterns
 
 ## Purpose
-Standards and patterns for generating clean, maintainable code. These principles apply regardless of language and ensure generated code is production-worthy, not prototype-quality.
+クリーンで保守しやすいコードを生成するための標準とパターン。これらの原則は言語を問わず適用され、生成されるコードがプロトタイプ品質ではなく本番に耐える品質であることを保証する。
 
 ## Clean Code Principles
 
 ### Naming
-- **Variables**: Describe what it holds, not the type. Use `customerEmail` not `str1` or `data`.
-- **Functions**: Describe what it does using a verb. Use `calculateShippingCost()` not `process()` or `doWork()`.
-- **Booleans**: Use `is`, `has`, `can`, `should` prefixes. Use `isActive` not `active` or `flag`.
-- **Constants**: Use SCREAMING_SNAKE_CASE for true constants. Use `MAX_RETRY_COUNT` not `num`.
-- **Classes**: Use nouns. Use `OrderProcessor` not `ProcessOrders` or `OrderHelper`.
+- **変数**: 型ではなく、何を保持するかを表す。`str1` や `data` ではなく `customerEmail` を使う。
+- **関数**: 何をするかを動詞で表す。`process()` や `doWork()` ではなく `calculateShippingCost()` を使う。
+- **真偽値**: `is`, `has`, `can`, `should` の接頭辞を使う。`active` や `flag` ではなく `isActive` を使う。
+- **定数**: 真の定数には SCREAMING_SNAKE_CASE を使う。`num` ではなく `MAX_RETRY_COUNT` を使う。
+- **クラス**: 名詞を使う。`ProcessOrders` や `OrderHelper` ではなく `OrderProcessor` を使う。
 
 ### Functions
-- Do one thing. If the function name includes "and", split it into two functions.
-- Keep parameter count low (0-3 ideal; more than 3 suggests a parameter object is needed).
-- Avoid boolean parameters that switch behavior — use two clearly named functions instead.
-- Return early for guard clauses to reduce nesting depth.
+- 1 つのことだけを行う。関数名に「and」が含まれるなら、2 つの関数に分割する。
+- 引数の数は少なく保つ（0〜3 が理想。3 を超えるならパラメータオブジェクトが必要なサインである）。
+- 振る舞いを切り替える真偽値の引数は避け、代わりに明確な名前を持つ 2 つの関数を使う。
+- ネストを浅くするため、ガード節では早期リターンする。
 
 ### Files
-- One primary concept per file (one class, one module, one component).
-- Keep files under 300 lines. If longer, the concept is likely doing too much.
-- Group related files by feature, not by type (see "Code Organization" below).
+- 1 ファイルにつき主要な概念は 1 つ（1 クラス、1 モジュール、1 コンポーネント）。
+- ファイルは 300 行未満に保つ。それより長いなら、その概念は多くのことをやりすぎている可能性が高い。
+- 関連ファイルは種類ではなく機能単位でまとめる（後述の「Code Organization」を参照）。
 
 ## SOLID Principles Applied
 
 ### Single Responsibility (S)
-Each module/class has one reason to change.
+各モジュール/クラスが変更される理由は 1 つだけである。
 ```
 // Bad: UserService handles auth, profile, and notifications
 // Good: AuthService, ProfileService, NotificationService
 ```
 
 ### Open/Closed (O)
-Extend behavior without modifying existing code. Use interfaces and composition.
+既存コードを変更せずに振る舞いを拡張する。インターフェースとコンポジションを使う。
 ```
 // Bad: Adding a new payment type requires modifying PaymentProcessor
 // Good: PaymentProcessor accepts a PaymentStrategy interface; add new strategies without touching the processor
 ```
 
 ### Liskov Substitution (L)
-Subtypes must be substitutable for their base types without breaking behavior. If overriding a method changes the contract, the inheritance hierarchy is wrong.
+サブタイプは、振る舞いを壊すことなく基底型と置き換え可能でなければならない。メソッドのオーバーライドで契約が変わるなら、継承階層が誤っている。
 
 ### Interface Segregation (I)
-No client should depend on methods it does not use. Prefer small, focused interfaces over large ones.
+クライアントは、使わないメソッドに依存すべきではない。大きなインターフェースより、小さく焦点の絞られたインターフェースを優先する。
 ```
 // Bad: interface Repository { find, save, delete, export, import, backup }
 // Good: interface Readable { find }, interface Writable { save, delete }
 ```
 
 ### Dependency Inversion (D)
-High-level modules depend on abstractions, not concrete implementations. Pass dependencies in; do not construct them internally.
+上位モジュールは具体的な実装ではなく抽象に依存する。依存関係は外から渡し、内部で生成しない。
 ```
 // Bad: class OrderService { db = new PostgresDB() }
 // Good: class OrderService { constructor(db: Database) }
@@ -59,7 +59,7 @@ High-level modules depend on abstractions, not concrete implementations. Pass de
 ## Error Handling Patterns
 
 ### Result Type (Preferred)
-Return success/failure explicitly instead of throwing exceptions for expected failures.
+想定される失敗に対しては、例外を投げる代わりに成功/失敗を明示的に返す。
 ```typescript
 type Result<T, E> = { ok: true; value: T } | { ok: false; error: E };
 
@@ -72,24 +72,24 @@ function parseEmail(input: string): Result<Email, ValidationError> {
 ```
 
 ### Try-Catch Hierarchy
-When using exceptions, follow this hierarchy:
-1. **Catch specific exceptions first** — handle known, recoverable errors
-2. **Let unknown exceptions propagate** — do not catch `Exception` or `Error` broadly
-3. **Catch at boundaries** — API handlers, event processors, and CLI entry points are appropriate catch-all locations
-4. **Never swallow exceptions silently** — `catch (e) {}` hides bugs
+例外を使う場合は、次の階層に従う:
+1. **まず特定の例外を捕捉する** — 既知の、回復可能なエラーを処理する
+2. **未知の例外は伝播させる** — `Exception` や `Error` を広く捕捉しない
+3. **境界で捕捉する** — API ハンドラー、イベントプロセッサー、CLI のエントリポイントが、すべてを捕捉する場所として適切である
+4. **決して例外を黙って握りつぶさない** — `catch (e) {}` はバグを隠す
 
 ### Error Messages
-- Include what happened, why it happened, and what the user/developer can do about it
-- Include relevant context (IDs, input values, operation being performed)
-- Do not expose internal implementation details in user-facing errors
+- 何が起きたか、なぜ起きたか、ユーザー/開発者がどう対処できるかを含める
+- 関連するコンテキスト（ID、入力値、実行中の操作）を含める
+- ユーザー向けのエラーで内部の実装詳細を露出しない
 
 ## Logging Standards
 
 ### Log Levels
-- **ERROR**: Something failed that requires attention. Include enough context to diagnose.
-- **WARN**: Something unexpected happened but was handled. May indicate a developing issue.
-- **INFO**: Significant business events (order placed, user registered, payment processed). One per operation.
-- **DEBUG**: Detailed diagnostic information for development. Never log sensitive data at any level.
+- **ERROR**: 対応が必要な失敗が発生した。診断に十分なコンテキストを含める。
+- **WARN**: 想定外のことが起きたが処理された。問題が進行しつつある兆候の可能性がある。
+- **INFO**: 重要なビジネスイベント（注文の確定、ユーザー登録、決済処理）。1 操作につき 1 件。
+- **DEBUG**: 開発向けの詳細な診断情報。どのレベルでも機密データは決してログに出さない。
 
 ### Structured Logging
 ```json
@@ -105,20 +105,20 @@ When using exceptions, follow this hierarchy:
 ```
 
 ### Rules
-- Log at operation boundaries (start, success, failure) — not inside loops
-- Include correlation/request IDs for tracing across services
-- Never log: passwords, tokens, API keys, PII, credit card numbers
-- Use structured format (JSON) not free-text strings for production logs
+- ログは操作の境界（開始、成功、失敗）で出す — ループの内側では出さない
+- サービス間の追跡のために相関 ID/リクエスト ID を含める
+- 決してログに出さないもの: パスワード、トークン、API キー、PII、クレジットカード番号
+- 本番のログには自由形式の文字列ではなく構造化形式（JSON）を使う
 
 ## Input Validation at Boundaries
 
 ### Boundary Definition
-Validate input at every trust boundary — where data enters your system from an untrusted source:
-- API request handlers (HTTP, gRPC, GraphQL)
-- Event/message consumers (SQS, Kafka, EventBridge)
-- File upload processors
-- CLI argument parsers
-- Database query results from external systems
+すべての信頼境界 — 信頼できないソースからシステムにデータが入ってくる場所 — で入力を検証する:
+- API リクエストハンドラー（HTTP、gRPC、GraphQL）
+- イベント/メッセージのコンシューマー（SQS、Kafka、EventBridge）
+- ファイルアップロードの処理部
+- CLI 引数のパーサー
+- 外部システムからのデータベースクエリ結果
 
 ### Validation Strategy
 ```
@@ -126,14 +126,14 @@ External Input → Validate at boundary → Convert to domain type → Domain lo
 ```
 
 ### What to Validate
-- **Presence**: Required fields exist and are not null/empty
-- **Type**: Values are the expected type (string, number, date)
-- **Range**: Numbers within acceptable bounds, strings within length limits
-- **Format**: Emails, URLs, dates, phone numbers match expected patterns
-- **Business rules**: Values are valid in context (status transitions, referential integrity)
+- **存在**: 必須フィールドが存在し、null/空でない
+- **型**: 値が想定どおりの型である（文字列、数値、日付）
+- **範囲**: 数値が許容範囲内にあり、文字列が長さ制限内にある
+- **形式**: メールアドレス、URL、日付、電話番号が想定されるパターンに一致する
+- **ビジネスルール**: 値がその文脈で妥当である（ステータス遷移、参照整合性）
 
 ### After Validation
-Once data passes the boundary and is converted to a domain type, internal code should NOT re-validate. Trust the boundary. This keeps domain logic clean and focused on business rules.
+データが境界を通過してドメイン型に変換されたら、内部のコードで再検証してはならない（NOT）。境界を信頼する。これにより、ドメインロジックはクリーンに保たれ、ビジネスルールに集中できる。
 
 ## Code Organization
 
@@ -162,18 +162,18 @@ Once data passes the boundary and is converted to a domain type, internal code s
 ```
 
 ### Why Feature-Based is Better
-- Related code is co-located — changes to "orders" touch files in one directory
-- Easy to understand the scope of a feature by looking at one directory
-- Supports extraction to microservices later (each feature directory is a candidate)
-- Layer-based organization scatters related code across the entire project
+- 関連するコードが同じ場所に置かれる — 「orders」への変更は 1 つのディレクトリ内のファイルだけに及ぶ
+- 1 つのディレクトリを見るだけで機能のスコープを把握しやすい
+- 後からマイクロサービスへ切り出しやすい（各機能ディレクトリがその候補になる）
+- レイヤー単位の構成では、関連するコードがプロジェクト全体に散らばる
 
 ## Code Generation Checklist
-- [ ] Follows naming conventions (descriptive, consistent, no abbreviations)
-- [ ] Functions are small and single-purpose
-- [ ] Error handling is explicit (Result type or catch at boundaries)
-- [ ] Input validation at all trust boundaries
-- [ ] Structured logging at operation boundaries
-- [ ] No hardcoded secrets, URLs, or configuration values
-- [ ] Dependencies are injected, not constructed internally
-- [ ] Tests accompany all generated code
-- [ ] Code is organized by feature, not by layer
+- [ ] 命名規約に従っている（説明的、一貫性がある、略語を使わない）
+- [ ] 関数が小さく、単一の目的を持つ
+- [ ] エラー処理が明示的である（Result 型、または境界での捕捉）
+- [ ] すべての信頼境界で入力を検証している
+- [ ] 操作の境界で構造化ログを出している
+- [ ] シークレット、URL、設定値をハードコードしていない
+- [ ] 依存関係は注入されており、内部で生成されていない
+- [ ] 生成したすべてのコードにテストが付いている
+- [ ] コードがレイヤー単位ではなく機能単位で構成されている

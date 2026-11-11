@@ -1,53 +1,53 @@
 # Component Specification Template
 
-Use this template for component-level specifications in `interaction-spec.md` (Stage 1.5 Refined Mockups) and any stage requiring detailed UI component definitions.
+`interaction-spec.md`（Stage 1.5 Refined Mockups）や、詳細な UI コンポーネント定義を必要とするあらゆるステージで、コンポーネントレベルの仕様にこのテンプレートを使用する。
 
 ---
 
 ## [Component Name]
 
-| Field | Value |
+| 項目 | 値 |
 |---|---|
-| Component | [name] |
-| Description | [one-line purpose] |
+| Component | [名前] |
+| Description | [目的を1行で] |
 | Category | [input / display / layout / navigation / feedback] |
 
 ### States
 
-| State | Description | Trigger |
+| State | 説明 | トリガー |
 |---|---|---|
-| default | Initial render state | page load |
-| hover | Cursor over element | mouseover |
-| focus | Keyboard focus | Tab key / click |
-| disabled | Non-interactive | prop disabled=true |
-| loading | Async operation pending | async op in progress |
-| error | Validation or system error | validation failure |
-| empty | No data to display | no data |
+| default | 初期描画の状態 | ページ読み込み |
+| hover | 要素上にカーソルがある | mouseover |
+| focus | キーボードフォーカス | Tab キー / クリック |
+| disabled | 操作不可 | prop disabled=true |
+| loading | 非同期処理の待機中 | 非同期処理の実行中 |
+| error | バリデーションエラーまたはシステムエラー | バリデーション失敗 |
+| empty | 表示するデータがない | データなし |
 
 ### Props / Inputs
 
-| Prop | Type | Required | Default | Description |
+| Prop | 型 | 必須 | デフォルト | 説明 |
 |---|---|---|---|---|
-| [prop-name] | [string \| boolean \| number \| object] | [yes/no] | [value or —] | [what it controls] |
+| [prop 名] | [string \| boolean \| number \| object] | [yes/no] | [値 または —] | [制御する内容] |
 
 ### Responsive Behaviour
 
-| Breakpoint | Behaviour |
+| ブレークポイント | 振る舞い |
 |---|---|
-| mobile (<768px) | [layout/visibility changes] |
-| tablet (768–1024px) | [layout/visibility changes] |
-| desktop (>1024px) | [default layout] |
+| mobile (<768px) | [レイアウト/表示の変化] |
+| tablet (768–1024px) | [レイアウト/表示の変化] |
+| desktop (>1024px) | [デフォルトのレイアウト] |
 
 ### Accessibility
 
-| Requirement | Implementation |
+| 要件 | 実装 |
 |---|---|
-| ARIA role | [role — e.g. button, listbox, dialog] |
-| Keyboard interaction | [Tab to focus, Enter/Space to activate, Escape to dismiss] |
-| Label / aria-label | [visible label, aria-label, or aria-labelledby approach] |
-| Contrast ratio | WCAG AA (4.5:1 text, 3:1 UI components) |
-| Screen reader | [what is announced and when] |
-| Focus management | [where focus goes on open/close/activate] |
+| ARIA ロール | [ロール — 例: button, listbox, dialog] |
+| キーボード操作 | [Tab でフォーカス、Enter/Space で実行、Escape で閉じる] |
+| ラベル / aria-label | [可視ラベル、aria-label、aria-labelledby のいずれの方式か] |
+| コントラスト比 | WCAG AA（テキストは 4.5:1、UI コンポーネントは 3:1） |
+| スクリーンリーダー | [何がいつ読み上げられるか] |
+| フォーカス管理 | [開く/閉じる/実行時にフォーカスがどこへ移るか] |
 
 ### Usage Example
 

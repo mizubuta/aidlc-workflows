@@ -1,49 +1,49 @@
 # AWS Cost Optimization Patterns
 
 ## Purpose
-Practical strategies for reducing AWS costs without sacrificing reliability or performance. Cost optimization is an ongoing discipline, not a one-time exercise.
+信頼性やパフォーマンスを犠牲にせずに AWS のコストを削減するための実践的な戦略。コスト最適化は一度きりの作業ではなく、継続的な取り組みである。
 
 ## Compute: Rightsizing
 
 ### Process
-1. Enable AWS Compute Optimizer (free, account-wide)
-2. Review recommendations after 14 days of data collection
-3. Identify over-provisioned instances (CPU < 20%, memory < 30% on average)
-4. Resize in non-production first, then production during maintenance windows
+1. AWS Compute Optimizer を有効にする（無料、アカウント全体）
+2. 14 日間のデータ収集後に推奨事項を確認する
+3. 過剰にプロビジョニングされたインスタンス（平均 CPU < 20%、メモリ < 30%）を特定する
+4. まず非本番環境でサイズを変更し、その後メンテナンスウィンドウ中に本番環境で変更する
 
 ### Common Findings
-- Most teams over-provision by 30-50% at initial deployment
-- Graviton (ARM) instances offer 20-40% better price-performance than x86 equivalents
-- Consider burstable instances (t3/t4g) for workloads with variable CPU patterns
+- ほとんどのチームは、初回デプロイ時に 30〜50% 過剰にプロビジョニングしている
+- Graviton（ARM）インスタンスは、同等の x86 インスタンスより 20〜40% 優れたコストパフォーマンスを提供する
+- CPU 使用パターンが変動するワークロードには、バースト可能なインスタンス（t3/t4g）を検討する
 
 ### Action Items
-- Review instance utilization monthly via Cost Explorer or Compute Optimizer
-- Set CloudWatch alarms for sustained low utilization (< 10% CPU for 7 days)
-- Automate non-production instance scheduling (stop at 7 PM, start at 7 AM)
+- Cost Explorer または Compute Optimizer でインスタンスの使用率を毎月確認する
+- 低使用率が続く場合（7 日間 CPU < 10%）の CloudWatch アラームを設定する
+- 非本番インスタンスのスケジュールを自動化する（午後 7 時に停止、午前 7 時に起動）
 
 ## Pricing Models
 
 ### On-Demand
-- No commitment, highest per-hour cost
-- Use for: unpredictable workloads, short-term spikes, new applications before usage patterns are established
+- コミットメント不要、時間あたりのコストが最も高い
+- 用途: 予測できないワークロード、短期的なスパイク、使用パターンが確立する前の新規アプリケーション
 
 ### Savings Plans
-- 1-year or 3-year commitment to a consistent amount of compute usage (measured in $/hour)
-- **Compute Savings Plans**: Apply across EC2, Lambda, and Fargate (most flexible)
-- **EC2 Instance Savings Plans**: Locked to instance family and region (deeper discount)
-- Typical savings: 30-40% (1-year, no upfront) to 60-72% (3-year, all upfront)
-- Start with Compute Savings Plans covering your baseline usage; use On-Demand for peaks
+- 一定量のコンピュート使用量（$/時間で測定）に対する 1 年または 3 年のコミットメント
+- **Compute Savings Plans**: EC2、Lambda、Fargate にまたがって適用される（最も柔軟）
+- **EC2 Instance Savings Plans**: インスタンスファミリーとリージョンに固定される（割引率が高い）
+- 一般的な削減率: 30〜40%（1 年、前払いなし）から 60〜72%（3 年、全額前払い）
+- まずベースラインの使用量をカバーする Compute Savings Plans から始め、ピークには On-Demand を使う
 
 ### Reserved Instances
-- 1-year or 3-year commitment to specific instance type, region, and OS
-- Less flexible than Savings Plans; similar discounts
-- Consider only for steady-state workloads with very predictable instance types
+- 特定のインスタンスタイプ、リージョン、OS に対する 1 年または 3 年のコミットメント
+- Savings Plans より柔軟性は低いが、割引率は同程度
+- インスタンスタイプが非常に予測しやすい定常的なワークロードに限って検討する
 
 ### Spot Instances
-- Up to 90% discount, but can be interrupted with 2-minute notice
-- Use for: batch processing, CI/CD workers, data processing, stateless web servers behind auto-scaling groups
-- Best practice: Diversify across multiple instance types and AZs to reduce interruption frequency
-- Never use for: databases, single-instance workloads, or anything that cannot tolerate interruption
+- 最大 90% の割引だが、2 分前の通知で中断される可能性がある
+- 用途: バッチ処理、CI/CD ワーカー、データ処理、Auto Scaling グループ配下のステートレスな Web サーバー
+- ベストプラクティス: 中断頻度を下げるため、複数のインスタンスタイプと AZ に分散する
+- 決して使わない用途: データベース、単一インスタンスのワークロード、中断を許容できないもの全般
 
 ## Storage: S3 Lifecycle Policies
 
@@ -57,55 +57,55 @@ S3 Standard (active data, frequent access)
 ```
 
 ### Rules
-- Analyze access patterns with S3 Storage Lens before setting lifecycle rules
-- Use S3 Intelligent-Tiering for unpredictable access patterns (automates transitions)
-- Delete incomplete multipart uploads after 7 days (they accumulate silently)
-- Enable S3 analytics to validate lifecycle policy effectiveness
+- ライフサイクルルールを設定する前に、S3 Storage Lens でアクセスパターンを分析する
+- アクセスパターンが予測できない場合は S3 Intelligent-Tiering を使う（移行を自動化できる）
+- 未完了のマルチパートアップロードは 7 日後に削除する（気づかないうちに蓄積する）
+- S3 analytics を有効にして、ライフサイクルポリシーの効果を検証する
 
 ### Quick Wins
-- Delete old CloudTrail logs in S3 after compliance retention period
-- Transition ELB/CloudFront access logs to Glacier after 90 days
-- Compress objects before upload (gzip, zstd) — reduces storage and transfer costs
+- コンプライアンス上の保持期間を過ぎた S3 上の古い CloudTrail ログを削除する
+- ELB/CloudFront のアクセスログを 90 日後に Glacier へ移行する
+- アップロード前にオブジェクトを圧縮する（gzip、zstd）— ストレージと転送のコストを削減できる
 
 ## Database: DynamoDB
 
 ### On-Demand vs Provisioned Capacity
-| Factor | On-Demand | Provisioned |
+| 要素 | On-Demand | Provisioned |
 |--------|-----------|-------------|
-| Traffic pattern | Unpredictable, spiky | Steady, predictable |
-| Pricing | Per-request | Per-capacity-unit-hour |
-| Scaling | Instant (within limits) | Auto-scaling with lag |
-| Best for | New tables, dev/test, event-driven | Production with known patterns |
+| トラフィックパターン | 予測不能、スパイクが多い | 安定、予測可能 |
+| 料金 | リクエスト単位 | キャパシティユニット時間単位 |
+| スケーリング | 即時（上限内） | 遅延を伴う Auto Scaling |
+| 最適な用途 | 新規テーブル、開発／テスト、イベント駆動 | パターンが判明している本番環境 |
 
 ### Cost Reduction Strategies
-- Use provisioned capacity with auto-scaling for steady-state production tables
-- Enable reserved capacity for predictable base load (additional discount on provisioned)
-- Use TTL to automatically delete expired items (no write cost for TTL deletions)
-- Design partition keys to distribute load evenly (hot partitions waste provisioned capacity)
+- 定常的な本番テーブルには、Auto Scaling 付きのプロビジョンドキャパシティを使う
+- 予測可能なベース負荷にはリザーブドキャパシティを有効にする（プロビジョンドに対する追加割引）
+- TTL を使って期限切れの項目を自動削除する（TTL による削除には書き込みコストがかからない）
+- 負荷が均等に分散するようにパーティションキーを設計する（ホットパーティションはプロビジョンドキャパシティを無駄にする）
 
 ## Lambda Cost Optimization
 
 ### Memory and Duration
-- Lambda pricing = (memory allocated) x (execution duration) x (number of invocations)
-- More memory also means more CPU — increasing memory can reduce duration and total cost
-- Use AWS Lambda Power Tuning to find the optimal memory setting per function
+- Lambda の料金 = （割り当てメモリ）×（実行時間）×（呼び出し回数）
+- メモリを増やすと CPU も増える — メモリを増やすことで実行時間と総コストを削減できる場合がある
+- AWS Lambda Power Tuning を使って、関数ごとに最適なメモリ設定を見つける
 
 ### Strategies
-- Minimize cold starts: keep deployment packages small, use layers for shared dependencies
-- Use ARM/Graviton runtime (`arm64`) for 20% cost reduction and better performance
-- Set appropriate timeout (not maximum 15 minutes for a function that runs in 3 seconds)
-- Batch process SQS messages (receive up to 10 messages per invocation)
-- Avoid provisioned concurrency unless latency requirements demand it (it is expensive)
+- コールドスタートを最小化する: デプロイパッケージを小さく保ち、共有依存関係にはレイヤーを使う
+- ARM/Graviton ランタイム（`arm64`）を使うと、コストが 20% 削減され、パフォーマンスも向上する
+- 適切なタイムアウトを設定する（3 秒で終わる関数に最大の 15 分を設定しない）
+- SQS メッセージをバッチ処理する（1 回の呼び出しで最大 10 メッセージを受信）
+- レイテンシー要件で必要な場合を除き、プロビジョニングされた同時実行は避ける（高価である）
 
 ### Invocation Reduction
-- Use SQS batch window to accumulate messages before invoking Lambda
-- Use EventBridge rules with content filtering to invoke only for relevant events
-- Cache results in DynamoDB or ElastiCache to reduce redundant compute
+- SQS のバッチウィンドウを使い、Lambda を呼び出す前にメッセージをためる
+- コンテンツフィルタリング付きの EventBridge ルールを使い、関連するイベントの場合だけ呼び出す
+- 結果を DynamoDB または ElastiCache にキャッシュし、重複するコンピュートを削減する
 
 ## Cost Allocation Tagging
 
 ### Required Tags
-Define and enforce a minimum tag set across all resources:
+すべてのリソースに適用する最小限のタグセットを定義し、強制する:
 ```
 Project:     project-name
 Environment: dev | staging | prod
@@ -115,28 +115,28 @@ Service:     service-name
 ```
 
 ### Enforcement
-- Use AWS Organizations SCPs to deny resource creation without required tags
-- Use CDK Aspects to add tags automatically and validate tag presence
-- Enable cost allocation tags in Billing console (tags must be activated to appear in Cost Explorer)
+- AWS Organizations の SCP を使い、必須タグのないリソース作成を拒否する
+- CDK Aspects を使い、タグを自動的に付与し、タグの有無を検証する
+- Billing コンソールでコスト配分タグを有効にする（Cost Explorer に表示するにはタグの有効化が必要）
 
 ## Cost Explorer Queries
 
 ### Monthly Cost Reviews
-1. **Cost by service**: Identify top 5 cost drivers
-2. **Cost by tag (team)**: Attribute costs to responsible teams
-3. **Daily cost trend**: Detect unexpected cost spikes
-4. **Cost by usage type**: Identify specific resources (data transfer, API calls, storage)
+1. **サービス別コスト**: コスト要因の上位 5 つを特定する
+2. **タグ（チーム）別コスト**: コストを担当チームに帰属させる
+3. **日次コストの推移**: 想定外のコストスパイクを検出する
+4. **使用タイプ別コスト**: 具体的なリソース（データ転送、API 呼び出し、ストレージ）を特定する
 
 ### Anomaly Detection
-- Enable AWS Cost Anomaly Detection for automatic notification of unexpected cost increases
-- Set budget alerts at 50%, 80%, and 100% of expected monthly spend
-- Create separate budgets per environment (production vs non-production)
+- AWS Cost Anomaly Detection を有効にし、想定外のコスト増加を自動通知する
+- 想定される月間支出の 50%、80%、100% で予算アラートを設定する
+- 環境ごと（本番と非本番）に別々の予算を作成する
 
 ### Monthly Cost Optimization Checklist
-- [ ] Review Compute Optimizer recommendations for rightsizing
-- [ ] Check for idle resources (unused EIPs, unattached EBS volumes, idle load balancers)
-- [ ] Review Savings Plans utilization and coverage
-- [ ] Check S3 storage distribution across tiers
-- [ ] Review data transfer costs (cross-region, internet egress)
-- [ ] Verify non-production environments are scheduled for off-hours shutdown
-- [ ] Review Lambda function memory settings with Power Tuning results
+- [ ] 適正サイズ化のため Compute Optimizer の推奨事項を確認する
+- [ ] アイドル状態のリソース（未使用の EIP、アタッチされていない EBS ボリューム、アイドル状態のロードバランサー）を確認する
+- [ ] Savings Plans の使用率とカバレッジを確認する
+- [ ] S3 ストレージのティア間の分布を確認する
+- [ ] データ転送コスト（クロスリージョン、インターネットへの送信）を確認する
+- [ ] 非本番環境が業務時間外に停止するようスケジュールされていることを確認する
+- [ ] Power Tuning の結果を踏まえて Lambda 関数のメモリ設定を確認する

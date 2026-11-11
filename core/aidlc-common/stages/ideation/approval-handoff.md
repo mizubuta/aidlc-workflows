@@ -54,70 +54,69 @@ outputs: initiative-brief.md, decision-log.md, approval-handoff-questions.md (un
 
 ### Step 1: Load Prior Context
 
-Read ALL Ideation phase artifacts:
-- Intent statement and stakeholder map from `<record>/ideation/intent-capture/`
-- Market research from `<record>/ideation/market-research/` (if exists)
-- Feasibility assessment, constraint register, RAID log from `<record>/ideation/feasibility/` (if exists)
-- Scope definition and intent backlog from `<record>/ideation/scope-definition/`
-- Team formation artifacts from `<record>/ideation/team-formation/` (if exists)
-- Mockups/wireframes from `<record>/ideation/rough-mockups/` (if exists)
+Ideation フェーズのすべての成果物を読み込む:
+- `<record>/ideation/intent-capture/` からインテントステートメントとステークホルダーマップ
+- `<record>/ideation/market-research/` から市場調査（存在する場合）
+- `<record>/ideation/feasibility/` から実現可能性評価、制約レジスター、RAID ログ（存在する場合）
+- `<record>/ideation/scope-definition/` からスコープ定義とインテントバックログ
+- `<record>/ideation/team-formation/` からチーム編成の成果物（存在する場合）
+- `<record>/ideation/rough-mockups/` からモックアップ/ワイヤーフレーム（存在する場合）
 
 ### Step 2: Generate Approval Questions
 
-Create `<record>/ideation/approval-handoff/approval-handoff-questions.md` with questions:
-- Do all stakeholders agree on the intent and scope?
-- Have all critical risks been acknowledged with mitigations?
-- Is there budget/resource commitment?
-- Do the rough mockups reflect the shared vision?
-- Does the market research support the investment?
-- Are mobs staffed and scheduled?
+次の質問を含む `<record>/ideation/approval-handoff/approval-handoff-questions.md` を作成する:
+- すべてのステークホルダーがインテントとスコープに合意しているか？
+- 重大なリスクはすべて、緩和策とともに認識されているか？
+- 予算/リソースの確約はあるか？
+- ラフモックアップは共有されたビジョンを反映しているか？
+- 市場調査は投資を裏付けているか？
+- モブの要員配置とスケジュールは決まっているか？
 
-Follow stage-protocol.md question flow.
+stage-protocol.md の質問フローに従う。
 
 ### Step 3: Compile Initiative Brief
 
-Create `<record>/ideation/approval-handoff/initiative-brief.md` — a one-pager combining:
-- Intent and problem statement
-- Market validation summary
-- Feasibility and risk highlights
-- Scope boundary
-- Concept visuals
-- Team plan
-- Go/no-go recommendation
+次の内容をまとめた1ページの `<record>/ideation/approval-handoff/initiative-brief.md` を作成する:
+- インテントと課題ステートメント
+- 市場検証の要約
+- 実現可能性とリスクの要点
+- スコープの境界
+- コンセプトのビジュアル
+- チーム計画
+- 実施可否（Go/no-go）の推奨
 
-Create `<record>/ideation/approval-handoff/decision-log.md` — record of all decisions made during Ideation.
+`<record>/ideation/approval-handoff/decision-log.md` を作成する — Ideation 中に下されたすべての判断の記録。
 
 ### Step 4: Phase Boundary Verification
 
-Run Ideation → Inception verification check:
-- Intent → Scope → Intent Backlog consistency
-- All scope items have feasibility backing
-- Write results to `<record>/verification/phase-check-ideation.md`
+Ideation → Inception の検証チェックを実行する:
+- インテント → スコープ → インテントバックログの一貫性
+- すべてのスコープ項目に実現可能性の裏付けがあること
+- 結果を `<record>/verification/phase-check-ideation.md` に書き込む
 
 ### Step 5: Completion Handoff
 
-Hand completion to `stage-protocol.md` via
-`{{INVOKE}} engine orchestrate report --stage approval-handoff --result <outcome>`.
-That `report` call owns every lifecycle transition and advancement; never perform one in prose, and never narrate this bookkeeping to the user.
+`{{INVOKE}} engine orchestrate report --stage approval-handoff --result <outcome>` を通じて、
+完了を `stage-protocol.md` に引き渡す。
+その `report` 呼び出しが、ライフサイクルの遷移と前進をすべて担う。散文の中で遷移を実行してはならず、この記録処理をユーザーに説明してもならない。
 
 ### Step 6: Present Completion & Request Approval
 
-Completion emoji: :white_check_mark:
-Review path: `<record>/ideation/approval-handoff/`
-Approval gate: Approve (Continue to `<directive.next_stage>`, the stage the engine names) / Request Changes.
+完了時の絵文字: :white_check_mark:
+レビュー対象のパス: `<record>/ideation/approval-handoff/`
+承認ゲート: Approve（Continue to `<directive.next_stage>`。エンジンが指定するステージへ進む）/ Request Changes。
 
 ## Sensors
 
-This stage's outputs are markdown artefacts under `<record>/ideation/approval-handoff/`.
+このステージの出力は `<record>/ideation/approval-handoff/` 配下の Markdown 成果物である。
 
-Imports: `required-sections`, `upstream-coverage`.
+インポート: `required-sections`, `upstream-coverage`.
 
-Upstream targets: `intent-statement`, `stakeholder-map`, `scope-document`, `intent-backlog`, `competitive-analysis`, `feasibility-assessment`, `constraint-register`, `team-assessment`, `wireframes`.
+上流の対象: `intent-statement`, `stakeholder-map`, `scope-document`, `intent-backlog`, `competitive-analysis`, `feasibility-assessment`, `constraint-register`, `team-assessment`, `wireframes`.
 
 ## Learn
 
-When `directive.protocol_modules` lists `learnings`, follow
-`stage-protocol-learnings.md`: keep the diary at `directive.memory_path` while
-working, and take the learnings step before the approval gate; that module says
-when it asks the person anything. When the module is absent, skip both the diary
-and the step.
+`directive.protocol_modules` に `learnings` が含まれている場合は、
+`stage-protocol-learnings.md` に従う。作業中は `directive.memory_path` に日誌を付け、
+承認ゲートの前に学習ステップを実施する。そのモジュールが、利用者に何かを尋ねるタイミングを定めている。
+モジュールがない場合は、日誌とステップの両方を省略する。

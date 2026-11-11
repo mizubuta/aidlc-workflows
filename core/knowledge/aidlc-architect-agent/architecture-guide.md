@@ -2,45 +2,45 @@
 
 ## Architectural Style Selection
 
-Choose based on system characteristics:
+システムの特性に基づいて選択する:
 
-| Style | When to Use | Avoid When |
+| スタイル | 使うべき場面 | 避けるべき場面 |
 |-------|-------------|------------|
-| Modular Monolith | Single team, shared database, <10 bounded contexts | Independent scaling needed per module |
-| Microservices | Multiple teams, independent deploy cycles, polyglot needs | Small team, simple domain, early-stage product |
-| Event-Driven | Async workflows, audit trails, temporal decoupling needed | Strong consistency required everywhere |
-| Serverless | Sporadic traffic, event-triggered compute, rapid prototyping | Long-running processes, predictable high throughput |
-| Layered (N-Tier) | CRUD-dominant apps, well-understood domain | Complex domain logic, high-performance paths |
+| Modular Monolith | 単一チーム、共有データベース、境界づけられたコンテキストが 10 未満 | モジュールごとに独立したスケーリングが必要 |
+| Microservices | 複数チーム、独立したデプロイサイクル、ポリグロットの必要性 | 小規模チーム、単純なドメイン、初期段階のプロダクト |
+| Event-Driven | 非同期ワークフロー、監査証跡、時間的な疎結合が必要 | あらゆる箇所で強い整合性が必要 |
+| Serverless | 散発的なトラフィック、イベント駆動のコンピュート、迅速なプロトタイピング | 長時間実行プロセス、予測可能な高スループット |
+| Layered (N-Tier) | CRUD 中心のアプリ、よく理解されたドメイン | 複雑なドメインロジック、高パフォーマンスが求められる経路 |
 
 ## Component Boundary Identification
 
-A component boundary is correct when:
-- The component has a single, nameable responsibility
-- It owns its data (no shared mutable state across boundaries)
-- Changes to its internals do not ripple to other components
-- It can be tested in isolation with stub/mock dependencies
-- It has a clear public API surface (no back-channel coupling)
+コンポーネント境界は、次を満たすとき正しい:
+- コンポーネントが、名前を付けられる単一の責務を持つ
+- 自身のデータを所有する（境界をまたいだ共有の可変状態がない）
+- 内部の変更が他のコンポーネントに波及しない
+- スタブ／モックの依存関係で単独テストできる
+- 明確な公開 API の面を持つ（裏口の結合がない）
 
-Red flags for wrong boundaries:
-- Two components that always deploy together
-- Circular dependencies between components
-- A component that is just a pass-through proxy
-- Shared database tables written by multiple components
+境界が誤っている兆候:
+- 常に一緒にデプロイされる 2 つのコンポーネント
+- コンポーネント間の循環依存
+- 単なるパススルーのプロキシにすぎないコンポーネント
+- 複数のコンポーネントが書き込む共有データベーステーブル
 
 ## Design Pattern Checklist
 
-For each pattern decision, evaluate:
-1. **Problem fit**: Does the pattern solve the specific problem, not a hypothetical one?
-2. **Complexity cost**: Is the added indirection justified by the flexibility gained?
-3. **Team familiarity**: Can the team maintain this pattern without the architect present?
-4. **Testing impact**: Does the pattern make the system easier or harder to test?
+パターンを決定するたびに、次を評価する:
+1. **問題への適合**: そのパターンは、仮定の問題ではなく具体的な問題を解決するか？
+2. **複雑さのコスト**: 追加される間接層は、得られる柔軟性に見合うか？
+3. **チームの習熟度**: アーキテクトがいなくても、チームはこのパターンを保守できるか？
+4. **テストへの影響**: そのパターンによってシステムのテストは容易になるか、困難になるか？
 
-Common patterns and their AI-DLC application:
-- **Repository**: Data access abstraction -- use when persistence technology may change
-- **CQRS**: Separate read/write models -- use when read and write patterns diverge significantly
-- **Saga/Orchestrator**: Distributed transaction coordination -- use for cross-service workflows
-- **Strategy**: Runtime algorithm selection -- use when behavior varies by configuration/tenant
-- **Adapter/Port**: External integration isolation -- always use for third-party dependencies
+一般的なパターンと AI-DLC での適用:
+- **Repository**: データアクセスの抽象化 -- 永続化技術が変わる可能性がある場合に使う
+- **CQRS**: 読み取り／書き込みモデルの分離 -- 読み取りと書き込みのパターンが大きく異なる場合に使う
+- **Saga/Orchestrator**: 分散トランザクションの調整 -- サービス横断のワークフローに使う
+- **Strategy**: 実行時のアルゴリズム選択 -- 設定やテナントによって振る舞いが変わる場合に使う
+- **Adapter/Port**: 外部統合の分離 -- サードパーティへの依存には常に使う
 
 ## ADR Format
 
@@ -64,21 +64,21 @@ Common patterns and their AI-DLC application:
 
 ## Infrastructure Pattern Alignment
 
-When designing application topology, validate against infrastructure:
-- **Stateless services**: Can scale horizontally behind a load balancer
-- **Stateful services**: Need sticky sessions, distributed cache, or dedicated instances
-- **Background workers**: Queue-driven, idempotent, with dead-letter handling
-- **Scheduled jobs**: Cron-based, must handle overlapping executions
-- **Edge functions**: Latency-sensitive, limited runtime, no persistent connections
+アプリケーショントポロジーを設計する際は、インフラに照らして検証する:
+- **ステートレスサービス**: ロードバランサーの背後で水平スケールできる
+- **ステートフルサービス**: スティッキーセッション、分散キャッシュ、または専用インスタンスが必要
+- **バックグラウンドワーカー**: キュー駆動、冪等で、デッドレター処理を備える
+- **スケジュールジョブ**: cron ベースで、実行の重複に対処しなければならない
+- **エッジ関数**: レイテンシーに敏感、ランタイムが制限され、永続接続を持たない
 
 ## Reverse Engineering Synthesis Checklist
 
-When receiving code scan results from Developer:
-1. Identify the dominant architectural style (or lack thereof)
-2. Map discovered components to bounded contexts
-3. Trace data flow paths (request entry to persistence)
-4. Flag coupling hotspots (high fan-in/fan-out modules)
-5. Identify missing boundaries (God classes, shared state)
-6. Assess test coverage alignment with architectural risk
-7. Document observed patterns vs. intended patterns
-8. Produce a component inventory with health ratings (healthy/at-risk/degraded)
+Developer からコードスキャン結果を受け取ったら:
+1. 支配的なアーキテクチャスタイル（またはその欠如）を特定する
+2. 発見したコンポーネントを境界づけられたコンテキストに対応付ける
+3. データフローの経路（リクエストの入口から永続化まで）をたどる
+4. 結合のホットスポット（ファンイン／ファンアウトの多いモジュール）を指摘する
+5. 欠けている境界（God クラス、共有状態）を特定する
+6. テストカバレッジがアーキテクチャ上のリスクと整合しているか評価する
+7. 観察されたパターンと意図されたパターンを対比して記録する
+8. 健全性評価（healthy/at-risk/degraded）付きのコンポーネント一覧を作成する

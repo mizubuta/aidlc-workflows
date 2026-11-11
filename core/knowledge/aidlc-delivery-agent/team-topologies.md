@@ -1,80 +1,80 @@
 # Team Topologies
 
-Organising teams for fast flow of change using the Team Topologies framework by Matthew Skelton and Manuel Pais.
+Matthew Skelton と Manuel Pais による Team Topologies フレームワークを用いて、変更の高速なフローのためにチームを編成する。
 
 ## The Four Fundamental Team Types
 
 ### 1. Stream-Aligned Team
-- **Purpose**: Delivers value along a single stream of work (a product, a feature set, a user journey, or a business domain).
-- **Characteristics**: Cross-functional (dev, test, ops, UX). Owns the full lifecycle from ideation to production. Has clear ownership boundaries.
-- **Size**: 5-9 people (two-pizza rule). Enough to own a meaningful slice of the product without excessive coordination.
-- **This is the primary team type.** Most teams in the organisation should be stream-aligned. Other team types exist to reduce the cognitive load on stream-aligned teams.
+- **目的**: 単一の作業ストリーム（プロダクト、機能セット、ユーザージャーニー、またはビジネスドメイン）に沿って価値を届ける。
+- **特徴**: クロスファンクショナル（開発、テスト、運用、UX）。アイデア創出から本番環境までのライフサイクル全体を担う。所有範囲の境界が明確である。
+- **規模**: 5〜9 人（ピザ 2 枚ルール）。過度な調整なしに、プロダクトの意味のある一部分を担うのに十分な人数である。
+- **これが主となるチームタイプである。** 組織内のほとんどのチームはストリームアラインドであるべきである。その他のチームタイプは、ストリームアラインドチームの認知負荷を減らすために存在する。
 
 ### 2. Platform Team
-- **Purpose**: Provides internal services that accelerate stream-aligned teams. Reduces cognitive load by abstracting away infrastructure complexity.
-- **Examples**: Internal developer platform (IDP), CI/CD pipeline team, observability platform, shared authentication service.
-- **Operates as a product team**: Treats stream-aligned teams as customers. Publishes a clear API/interface. Prioritises usability and self-service.
-- **Anti-pattern**: A platform team that requires tickets and manual intervention is a bottleneck, not a platform.
+- **目的**: ストリームアラインドチームを加速させる内部サービスを提供する。インフラの複雑さを抽象化することで認知負荷を減らす。
+- **例**: 社内開発者プラットフォーム（IDP）、CI/CD パイプラインチーム、オブザーバビリティプラットフォーム、共有認証サービス。
+- **プロダクトチームとして運営する**: ストリームアラインドチームを顧客として扱う。明確な API/インターフェースを公開する。使いやすさとセルフサービスを優先する。
+- **アンチパターン**: チケットや手作業による介入を必要とするプラットフォームチームは、プラットフォームではなくボトルネックである。
 
 ### 3. Enabling Team
-- **Purpose**: Helps stream-aligned teams acquire new capabilities. Coaches, mentors, and researches — does not build features.
-- **Examples**: Cloud adoption team helping migrate from on-premise. Security enablement team coaching secure coding practices. SRE team teaching observability patterns.
-- **Time-boxed engagement**: Works with a stream-aligned team for weeks or months, then moves on. Success means the stream-aligned team no longer needs the enabling team.
+- **目的**: ストリームアラインドチームが新しい能力を獲得するのを支援する。コーチング、メンタリング、調査を行う — 機能は構築しない。
+- **例**: オンプレミスからの移行を支援するクラウド導入チーム。セキュアコーディングの実践をコーチングするセキュリティ支援チーム。オブザーバビリティのパターンを教える SRE チーム。
+- **期間を区切った関与**: ストリームアラインドチームと数週間から数か月協働し、その後は離れる。成功とは、ストリームアラインドチームがイネイブリングチームをもう必要としなくなることである。
 
 ### 4. Complicated-Subsystem Team
-- **Purpose**: Owns a component that requires deep specialist knowledge that most stream-aligned teams cannot reasonably maintain.
-- **Examples**: ML model training pipeline, video codec optimization, cryptography module, real-time data processing engine.
-- **Rare**: Only create this team type when the subsystem's complexity truly justifies specialist ownership. Over-use leads to silos.
+- **目的**: ほとんどのストリームアラインドチームでは無理なく維持できない、高度な専門知識を要するコンポーネントを担う。
+- **例**: ML モデルのトレーニングパイプライン、動画コーデックの最適化、暗号モジュール、リアルタイムデータ処理エンジン。
+- **まれ**: サブシステムの複雑さが専門家による所有を本当に正当化する場合にのみ、このチームタイプを作る。使いすぎるとサイロ化を招く。
 
 ## Three Interaction Modes
 
 | Mode | Description | When to Use |
 |------|-------------|-------------|
-| **Collaboration** | Two teams work closely together on a shared goal. High communication bandwidth. | Discovery phases, building a new capability, exploring uncertainty. Time-box to avoid permanent coupling. |
-| **X-as-a-Service** | One team provides a service; the other consumes it via a well-defined API. Low communication overhead. | Stable, well-understood capabilities. The providing team's interface is mature. |
-| **Facilitating** | One team (typically enabling) helps another team learn or adopt a new practice. | Skill transfer, technology adoption, practice improvement. |
+| **Collaboration** | 2 つのチームが共通の目標に向けて密接に協働する。コミュニケーションの帯域が大きい。 | 探索フェーズ、新しい能力の構築、不確実性の探求。恒久的な結合を避けるために期間を区切る。 |
+| **X-as-a-Service** | 一方のチームがサービスを提供し、もう一方が明確に定義された API を通じてそれを利用する。コミュニケーションのオーバーヘッドが小さい。 | 安定し、よく理解されている能力。提供側チームのインターフェースが成熟している。 |
+| **Facilitating** | 一方のチーム（通常はイネイブリングチーム）が、もう一方のチームの新しいプラクティスの習得や導入を支援する。 | スキル移転、技術導入、プラクティスの改善。 |
 
-Interaction modes should evolve over time. A platform team might start in collaboration mode with a stream-aligned team and transition to X-as-a-service once the interface stabilises.
+インタラクションモードは時間とともに進化させるべきである。プラットフォームチームは、ストリームアラインドチームとコラボレーションモードで始め、インターフェースが安定したら X-as-a-Service に移行することがある。
 
 ## Cognitive Load Assessment
 
-Cognitive load is the primary constraint on team effectiveness. Three types:
+認知負荷は、チームの有効性に対する主要な制約である。次の 3 種類がある:
 
-- **Intrinsic**: Complexity of the domain itself (financial regulations, distributed systems).
-- **Extraneous**: Unnecessary complexity from tooling, process, or poor documentation. Reduce this.
-- **Germane**: Productive learning related to the domain. Increase this.
+- **内在的（Intrinsic）**: ドメインそのものの複雑さ（金融規制、分散システム）。
+- **外在的（Extraneous）**: ツール、プロセス、または不十分なドキュメントに起因する不要な複雑さ。これを減らす。
+- **本質的（Germane）**: ドメインに関連する生産的な学習。これを増やす。
 
-**Assessment questions for each team**:
-1. How many services/components does this team own? (If > 3-5 significant services, the team is overloaded.)
-2. How many different technology stacks must the team maintain?
-3. How much time is spent on operational toil vs feature development?
-4. How often does the team need to coordinate with other teams to deliver?
-5. Can a new team member become productive within 2-4 weeks?
+**各チームへの評価の質問**:
+1. このチームはいくつのサービス/コンポーネントを担っているか？（重要なサービスが 3〜5 を超える場合、チームは過負荷である。）
+2. チームはいくつの異なる技術スタックを維持しなければならないか？
+3. 運用上の雑務と機能開発に、それぞれどれだけの時間が費やされているか？
+4. デリバリーのために、チームはどのくらいの頻度で他チームと調整する必要があるか？
+5. 新しいチームメンバーが 2〜4 週間以内に生産的になれるか？
 
-If cognitive load is too high, split the team's responsibilities, create a platform team to absorb shared concerns, or simplify the architecture.
+認知負荷が高すぎる場合は、チームの責務を分割するか、共通の関心事を引き受けるプラットフォームチームを作るか、アーキテクチャを簡素化する。
 
 ## Team API Concept
 
-Each team should publish a "Team API" that describes:
-- **What the team owns**: Services, data stores, APIs, domains.
-- **How to interact**: Preferred communication channels, office hours, request processes.
-- **What the team provides**: Interfaces, SLOs, documentation, support expectations.
-- **What the team needs**: Dependencies on other teams, expected SLOs from dependencies.
+各チームは、次の内容を記述した "Team API" を公開するべきである:
+- **チームが所有するもの**: サービス、データストア、API、ドメイン。
+- **やり取りの方法**: 推奨するコミュニケーションチャネル、オフィスアワー、依頼のプロセス。
+- **チームが提供するもの**: インターフェース、SLO、ドキュメント、サポートの期待値。
+- **チームが必要とするもの**: 他チームへの依存関係、依存先に期待する SLO。
 
-The Team API makes boundaries explicit and reduces ad-hoc interruptions.
+Team API は境界を明示し、場当たり的な割り込みを減らす。
 
 ## Conway's Law Implications
 
-"Organizations which design systems are constrained to produce designs which are copies of the communication structures of these organizations." — Melvin Conway
+「システムを設計する組織は、その組織のコミュニケーション構造をコピーした設計を生み出すよう制約される。」（"Organizations which design systems are constrained to produce designs which are copies of the communication structures of these organizations."）— Melvin Conway
 
-**Practical implications**:
-- If you want a microservices architecture, organise teams around services. A monolithic team structure will produce a monolith.
-- If two teams must collaborate to deploy a feature, the architecture has an implicit coupling that should be addressed.
-- Use the "Inverse Conway Manoeuvre": design the team structure to match the desired architecture, and the architecture will follow.
+**実践上の示唆**:
+- マイクロサービスアーキテクチャを望むなら、サービスを中心にチームを編成する。モノリシックなチーム構造はモノリスを生み出す。
+- ある機能をデプロイするために 2 つのチームが協働しなければならない場合、そのアーキテクチャには対処すべき暗黙の結合がある。
+- 「逆コンウェイ戦略（Inverse Conway Manoeuvre）」を用いる: 望ましいアーキテクチャに合わせてチーム構造を設計すれば、アーキテクチャはそれに従う。
 
 ## Team Sizing — The Two-Pizza Rule
 
-- A team should be small enough that two pizzas can feed it (5-9 people).
-- Below 5: insufficient breadth of skills; high bus factor risk.
-- Above 9: communication overhead grows quadratically; decision-making slows.
-- If a team is growing beyond 9, look for a natural boundary to split along (a subdomain, a component, a user journey).
+- チームは、ピザ 2 枚で全員の食事をまかなえるくらい小さくあるべきである（5〜9 人）。
+- 5 人未満: スキルの幅が不十分で、バス係数のリスクが高い。
+- 9 人超: コミュニケーションのオーバーヘッドが二次関数的に増え、意思決定が遅くなる。
+- チームが 9 人を超えて大きくなっている場合は、分割の基準となる自然な境界（サブドメイン、コンポーネント、ユーザージャーニー）を探す。

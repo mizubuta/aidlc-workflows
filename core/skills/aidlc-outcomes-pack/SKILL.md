@@ -15,61 +15,61 @@ classification: read-only
 
 ## Purpose
 
-Produce a single handover document at the close of a workflow that gives
-the team everything they need to own, operate, and keep building the
-delivered system — without re-running the workflow to recover context.
+ワークフローの終了時に、納品したシステムをチームが所有し、運用し、
+開発を続けるために必要なすべてを、コンテキストを取り戻すために
+ワークフローを再実行することなく得られる、単一の引き継ぎ文書を作成する。
 
 ## Classification
 
-Read-only with respect to workflow state. This skill never advances the
-stage pointer and never emits an audit event. It **does** write one
-report artefact (`OUTCOMES.md` at the workspace root) — that is its
-output. It writes nothing else.
+ワークフローの状態に対しては読み取り専用である。このスキルはステージの
+ポインタを決して進めず、監査イベントも決して出力しない。ただし、レポートの
+成果物を 1 つ（ワークスペースルートの `OUTCOMES.md`）**書き込む**。それが
+このスキルの出力である。それ以外には何も書き込まない。
 
 ## The counting rule
 
-Stage tallies, per-phase rollup, memory-entry counts, and learnings
-captured come from the tool, not from eyeballing the artefact tree:
+ステージの集計、フェーズごとの集約、メモリーエントリの件数、記録された学びの件数は、
+成果物ツリーを目で数えるのではなく、ツールから取得する:
 
 ```bash
 {{INVOKE}} engine runtime summary --json
 ```
 
-Section *content* (what was built, setup steps, decisions) is yours to
-synthesise from the artefacts and the delivered code. Any *count* that
-appears in the pack must trace to the tool's output.
+セクションの*内容*（何を作ったか、セットアップ手順、意思決定）は、成果物と
+納品されたコードからあなたがまとめる。パックに現れる*件数*はすべて、
+ツールの出力にたどれなければならない。
 
 ## Steps
 
 ### Step 1: Read the aggregates
 
-Run `{{INVOKE}} engine runtime summary --json`.
+`{{INVOKE}} engine runtime summary --json` を実行する。
 
-If it exits non-zero (no `runtime-graph.json` yet), print:
+0 以外で終了した場合（`runtime-graph.json` がまだない）は、次を出力する:
 
 ```
 No session data yet — an outcomes pack is generated at the close of a
 workflow. Run /aidlc to completion first.
 ```
 
-and STOP. Otherwise keep the parsed JSON for the count fields below.
+そして停止する。そうでなければ、解析した JSON を以下の件数フィールドのために保持しておく。
 
 ### Step 2: Read the content sources
 
-Resolve `<active-space>` from `aidlc/active-space` (default `default`) and
-`<active-intent>` from
-`aidlc/spaces/<active-space>/intents/active-intent`. The active workflow
-record is
-`aidlc/spaces/<active-space>/intents/<active-intent>`.
+`<active-space>` を `aidlc/active-space`（既定値は `default`）から、
+`<active-intent>` を
+`aidlc/spaces/<active-space>/intents/active-intent` から解決する。アクティブなワークフローの
+記録は
+`aidlc/spaces/<active-space>/intents/<active-intent>` である。
 
-- All artefacts recursively under `<record>/<phase>/` — requirements,
-  design decisions, NFRs, infrastructure, and per-unit outputs.
-- The delivered application and infrastructure code at the workspace
-  root.
+- `<record>/<phase>/` 配下を再帰的にたどったすべての成果物 — 要件、
+  設計上の意思決定、NFR、インフラストラクチャ、ユニットごとの出力。
+- ワークスペースルートにある、納品されたアプリケーションとインフラストラクチャの
+  コード。
 
 ### Step 3: Write OUTCOMES.md
 
-Write `OUTCOMES.md` at the workspace root (outside `<record>/`):
+ワークスペースルート（`<record>/` の外）に `OUTCOMES.md` を書き込む:
 
 ```markdown
 # Outcomes Pack
@@ -131,6 +131,6 @@ Write `OUTCOMES.md` at the workspace root (outside `<record>/`):
 
 ### Step 4: Confirm
 
-Print a short summary: sections written, any sections skipped for
-missing source material, and recommended additions. You may offer one
-round of "want to add or adjust a section?" — do not loop on it.
+短いサマリーを出力する: 書き込んだセクション、元資料がないためにスキップしたセクション、
+推奨する追記。"want to add or adjust a section?"（セクションの追加や調整をしますか？）と
+1 回だけ尋ねてもよい — それを繰り返してはならない。

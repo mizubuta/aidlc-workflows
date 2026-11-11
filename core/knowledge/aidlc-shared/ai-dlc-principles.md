@@ -2,34 +2,34 @@
 
 ## Design Principle: Small Mob, Broad Agents
 
-AI-DLC is built on the mob model — a small cross-functional group moving fast together. The agents mirror that. Rather than dozens of narrow specialists (which recreates waterfall handoff chains), we define **11 broadly capable agents** that each participate across multiple stages and phases, just as a real architect or developer would in a mob session.
+AI-DLC はモブモデル、つまり少人数の職能横断チームが一体となって素早く進む形態に基づいている。エージェントもこれに倣う。狭い専門領域を持つ多数のスペシャリストを置く（ウォーターフォール型の引き継ぎの連鎖を再現してしまう）のではなく、**幅広い能力を持つ 11 のエージェント**を定義し、実際のアーキテクトや開発者がモブセッションで振る舞うのと同じように、それぞれが複数のステージやフェーズにまたがって参加する。
 
-Each agent carries context across stages because they are present throughout. This eliminates handoffs, reduces coordination overhead, and keeps the process agile.
+各エージェントは全体を通して参加しているため、ステージをまたいでコンテキストを保持する。これにより引き継ぎがなくなり、調整の負担が減り、プロセスのアジリティが保たれる。
 
 ## Core Principles
 
-1. **User decides, AI executes** — Every material decision goes through an approval gate where the user reviews, revises, or overrides.
-2. **Adaptive depth** — Simple projects skip heavyweight stages. Complex projects get full coverage. The workflow adapts to project needs.
-3. **Traceable artifacts** — Every stage produces versioned markdown documents in `aidlc-docs/`, creating a complete decision record.
-4. **Multi-role expertise** — Each stage is guided by domain-expert agent personas to ensure appropriate depth.
-5. **No emergent behavior** — Agents follow prescribed protocols. Approval menus, completion messages, and state transitions are standardized.
-6. **Questions before assumptions** — When in doubt, ask. Incomplete answers lead to poor designs.
-7. **Contradiction detection** — Cross-check all answers for scope mismatches, risk mismatches, and technology conflicts.
+1. **ユーザーが決め、AI が実行する** — 重要な判断はすべて承認ゲートを通り、ユーザーがレビュー・修正・上書きを行う。
+2. **適応的な深さ** — 単純なプロジェクトでは重いステージを省略する。複雑なプロジェクトでは全面的にカバーする。ワークフローはプロジェクトのニーズに合わせて変化する。
+3. **追跡可能な成果物** — 各ステージは `aidlc-docs/` にバージョン管理された Markdown ドキュメントを生成し、完全な意思決定の記録を残す。
+4. **複数の役割の専門性** — 各ステージはドメインの専門家であるエージェントペルソナによって導かれ、適切な深さを確保する。
+5. **場当たり的な振る舞いをしない** — エージェントは定められたプロトコルに従う。承認メニュー、完了メッセージ、状態遷移は標準化されている。
+6. **推測より先に質問する** — 迷ったら質問する。不完全な回答は質の低い設計につながる。
+7. **矛盾の検出** — すべての回答を照合し、スコープの不一致、リスクの不一致、技術の衝突を確認する。
 
 ## Five-Phase Structure
 
-| Phase | Purpose | Key Outcome |
+| フェーズ | 目的 | 主な成果 |
 |-------|---------|-------------|
-| **INITIALIZATION** | Bootstrap — state files, directory scaffold, workspace scan, routing | Configured workspace ready for workflow |
-| **IDEATION** | Validate the initiative — intent, market, feasibility, scope, team | Approved initiative brief |
-| **INCEPTION** | Elaborate — requirements, stories, design, architecture, units, delivery plan | Detailed execution plan |
-| **CONSTRUCTION** | Build — functional design, NFRs, infrastructure, code, tests, CI | Working tested code |
-| **OPERATION** | Deploy & operate — pipelines, environments, observability, incidents, feedback | Production system with monitoring |
+| **INITIALIZATION** | ブートストラップ — 状態ファイル、ディレクトリの雛形、ワークスペースのスキャン、ルーティング | ワークフローの準備が整ったワークスペース |
+| **IDEATION** | 取り組みの妥当性確認 — インテント、市場、実現可能性、スコープ、チーム | 承認済みの取り組み概要 |
+| **INCEPTION** | 詳細化 — 要件、ストーリー、設計、アーキテクチャ、ユニット、デリバリー計画 | 詳細な実行計画 |
+| **CONSTRUCTION** | 構築 — 機能設計、NFR、インフラ、コード、テスト、CI | テスト済みの動作するコード |
+| **OPERATION** | デプロイと運用 — パイプライン、環境、オブザーバビリティ、インシデント、フィードバック | 監視付きの本番システム |
 
 ## Scope System
 
-Not every task requires every stage. Scopes (see the compiled scope grid or run `/aidlc --doctor` for the enabled set) determine which stages execute and at what depth.
+すべてのタスクにすべてのステージが必要なわけではない。スコープ（有効なセットはコンパイル済みのスコープグリッドを参照するか、`/aidlc --doctor` を実行して確認する）によって、どのステージをどの深さで実行するかが決まる。
 
 ## Self-Learning Guardrails
 
-When a human corrects agent behavior, the correction becomes a permanent guardrail so the mistake never repeats. Guardrails are classified as organization-level (all projects) or project-level (this repo only).
+人間がエージェントの振る舞いを修正すると、その修正は恒久的なガードレールとなり、同じ誤りが二度と繰り返されないようにする。ガードレールは組織レベル（全プロジェクト）またはプロジェクトレベル（このリポジトリのみ）に分類される。

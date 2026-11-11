@@ -20,22 +20,22 @@ timeout_seconds: 1200
 
 # type-check sensor
 
-Wraps the project's configured type-checker. v0.5.0 defaults to tsc;
-multi-language auto-detection (mypy, go vet, cargo-check) is deferred
-to v0.6.0+.
+プロジェクトで設定された型チェッカーをラップする。v0.5.0 のデフォルトは tsc である。
+多言語の自動検出（mypy、go vet、cargo-check）は v0.6.0 以降に
+先送りされている。
 
-Echoes Fowler's "type checkers" example from the harness-engineering article.
+harness-engineering の記事にある Fowler の「型チェッカー（type checkers）」の例に倣ったものである。
 
 ## Failure mode
 
-Emits `SENSOR_FAILED` and writes detail to
-`aidlc/spaces/<active-space>/intents/<active-intent>/.aidlc-engine/sensors/<stage-slug>/type-check-<fire-id>.md`,
-where the space and intent come from the active cursors. The fire id is the
-8-hex correlator from the `SENSOR_FIRED` row in the active record's
-`audit/<host>-<clone-id>.md` shard. The detail contains the type-checker's
-structured output.
+`SENSOR_FAILED` を発行し、詳細を
+`aidlc/spaces/<active-space>/intents/<active-intent>/.aidlc-engine/sensors/<stage-slug>/type-check-<fire-id>.md`
+に書き込む。スペースとインテントはアクティブなカーソルから決まる。fire id は、
+アクティブな記録の `audit/<host>-<clone-id>.md` シャードにある `SENSOR_FIRED` 行の
+8 桁 16 進の相関 ID である。詳細には型チェッカーの
+構造化された出力が含まれる。
 
 ## v0.6.0 carry-forward
 
-Multi-language detection at framework boundary (read project type from
-practices `## Tech Stack` section, dispatch appropriate type-checker).
+フレームワーク境界での多言語検出（プラクティスの `## Tech Stack` セクションから
+プロジェクトの種類を読み取り、適切な型チェッカーにディスパッチする）。

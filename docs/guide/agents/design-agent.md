@@ -1,37 +1,37 @@
 # Design Agent
 
-> **Agent deep dive** · [User Guide](../00-introduction.md) › [Agents](../06-agents.md) › [deep dives](README.md) · Technical reference: [design-agent](../../reference/agents/design-agent.md)
+> **エージェント詳細解説** · [ユーザーガイド](../00-introduction.md) › [エージェント](../06-agents.md) › [詳細解説](README.md) · 技術リファレンス: [design-agent](../../reference/agents/design-agent.md)
 
-The aidlc-design-agent is your UX/UI designer. It produces wireframes and concept sketches during Ideation, then evolves them into high-fidelity mockups with interaction specifications during Inception. It defines information architecture, navigation design, responsive behavior, and accessibility requirements. For non-UI projects, it produces system context diagrams and API experience designs.
+aidlc-design-agent は、あなたの UX/UI デザイナーです。Ideation ではワイヤーフレームとコンセプトスケッチを作成し、Inception ではそれらをインタラクション仕様付きの高忠実度モックアップへと発展させます。情報アーキテクチャ、ナビゲーション設計、レスポンシブな振る舞い、アクセシビリティ要件を定義します。UI を持たないプロジェクトでは、システムコンテキスト図と API エクスペリエンス設計を作成します。
 
-The aidlc-design-agent leads two stages and supports two others. It ensures that every user-facing interface is usable, accessible, and consistent with design system standards.
+aidlc-design-agent は 2 つのステージをリードし、他の 2 つのステージをサポートします。利用者が触れるすべてのインターフェースが、使いやすく、アクセシブルで、デザインシステムの標準と一貫していることを保証します。
 
 ## Stages Led
 
-| Stage | Phase | Description |
+| ステージ | フェーズ | 説明 |
 |-------|-------|-------------|
-| 1.6 Rough Mockups | Ideation | Low-fidelity wireframes and concept visualization |
-| 2.5 Refined Mockups | Inception | High-fidelity mockups with interaction specs and accessibility |
+| 1.6 Rough Mockups | Ideation | 低忠実度のワイヤーフレームとコンセプトの可視化 |
+| 2.5 Refined Mockups | Inception | インタラクション仕様とアクセシビリティを含む高忠実度モックアップ |
 
 ## Stages Supported
 
-| Stage | Phase | Contribution |
+| ステージ | フェーズ | 貢献内容 |
 |-------|-------|-------------|
-| 2.4 User Stories | Inception | Enriches stories with interaction details and UX acceptance criteria when collaborators are on |
-| 2.6 Domain Design | Inception | Contributes UI component specifications |
+| 2.4 User Stories | Inception | コラボレーターが有効な場合、インタラクションの詳細と UX 受け入れ基準でストーリーを充実させる |
+| 2.6 Domain Design | Inception | UI コンポーネントの仕様を提供する |
 
 ## What to Expect
 
-When the aidlc-design-agent is active, it produces detailed descriptions of screen layouts, user flows, and interaction patterns in markdown. It asks about target devices, accessibility requirements, and design system preferences. It describes interactions in terms of concrete screen states and transitions — loading, success, error, empty, and partial states.
+aidlc-design-agent が稼働しているときは、画面レイアウト、ユーザーフロー、インタラクションパターンの詳細な説明を Markdown で作成します。対象デバイス、アクセシビリティ要件、デザインシステムの好みについて質問します。インタラクションは、具体的な画面状態と遷移（読み込み中、成功、エラー、空、部分的な状態）の観点で記述します。
 
 ## How It Collaborates
 
-The aidlc-design-agent receives intent and user stories from the aidlc-product-agent, and component constraints from the aidlc-architect-agent. Its mockups and interaction specs are handed off to the aidlc-developer-agent for implementation and to the aidlc-quality-agent for UX acceptance testing.
+aidlc-design-agent は、aidlc-product-agent からインテントとユーザーストーリーを、aidlc-architect-agent からコンポーネントの制約を受け取ります。作成したモックアップとインタラクション仕様は、実装のために aidlc-developer-agent へ、UX 受け入れテストのために aidlc-quality-agent へ引き渡されます。
 
 ## Key Principles
 
-- Design for scannability — important actions must be immediately visible
-- Consistency reduces cognitive load — every interaction pattern should be predictable
-- Error prevention over error messages — make errors difficult to commit
-- WCAG accessibility compliance is a baseline, not a stretch goal
-- Design for the worst case — empty states, error states, slow connections
+- 一覧性を重視して設計する — 重要なアクションはすぐに目に入らなければならない
+- 一貫性は認知負荷を減らす — すべてのインタラクションパターンは予測可能であるべき
+- エラーメッセージよりエラー防止 — そもそもエラーを起こしにくくする
+- WCAG アクセシビリティ準拠は努力目標ではなく最低ラインである
+- 最悪のケースを想定して設計する — 空の状態、エラー状態、低速な接続

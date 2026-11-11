@@ -1,199 +1,195 @@
 # Workflow Profiles
 
-AI-DLC does not force every task through the same lifecycle. It ships a set of
-**workflow profiles** for common kinds of work: a full feature, a quick bugfix,
-an infrastructure change, a lightweight Express run, and others.
+AI-DLC は、すべてのタスクに同じライフサイクルを強制するわけではありません。よくある種類の作業に向けて、
+一連の **ワークフロープロファイル** を提供しています。完全な機能開発、素早いバグ修正、
+インフラ変更、軽量な Express 実行などです。
 
-The engine calls a workflow profile a **scope**. The two terms describe the same
-choice from different perspectives:
+エンジンはワークフロープロファイルを **スコープ** と呼びます。この 2 つの用語は、同じ
+選択を異なる視点から表したものです:
 
-- **Workflow profile** is the user-facing experience: what kind of work you are
-  doing and how much ceremony it needs.
-- **Scope** is the engine setting stored in `aidlc-state.md`: the exact stage
-  route, depth, test strategy, review ceiling, and ceremony switches used for that workflow.
+- **ワークフロープロファイル** は利用者から見た体験です。どのような種類の作業を
+  行っていて、どの程度の手続きが必要かを表します。
+- **スコープ** は `aidlc-state.md` に保存されるエンジンの設定です。そのワークフローで使われる、正確なステージの
+  ルート、深さ、テスト戦略、レビューの上限、手続きのスイッチを表します。
 
-Choose a profile explicitly with `/aidlc <profile>` or describe the work and let
-AI-DLC suggest one. The assistant reads what you describe and proposes the
-profile that fits it, or offers the adaptive composer when none does; you
-confirm the route before anything starts. An explicitly named profile is used
-as you named it: with what to build after it, it starts and prints its stage
-and gate counts; named alone, it first asks what the work is for.
+`/aidlc <profile>` でプロファイルを明示的に選ぶか、作業内容を説明して
+AI-DLC に提案させます。アシスタントはあなたの説明を読み、それに合う
+プロファイルを提案します。どれも合わない場合はアダプティブコンポーザーを提案します。
+何かが始まる前に、あなたがルートを確認します。明示的に指定したプロファイルは、
+指定したとおりに使われます。その後に何を構築するかを続けて書くと、すぐに開始してステージ数と
+ゲート数を表示します。プロファイル名だけを指定すると、まず何のための作業かを尋ねます。
 
 ## Quick chooser
 
-| Workflow profile | Best for | Stages | Depth | Test strategy | Start with |
+| ワークフロープロファイル | 最適な用途 | ステージ数 | 深さ | テスト戦略 | 開始方法 |
 |------------------|----------|--------|-------|---------------|------------|
-| **Classic** | V1-style ceremony through Inception and Construction, ending at Build and Test | 15 / 30 | Standard | Standard | `/aidlc classic` |
-| **Express** | The lightest requirements-to-code-and-test path | 7 / 30 | Minimal | Minimal | `/aidlc express` |
-| **Feature** | A production feature using the complete lifecycle | 30 / 30 | Standard | Standard | `/aidlc feature` |
-| **Enterprise** | Regulated or high-assurance work with full traceability | 30 / 30 | Comprehensive | Comprehensive | `/aidlc enterprise` |
-| **MVP** | A real first product increment without the Operation phase | 20 / 30 | Standard | Standard | `/aidlc mvp` |
-| **Proof of concept** | Testing feasibility with the smallest useful implementation path | 5 / 30 | Minimal | Minimal | `/aidlc poc` |
-| **Bugfix** | A known defect that needs a focused fix and regression test | 6 / 30 | Minimal | Minimal | `/aidlc bugfix` |
-| **Refactor** | Improving existing code without changing product behavior | 7 / 30 | Minimal | Minimal | `/aidlc refactor` |
-| **Infrastructure** | Environments, IaC, deployment foundations, or cost work | 12 / 30 | Standard | Standard | `/aidlc infra` |
-| **Security patch** | A CVE or focused vulnerability response | 7 / 30 | Minimal | Minimal | `/aidlc security-patch` |
-| **Workshop** | A facilitated training or group delivery session | 23 / 30 | Standard | Minimal | `/aidlc workshop` |
+| **Classic** | Inception と Construction を通した V1 スタイルの手続きで、Build and Test で終了する | 15 / 30 | Standard | Standard | `/aidlc classic` |
+| **Express** | 要件からコードとテストまでの最も軽量な経路 | 7 / 30 | Minimal | Minimal | `/aidlc express` |
+| **Feature** | 完全なライフサイクルを使う本番機能 | 30 / 30 | Standard | Standard | `/aidlc feature` |
+| **Enterprise** | 完全なトレーサビリティを備えた、規制対象または高保証の作業 | 30 / 30 | Comprehensive | Comprehensive | `/aidlc enterprise` |
+| **MVP** | Operation フェーズを除いた、実際の最初の製品インクリメント | 20 / 30 | Standard | Standard | `/aidlc mvp` |
+| **Proof of concept** | 最小限の有用な実装経路で実現可能性を検証する | 5 / 30 | Minimal | Minimal | `/aidlc poc` |
+| **Bugfix** | 焦点を絞った修正と回帰テストが必要な既知の不具合 | 6 / 30 | Minimal | Minimal | `/aidlc bugfix` |
+| **Refactor** | 製品の振る舞いを変えずに既存コードを改善する | 7 / 30 | Minimal | Minimal | `/aidlc refactor` |
+| **Infrastructure** | 環境、IaC、デプロイ基盤、またはコストに関する作業 | 12 / 30 | Standard | Standard | `/aidlc infra` |
+| **Security patch** | CVE または焦点を絞った脆弱性への対応 | 7 / 30 | Minimal | Minimal | `/aidlc security-patch` |
+| **Workshop** | ファシリテーター主導のトレーニングやグループでの実施セッション | 23 / 30 | Standard | Minimal | `/aidlc workshop` |
 
-Stage counts describe the static route. They count the stages after
-Initialization's three setup stages, which every profile runs first: the count
-the plan offer gives. A stage marked conditional can still
-self-skip when its condition does not apply, such as Reverse Engineering in a
-greenfield project. For the exact stage-by-profile matrix, see
-[Scopes, Depth, and Test Strategy](05-scopes-and-depth.md#stage-by-scope-matrix).
+ステージ数は静的なルートを表します。すべてのプロファイルが最初に実行する
+Initialization の 3 つのセットアップステージを除いた後のステージを数えており、これは
+計画の提案で示される数です。条件付きとマークされたステージは、その条件が当てはまらない場合に
+自ら省略されることがあります。たとえば、グリーンフィールドプロジェクトにおける Reverse Engineering などです。正確なステージ×プロファイルのマトリクスについては、
+[スコープ、深さ、テスト戦略](05-scopes-and-depth.md#stage-by-scope-matrix) を参照してください。
 
 ## `classic`
 
-**Choose Classic when:** you want v1-style ceremony: Inception with one human
-approval per stage, and Construction built Unit by Unit, where you approve each
-Unit's code plan and, if you chose **Review each checkpoint**, its checkpoint (a
-Unit's design stages have no stop of their own; team-owned Units keep their own
-per-stage or end-of-Unit gates). It skips Ideation and leaves Operation as a
-placeholder. Stage-declared execution modes and support agents are unchanged.
+**Classic を選ぶ場面:** v1 スタイルの手続きを望む場合です。Inception ではステージごとに 1 回の人間による
+承認があり、Construction はユニットごとに構築されます。各ユニットのコード計画を承認し、
+**Review each checkpoint** を選んだ場合はそのチェックポイントも承認します（
+ユニットの設計ステージには独自の停止点はありません。チームが所有するユニットは、独自の
+ステージごとまたはユニット終了時のゲートを維持します）。Ideation は省略され、Operation は
+プレースホルダーとして残されます。ステージで宣言された実行モードとサポートエージェントは変わりません。
 
-Classic is the implicit engine default when neither you nor
-`AWS_AIDLC_DEFAULT_SCOPE` names another profile. In the conversational cold-start
-flow, a rich task description may still receive an adaptive compose offer before
-anything is created. Classic uses Standard artifacts and tests. Walking-skeleton
-ceremony and summary confirmation are off. Sensors run and the learnings ritual runs.
-Reviews are advisory (one pass per stage, findings at the approval gate);
-explicit autonomy keeps the single pre-merge review. Guard Policy defaults to off:
-plan re-approval, review freeze, state transition, and reviewer read scope stand aside
-for undirected work and record a `GUARD_STOOD_ASIDE` row each time; Plan Approval is
-still asked, by the engine. Human-turn authority and audit remain in force.
+あなたも
+`AWS_AIDLC_DEFAULT_SCOPE` も別のプロファイルを指定していない場合、Classic がエンジンの暗黙の既定値です。会話型のコールドスタート
+フローでは、詳細なタスク説明があると、何かが作成される前にアダプティブな構成の提案を受けることがあります。
+Classic は Standard の成果物とテストを使います。ウォーキングスケルトンの
+手続きとサマリー確認はオフです。センサーは実行され、学びの儀式も実行されます。
+レビューは助言的です（ステージごとに 1 回のパスで、指摘は承認ゲートで示されます）。
+明示的な自律モードでは、マージ前の 1 回のレビューが維持されます。ガードポリシーの既定値は off です。
+計画の再承認、レビューの凍結、状態遷移、レビュアーの読み取り範囲は、
+指示のない作業では適用を見送り、そのたびに `GUARD_STOOD_ASIDE` 行を記録します。Plan Approval は
+引き続きエンジンによって求められます。人間のターンの権限と監査は引き続き有効です。
 
-Use `/aidlc --sensors on|off`, `/aidlc --learnings on|off`,
-`/aidlc --summary-confirmation on|off`, or `/aidlc --plan-approval on|off` to
-override the scope for an intent (only you turn plan approval off).
-`AIDLC_DISABLE_SENSORS=1`, `AIDLC_DISABLE_LEARNINGS=1`,
-`AIDLC_DISABLE_SUMMARY_CONFIRMATION=1`, and `AIDLC_DISABLE_PLAN_APPROVAL_GUARD=1`
-force the respective ceremony off, even when the intent says on.
+`/aidlc --sensors on|off`、`/aidlc --learnings on|off`、
+`/aidlc --summary-confirmation on|off`、または `/aidlc --plan-approval on|off` を使うと、
+インテント単位でスコープの設定を上書きできます（計画の承認をオフにできるのはあなただけです）。
+`AIDLC_DISABLE_SENSORS=1`、`AIDLC_DISABLE_LEARNINGS=1`、
+`AIDLC_DISABLE_SUMMARY_CONFIRMATION=1`、`AIDLC_DISABLE_PLAN_APPROVAL_GUARD=1` は、
+インテントがオンと指定している場合でも、それぞれの手続きを強制的にオフにします。
 
-Do not choose Classic when the problem itself is still unclear and would benefit
-from market research, feasibility analysis, or explicit scope discovery; choose
-Feature or Enterprise instead.
+問題そのものがまだ明確でなく、
+市場調査、実現可能性の分析、明示的なスコープの発見が役立つ場合は、Classic を選ばないでください。代わりに
+Feature または Enterprise を選んでください。
 
 ## `express`
 
-**Choose Express when:** the requirements are already understood and you want
-the shortest supported path through requirements, implementation, tests, and an
-optional deploy tail.
+**Express を選ぶ場面:** 要件がすでに理解されており、要件、実装、テスト、そして
+任意のデプロイ工程を通る、サポートされた最短の経路を望む場合です。
 
-Express skips Ideation, the design pass, Unit decomposition, Delivery Planning,
-and CI Pipeline. It disables stage reviewer dispatch and uses Minimal artifacts
-and requirement-driven tests. Reverse Engineering and deployment stages remain
-conditional.
+Express は、Ideation、設計パス、ユニット分解、Delivery Planning、
+CI Pipeline を省略します。ステージのレビュアーのディスパッチを無効にし、Minimal の成果物と
+要件駆動のテストを使います。Reverse Engineering とデプロイのステージは
+条件付きのままです。
 
-Express also turns sensors, learnings, and summary confirmation off.
-Override them per intent with [`/aidlc --sensors on|off`](12-cli-commands.md#aidlc-sensors-learnings-summary-confirmation-ceremony-controls),
-[`/aidlc --learnings on|off`](12-cli-commands.md#aidlc-sensors-learnings-summary-confirmation-ceremony-controls),
-or [`/aidlc --summary-confirmation on|off`](12-cli-commands.md#aidlc-sensors-learnings-summary-confirmation-ceremony-controls).
+Express は、センサー、学び、サマリー確認もオフにします。
+これらはインテントごとに [`/aidlc --sensors on|off`](12-cli-commands.md#aidlc-sensors-learnings-summary-confirmation-ceremony-controls)、
+[`/aidlc --learnings on|off`](12-cli-commands.md#aidlc-sensors-learnings-summary-confirmation-ceremony-controls)、
+または [`/aidlc --summary-confirmation on|off`](12-cli-commands.md#aidlc-sensors-learnings-summary-confirmation-ceremony-controls) で上書きできます。
 
-Express's [Guard Policy](13-customization.md#guard-policy) defaults to off: plan
-approval, review freeze, state transition, and reviewer read scope stand aside for
-undirected work and record a `GUARD_STOOD_ASIDE` row each time. Human presence stays
-on. Type `/aidlc --guard-policy strict` or `relaxed` to raise it for one intent.
+Express の [ガードポリシー](13-customization.md#guard-policy) の既定値は off です。計画の
+承認、レビューの凍結、状態遷移、レビュアーの読み取り範囲は、
+指示のない作業では適用を見送り、そのたびに `GUARD_STOOD_ASIDE` 行を記録します。人間の在席確認は
+オンのままです。1 つのインテントについて引き上げるには、`/aidlc --guard-policy strict` または `relaxed` と入力します。
 
-Do not choose Express for ambiguous, cross-team, regulated, or architecture-heavy
-work. Its speed comes from intentionally removing those decision surfaces.
+曖昧な作業、チームをまたぐ作業、規制対象の作業、アーキテクチャの比重が大きい作業には
+Express を選ばないでください。Express の速さは、そうした意思決定の場を意図的に取り除くことで得られています。
 
 ## `feature`
 
-**Choose Feature when:** you are building a production feature and want the
-complete lifecycle at practical depth.
+**Feature を選ぶ場面:** 本番機能を構築しており、実用的な深さで
+完全なライフサイクルを望む場合です。
 
-Feature runs all 30 stages after setup at Standard depth, from intent discovery through
-design, implementation, deployment, and feedback. It gives the workflow the
-widest opportunity to surface unknowns without the heavier documentation floor
-of Enterprise.
+Feature は、セットアップ後の 30 ステージすべてを Standard の深さで実行します。インテントの発見から
+設計、実装、デプロイ、フィードバックまでを含みます。Enterprise のような重いドキュメント要件を課すことなく、
+未知の事項を浮かび上がらせる機会を、ワークフローに最も広く与えます。
 
 ## `enterprise`
 
-**Choose Enterprise when:** the work is regulated, high risk, audit-sensitive,
-or requires formal compliance and operational evidence.
+**Enterprise を選ぶ場面:** 作業が規制対象、高リスク、監査上センシティブである場合、
+または正式なコンプライアンスや運用上の証跡が必要な場合です。
 
-Enterprise runs all 30 stages after setup at Comprehensive depth. It retains market,
-compliance, security, design, observability, incident-response, and performance
-work because the cost of an undocumented decision is higher than the cost of
-the additional ceremony.
+Enterprise は、セットアップ後の 30 ステージすべてを Comprehensive の深さで実行します。市場、
+コンプライアンス、セキュリティ、設計、オブザーバビリティ、インシデント対応、パフォーマンスの
+作業を維持します。文書化されていない判断のコストが、追加の手続きのコストよりも
+高いためです。
 
 ## `mvp`
 
-**Choose MVP when:** you are shipping a real first product increment, not merely
-testing whether an idea is possible.
+**MVP を選ぶ場面:** アイデアが実現可能かどうかを試すだけでなく、
+実際の最初の製品インクリメントをリリースする場合です。
 
-MVP keeps the full Inception and Construction design/build path at Standard
-depth. It trims selected Ideation ceremony and skips the Operation phase. Move
-to Feature or Enterprise when the product needs production operations and the
-full feedback lifecycle.
+MVP は、Inception と Construction の設計/構築の経路全体を Standard の
+深さで維持します。Ideation の手続きの一部を削り、Operation フェーズを省略します。製品に本番運用と
+完全なフィードバックのライフサイクルが必要になったら、Feature または Enterprise に移行してください。
 
 ## `poc`
 
-**Choose Proof of Concept when:** the primary question is whether an approach can
-work.
+**Proof of Concept を選ぶ場面:** 主な問いが、あるアプローチが機能するかどうかである
+場合です。
 
-PoC uses 5 stages at Minimal depth. It gets to requirements, code, and tests
-quickly while omitting most product, design, and operational ceremony. A PoC is
-evidence for a later decision; it is not the production-readiness profile.
+PoC は Minimal の深さで 5 ステージを使います。製品、設計、運用の手続きの大半を省きながら、
+要件、コード、テストまで素早く到達します。PoC は後の意思決定のための
+証拠であり、本番対応のためのプロファイルではありません。
 
 ## `bugfix`
 
-**Choose Bugfix when:** the defect is known and the desired outcome is a focused
-repair with verification.
+**Bugfix を選ぶ場面:** 不具合が既知であり、望む成果が、検証を伴う焦点を絞った
+修正である場合です。
 
-Bugfix uses 6 stages at Minimal depth. It preserves workspace understanding,
-requirements, Code Generation, Build and Test, and the deployment path while
-dropping discovery, broad design, and unrelated Operation work.
+Bugfix は Minimal の深さで 6 ステージを使います。ワークスペースの理解、
+要件、Code Generation、Build and Test、デプロイの経路を維持し、
+発見、広範な設計、無関係な Operation の作業を省きます。
 
-Bugfix also turns learnings and summary confirmation off, so no stage keeps a
-diary or asks "Keep that for next time?" after a correction. Sensors, stage approvals, and plan
-approval stay on.
+Bugfix は学びとサマリー確認もオフにします。そのため、どのステージも日誌を付けず、
+修正の後に "Keep that for next time?"（次回のために残しますか？）と尋ねることもありません。センサー、ステージの承認、計画の
+承認はオンのままです。
 
 ## `refactor`
 
-**Choose Refactor when:** behavior should stay stable while internal structure,
-maintainability, or technical debt improves.
+**Refactor を選ぶ場面:** 振る舞いを安定させたまま、内部構造、
+保守性、技術的負債を改善する場合です。
 
-Refactor uses 7 stages at Minimal depth. It emphasizes understanding the
-existing code, defining the internal change, implementing it, proving behavior
-did not regress, and carrying the verified result through deployment. Use
-Feature instead if the work changes user-visible behavior.
+Refactor は Minimal の深さで 7 ステージを使います。既存コードの理解、
+内部的な変更の定義、その実装、振る舞いが
+退行していないことの証明、そして検証済みの結果をデプロイまで運ぶことに重点を置きます。作業がユーザーから見える振る舞いを変える場合は、
+代わりに Feature を使ってください。
 
 ## `infra`
 
-**Choose Infrastructure when:** the outcome is an environment, IaC change,
-deployment foundation, platform capability, or cost optimization.
+**Infrastructure を選ぶ場面:** 成果物が環境、IaC の変更、
+デプロイ基盤、プラットフォームの機能、またはコスト最適化である場合です。
 
-Infrastructure uses 12 stages at Standard depth. It removes user-facing product
-ceremony and concentrates on requirements, NFRs, infrastructure design, CI/CD,
-deployment, and observability. Code Generation writes the IaC under Plan
-Approval, and Build and Test runs its checks (for example `terraform validate`
-or `cdk synth`) before Environment Provisioning applies it.
+Infrastructure は Standard の深さで 12 ステージを使います。ユーザー向けの製品の
+手続きを取り除き、要件、NFR、インフラ設計、CI/CD、
+デプロイ、オブザーバビリティに集中します。Code Generation は Plan
+Approval のもとで IaC を書き、Environment Provisioning がそれを適用する前に、Build and Test がチェック（たとえば `terraform validate`
+や `cdk synth`）を実行します。
 
 ## `security-patch`
 
-**Choose Security Patch when:** you are responding to a known CVE, vulnerability,
-or narrowly scoped security defect.
+**Security Patch を選ぶ場面:** 既知の CVE、脆弱性、
+または範囲の狭いセキュリティ上の不具合に対応する場合です。
 
-Security Patch uses 7 stages at Minimal depth. It keeps the security-relevant
-requirements, verification, implementation, and deployment path while avoiding
-unrelated product ceremony. Use Enterprise for a broader security or compliance
-program rather than a focused patch.
+Security Patch は Minimal の深さで 7 ステージを使います。セキュリティに関係する
+要件、検証、実装、デプロイの経路を維持し、
+無関係な製品の手続きは避けます。焦点を絞ったパッチではなく、より広範なセキュリティやコンプライアンスの
+プログラムには Enterprise を使ってください。
 
 ## `workshop`
 
-**Choose Workshop when:** a facilitator is leading a training lab or coordinated
-group session.
+**Workshop を選ぶ場面:** ファシリテーターがトレーニングラボや、協調して進める
+グループセッションを主導する場合です。
 
-Workshop skips Ideation because the facilitator supplies the exercise, then runs
-the Inception-through-Operation lifecycle at Standard depth. It deliberately
-uses a Minimal test strategy to keep a teaching session moving and caps normal
-reviews at one advisory pass. The multi-participant operating recipe is in
-[Workshop Mode](workshop-mode.md).
+Workshop は、ファシリテーターが演習を用意するため Ideation を省略し、
+Inception から Operation までのライフサイクルを Standard の深さで実行します。教育セッションを止めずに進めるため、
+意図的に Minimal のテスト戦略を使い、通常の
+レビューを 1 回の助言的なパスに制限します。複数参加者での運用手順は
+[Workshop モード](workshop-mode.md) にあります。
 
 ## Let AI-DLC choose or compose
 
-You do not need to memorize the profiles. Describe the work:
+プロファイルを覚える必要はありません。作業内容を説明してください:
 
 ```
 /aidlc Fix the login timeout bug
@@ -201,12 +197,12 @@ You do not need to memorize the profiles. Describe the work:
 /aidlc Create a lightweight prototype for the new search flow
 ```
 
-When a stock profile fits what you describe, the assistant proposes it and
-shows its stage and gate count for confirmation. Rich or ambiguous work
-receives an offer to use the adaptive composer, which proposes a tailored stage
-route and waits for approval before creating it.
+既製のプロファイルが説明に合う場合、アシスタントはそれを提案し、
+確認のためにステージ数とゲート数を表示します。詳細な作業や曖昧な作業には、
+アダプティブコンポーザーを使う提案が示されます。アダプティブコンポーザーは目的に合わせたステージの
+ルートを提案し、作成する前に承認を待ちます。
 
-You can force that path with:
+次のようにして、その経路を強制することもできます:
 
 ```
 /aidlc compose "harden the deployment pipeline and add observability"
@@ -214,43 +210,43 @@ You can force that path with:
 
 ## Construction approvals and execution
 
-New source-producing solo Unit workflows default to building one Unit at a
-time, serially, with verified completion checkpoints. This requires Unit
-decomposition and an included source-producing per-unit stage. Design-only work
-and profiles such as Express that skip Unit decomposition retain their existing
-stage flow; team-owned Unit gates keep their separate policy. Existing workflows
-and explicit iteration choices are not converted by the new defaults.
+ソースを生成する新しい単独ユニットのワークフローは、既定で、検証済みの完了チェックポイントを伴いながら、ユニットを 1 つずつ
+順番に構築します。これにはユニット
+分解と、ソースを生成するユニット単位のステージが含まれていることが必要です。設計のみの作業や、
+Express のようにユニット分解を省略するプロファイルは、既存の
+ステージフローを維持します。チームが所有するユニットのゲートは、独自のポリシーを維持します。既存のワークフローや
+明示的なイテレーションの選択は、新しい既定値によって変換されません。
 
-With skeleton-on, the first Unit is planned as the smallest working integrated
-slice. Its applicable design work and Code Generation finish, a real integrated
-check passes, and you approve the skeleton before later Units start. A first
-design document is not a working skeleton. Skeleton-off offers **Continue
-automatically** / **Review each checkpoint** at Construction entry; skeleton-on
-offers it after the skeleton checkpoint. A recorded choice is not repeated,
-and you can explicitly grant or revoke autonomy during Construction.
+skeleton-on の場合、最初のユニットは、動作する最小の統合された
+スライスとして計画されます。その該当する設計作業と Code Generation が完了し、実際の統合
+チェックに合格し、あなたがスケルトンを承認してから、以降のユニットが始まります。最初の
+設計ドキュメントは、動作するスケルトンではありません。skeleton-off では、Construction の開始時に **Continue
+automatically** / **Review each checkpoint** が提示されます。skeleton-on では、
+スケルトンのチェックポイントの後に提示されます。記録済みの選択が繰り返し尋ねられることはなく、
+Construction 中に明示的に自律を許可または取り消すことができます。
 
-Approval policy and execution are separate. To fan out eligible Code Generation
-batches, explicitly choose stage-major order and swarm execution; guided and
-automatic batch completion are both supported. Unit-major stays serial.
-Plan Approval for every Unit, verification command selection, and pre-generation
-summary confirmation still need your answer; eligible swarm plans can share one
-**Approve Plans** presentation with individual receipts. The recorded,
-human-authorized verification command is reused at every Unit/batch checkpoint;
-changing it requires a new human receipt. Failures still halt. Existing workflows retain their
-recorded iteration and legacy behavior when the new checkpoint/execution fields
-are absent. See [Construction commands](12-cli-commands.md#construction-order-and-execution).
+承認ポリシーと実行は別のものです。対象となる Code Generation の
+バッチをファンアウトするには、stage-major の順序とスウォーム実行を明示的に選びます。ガイド付きと
+自動のバッチ完了の両方がサポートされています。unit-major は直列のままです。
+すべてのユニットの Plan Approval、検証コマンドの選択、生成前の
+サマリー確認には、引き続きあなたの回答が必要です。対象となるスウォームの計画は、個別の受領記録を伴う 1 回の
+**Approve Plans** の提示を共有できます。記録された、
+人間が承認した検証コマンドは、すべてのユニット/バッチのチェックポイントで再利用されます。
+変更するには、新たな人間の受領記録が必要です。失敗した場合は引き続き停止します。既存のワークフローは、
+新しいチェックポイント/実行のフィールドがない場合、記録済みのイテレーションと従来の振る舞いを維持します。
+[Construction コマンド](12-cli-commands.md#construction-order-and-execution) を参照してください。
 
 ## Related controls
 
-The workflow profile chooses the route and defaults. You can independently tune:
+ワークフロープロファイルは、ルートと既定値を選びます。次の項目は個別に調整できます:
 
-- **Depth** with `--depth minimal|standard|comprehensive`.
-- **Test strategy** with `--test-strategy minimal|standard|comprehensive`.
-- **Review cap** with `--review adversarial|advisory|none`. The effective class
-  is the stage's own declared class, lowered by this per-run cap when set,
-  otherwise by the profile cap; neither ceiling can raise a stage past what it
-  declares, and a set per-run cap replaces the profile cap.
+- **深さ**: `--depth minimal|standard|comprehensive` で調整します。
+- **テスト戦略**: `--test-strategy minimal|standard|comprehensive` で調整します。
+- **レビューの上限**: `--review adversarial|advisory|none` で調整します。実際に適用されるクラスは、
+  ステージ自身が宣言したクラスを、設定されていればこの実行単位の上限で、
+  設定されていなければプロファイルの上限で引き下げたものです。どちらの上限も、ステージを
+  宣言されたクラスより上に引き上げることはできず、実行単位の上限を設定するとプロファイルの上限は置き換えられます。
 
-These overrides do not turn one profile into another; they adjust the selected
-profile. See [Scopes, Depth, and Test Strategy](05-scopes-and-depth.md) for the
-normative routing matrix and override semantics.
+これらの上書きは、あるプロファイルを別のプロファイルに変えるものではありません。選択した
+プロファイルを調整するものです。規範となるルーティングマトリクスと上書きのセマンティクスについては、
+[スコープ、深さ、テスト戦略](05-scopes-and-depth.md) を参照してください。
